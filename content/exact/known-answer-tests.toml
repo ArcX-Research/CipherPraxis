@@ -1,13 +1,13 @@
 id = "known-answer-tests"
 section = "exact"
 title = "Known-answer tests for cipher cores"
-subtitle = "Fixed inputs with fixed expected outputs, brute-force parity at small sizes, mutation tests that must fail, sentinels that must stop, and negatives that must be rejected"
+subtitle = "Use fixed answers, small brute-force checks, broken inputs, stop sentinels, and known negatives"
 status = "VERIFIED"
-status_note = "Every sealed core in the corpus ships a KAT suite that is run before controls: forward/inverse roundtrips over entire schedule spaces (2,725,632 coordinates), DP versus brute force (8/8), exact-algebra identities on 1,092 score cells, parser and transcript mutations (23/23 rejected), forced-failure proofs that each gate exits non-zero (7/7), and structured negatives (5/5); a defect the suite missed (tests that bypassed the production parser) is recorded with its repair."
+status_note = "Every sealed core runs known-answer tests before controls. Checks include forward/back round trips across 2,725,632 schedule coordinates, dynamic programming against brute force at 8/8, algebra identities on 1,092 score cells, 23/23 rejected parser and transcript mutations, 7/7 gates forced to fail with nonzero exits, and 5/5 structured negatives. One missed defect, tests bypassing the real parser, remains recorded with its repair."
 family = "Exactness guarantees"
 tags = ["KAT", "self-test", "mutation test", "parity", "sentinel", "tautological gate"]
 related = ["kat-harness", "tautological-gate-rule", "reproducibility-receipts", "seal-and-audit-protocol", "bound-benchmarks-and-certificates", "exhaustive-enumeration", "cp-sat-and-smt-solvers", "all-different-enumeration", "vigenere", "vigenere-lab", "seed-determinism", "g-certificate"]
-summary = "A known-answer test feeds a core a fixed input whose correct output is known independently and fails loudly on any difference. For cipher solvers the useful KATs are of five kinds: roundtrip identities over whole parameter spaces, parity between a fast implementation and a brute-force one at a size where brute force is affordable, algebraic identities checked cell by cell, mutations of inputs or transcripts that must be rejected, and forced failures that prove each gate can actually fail. A check that cannot fail is not a test."
+summary = "A known-answer test gives a core fixed input with an answer known from another source. Any difference must fail loudly. Useful solver checks include round trips across full parameter ranges, fast code compared with brute force on small cases, algebra identities checked cell by cell, damaged inputs or transcripts that must be rejected, and forced failures that prove each gate can stop the run. A check that cannot fail is not a real test."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -75,7 +75,7 @@ Recorded suites: piecewise-key core 2,725,632 schedule checks and 52,416 alias c
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 A Vigenère core KAT: encrypt `ATTACKATDAWN` with key `LEMON` and require `LXFOPVEFRNHR` exactly (position 2: T + M $= 19 + 12 = 31 \equiv 5 =$ F); decrypt the result with the same key and require the plaintext back. Mutation: encrypt with key `LEMOM` and require a mismatch (position 4 becomes C + M $= 2 + 12 = 14 =$ O instead of C + N $= 15 =$ P), proving the comparison can fail. Sentinel: call the solver with a node cap of 1 and require STATUS INCOMPLETE with no key printed. Forced failure: temporarily invert the sign in the roundtrip check and require the suite to exit non-zero naming the roundtrip gate, then restore it. The [Vigenère lab](/labs/vigenere-lab) reproduces the first two lines interactively.
 '''

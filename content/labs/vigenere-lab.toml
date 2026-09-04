@@ -1,13 +1,13 @@
 id = "vigenere-lab"
 section = "labs"
 title = "Vigenère family lab"
-subtitle = "Encrypt with Vigenère, Beaufort, variant Beaufort or Porta and watch the coset histograms"
+subtitle = "Encrypt with Vigenère, Beaufort, Variant Beaufort, or Porta and inspect each coset"
 status = "VERIFIED"
-status_note = "The cipher code is unit-tested against published test vectors (Vigenère ATTACKATDAWN/LEMON → LXFOPVEFRNHR, Beaufort reciprocity, Porta rows) and the same compiled module runs in this page."
+status_note = "The code matches published checks for Vigenère ATTACKATDAWN/LEMON → LXFOPVEFRNHR, Beaufort reciprocity, and Porta rows. The same compiled code runs this page."
 family = "Substitution labs"
 tags = ["periodic", "polyalphabetic", "coset", "histogram"]
 related = ["vigenere", "beaufort", "variant-beaufort", "porta", "coset-shift-recovery", "coincidence-lab"]
-summary = "A periodic additive cipher splits its ciphertext into cosets, one per key letter, and each coset is a Caesar shift of the plaintext letters at those positions. This lab encrypts a text of your choice, shows every coset's letter histogram with its index of coincidence, and recovers the key blind by χ² fitting whenever the cosets carry enough language."
+summary = "A repeating additive cipher splits ciphertext into one coset per key letter. Each coset is a Caesar shift of the plaintext letters in those positions. This lab encrypts your text, shows the letter counts and index of coincidence for every coset, and uses χ² fitting to recover the key when each coset contains enough language."
 updated = "2026-09-04"
 lab = "vigenere"
 

@@ -1,13 +1,13 @@
 id = "route-transposition"
 section = "ciphers"
 title = "Route transposition"
-subtitle = "Write into a shape by one path, read out by another"
+subtitle = "Write a message into a shape by one path and read it by another"
 status = "VERIFIED"
-status_note = "Two finite route vocabularies (78 triangular-lattice and 81 square compositions) under a two-key additive layer recovered 4/4 held-out controls at rank 1, and the affine position-route lane recovered 3/3 controls at 153, 144 and 504 letters; both families were then excluded on the corpus texts at the declared depth."
+status_note = "Two fixed route lists, 78 triangular and 81 square combinations, recovered 4/4 held-out controls at rank 1 beneath a two-key additive layer. The affine position-route test recovered 3/3 controls at 153, 144, and 504 letters. Both stated families were then ruled out for the project texts at the tested depth."
 family = "Transposition"
 tags = ["transposition", "route", "spiral", "boustrophedon", "affine route"]
 related = ["columnar-transposition", "rail-fence", "myszkowski", "transposition-width-recovery", "units-mod-26", "selection-overfit-diagnostic", "exhaustive-enumeration", "g-transposition-grid"]
-summary = "A route transposition writes the message into a grid or other shape along one path (rows, spiral, diagonals, boustrophedon) and reads it out along another. The key is the pair of paths and the shape. Because the set of natural paths on a given shape is finite, the program treated route ciphers as enumerable vocabularies, adding a complete family of affine position permutations j = ui + d for every unit u and offset d."
+summary = "A route transposition writes a message into a grid or other shape along one path, then reads it along another. Paths may follow rows, spirals, diagonals, or alternating directions. The shape and two paths form the key. Because a chosen shape has a limited list of natural paths, the solver can check them all. Tests also covered every affine position route j = ui + d for each valid unit u and offset d."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -51,7 +51,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Enumerate every route in the vocabulary and every inner period $k$, both alphabet orders and both relations.
 2. For each cell fit the outer and inner keys (exact per-residue maximisation for the shape routes; a cheap exact cyclic-cut stage for every offset $d$ in the affine family, followed by the validated quadgram periodic finish on the best 96 MAP endpoints).
@@ -81,7 +81,7 @@ Shape routes (log 411): four target-absent held-out controls (triangle with stra
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Plaintext `ROUTECIPHERS` written row by row into a $3 \times 4$ grid and read out by a clockwise inward spiral from the top-left corner:
 

@@ -34,22 +34,22 @@ pub fn NullLab() -> impl IntoView {
             <div class="lab-controls">
                 <TextField label="Ciphertext" value=text multiline=true mono=true/>
                 <div class="lab-row">
-                    <NumberField label="Period m under test" value=period min=1 max=40/>
-                    <NumberField label="Shuffled trials" value=trials min=10 max=5000/>
+                    <NumberField label="Period m to test" value=period min=1 max=40/>
+                    <NumberField label="Number of shuffles" value=trials min=10 max=5000/>
                     <NumberField label="Seed" value=seed min=0 max=1000000/>
                 </div>
             </div>
             <div class="stat-row">
                 <div class="stat"><div class="stat-label mono">"observed mean coset IC"</div><div class="stat-value mono">{move || format!("{:.4}", summary.get().observed)}</div></div>
-                <div class="stat"><div class="stat-label mono">"null mean ± sd"</div><div class="stat-value mono">{move || format!("{:.4} ± {:.4}", summary.get().mean, summary.get().sd)}</div></div>
+                <div class="stat"><div class="stat-label mono">"null mean ± standard deviation"</div><div class="stat-value mono">{move || format!("{:.4} ± {:.4}", summary.get().mean, summary.get().sd)}</div></div>
                 <div class="stat"><div class="stat-label mono">"z"</div><div class="stat-value mono" class:hot=move || { summary.get().z > 3.0 }>{move || format!("{:+.2}", summary.get().z)}</div></div>
-                <div class="stat"><div class="stat-label mono">"empirical upper p"</div><div class="stat-value mono">{move || format!("{:.3}", summary.get().p_upper)}</div><div class="stat-sub mono">{move || format!("{} trials", summary.get().trials)}</div></div>
+                <div class="stat"><div class="stat-label mono">"empirical upper-tail p-value"</div><div class="stat-value mono">{move || format!("{:.3}", summary.get().p_upper)}</div><div class="stat-sub mono">{move || format!("{} trials", summary.get().trials)}</div></div>
             </div>
             <div class="lab-viz">
-                <div class="lab-viz-head mono">"z of the mean coset IC against 120 shuffles, for m = 2…12"</div>
+                <div class="lab-viz-head mono">"Mean coset IC z-score versus 120 shuffles, for m = 2…12"</div>
                 {move || { let d = sweep.get(); let hl: Vec<usize> = d.iter().enumerate().filter(|(_, (_, z))| *z > 3.0).map(|(i, _)| i).collect(); let data: Vec<(String, f64)> = d.into_iter().map(|(m, z)| (m, z.max(0.0))).collect(); view! { <div inner_html=bars_svg(&data, &hl, Some((3.0, "z = 3")))></div> } }}
             </div>
-            <Note>"Shuffling the letters destroys positional structure while keeping the letter counts, so the whole-text IC is unchanged and only order-dependent statistics move. A period is credible when its z is large under this null; scanning many periods and keeping the best inflates the maximum, which is why a family-wise null repeats the entire scan on each shuffle."</Note>
+            <Note>"Shuffling removes position patterns but keeps the same letter counts. The whole-text IC therefore stays the same, while order-based statistics change. A large z-score gives evidence for a period under this null model. If you scan many periods and keep only the best, repeat the full scan on every shuffle so the p-value includes that choice."</Note>
         </div>
     }
 }

@@ -1,13 +1,13 @@
 id = "quadgram-log-likelihood"
 section = "statistics"
 title = "Quadgram log-likelihood"
-subtitle = "Per-letter log-probability of a text under a smoothed four-letter model, the workhorse language score"
+subtitle = "Score a text by the probability of its overlapping four-letter groups"
 status = "VERIFIED"
-status_note = "Implemented as a smoothed 26^4 table from a fixed corpus and calibrated on held-out prose: 1,545 genuine 153-letter windows read median -4.27 (range -5.56 to -3.76) log10 per letter, random letters about -7, and planted decrypts of every solved control read -4.1 to -4.4. Its nulls under free parameters and its blindness under an unstripped transposition are both measured."
+status_note = "A fixed corpus supplies a smoothed table of all 26^4 quadgrams. On 1,545 separate 153-letter English samples, the median was -4.27 log10 per letter, with a range from -5.56 to -3.76. Random letters score about -7, and solved planted controls score -4.1 to -4.4. Tests also measure the score's behavior with free parameters and while a transposition remains."
 family = "Language-model scoring"
 tags = ["quadgram", "language model", "log-likelihood", "scoring", "objective"]
 related = ["english-gate-calibration", "bayesian-evidence-model-selection", "selection-overfit-diagnostic", "shuffled-null-z-score", "order-free-width-statistic", "simulated-annealing", "hill-climbing", "exact-dynamic-programming", "g-quadgram", "g-nats-per-letter"]
-summary = "The quadgram score of a letter string is the sum over all overlapping four-letter windows of the log-probability of that window in a reference corpus, and the rate is that sum divided by the number of windows. English prose scores about -4.3 log10 per letter, random letters about -7, and the gap of 2.7 decades per letter is what makes the score a usable objective for hill-climbing, annealing and dynamic-programming solvers. It is a likelihood, not a probability of correctness: its value under wrong keys with free parameters, and its behaviour when a transposition is still in place, must be calibrated separately."
+summary = "A quadgram score adds the log-probability of every overlapping four-letter group in a text. Divide by the number of groups to get the rate. English prose scores about -4.3 log10 per letter and random letters about -7. This wide gap makes quadgrams useful for hill climbing, annealing, and dynamic programming. The score is a likelihood, not the chance that an answer is correct. Wrong keys with many free settings and text with an unremoved transposition need separate calibration."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -44,7 +44,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. **Objective.** Energy for [simulated annealing](/search/simulated-annealing) and [hill climbing](/search/hill-climbing) over keys, alphabets or column orders; the per-window additivity makes it exact for [dynamic programming](/exact/exact-dynamic-programming) over periodic keys (a window's score depends on at most four consecutive key elements).
 2. **Polish.** Coordinate descent over individual shifts or column swaps with the rate as the criterion, applied only after the order-free stages have fixed the structure.

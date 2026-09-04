@@ -1,13 +1,13 @@
 id = "transposition-width-recovery"
 section = "cryptanalysis"
 title = "Transposition width recovery"
-subtitle = "Finding the width and column order of a columnar transposition that sits under, over or between substitution layers"
+subtitle = "Find the width and column order of a transposition around substitution layers"
 status = "VERIFIED"
-status_note = "Width and order recovery are implemented three ways (order-free residue-pattern fit, class-posterior block statistic, dictionary-word and exhaustive orders after peeling the substitution); planted controls recover the true width and order exactly (logs/317, 300, 05, 29, 48), while a plain iterated local search failed its own width-9 control and quadgram ranking with the transposition still in place scores the truth as noise."
+status_note = "Three methods recover width and order: an order-free residue-pattern fit, a class-probability block score, and dictionary or complete order searches after removing the substitution. Planted controls recovered the true width and order exactly (logs/317, 300, 05, 29, 48). Plain repeated local search failed its own width-9 control, and quadgrams scored the truth like noise while the transposition remained."
 family = "Layered-construction inference"
 tags = ["columnar", "transposition", "width", "column order", "residue pattern", "peel"]
 related = ["columnar-transposition", "myszkowski", "rail-fence", "sandwich-construction", "order-free-width-statistic", "mixture-inference-under-transposition", "exact-period-alignment", "dictionary-attack", "simulated-annealing", "exhaustive-enumeration", "lcm-of-periods", "g-residue-pattern", "g-inner-and-outer-layer"]
-summary = "A columnar transposition destroys letter order but preserves the letter multiset exactly, so a periodic substitution applied after it keeps its coset structure while the text under it reads as noise. Width recovery asks which grid width and column order undo the transposition. The corpus recovers widths through statistics that do not need the order (residue patterns of an inner period, class-posterior block patterns), then resolves the order with dictionary keys or exhaustive enumeration, and it records the two ways the naive approach fails: ranking by quadgrams while the transposition is in place, and trusting a local search that never passed a control."
+summary = "A columnar transposition scrambles letter order but keeps total letter counts. A repeating substitution applied afterward still has clear cosets, while the text beneath looks like noise. Width recovery finds the grid width and column order that undo the transposition. Order-free residue and class patterns find the width first. Dictionary keys or a complete search then find the order. Quadgrams cannot rank the truth while the transposition remains, and an untested local search is not reliable."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -39,7 +39,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Fit and peel the outer periodic layer with order-free statistics (marginalised monogram evidence), so that what remains is transposed language.
 2. Rank widths order-free: residue patterns if an inner period is suspected, class-posterior blocks under a mixture model, or the exact-grid divisors.
@@ -75,7 +75,7 @@ body = '''
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Plaintext `ATTACKATDAWN`, width 4, exact grid:
 

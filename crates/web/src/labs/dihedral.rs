@@ -26,8 +26,8 @@ pub fn DihedralLab() -> impl IntoView {
             <div class="lab-controls">
                 <div class="lab-row">
                     <NumberField label="n (positions on the ring)" value=n min=3 max=60/>
-                    <div class="field"><span class="field-label">"a"</span><div class="lab-row tight"><label class="filter-toggle"><input type="checkbox" prop:checked=move || a_ref.get() on:change=move |ev| a_ref.set(event_target_checked(&ev))/><span>"reflect"</span></label><NumberField label="k" value=a_k min=0 max=59/></div></div>
-                    <div class="field"><span class="field-label">"b"</span><div class="lab-row tight"><label class="filter-toggle"><input type="checkbox" prop:checked=move || b_ref.get() on:change=move |ev| b_ref.set(event_target_checked(&ev))/><span>"reflect"</span></label><NumberField label="k" value=b_k min=0 max=59/></div></div>
+                    <div class="field"><span class="field-label">"a"</span><div class="lab-row tight"><label class="filter-toggle"><input type="checkbox" prop:checked=move || a_ref.get() on:change=move |ev| a_ref.set(event_target_checked(&ev))/><span>"Use reflection"</span></label><NumberField label="k" value=a_k min=0 max=59/></div></div>
+                    <div class="field"><span class="field-label">"b"</span><div class="lab-row tight"><label class="filter-toggle"><input type="checkbox" prop:checked=move || b_ref.get() on:change=move |ev| b_ref.set(event_target_checked(&ev))/><span>"Use reflection"</span></label><NumberField label="k" value=b_k min=0 max=59/></div></div>
                 </div>
             </div>
             <div class="stat-row">
@@ -40,7 +40,7 @@ pub fn DihedralLab() -> impl IntoView {
                 }).collect_view()}
             </div>
             <div class="lab-viz">
-                <div class="lab-viz-head mono">{move || format!("Action of a ∘ b on positions 0…{} · |D_{}| = {}", n.get() - 1, n.get(), 2 * n.get())}</div>
+                <div class="lab-viz-head mono">{move || format!("How a ∘ b moves positions 0…{} · |D_{}| = {}", n.get() - 1, n.get(), 2 * n.get())}</div>
                 <div class="perm-rows mono">
                     {move || {
                         let e = ab.get();
@@ -53,7 +53,7 @@ pub fn DihedralLab() -> impl IntoView {
                     }}
                 </div>
             </div>
-            <Note>"Rotations commute; a rotation and a reflection do not, so a ∘ b and b ∘ a generally differ. Dihedral symmetries of a ring of positions are the natural candidates when a cipher is suspected of reading a text around a circular or reversed layout."</Note>
+            <Note>"Two rotations commute, so their order does not matter. A rotation and a reflection usually do not: a ∘ b and b ∘ a can differ. These dihedral symmetries are useful when a cipher may read positions around a circle or in reverse."</Note>
         </div>
     }
 }

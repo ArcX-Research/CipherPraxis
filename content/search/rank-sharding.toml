@@ -1,13 +1,13 @@
 id = "rank-sharding"
 section = "search"
 title = "Rank sharding of large enumerations"
-subtitle = "Partitioning a ranked or lexicographically indexed search space into predeclared shards whose local results merge exactly, with no early stopping"
+subtitle = "Split an exact search into fixed ranges that can run separately and merge cleanly"
 status = "VERIFIED"
-status_note = "Three sharding schemes are implemented and checked: cumulative rank shards of a k-best schedule (validation 5/5 positives plus a predicted sentinel miss), lexicographic index ranges of an exact bound-pruned core (parity with the monolithic core on W=3 and W=4 universes and an explicit tolerance-tie trap), and hash-ordered pair segments (20/20 planted truths recovered when their segment is scheduled)."
+status_note = "Three split methods are checked. Fixed rank ranges recovered 5/5 positives and missed a sentinel outside the range as predicted. Lexicographic index ranges matched the one-piece exact solver for W=3 and W=4, including a near-tie trap. Hash-ordered pair segments recovered 20/20 planted answers when their segment was scheduled."
 family = "Enumeration strategies"
 tags = ["sharding", "partition", "resumable", "exact merge", "ties", "coverage"]
 related = ["k-best-lists", "exhaustive-enumeration", "bound-benchmarks-and-certificates", "compiled-hot-cores", "drainability-and-throughput", "state-checkpoints", "reproducibility-receipts", "throughput-fail", "g-shard", "g-drainability", "g-certificate"]
-summary = "Rank sharding splits an enumeration into disjoint, adjacent, predeclared intervals of a ranking or of a lexicographic index, runs each interval to completion as an independent process, and merges the interval winners and tolerance ties exactly. It makes multi-hour exact searches resumable and auditable and converts a time cap into a measured coverage fraction rather than a silent truncation. Its two rules are that an incomplete shard has no evidentiary value and that recovery probability under a cap equals coverage."
+summary = "Rank sharding divides an exact search into separate, neighboring ranges declared in advance. Each range runs to completion on its own. A final step merges every range winner and near tie exactly. This makes long searches resumable and easy to audit. A time limit becomes a stated coverage fraction instead of a hidden cutoff. An unfinished shard supports no conclusion, and under a fixed order the chance of recovery before the cap equals the fraction covered."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -47,7 +47,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 - **Rank shards of a two-stage selector.** Stage one exhausts an exact family (128 forward classes, 26,624 provenance rows); stage two finishes monogram-ranked method classes in five cumulative shards to rank 512 (a sealed successor: seven shards to 2,048). Each shard record binds its rank range, cumulative seed/class/tie counts, digests and the running winner; the whole selector is replayed in a separate supervised process before the transcript is committed.
 - **Index ranges of an exact core.** A universe of $64 \times 9! = 23{,}224{,}320$ states (64 retained keys times all permutations of nine columns) is cut into eight half-open ranges of $2{,}903{,}040$ states, each eight complete key blocks; the core also supports ranges that split a key by seeding each intersected fragment.
@@ -78,7 +78,7 @@ Rank shards: six frozen fixtures (positives at truth ranks 40, 47, 91, 155, 443;
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Twelve states with scores $F = (3, 9, 1, 9,\ 4, 8, 2, 9,\ 7, 6, 9, 0)$ and $\text{TOL} = 0$, cut into three shards of four.
 

@@ -1,13 +1,13 @@
 id = "polish-basin-measurement"
 section = "search"
 title = "Polish-basin measurement"
-subtitle = "Measuring how far from the truth a deterministic polish still recovers it, to decide whether a search failure is budget or landscape"
+subtitle = "Measure how close a starting key must be for local search to reach the truth"
 status = "VERIFIED"
-status_note = "The protocol was run on planted two-sided unknown-alphabet instances: starting d swaps from the truth with shifts refit per move and two-swap moves allowed, recovery was 3/4 at d=3 and 0/4 at d>=5 (joint 63+96: 1/4 at d=3-5), while the search's best states sat about ten swaps away; a crib widened the basin to three swaps (13 letters) or six (25 letters)."
+status_note = "On planted two-sided unknown alphabets, local search recovered 3/4 cases from d=3 swaps away and 0/4 from d>=5, while refitting shifts and allowing two-swap moves. A joint 63+96-letter case recovered 1/4 from d=3–5. Global search stopped about ten swaps away. A crib widened the useful range to three swaps at 13 letters and six at 25 letters."
 family = "Stochastic local search"
 tags = ["basin of attraction", "calibration", "landscape", "swap distance", "power"]
 related = ["hill-climbing", "simulated-annealing", "parallel-tempering", "coordinate-descent", "quagmire-iii", "power-measurement", "planted-controls", "tautological-gate-rule", "g-search-basin", "g-move-set"]
-summary = "A polish-basin measurement plants a known key, perturbs it by d random moves, runs the deterministic polish that production uses, and records for each d whether the truth is recovered. The largest d with reliable recovery is the basin radius. Compared with the distance at which the global search's best states end up, it says whether more budget could ever help: if the search plateaus outside the basin, the landscape, not the budget, is the obstacle, and the honest next step is an exact method."
+summary = "To measure a search basin, start from a known key, make d random changes, and run the same fixed local search used in production. Record whether it returns to the truth for each d. The largest reliable d is the basin radius. Compare that with how close the broader search gets. If the broad search stops outside the basin, more time will not bridge the gap. The score landscape is the problem, and an exact method is the next step."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -73,7 +73,7 @@ Planted 96-letter and joint 63+96-letter two-sided instances with random alphabe
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 A one-dimensional landscape over states $0..10$ with objective $f = (1, 2, 3, 4, 5, 4, 3, 2, 6, 7, 8)$ and truth at state $10$ ($f = 8$). Greedy ascent moves to the better neighbour.
 

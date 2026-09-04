@@ -1,0 +1,94 @@
+id = "polybius-square"
+section = "ciphers"
+title = "Polybius square"
+subtitle = "Turn each letter into a row-and-column pair on a 5×5 or 6×6 grid"
+status = "VERIFIED"
+status_note = "The square maps 25 letters one-to-one with coordinate pairs. It is implemented and unit-tested in the Bifid lab. The same component appears in Bifid, Trifid, and twin-square tests, whose results are listed on their own pages."
+family = "Fractionation"
+tags = ["fractionation", "coordinates", "checkerboard", "component"]
+related = ["bifid", "trifid", "playfair", "two-square-four-square", "keyword-mixed-alphabet", "bifid-lab", "g-fractionation"]
+summary = "A Polybius square places 25 letters in a 5×5 grid, with I and J sharing one cell. Each letter becomes two digits from 1 to 5: its row and column. By itself, this is a simple substitution into digit pairs. It becomes more useful in Bifid, Trifid, ADFGX-style, and straddling-checkerboard ciphers, which rearrange those digits before turning them back into letters."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Fix a permutation of the 25-letter alphabet (J written as I) into a $5 \times 5$ array $S$. The square maps a letter $x$ to its coordinates
+
+$$x \mapsto (r(x), c(x)), \qquad r, c \in \{1, \dots, 5\},$$
+
+and the inverse map reads a letter back from a digit pair: $S[r, c]$. A keyword-mixed square is filled with the keyword's distinct letters first and the remaining letters in order; a $6 \times 6$ variant admits the ten digits as well.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Fractionation"
+body = '''
+For a block $x_0 \dots x_{m-1}$ the coordinate stream is $r_0 c_0\, r_1 c_1 \dots r_{m-1} c_{m-1}$. Fractionating ciphers permute this stream and re-pair it: Bifid writes all rows then all columns, $r_0 \dots r_{m-1}\, c_0 \dots c_{m-1}$, and reads consecutive digit pairs back through $S$, so that each output letter depends on two input letters up to $m$ positions apart. Trifid does the same with a $3 \times 3 \times 3$ cube and three coordinates.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The square is a bijection; the merged letter pair (usually I/J) is the only information loss.
+- Invariant: the multiset of coordinate digits is preserved by any fractionating rearrangement, so digit frequencies, and therefore the row and column frequencies of the square, survive the mixing even though letter frequencies do not.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to attack it"
+body = '''
+As a bare substitution the square falls to frequency analysis of the 25 coordinate pairs. Inside a fractionating cipher the attack recovers the period first, then searches the square with a language-model objective (annealing over squares, or exact enumeration when the square is keyword-structured); the research program's Bifid and twin-square lanes document what that search can and cannot reach.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+There are $25! \approx 1.6 \times 10^{25}$ squares, of which keyword-mixed squares are a tiny enumerable subset (one per distinct keyword). Row and column permutations of a square give equivalent Bifid ciphers only up to the re-pairing rule, so the effective search space is not much smaller than $25!$ for the blind case.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Merged letters.** Any text containing both I and J decrypts with J replaced by I; a control that compares decrypted text to the original must normalise the pair first.
+- **Square symmetry.** Reading rows or columns in a different order gives a different but related square; solvers that score candidates without canonicalising the square waste effort on equivalents.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The lab's square is checked against Delastelle's published Bifid example (the square starting `BGWKZ` encrypts `FLEEATONCE` to `UAEOLWRINS` in a single block) and by period-5 round trips; the [Bifid lab](/labs/bifid-lab) shows the coordinates for the first three blocks of any text.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+With the keyword `PLAYFAIR` the square is
+
+```
+P L A Y F
+I R B C D
+E G H K M
+N O Q S T
+U V W X Z
+```
+
+so `H` is at (3, 3), `E` at (3, 1) and `Y` at (1, 4): the word `HEY` becomes the digit stream `33 31 14`.
+'''
+
+[[provenance]]
+path = "withmath/TWIN_BIFID_Q7_AUDIT.md"
+kind = "audit"
+note = "A shared 25-cell square under two outer periodic layers: the square's coordinate map is the fractionation step, searched by a compiled annealer with planted random-square controls."
+
+[[provenance]]
+path = "withmath/TRIFID_AUDIT.md"
+kind = "audit"
+note = "The three-coordinate cube analogue and its controls."
+
+[[references]]
+title = "Traité Élémentaire de Cryptographie"
+author = "Félix Delastelle"
+year = 1902

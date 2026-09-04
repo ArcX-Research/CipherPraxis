@@ -1,13 +1,13 @@
 id = "beaufort"
 section = "ciphers"
 title = "Beaufort cipher"
-subtitle = "Reciprocal periodic substitution: ciphertext = key minus plaintext"
+subtitle = "A repeating-key cipher where ciphertext = key minus plaintext"
 status = "VERIFIED"
-status_note = "Every periodic solver in the program runs both the Vigenère and the Beaufort orientation; the exact periodic DP recovered 100% of three blind controls (63, 95 and 126 letters) in both orientations, and the plaintext-autokey audit recovered its Beaufort controls at 153, 144 and 504 letters."
+status_note = "Every periodic solver checks both Vigenère and Beaufort directions. The exact periodic solver recovered 100% of three blind controls at 63, 95, and 126 letters in both directions. The plaintext-autokey test also recovered its Beaufort controls at 153, 144, and 504 letters."
 family = "Polyalphabetic substitution"
 tags = ["periodic", "reciprocal", "polyalphabetic", "tabula recta"]
 related = ["vigenere", "variant-beaufort", "porta", "autokey", "exact-period-alignment", "periodic-substitution-dp", "g-reciprocal-cipher", "g-tabula-recta"]
-summary = "The Beaufort cipher subtracts the plaintext from a repeating key modulo 26. Encryption and decryption are the same operation, and the coset structure is identical to Vigenère's, so a Beaufort is attacked with the same alignment and shift-recovery tools with the sign of the plaintext reversed. In every periodic lane of the program the relation (Vigenère or Beaufort) is a selected parameter rather than an assumption."
+summary = "Beaufort subtracts each plaintext letter from a repeating key modulo 26. The same operation encrypts and decrypts. Its cosets match Vigenère's, so the same alignment and shift tools work after reversing the plaintext sign. Every periodic test checks both Vigenère and Beaufort instead of assuming one."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -47,7 +47,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Find the period with coincidence statistics or the exact alignment objective.
 2. For each coset compute the correlation with the reflected reference $E(k - x)$ over 26 values of $k$; compare the best Vigenère and Beaufort fits by their total evidence rather than by one profiled likelihood.
@@ -76,7 +76,7 @@ Exact periodic DP: three blind controls at 63, 95 and 126 letters (periods 7, 7 
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Plaintext `ATTACK`, key `CIPHER` ($m = 6$):
 

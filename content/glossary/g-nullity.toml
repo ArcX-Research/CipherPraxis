@@ -6,5 +6,5 @@ status_note = "Standard linear-algebra term."
 family = "Algebra"
 tags = ["linear algebra", "GF(13)"]
 related = ["finite-field-linear-algebra", "modular-inverse-and-crt", "all-different-constraints", "g-all-different"]
-summary = "The dimension of the null space of a homogeneous linear system, equal to the number of unknowns minus the rank. For alphabet-recovery systems over Z26 the solver reports two nullities, d2 over GF(2) and d13 over GF(13); the system has 2^d2 times 13^d13 linear solutions. Because a homogeneous system with a gauge row is always consistent, the nullity, not consistency, measures how much a crib constrains the alphabet, and d13 of about seven or less is the regime in which exact enumeration is feasible."
+summary = "Nullity is the size, by dimension, of a homogeneous linear system's null space. It equals the number of unknowns minus the rank. For alphabet recovery over Z26, the solver reports d2 over GF(2) and d13 over GF(13). The system then has 2^d2 times 13^d13 linear solutions. Such a system is always consistent after adding a gauge row, so nullity shows how strongly a crib limits the alphabet. Exact enumeration is practical when d13 is about seven or less."
 updated = "2026-09-04"

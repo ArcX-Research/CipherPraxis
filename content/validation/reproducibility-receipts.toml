@@ -1,13 +1,13 @@
 id = "reproducibility-receipts"
 section = "validation"
 title = "Reproducibility receipts"
-subtitle = "Every number carries the hash of the bytes that produced it"
+subtitle = "Keep the hashes, inputs, and command needed to reproduce every reported number"
 status = "VERIFIED"
-status_note = "Receipts are implemented throughout the research program: launchers print the transcript path, ledger entries carry SHA-256 of sources and transcripts, audits rehash before writing, and a fresh re-execution of a sealed controls run reproduced every semantic record with only timing fields differing."
+status_note = "Launchers print transcript paths, ledger entries store SHA-256 hashes for sources and transcripts, and audits recompute hashes before writing. A fresh rerun of one sealed control job reproduced every meaningful record; only timing fields changed."
 family = "Reproducibility"
 tags = ["receipts", "hashes", "transcripts", "provenance"]
 related = ["seal-and-audit-protocol", "ledger-reservations", "hash-chained-transcripts", "build-manifests-and-release-json", "seed-determinism", "run-script-log-convention", "g-receipt"]
-summary = "A receipt is the minimal record that lets a stranger recompute a claimed number: the hashes of the source, runner, parser, corpus and model tables, the seeds, the exact command, and the hash of the transcript the number was read from. This atlas quotes no figure without one. The practice sounds bureaucratic until the first time a claim is traced to a log that turns out to be empty, interrupted or from a superseded source; the program's own audit of two hundred logs found four empty ones and a dozen failed or partial ones that had been at risk of being cited."
+summary = "A receipt stores the minimum needed to reproduce a number: hashes of the source, runner, parser, corpus, and model tables; the seeds and exact command; and the transcript hash. This site reports no measured figure without one. An audit of 200 logs found four empty files and twelve failed or partial runs that could otherwise have been cited. Receipts make those mistakes easier to catch."
 updated = "2026-09-04"
 
 [[blocks]]

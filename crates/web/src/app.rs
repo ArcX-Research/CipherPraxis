@@ -1,13 +1,13 @@
 //! Root component: router, shell (header, footer, search palette) and route table.
 use crate::components::motif::Logo;
 use crate::components::palette::SearchPalette;
+use crate::components::sidebar::KnowledgeSidebar;
 use crate::pages::{
     entry::EntryPage, find::FindPage, not_found::NotFound, overview::Overview, section::SectionPage,
 };
 use crate::state::{use_palette, AppState, Palette};
 use leptos::prelude::*;
 use leptos_router::components::{Route, Router, Routes};
-use leptos_router::hooks::use_location;
 use leptos_router::path;
 use praxis_core::content::Section;
 
@@ -15,6 +15,7 @@ use praxis_core::content::Section;
 pub fn App() -> impl IntoView {
     provide_context(AppState::load());
     let palette = RwSignal::new(false);
+    let sidebar = RwSignal::new(false);
     provide_context(Palette(palette));
 
     window_event_listener(leptos::ev::keydown, move |ev| {
@@ -24,77 +25,61 @@ pub fn App() -> impl IntoView {
             palette.update(|o| *o = !*o);
         } else if key == "Escape" {
             palette.set(false);
+            sidebar.set(false);
         }
     });
 
     view! {
         <Router>
             <a class="skip-link" href="#main">"Skip to content"</a>
-            <Header/>
-            <main id="main" class="main" tabindex="-1">
-                <Routes fallback=|| view! { <NotFound/> }>
-                    <Route path=path!("/") view=Overview/>
-                    <Route path=path!("/find") view=FindPage/>
-                    <Route path=path!("/:section") view=SectionPage/>
-                    <Route path=path!("/:section/:id") view=EntryPage/>
-                </Routes>
-            </main>
-            <Footer/>
+            <Header sidebar=sidebar/>
+            <div class="kb-shell">
+                <KnowledgeSidebar open=sidebar/>
+                <div class="kb-workspace">
+                    <main id="main" class="main" tabindex="-1">
+                        <Routes fallback=|| view! { <NotFound/> }>
+                            <Route path=path!("/") view=Overview/>
+                            <Route path=path!("/find") view=FindPage/>
+                            <Route path=path!("/:section") view=SectionPage/>
+                            <Route path=path!("/:section/:id") view=EntryPage/>
+                        </Routes>
+                    </main>
+                    <Footer/>
+                </div>
+            </div>
             <SearchPalette/>
         </Router>
     }
 }
 
 #[component]
-fn Header() -> impl IntoView {
+fn Header(sidebar: RwSignal<bool>) -> impl IntoView {
     let palette = use_palette();
-    let nav_open = RwSignal::new(false);
-    let location = use_location();
-    let pathname = location.pathname;
-    let is_active = move |slug: &'static str| {
-        let p = pathname.get();
-        p == format!("/{slug}") || p.starts_with(&format!("/{slug}/"))
-    };
-    // Close the mobile menu on navigation.
-    Effect::new(move |_| {
-        pathname.track();
-        nav_open.set(false);
-    });
+    let state = crate::state::use_state();
+    let total = state.catalog.len();
 
     view! {
         <header class="site-header">
-            <div class="wrap header-row">
+            <div class="header-row">
                 <a class="brand" href="/" aria-label="Cipher Praxis home">
                     <Logo/>
                     <span class="brand-text">
                         <span class="brand-name">"Cipher Praxis"</span>
-                        <span class="brand-sub">"A Dilate Cryptography Knowledge Base"</span>
+                        <span class="brand-sub">"Cryptography knowledge base"</span>
                     </span>
                 </a>
-                <nav class="nav" class:open=move || nav_open.get() aria-label="Primary">
-                    {Section::ALL
-                        .into_iter()
-                        .map(|s| {
-                            let slug = s.slug();
-                            view! {
-                                <a
-                                    class="nav-link"
-                                    href=format!("/{slug}")
-                                    aria-current=move || if is_active(slug) { Some("page") } else { None }
-                                >
-                                    <span class="nav-ord">{format!("{:02}", s.ordinal())}</span>
-                                    <span>{s.short()}</span>
-                                </a>
-                            }
-                        })
-                        .collect_view()}
-                </nav>
+                <div class="header-context mono">
+                    <span class="kb-live-dot" aria-hidden="true"></span>
+                    <span>{format!("{total} entries")}</span>
+                    <span class="header-context-sep">"/"</span>
+                    <span>"runs in your browser"</span>
+                </div>
                 <div class="header-actions">
                     <button
                         type="button"
                         class="search-btn"
                         on:click=move |_| palette.set(true)
-                        aria-label="Open search (Command or Control plus K)"
+                        aria-label="Open search (Command or Control and K)"
                     >
                         <span class="search-btn-icon" aria-hidden="true" inner_html=crate::components::motif::ICON_SEARCH></span>
                         <span class="search-btn-label">"Search"</span>
@@ -103,11 +88,11 @@ fn Header() -> impl IntoView {
                     <button
                         type="button"
                         class="nav-toggle"
-                        aria-expanded=move || nav_open.get().to_string()
-                        aria-controls="primary-nav"
-                        on:click=move |_| nav_open.update(|o| *o = !*o)
+                        aria-expanded=move || sidebar.get().to_string()
+                        aria-controls="knowledge-sidebar"
+                        aria-label="Open site menu"
+                        on:click=move |_| sidebar.update(|open| *open = !*open)
                     >
-                        <span class="sr-only">"Menu"</span>
                         <span class="nav-toggle-bars" aria-hidden="true"><i></i><i></i></span>
                     </button>
                 </div>
@@ -128,7 +113,7 @@ fn Footer() -> impl IntoView {
                     <Logo/>
                     <div>
                         <div class="brand-name">"Cipher Praxis"</div>
-                        <div class="footer-tag">"A Dilate Cryptography Knowledge Base — theory made operational through equations, attacks, controls and WebAssembly labs."</div>
+                        <div class="footer-tag">"Learn how ciphers work, how attacks test them, and how evidence supports each result."</div>
                     </div>
                 </div>
                 <div class="footer-cols">
@@ -153,7 +138,7 @@ fn Footer() -> impl IntoView {
             </div>
             <div class="wrap footer-line mono">
                 <span>"© Dilate Technologies · Cipher Praxis"</span>
-                <span>"Light theme · no tracking · runs entirely in your browser"</span>
+                <span>"No tracking · runs in your browser"</span>
             </div>
         </footer>
     }

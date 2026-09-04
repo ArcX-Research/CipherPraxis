@@ -1,13 +1,13 @@
 id = "trifid"
 section = "ciphers"
 title = "Trifid cipher"
-subtitle = "Three-coordinate fractionation on a 27-cell cube"
+subtitle = "Split letters into three coordinates on a 27-cell cube"
 status = "CLOSED"
-status_note = "Whole-message Trifid over periods 2-40 at 504 letters (2/2 arbitrary-cube controls exact) and a cube shared by two 153- and 144-letter texts (3/3 fixed-period and 3/3 period-selection controls exact) were excluded on the corpus texts; Trifid under an additional periodic layer failed all four controls and is power-limited."
+status_note = "Direct 504-letter Trifid tests covered periods 2–40 and solved 2/2 arbitrary-cube controls exactly. Shared-cube tests across 153- and 144-letter texts passed 3/3 fixed-period and 3/3 period-selection controls. Those forms were ruled out for the project texts. Trifid beneath another periodic layer failed all four controls and is power-limited."
 family = "Fractionation"
 tags = ["fractionation", "cube", "27 symbols", "period"]
 related = ["bifid", "playfair", "polybius-square", "simulated-annealing", "known-answer-tests", "conjugacy-and-gauge", "g-fractionation", "g-period"]
-summary = "Trifid writes each letter of a block as three ternary coordinates in a 3 x 3 x 3 cube of 26 letters plus one extra symbol, transcribes all first coordinates, then all second, then all third, and regroups the stream in threes. It is Bifid in three dimensions with a 27-symbol alphabet. The program verified a two-block known-answer vector, byte-matched a source generator, and ran controls-first audits of the direct, shared-cube and layered forms."
+summary = "Trifid places 26 letters and one extra symbol in a 3 x 3 x 3 cube. Each letter becomes three base-3 coordinates. Within a block, the cipher writes all first coordinates, then all second coordinates, then all third coordinates, and groups them back into threes. It is a three-dimensional form of Bifid. Tests checked a known answer, matched a separate generator byte for byte, and covered direct, shared-cube, and layered forms."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -47,7 +47,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Pin the implementation: independent forward and inverse, a two-block known-answer vector, and byte-match against a separately compiled source generator.
 2. For every period in the declared range, anneal the cube (cell and plane moves) under a quadgram objective; 6 restarts of 300,000 proposals per period in the direct audit.
@@ -77,7 +77,7 @@ Direct (log 191): known-answer vector reproduced; two disjoint 504-letter contro
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Cube (cell-major) `FELIXMARDSTBCGHJKNOPQUVWYZ+`, period 5, plaintext `AIDETOILEC`.
 

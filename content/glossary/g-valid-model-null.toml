@@ -6,5 +6,5 @@ status_note = "Term as used in the validation section."
 family = "Validation vocabulary"
 tags = ["nulls", "controls"]
 related = ["valid-model-nulls", "tautological-gate-rule", "planted-controls"]
-summary = "A negative control that satisfies every algebraic assumption of the cipher model (legal key, correct construction, English letter frequencies) but carries no signal, typically independent letters drawn from the monogram distribution. A gate must reject it; a gate that passes it is testing the algebra rather than the language. Contrasted with model-violating negatives such as an independent random key stream."
+summary = "A valid-model null is a negative control that follows every algebraic rule of the cipher but contains no real language signal. It uses a legal key and construction and may draw independent letters with English single-letter frequencies. A useful language gate must reject it. If the gate passes it, the gate is detecting only the cipher's algebra. This is stricter than a negative that breaks the model, such as an illegal random key stream."
 updated = "2026-09-04"

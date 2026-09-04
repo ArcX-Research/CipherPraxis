@@ -1,13 +1,13 @@
 id = "quagmire-i"
 section = "ciphers"
 title = "Quagmire I"
-subtitle = "Periodic shifts between a keyed plaintext alphabet and a straight ciphertext alphabet"
+subtitle = "Repeat shifts from a keyed plaintext alphabet to a straight ciphertext alphabet"
 status = "VERIFIED"
-status_note = "The crib-driven alphabet solver recovered planted Quagmire I ciphers (random alphabet, random shifts, 153 letters) in 3/3 seeds at every crib length from 7 to 25 letters; the phrase-keyed bank search recovers its planted control at 100%."
+status_note = "The crib-based solver recovered 3/3 planted 153-letter Quagmire I ciphers with random alphabets and shifts. It passed at every crib length from 7 to 25 letters. The phrase-keyed bank search also recovered its planted control at 100%."
 family = "Polyalphabetic substitution"
 tags = ["periodic", "keyed alphabet", "polyalphabetic", "quagmire"]
 related = ["vigenere", "keyword-mixed-alphabet", "quagmire-ii", "quagmire-iii", "quagmire-iv", "crib-driven-alphabet-recovery", "phrase-keyed-alphabet-attack", "simulated-annealing", "quagmire-lab", "g-keyed-alphabet"]
-summary = "Quagmire I is a Vigenère whose plaintext alphabet is a mixed alphabet while the ciphertext alphabet stays straight. The coset structure of the plain Vigenère survives, so the period is found the same way, but each coset's histogram is a rotation of a permuted reference. With a crib of seven or more contiguous letters the shifts are determined and only the alphabet remains, which a batched annealer recovers reliably at 153 letters."
+summary = "Quagmire I is a Vigenère cipher with a mixed plaintext alphabet and a straight ciphertext alphabet. Its Vigenère cosets remain, so the usual methods find the period. Each coset's letter counts are a shifted, rearranged language profile. A continuous crib of seven or more letters fixes the shifts. At 153 letters, a batched annealing search can then recover the remaining alphabet."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -47,7 +47,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Recover the period from coincidences or the exact alignment objective.
 2. **Structured alphabet**: try every keyed alphabet in the bank, fit the shifts by chi-square and quadgram sweeps, rank by quadgram rate.
@@ -72,12 +72,12 @@ body = '''
 [[blocks]]
 kind = "controls"
 body = '''
-Crib calibration on planted ciphers (random alphabet, random shifts, real English, true crib at its offset): Quagmire I with a known straight or keyword-mixed ciphertext alphabet solved 3/3 seeds at crib lengths 7, 9, 11, 13, 16, 20 and 25, with 9 to 16 of 16 restarts reading English and 100% match, while wrong placements averaged $-6.06 \pm 0.21$ (logs/22_crib_smoke.log). On the two live texts, 6,701 placements each (46 cribs at every offset plus 66 opening cribs) gave best rates $-5.70$ to $-5.83$ and $-5.53$ to $-5.68$, at the wrong-placement null (logs/23_crib_pk8_pk9.log).
+Crib calibration on planted ciphers (random alphabet, random shifts, real English, true crib at its offset): Quagmire I with a known straight or keyword-mixed ciphertext alphabet solved 3/3 seeds at crib lengths 7, 9, 11, 13, 16, 20 and 25, with 9 to 16 of 16 restarts reading English and 100% match, while wrong placements averaged $-6.06 \pm 0.21$ (log 22). On the two live texts, 6,701 placements each (46 cribs at every offset plus 66 opening cribs) gave best rates $-5.70$ to $-5.83$ and $-5.53$ to $-5.68$, at the wrong-placement null (log 23).
 '''
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Plaintext alphabet keyed by `ZEBRAS` ($P$ = `ZEBRASCDFGHIJKLMNOPQTUVWXY`), ciphertext alphabet straight, shifts $(3, 7, 12)$. Plaintext `QUAGMIRE`:
 

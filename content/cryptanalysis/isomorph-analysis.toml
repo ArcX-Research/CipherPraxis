@@ -1,0 +1,71 @@
+id = "isomorph-analysis"
+section = "cryptanalysis"
+title = "Isomorph analysis"
+subtitle = "Compare repeat patterns to find fragments that may share a substitution"
+status = "UNTESTED"
+status_note = "This classical method is documented for completeness. The project has no isomorph test, records, or controls, so this page reports no measured result."
+family = "Period and structure recovery"
+tags = ["isomorphs", "patterns", "rotor", "polyalphabetic", "classical"]
+related = ["kasiski-examination", "frequency-analysis", "coset-shift-recovery", "permutation-cycles", "g-period"]
+summary = "Two fragments are isomorphic when their letters repeat in the same pattern, such as ABCA and XYZX. If corresponding positions use the same substitutions, repeated plaintext produces matching repeat patterns even when the actual letters differ. This can show where two stretches used the same alphabet sequence. The method is common for rotor machines and can help with keyed periodic ciphers. It is explained here but has not been tested in this project."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+The **pattern** of a string $s_0 \dots s_{n-1}$ is the sequence of first-occurrence indices: $\pi(s)_i = \min\{j : s_j = s_i\}$. Two strings are isomorphic when they have the same pattern, i.e. when a bijection of letters maps one to the other. If two plaintext stretches $P$ and $P'$ are identical and are enciphered by substitutions $\sigma_i$ and $\sigma'_i$ with $\sigma'_i = \tau \circ \sigma_i$ for one fixed bijection $\tau$ (the same alphabet sequence up to a relabelling), then the ciphertexts are isomorphic.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Repeated plaintext exists at the two stretches, or the search is over all pairs of positions.
+- The substitution sequences at the two stretches are related by a single fixed relabelling; for a periodic cipher this holds for stretches whose start positions are congruent modulo the period.
+- Invariant: the pattern is preserved by any monoalphabetic relabelling, so isomorph detection needs no key knowledge at all.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to attack it"
+body = '''
+1. Slide two windows over the ciphertext and record pairs of positions whose windows are isomorphic for lengths well above the chance level.
+2. The offsets between isomorphic windows vote for the period, as Kasiski distances do, but with a weaker requirement (relabelled rather than identical repeats).
+3. Aligning the isomorphs gives constraints linking the substitutions at the two stretches, which reduce the key search.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+All window pairs of length $L$ cost $O(N^2 L)$; hashing patterns reduces it to $O(N L)$ per length. Chance isomorphs are far more frequent than chance identical repeats, so the minimum useful length is larger.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Chance isomorphs.** Short patterns such as ABCA occur by chance constantly; the significance threshold must be calibrated on shuffled or random text.
+- **No shared relabelling.** When the substitutions at the two stretches are unrelated (independent alphabets per coset with a free key), isomorphs carry no information beyond identical repeats.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Not exercised in the research program; a control design would plant a periodic keyed-alphabet cipher over English with repeated words and require the isomorph offsets to recover the period at a stated text length before any live use.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+`ABCA` and `XYZX` share the pattern `0 1 2 0`; `ABCA` and `XYZW` do not. In a period-4 Quagmire cipher the plaintext word `THAT` enciphered at positions 0 and 8 gives two isomorphic tetragrams (both with pattern `0 1 2 0`) even though the letters differ, because the alphabet sequence is the same at both places.
+'''
+
+[[provenance]]
+path = "withmath/wm_patternbeam.py"
+kind = "solver"
+note = "Pattern-constrained language decoding derives and checks periodic equality patterns without assuming concrete ciphertext-letter identities."
+
+[[references]]
+title = "Military Cryptanalytics, Part II"
+author = "William F. Friedman and Lambros D. Callimahos"
+year = 1959

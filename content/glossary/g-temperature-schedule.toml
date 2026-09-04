@@ -6,5 +6,5 @@ status_note = "Standard term."
 family = "Search and optimisation"
 tags = ["annealing", "metropolis"]
 related = ["simulated-annealing", "parallel-tempering"]
-summary = "The rule by which the temperature of a Metropolis search decays. A geometric schedule T_t = T_0 (T_1/T_0)^(t/N) lowers log T linearly from T_0 to T_1 over N steps, so a move that worsens the score by one unit is accepted with probability exp(-1/T_t), high early and negligible late. In parallel tempering the schedule is replaced by a fixed geometric ladder of temperatures across chains, with exchange moves between adjacent levels."
+summary = "A temperature schedule controls how a Metropolis search becomes less willing to accept worse moves. The geometric schedule T_t = T_0 (T_1/T_0)^(t/N) lowers log T evenly from T_0 to T_1 over N steps. A move that loses one score unit is accepted with probability exp(-1/T_t), often early and rarely late. Parallel tempering instead runs chains at a fixed ladder of temperatures and swaps states between nearby levels."
 updated = "2026-09-04"

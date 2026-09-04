@@ -1,13 +1,13 @@
 id = "hill-climbing"
 section = "search"
 title = "Hill climbing and iterated local search"
-subtitle = "First-improvement and steepest-ascent neighbourhood descent, used as the deterministic finisher after stochastic search"
+subtitle = "Keep making small key changes that improve the score"
 status = "VERIFIED"
-status_note = "Exhaustive-neighbourhood polish (925 alphabet neighbours; all swaps, insertions and relabellings of a column order) and iterated local search are implemented and are part of every passing planted control in the sandwich, permutation and crib pipelines. The measured basin radius of at most three swaps on a two-sided alphabet is recorded as the technique's limit."
+status_note = "The finishing pass checks all 925 nearby alphabets and every swap, insertion, or relabelling of a column order. Repeated local search is also implemented. These methods appear in every passing planted control for layered, permutation, and crib pipelines. On a two-sided alphabet, they recover reliably only within about three swaps of the truth."
 family = "Deterministic heuristics"
 tags = ["local search", "neighbourhood", "first improvement", "steepest ascent", "iterated local search", "polish"]
 related = ["simulated-annealing", "coordinate-descent", "polish-basin-measurement", "parallel-tempering", "columnar-transposition", "sandwich-construction", "quadgram-log-likelihood", "index-of-coincidence", "planted-controls", "g-move-set", "g-search-basin"]
-summary = "Hill climbing repeatedly replaces the current key by a better neighbour until none exists. In the corpus it appears as the exhaustive 925-neighbour polish of an alphabet (first improvement over all swaps and insertions, batch-scored), as the steepest-ascent finish over all swaps, insertions and relabellings of a column order, and as iterated local search that kicks a local optimum with three random moves and re-descends. It converts near-solutions into solutions; its basin on a two-sided alphabet is only about three swaps wide, which is why it cannot replace global search there."
+summary = "Hill climbing replaces the current key with a nearby key that scores better. It stops when no allowed small move helps. For alphabets, a finishing pass checks 925 swaps and insertions. For column orders, it checks swaps, insertions, and equivalent relabellings. Repeated local search makes three random moves from a local optimum and climbs again. This can turn a near-answer into the truth, but on a two-sided alphabet it works only from about three swaps away."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -48,7 +48,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 - **Finisher for annealed alphabets.** The best chain of every crib placement is polished by first-improvement over the 925 neighbours (up to 80 iterations); the best tempering chains by the alternating shift/alphabet climb (up to 60 iterations).
 - **Column orders.** After each anneal restart, a steepest-ascent finish over all swaps, insertions and relabellings of every order in the state, with the energy recomputed by the class solver (all outer and inner shifts refit per candidate). Iterated local search then runs 40 rounds of kick-anneal-finish from the incumbent.
@@ -78,7 +78,7 @@ Planted sandwiches (period-7 keyed layer over a columnar transposition over a sh
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 State: an order of four symbols, objective $f$ = number of adjacent pairs in alphabetical order, neighbourhood = swaps of two positions, first improvement in index order.
 

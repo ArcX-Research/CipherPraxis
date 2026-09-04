@@ -1,13 +1,13 @@
 id = "periodic-substitution-dp"
 section = "exact"
 title = "Periodic-substitution dynamic programming"
-subtitle = "Exact recovery of a periodic key of any length under a quadgram objective for additive, Porta and per-residue affine families, calibrated on blind controls and read against within-coset nulls"
+subtitle = "Recover repeating additive, Porta, or affine keys exactly and compare them with within-coset nulls"
 status = "VERIFIED"
-status_note = "Three families are implemented on the same cyclic order-three DP: additive keys in two alphabet orders and both relations (blind controls 63/63, 95/95, 126/126), free Porta rows per residue (63/63, 95/95, 126/126), and per-residue affine maps (63/63 and 95/95 at period 7; the period-26 affine control fails by producing a false English state). Measured target zones finished at or below their within-coset null maxima in every family."
+status_note = "One cyclic three-step dynamic program handles three families. Additive-key controls passed 63/63, 95/95, and 126/126 across two alphabet orders and both signs. Free Porta-row controls passed at the same lengths. Period-7 affine controls passed at 63/63 and 95/95, but the period-26 affine control chose false English. Every target zone scored at or below its within-coset null maximum."
 family = "Dynamic programming"
 tags = ["periodic key", "cyclic DP", "shortlist", "within-coset null", "porta", "affine"]
 related = ["viterbi-decoding", "exact-dynamic-programming", "k-best-lists", "coordinate-descent", "vigenere", "beaufort", "porta", "affine-cipher", "affine-maps-mod-26", "within-coset-null", "valid-model-nulls", "planted-controls", "g-coset"]
-summary = "For a measured zone with a measured period, the periodic-substitution DP asks one falsifiable question: is this zone a standard periodic substitution in a known alphabet order? Each residue's map is reduced to a shortlist by monogram likelihood, the globally best key inside the shortlisted product is found exactly by a cyclic order-three quadgram DP, a coordinate pass admits omitted maps, and the finish is compared with the same pipeline on ciphertexts shuffled within each coset. Blind controls at the exact target budgets pass; the recorded target answers are negatives at the null."
+summary = "Given a text zone and period, this solver asks whether the zone uses a standard repeating substitution in a known alphabet order. Single-letter likelihood makes a shortlist of maps for each residue. A cyclic quadgram dynamic program finds the exact best key within their product. A final coordinate pass can add maps that missed the shortlist. The full process is repeated on ciphertext shuffled within each coset. Blind controls at the target sizes pass, while recorded target answers stay at the null level."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -44,7 +44,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 Run the three families on each measured zone (two zones of 63 and 95 letters at period 7; one of 126 letters at period 26), both alphabet orders, both relations. Any finish above the English gate receives a full within-coset familywise null; otherwise no null budget is spent. Recorded finishes: additive $-6.037$, $-6.290$, $-5.107$ against five-null maxima $-5.770$, $-6.185$, $-5.021$; Porta $-6.2479$, $-6.3562$, $-5.7315$ (verdicts no / no / partial); affine $-5.2552$ and $-5.7742$ on the period-7 zones (partial, roundtripping overfits). None reached the gate, so the zones are not standard periodic substitutions in the two tested orders; an unknown alphabet, a non-language inner stream or a non-additive construction remain open.
 '''
@@ -72,7 +72,7 @@ Additive: blind controls at 63 letters (period 7), 95 letters (period 7) and 126
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Period 2 on an 8-letter toy, shortlist $W = 2$ per residue: residue 0 candidates $\{k_0 = 3, k_0 = 7\}$, residue 1 candidates $\{k_1 = 1, k_1 = 5\}$. The quadgram objective over the eight-letter decrypt depends on both shifts at every quadgram, so with $p = 2$ the chain has a single table $\Phi(k_0, k_1)$ and the exact maximum is the best of the $2 \times 2 = 4$ cells, say $\Phi(3, 1) = -22.0$, $\Phi(3, 5) = -25.5$, $\Phi(7, 1) = -24.1$, $\Phi(7, 5) = -19.8$: the DP returns $(7, 5)$. The coordinate pass then tries all 26 values of $k_0$ with $k_1 = 5$ and all 26 of $k_1$ with $k_0 = 7$; if the planted key were $(7, 9)$ with $9$ outside the shortlist, this pass is what recovers it. For $p \ge 4$ the same computation becomes a genuine chain with $8^3$ states per position instead of a single table.
 '''

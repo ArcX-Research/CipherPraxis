@@ -1,13 +1,13 @@
 id = "power-measurement"
 section = "validation"
 title = "Power measurement"
-subtitle = "The fraction of planted cases an instrument recovers, with its budget and ordering stated"
+subtitle = "Report how many planted cases the full test recovers under its real budget and task order"
 status = "VERIFIED"
-status_note = "Recorded power panels include 195/200 all-seven shift retention for a width-8 shortlist, 20/20 exact recovery when the truth's segment is scheduled with median 8.7% coverage at a 24 h cap, and an 18/24 held-out gate; each figure is tied to a transcript."
+status_note = "Recorded measurements include keeping all seven true shifts in 195/200 width-8 shortlists, recovering 20/20 answers when their segment was scheduled with median 8.7% coverage at a 24-hour limit, and passing 18/24 held-out cases. Each number links to a transcript."
 family = "Power and calibration"
 tags = ["power", "calibration", "coverage", "controls"]
 related = ["planted-controls", "blind-controls", "held-out-gates", "throughput-fail", "tautological-gate-rule", "power-analysis", "estimator-standard-error", "drainability-and-throughput"]
-summary = "Power is what a negative result is worth. The program measures it directly, as the fraction of planted cases recovered by the frozen pipeline under the live budget and task order, and refuses to interpret a target miss whose power was not measured. For time-capped searches, power decomposes into recovery-when-scheduled (measured on segments around the planted truth) times coverage-at-cap (the fraction of the frontier the budget reaches), which turned a hopeful 24-hour run into an honest 2% statement."
+summary = "Power tells us how much a negative result is worth. Measure it as the share of planted cases a frozen pipeline recovers with the real budget and task order. Do not interpret a target miss without that number. For a time-limited search, multiply the chance of recovery when the true segment runs by the fraction of segments reached before the limit. In one case, this turned a hopeful 24-hour run into an honest power estimate near 2%."
 updated = "2026-09-04"
 
 [[blocks]]

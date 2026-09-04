@@ -39,18 +39,18 @@ pub fn QuagmireLab() -> impl IntoView {
                         </select>
                     </div>
                     <TextField label="Key" value=key mono=true/>
-                    <TextField label="Indicator" value=indicator mono=true hint="one letter"/>
+                    <TextField label="Indicator" value=indicator mono=true hint="Use one letter"/>
                 </div>
                 <div class="lab-row">
-                    <TextField label="Plaintext keyword" value=plain_kw mono=true hint="types I, III, IV"/>
-                    <TextField label="Ciphertext keyword" value=cipher_kw mono=true hint="types II, IV"/>
+                    <TextField label="Plaintext keyword" value=plain_kw mono=true hint="Used by types I, III, and IV"/>
+                    <TextField label="Ciphertext keyword" value=cipher_kw mono=true hint="Used by types II and IV"/>
                 </div>
                 <TextField label="Plaintext" value=plain multiline=true/>
             </div>
             <Output label="Ciphertext" value=cipher/>
             <Output label="Decrypted" value=back/>
             <div class="lab-viz">
-                <div class="lab-viz-head mono">"Tableau rows in use · plaintext alphabet on top, one ciphertext row per key letter"</div>
+                <div class="lab-viz-head mono">"Tableau rows used · plaintext alphabet on top, one ciphertext row for each key letter"</div>
                 {move || q.get().ok().map(|q| {
                     let pa = q.plain_alphabet.to_string();
                     let shifts = q.shifts();
@@ -66,7 +66,7 @@ pub fn QuagmireLab() -> impl IntoView {
                     }
                 })}
             </div>
-            <Note>"With both keywords empty every type collapses to plain Vigenère. Quagmire III uses one keyed alphabet on both sides, which is why a crib fixes the shifts but not the alphabet: every alphabet swap moves letters on the plaintext side and re-slots ciphertext letters at the same time."</Note>
+            <Note>"When both keywords are empty, every type becomes ordinary Vigenère. Quagmire III uses the same keyed alphabet on both sides. A crib can therefore fix the shifts but not the alphabet: changing the alphabet moves plaintext and ciphertext letters together."</Note>
         </div>
     }
 }

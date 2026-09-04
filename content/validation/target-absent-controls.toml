@@ -1,13 +1,13 @@
 id = "target-absent-controls"
 section = "validation"
 title = "Target-absent controls"
-subtitle = "Designing, sealing and auditing an instrument with no code path that can read the live text"
+subtitle = "Build and audit a test that has no way to read the live ciphertext"
 status = "VERIFIED"
-status_note = "Every sealed control lane in the research program carries a target=ABSENT field in its manifest and transcript, an import allow-list KAT, a forbidden-string scan and refusal of any target mode; independent auditors verified the isolation transitively through the import chain."
+status_note = "Every sealed control job records target=ABSENT in its manifest and transcript. It also checks allowed imports, scans for forbidden strings, and rejects any target mode. Independent auditors followed the full import chain to verify this isolation."
 family = "Control design"
 tags = ["controls", "isolation", "leakage", "sealing"]
 related = ["planted-controls", "blind-controls", "seal-and-audit-protocol", "build-manifests-and-release-json", "kat-harness", "held-out-gates", "assumption-review-protocol", "g-target-absent"]
-summary = "A target-absent control lane is an instrument that is written, tested, sealed and independently audited while it is physically unable to load the live ciphertext: no loader import, no ciphertext constant, no target command-line mode. Its controls are therefore free of any tuning on the target, its power numbers can be published before the target is ever read, and a later one-shot target run inherits a validated selector rather than one shaped by peeking."
+summary = "A target-absent tool is built, tested, frozen, and independently audited while it has no way to load the live ciphertext. It has no loader import, ciphertext constant, or target command. Its controls cannot be tuned by looking at the target, and its power can be published before the target is read. A later one-shot run then uses a tested selector that was not shaped by peeking."
 updated = "2026-09-04"
 
 [[blocks]]

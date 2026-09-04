@@ -6,5 +6,5 @@ status_note = "Standard term."
 family = "Search and optimisation"
 tags = ["search", "local search"]
 related = ["simulated-annealing", "hill-climbing", "polish-basin-measurement", "g-search-basin"]
-summary = "The set of elementary changes a local search may apply to a state. For an alphabet permutation: swaps of two letters and insertions of one letter into another slot (325 + 600 = 925 neighbours); for a 5x5 square also row swaps, column swaps and transpositions; for a column order also segment reversals, rotations and cyclic relabellings. Every move must preserve the legality of the key (a permutation stays a permutation). The move set defines the distance in which a basin radius is measured."
+summary = "A move set lists the small changes a local search may make. For an alphabet, these may be two-letter swaps or moving one letter to another slot: 325 + 600 = 925 neighbours. A 5x5 square may also swap rows or columns or transpose the grid. A column order may reverse or rotate a segment. Every move must keep the key valid. These moves also define how search distance is measured."
 updated = "2026-09-04"

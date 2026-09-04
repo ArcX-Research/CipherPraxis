@@ -1,13 +1,13 @@
 id = "crib-dragging"
 section = "cryptanalysis"
 title = "Crib dragging"
-subtitle = "Sliding a known or probable plaintext fragment along a ciphertext and keeping only placements whose implied key is consistent"
+subtitle = "Slide a likely plaintext fragment along the ciphertext and test the key it implies"
 status = "VERIFIED"
-status_note = "Crib placement with implied-key consistency filtering, a batch annealer over one unknown alphabet, and an exact crib-plus-keyword constraint solver are implemented; planted controls read at 100% for the validated families with true placements converging in 9 to 16 of 16 restarts, and wrong placements sit at a measured null level (mean -6.06 +/- 0.21 at 153 letters; median -5.3 to -5.4 at 95 letters) (logs/22, 23, 26, 42)."
+status_note = "The project implements key-consistency filtering, batch annealing over one unknown alphabet, and an exact crib-plus-keyword solver. Validated families recovered planted controls at 100%, with true positions found in 9 to 16 of 16 restarts. Wrong positions set the measured null level: mean -6.06 +/- 0.21 at 153 letters and median -5.3 to -5.4 at 95 letters (logs/22, 23, 26, 42)."
 family = "Known-plaintext methods"
 tags = ["crib", "known plaintext", "placement", "implied key", "null level"]
 related = ["vigenere", "quagmire-i", "quagmire-ii", "quagmire-iii", "crib-driven-alphabet-recovery", "coset-shift-recovery", "quadgram-log-likelihood", "selection-overfit-diagnostic", "word-prefix-csp", "constraint-satisfaction-forward-checking", "g-crib", "g-selection-freedom"]
-summary = "A crib is a fragment of plaintext believed to occur somewhere in the message. Dragging it along the ciphertext turns every placement into a hypothesis about the key: under a periodic additive cipher each crib letter implies one key element, a crib longer than the period must imply the same element twice, and an implied key that is a word or that completes to a readable decrypt confirms the placement. The corpus adds the discipline that makes the method honest at short lengths: every sweep prints the null level of its wrong placements, and a placement counts only if it reads above that level."
+summary = "A crib is a piece of plaintext that may appear in the message. Try it at every position and calculate the key each position would require. In a repeating additive cipher, each crib letter reveals one key value. A crib longer than the period must agree with itself when the key repeats. A word-like key or readable full decryption supports the position. To avoid false hits on short text, compare the best position with the scores from known-wrong positions."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -41,7 +41,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. For every crib, offset, alphabet convention and relation, derive the implied key elements; discard placements whose repeated residues disagree.
 2. Rank the survivors by the word-likeness of the implied key fragment (a setter who uses word keys leaves a readable fragment) and by the decrypt of the covered positions.
@@ -76,7 +76,7 @@ body = '''
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Ciphertext `LXFOPVEFRNHR` (the exemplar Vigenère of `ATTACKATDAWN` under `LEMON`). Drag the crib `ATTACK`:
 

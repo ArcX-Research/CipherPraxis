@@ -1,13 +1,13 @@
 id = "family-identification"
 section = "cryptanalysis"
 title = "Family identification"
-subtitle = "Deciding which construction could have produced a ciphertext by simulating candidate families and matching invariant statistics"
+subtitle = "Simulate possible ciphers and compare the patterns that do not depend on their keys"
 status = "POWER-LIMITED"
-status_note = "Likelihood-free classification (29 constructions x 120 simulations, 19 invariant features, Mahalanobis distance) and the alignment z-profile fingerprint are implemented; they separate monoalphabetic-coset, transposed-inner, matrix-outside and mixed-inner families, but the mixed-inner cluster cannot be split at 153 letters (three of its four nearest members self-classify at 8 to 42% in the first run, the fourth at 82%), so negatives inside that cluster are uninformative (logs/04, 312)."
+status_note = "The classifier compares 19 key-independent features across 29 cipher types x 120 simulations using Mahalanobis distance, plus an alignment z-profile. It separates monoalphabetic-coset, transposed-inner, matrix-outside, and mixed-inner groups. At 153 letters it cannot reliably split the mixed-inner group: three nearby types self-classified at 8–42%, and the fourth at 82%. Negatives within that group tell us little (logs/04, 312)."
 family = "Model identification"
 tags = ["approximate Bayesian computation", "Mahalanobis", "fingerprint", "invariant statistics", "simulation", "power"]
 related = ["mahalanobis-family-distance", "index-of-coincidence", "coincidence-lag-profile", "power-analysis", "exact-period-alignment", "mixture-inference-under-transposition", "frequency-analysis", "assumption-review-protocol", "sandwich-construction", "bifid", "hill-cipher", "g-family-sweep", "g-inner-and-outer-layer"]
-summary = "Before searching keys it pays to ask which constructions are even consistent with a ciphertext. Family identification simulates each candidate construction many times on real language with random keys, computes the same vector of key- and transposition-invariant statistics on the simulations and on the target, and scores the target against every family's cloud. It also runs in the other direction, as a family-consistency check that rejects a proposed family whose simulated statistics do not contain the measured ones. The corpus's finding is one of power: the coarse families separate cleanly at 153 letters, the mixed-inner ones do not."
+summary = "Before searching keys, ask which cipher types could match the text. Simulate each type many times with real language and random keys. Measure the same key- and transposition-independent patterns in those samples and the target, then compare the target with each group. The method can also reject a proposed family when its simulations never look like the measured text. At 153 letters, broad families separate well, but similar mixed-inner ciphers do not."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -37,7 +37,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Declare the menu (in the corpus: random letters, plain language, periodic substitution, transposed language under it, sandwiches at several widths and inner periods, a double columnar, three fractionations, running key, autokey, four compound keys, two binary-perturbed keys, unknown-alphabet substitution, seven independent alphabets, two-alphabet rounds, four varied rounds, segment variants, nulls, progressive key, a $3 \times 3$ matrix under the layer).
 2. Simulate, standardise, fit clouds; score the target; print the ranked table with per-feature $z$ above 2.
@@ -56,7 +56,7 @@ Simulation cost dominates: $29 \times 120$ encryptions plus a heuristic alignmen
 kind = "failure_modes"
 body = '''
 - **Inseparable cluster.** For the 153-letter text the nearest families were a fractionation under the layer ($d^2 = 10.7$), four varied rounds (13.2), an unknown-alphabet substitution (13.3) and seven independent alphabets (13.8), with self-classification accuracies of 8%, 42%, 30% and 82% in that run; those families cannot be told apart by invariant statistics at this length.
-- **Zone artefact.** The classifier saw a mixed inner because the text is a 63-letter monoalphabetic-coset zone pooled with 90 flat letters; the coincidence diagnostics tell the same story (adjacent same-coset pair coincidences 5 against $11.7 \pm 3.8$ for per-coset substitutions, $z -1.8$, and $4.9 \pm 2.3$ for a transposed period-2 inner, $z 0.0$). Family identification on a non-homogeneous text identifies the mixture, not the construction.
+- **Zone artefact.** The classifier saw a mixed inner because the text is a 63-letter monoalphabetic-coset zone pooled with 90 flat letters; the coincidence diagnostics support the same conclusion (adjacent same-coset pair coincidences 5 against $11.7 \pm 3.8$ for per-coset substitutions, $z -1.8$, and $4.9 \pm 2.3$ for a transposed period-2 inner, $z 0.0$). Family identification on a non-homogeneous text identifies the mixture, not the construction.
 - **Optimistic power.** Plug-in self-classification overestimates; a held-out split is stricter.
 - **Menu closure.** A construction outside the menu is reported as its nearest neighbour.
 '''
@@ -71,7 +71,7 @@ body = '''
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Three of the fingerprint's features for planted families at 153 letters (logs/312; the target row is the corpus's 153-letter text):
 

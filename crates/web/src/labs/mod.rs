@@ -41,7 +41,7 @@ pub fn render_lab(key: &str) -> AnyView {
         "dihedral" => view! { <dihedral::DihedralLab/> }.into_any(),
         "null" => view! { <null::NullLab/> }.into_any(),
         other => {
-            view! { <p class="lab-missing">{format!("Unknown lab “{other}”.")}</p> }.into_any()
+            view! { <p class="lab-missing" role="alert">{format!("This page asks for the unknown lab “{other}”. Return to the Labs section and choose a listed lab.")}</p> }.into_any()
         }
     }
 }

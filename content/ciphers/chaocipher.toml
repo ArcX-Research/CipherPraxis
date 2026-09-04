@@ -1,13 +1,13 @@
 id = "chaocipher"
 section = "ciphers"
 title = "Chaocipher"
-subtitle = "Two mutually permuting wheels; ciphertext fixes the left wheel's path"
+subtitle = "Two alphabets change after every letter, but ciphertext fixes one wheel's path"
 status = "CLOSED"
-status_note = "A keyed-wheel bank (156,816 ordered pairs) and the one-wheel-free reduction (left wheel in one of 104 dihedral states, right wheel arbitrary) were both control-qualified and both excluded on the 504-letter text; the result with both wheels arbitrary is untested."
+status_note = "Controls passed for a bank of 156,816 ordered keyed-wheel pairs and for a reduced search with 104 left-wheel states and any right wheel. Both forms were ruled out on the 504-letter text. The case where both starting wheels are arbitrary has not been tested."
 family = "Stream and machine ciphers"
 tags = ["machine", "wheels", "state mutation", "dihedral", "monoalphabetic reduction"]
 related = ["alberti-progressive", "keyword-mixed-alphabet", "dihedral-group", "permutation-cycles", "simulated-annealing", "known-answer-tests", "shuffled-null-z-score", "g-gauge-class"]
-summary = "Chaocipher enciphers with two alphabets on wheels that are permuted after every letter, so the substitution changes with the message. Its key observation for cryptanalysis is that, once the left (ciphertext) wheel's initial state is fixed, the ciphertext alone determines every subsequent wheel motion, and the unknown right wheel collapses to one monoalphabetic substitution of a computable position stream. The program exploited this to make the cipher searchable with a substitution solver."
+summary = "Chaocipher uses two alphabet wheels that rearrange after each letter, so its substitution keeps changing. Once the left, or ciphertext, wheel's starting state is fixed, the ciphertext determines every later wheel move. The unknown right wheel then becomes one fixed substitution over a position stream that can be calculated. This reduction lets a standard substitution solver search the cipher."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -46,7 +46,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Verify the implementation against a published test vector and against an independently written string-wheel forward; exhaust all $5!^2$ wheel pairs and $5^2$ plaintexts on a five-letter reduced alphabet as a mechanics KAT.
 2. For each raw left state, derive $q$, and solve $p = R_0[q]$ with the frozen substitution annealer; share the solve across states with equal RGS.
@@ -77,7 +77,7 @@ Keyed-wheel bank (log 182): the published test vector passed; the 504-letter hid
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 The published test vector (Rubin, 2010) uses left wheel `HXUCZVAMDSLKPEFJRIGTWOBNYQ` and right wheel `PTLNBQDEOYSFAVZKGJRIHWXUMC`. Plaintext `WELLDONEISBETTERTHANWELLSAID` gives ciphertext `OAHQHCNYNXTSZJRRHJBYHQKSOUJY`.
 

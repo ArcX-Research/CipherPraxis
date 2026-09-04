@@ -1,13 +1,13 @@
 id = "bifid"
 section = "ciphers"
 title = "Bifid cipher"
-subtitle = "Polybius coordinates written out by rows, then regrouped: fractionation with a period"
+subtitle = "Split letters into Polybius coordinates, rearrange them in blocks, and pair them again"
 status = "VERIFIED"
-status_note = "A direct 504-letter Bifid control with an arbitrary square and a hidden period among the estimated candidates was recovered 504/504 with the period selected correctly; for a Bifid square shared by two 153- and 144-letter texts under a period-7 outer key, the outer key was enumerated exhaustively from an omission constraint and fixed-key square recovery measured 100/100, while the joint annealer of an earlier lane failed 0/4."
+status_note = "A direct 504-letter control recovered all 504 letters, an arbitrary square, and the hidden period. For two shorter texts sharing a Bifid square under a period-7 outer key, the outer key was checked completely and fixed-key square recovery scored 100/100. An earlier joint annealing search failed 0/4 controls."
 family = "Fractionation"
 tags = ["fractionation", "polybius square", "period", "5x5"]
 related = ["trifid", "playfair", "two-square-four-square", "polybius-square", "sandwich-construction", "family-identification", "simulated-annealing", "exhaustive-enumeration", "bifid-lab", "g-fractionation", "g-period"]
-summary = "Bifid replaces each letter of a block by its row and column in a 5 x 5 square, writes all the rows and then all the columns, and reads the resulting digit string back in pairs. Each ciphertext letter mixes coordinates of two plaintext letters up to a period apart, which flattens single-letter statistics and removes digram structure while keeping the block boundary. The program treated Bifid both directly and as the inner layer under a periodic key shared between two texts."
+summary = "Bifid looks up each letter's row and column in a 5 x 5 square. Within each block, it writes all row numbers, then all column numbers, and pairs the digits into new letters. One ciphertext letter can mix parts of two plaintext letters. This flattens letter frequencies and hides letter-pair patterns, though block edges remain. Tests covered Bifid alone and beneath a periodic key shared by two texts."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -48,7 +48,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Estimate the period from the block structure (candidate periods are those at which within-block statistics are distinctive).
 2. Anneal the square under a quadgram objective for each candidate period; select the period by score.
@@ -79,7 +79,7 @@ Direct Bifid (log 184): 504-letter control, arbitrary square, hidden period 7 am
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Square (rows) `BGWKZ / QPNDS / IOAXE / FCLUM / THYVR`, period 5, plaintext `FLEEATONCE`.
 

@@ -1,13 +1,13 @@
 id = "change-point-zone-detection"
 section = "cryptanalysis"
 title = "Change-point and zone detection"
-subtitle = "Locating where a key, alphabet or plaintext regime changes along a ciphertext, without knowing the alphabet"
+subtitle = "Locate where the key, alphabet, or kind of plaintext changes"
 status = "PROMISING"
-status_note = "An exact dynamic programme over same-coset coincidences located one key boundary in the 144-letter text at position 53 (z +3.3 against within-coset shuffles, reproduced at z +3.39 in a second implementation) and none in the 153-letter text; the companion letter-set, windowed-lag and segment-identity tests carry planted references, but the coincidence detector itself has no planted positive control and fixes its prose rates in advance (logs/56, 335, 38)."
+status_note = "An exact dynamic program found one boundary at position 53 in the 144-letter text: z +3.3 against within-coset shuffles and z +3.39 in a second implementation. It found none in the 153-letter text. Related letter-set, windowed-lag, and segment checks have planted references. The coincidence detector itself has no planted positive control and uses rates fixed in advance (logs/56, 335, 38)."
 family = "Period and structure recovery"
 tags = ["change point", "segmentation", "zone", "dynamic programming", "coincidence", "alphabet-free"]
 related = ["exact-period-alignment", "segment-chain-analysis", "assumption-review-protocol", "within-coset-null", "permutation-test", "exact-dynamic-programming", "coincidence-lag-profile", "g-change-point", "g-zone", "g-coset"]
-summary = "A ciphertext need not be homogeneous: the key may change part-way, a prefix may be keyed with a degenerate key, or the plaintext itself may switch character. Zone detection finds such boundaries from statistics that need no alphabet, chiefly the rate at which letters a multiple of the period apart coincide, the letter set in use, and the identity or rotation relation between segment histograms. In the corpus it reorganised the whole analysis: statistics that had been read as evidence of a mixed inner text turned out to be artefacts of pooling a 63-letter period-7 zone with 90 flat letters."
+summary = "One ciphertext can contain several zones. The key may change, a prefix may use a special key, or the kind of plaintext may switch. Zone tests find boundaries without knowing the alphabet. They compare matches at period-sized gaps, the set of letters used, and how letter counts relate across segments. In one project text, this changed the interpretation: a 63-letter period-7 zone mixed with 90 flat letters had looked like a different inner cipher."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -41,7 +41,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Compute the same-coset coincidence rate in sliding windows (window 42, step 7 at period 7) and note where it rises above the uniform level: the zones.
 2. Run the exact segmentation DP for $k = 1 \dots 4$ segments; report boundaries and the gain against within-coset shuffles.
@@ -78,7 +78,7 @@ body = '''
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Period 2, sixteen ciphertext positions, so each coset holds eight letters and $2 \times \binom{8}{2} = 56$ same-coset pairs. Suppose the first half is keyed by one key and the second by another, and consider the split at $t = 8$. The 32 pairs that straddle the boundary are the ones the split removes from the score:
 

@@ -1,13 +1,13 @@
 id = "dihedral-group"
 section = "algebra"
 title = "Dihedral group"
-subtitle = "Rotations and reflections of a block of positions, and of a 26-letter cycle"
+subtitle = "Rotate or reverse positions and 26-letter cycles"
 status = "CLOSED"
-status_note = "The dihedral algebra is exact and independently reproduced (96 elements of D48, 9,216 ordered pairs, component census matched term for term by two implementations) and its solver passed 7/7 hidden positive controls with matched nulls at rank 1/100. The one-shot target measurements of the positional-dihedral family and of the aligned-thirds family both returned exact structural zeros, so those finite families are excluded in their declared scope."
+status_note = "Two implementations matched exactly on all 96 elements of D48, 9,216 ordered pairs, and component counts. The solver passed 7/7 hidden positive controls, each ranked 1/100 against matched nulls. One-shot target tests returned structural zeros for the stated positional-dihedral and aligned-thirds families, ruling them out only in that scope."
 family = "Group theory"
 tags = ["dihedral", "rotation", "reflection", "position maps", "residue graph"]
 related = ["group-actions-on-alphabets", "permutation-cycles", "units-mod-26", "residue-class-graphs", "all-different-constraints", "conjugacy-and-gauge", "beaufort", "isomorph-analysis", "family-wise-null", "dihedral-lab", "g-cycle-type", "g-invariant"]
-summary = "The dihedral group D_n consists of the n rotations and n reflections of a cycle of n points. It models two things at once: the ways a block of n ciphertext positions can be re-read (rotate or reverse), and the ways a 26-letter cycle can be shifted or reflected, which is exactly the difference between Vigenère-type and Beaufort-type classes. Enumerating D_48 on three 48-letter blocks gives a finite family of 9,216 position hypotheses whose key equations collapse onto a small graph."
+summary = "The dihedral group D_n contains n rotations and n reflections of a ring with n points. It describes how to reread a ciphertext block by rotating or reversing it. It also describes how to shift or reflect a 26-letter cycle, the key distinction between Vigenère-like and Beaufort-like ciphers. For three 48-letter blocks, D_48 gives 9,216 position choices. Their key equations reduce to a small graph."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -77,7 +77,7 @@ Target measurements: every one of the 9,216 raw positional pairs failed the equa
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 In $D_{48}$ let $g_1 = (-1, 47)$, the reflection $j \mapsto 47 - j$, and $g_2 = (1, 7)$, rotation by 7. Then $g_1 \circ g_2 = (-1, (-1)\cdot 7 + 47) = (-1, 40)$ and $g_2 \circ g_1 = (-1, 47 + 7) = (-1, 6)$. Check $j = 10$: $g_1(g_2(10)) = 47 - 17 = 30 = -10 + 40$; $g_2(g_1(10)) = 37 + 7 = 44 \equiv -10 + 6$. The two products differ, as $s r \ne r s$.
 

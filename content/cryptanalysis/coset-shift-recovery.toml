@@ -1,13 +1,13 @@
 id = "coset-shift-recovery"
 section = "cryptanalysis"
 title = "Coset shift recovery"
-subtitle = "Fixing each coset's key element against a reference distribution: maximum likelihood, chi-square, marginalised evidence and class-EM"
+subtitle = "Compare each coset with expected letter frequencies to recover its key value"
 status = "VERIFIED"
-status_note = "Per-coset monogram maximum likelihood, chi-square fitting, shift-marginalised evidence, class-EM refinement and quadgram coordinate descent are implemented; on planted controls the evidence fit plus class-EM recovered 7/7 outer shifts, a 2.06-million-alphabet screen ranked the planted alphabet first by per-coset likelihood, and chi-square plus polish read a planted phrase-keyed text at 100% (logs/05, 24, 07)."
+status_note = "The project implements single-letter likelihood, chi-square fitting, shift-averaged evidence, class-EM refinement, and quadgram coordinate descent. In controls, evidence plus class-EM recovered 7/7 outer shifts. A 2.06-million-alphabet screen ranked the planted alphabet first. Chi-square plus local polish recovered a planted phrase-keyed text at 100% (logs/05, 24, 07)."
 family = "Period and structure recovery"
 tags = ["periodic", "shift", "monogram", "maximum likelihood", "chi-square", "evidence"]
 related = ["vigenere", "caesar-shift", "exact-period-alignment", "chi-squared-fit", "bayesian-evidence-model-selection", "quadgram-log-likelihood", "coordinate-descent", "expectation-maximisation", "conjugacy-and-gauge", "g-coset", "g-selection-freedom"]
-summary = "Once the period is known, each coset of a periodic additive cipher is a Caesar shift of the plaintext letters at those positions. Coset shift recovery reads the shift from the coset histogram against a reference distribution, by correlation, chi-square or likelihood, and, when the shifts are nuisance parameters of a larger model comparison, integrates them out rather than maximising them. The corpus treats the maximised shift as a vote whose reliability depends on coset length, and marginalises shifts whenever models are compared."
+summary = "Once the period is known, each coset of a repeating additive cipher is a Caesar shift. Compare its letter counts with expected language counts to find that shift. Correlation, chi-square, and likelihood are three ways to do this. Short cosets give uncertain answers. When comparing larger models, average over all shifts instead of choosing the best one; this avoids rewarding a model merely for having more choices."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -45,7 +45,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Fit each coset's shift by likelihood or chi-square against $E$ in the hypothesised order; or take the relative shifts from exact alignment and try the 26 absolute rotations.
 2. Decrypt and score with a language model (quadgrams); polish by coordinate descent over the $m$ shifts (each move re-scores the whole text), keeping a shuffled-text null for the polished rate, because free shifts overfit short texts.
@@ -79,7 +79,7 @@ body = '''
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Take the twelve plaintext letters of one coset, `ETAETEHEATEN`, and shift them by $k = 3$: the coset reads `HWDHWHKHDWHQ` with histogram H:5, W:3, D:2, K:1, Q:1. With approximate English frequencies (E $.127$, T $.091$, A $.082$, N $.067$, H $.061$, S $.063$, D $.043$, W $.024$, G $.020$, M $.024$, K $.008$, Q $.001$, Z $.001$) the correlation $\sum_x E(x-k)F(x)$ is
 

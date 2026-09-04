@@ -1,13 +1,13 @@
 id = "literature-search-and-exact-solvers"
 section = "references"
 title = "Search and exact-solver literature"
-subtitle = "Annealing, tempering, dynamic programming, constraint propagation, SAT/SMT and exhaustive enumeration"
+subtitle = "Sources for heuristic search, dynamic programming, constraint solving, SAT/SMT, and complete search"
 status = "VERIFIED"
-status_note = "Bibliographic entry: standard sources for the heuristic search and exact solving methods used by the solvers in this atlas; no experimental claim is made here."
+status_note = "These are standard sources for the heuristic and exact methods used by the site's solvers. This bibliography makes no experimental claim."
 family = "Literature"
 tags = ["bibliography", "search", "optimisation", "constraint programming"]
 related = ["simulated-annealing", "parallel-tempering", "hill-climbing", "beam-search", "viterbi-decoding", "expectation-maximisation", "constraint-satisfaction-forward-checking", "cp-sat-and-smt-solvers", "exact-dynamic-programming", "all-different-enumeration", "exhaustive-enumeration", "literature-methodology"]
-summary = "The heuristic side: simulated annealing (Kirkpatrick, Gelatt and Vecchi), replica exchange or parallel tempering (Swendsen and Wang; Earl and Deem), beam search (Lowerre) and expectation-maximisation (Dempster, Laird and Rubin). The exact side: Bellman's dynamic programming and Viterbi's decoder, forward checking (Haralick and Elliott), all-different propagation (Régin), the constraint-programming handbook, Google's CP-SAT solver in OR-Tools, the Z3 SMT solver, and Knuth's dancing links for exhaustive enumeration."
+summary = "Sources for heuristic search cover simulated annealing, parallel tempering, beam search, and expectation-maximization. Exact-method sources cover Bellman's dynamic programming, Viterbi decoding, forward checking, and all-different propagation. The list also includes the constraint-programming handbook, Google's OR-Tools CP-SAT solver, the Z3 SMT solver, and Knuth's dancing links method for complete enumeration."
 updated = "2026-09-04"
 
 [[blocks]]

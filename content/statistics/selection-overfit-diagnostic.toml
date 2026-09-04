@@ -1,13 +1,13 @@
 id = "selection-overfit-diagnostic"
 section = "statistics"
 title = "Selection-overfit diagnostic"
-subtitle = "Recognising when the best candidate of a large search is only the expected best of many chances"
+subtitle = "Check whether a strong-looking winner is just the luckiest of many trials"
 status = "VERIFIED"
-status_note = "Applied with receipts: a bank search over 66,628 ciphertext-derived cycles produced a candidate rated English at -4.869 that eight of nine complete-pipeline nulls beat (p = 0.90), a keyword-bank scan put all three targets at z +2.7 to +3.0 at the top of its period range while its control ranked 1 of 607,776 at z +7.6, and a profiled likelihood was shown to buy about 0.15 nats per letter of selection freedom at 153 letters."
+status_note = "Recorded examples show the effect. In a bank of 66,628 ciphertext-based cycles, eight of nine full-pipeline nulls beat a target candidate that looked English at -4.869, giving p = 0.90. A keyword scan put all three targets at z +2.7 to +3.0 at the edge of its period range, while its control ranked 1 of 607,776 at z +7.6. Choosing best-fit shifts adds about 0.15 nats per letter at 153 letters."
 family = "Null distributions and calibration"
 tags = ["overfitting", "selection", "multiple comparisons", "search", "diagnostic"]
 related = ["family-wise-null", "within-coset-null", "quadgram-log-likelihood", "bayesian-evidence-model-selection", "selection-overfit-check", "corpus-bank-screen", "simulated-annealing", "polish-basin-measurement", "g-null-distribution"]
-summary = "Any search over keys, alphabets, cribs, offsets or bank members returns a best candidate; on a short text that candidate will look partly like English whether or not the hypothesis is true, because free parameters absorb noise. The diagnostic asks how the best candidate of the identical search behaves on nulls that keep what the hypothesis does not claim. Four signatures recur: the winner sits at the largest parameter scanned; the winner's score is inside the band of null maxima; the improvement comes from parameters fitted after the fact; and a readable fragment is produced by every run, including the null ones."
+summary = "Every search over keys, alphabets, cribs, offsets, or bank entries returns a winner. On short text, that winner often looks partly like English even when the model is wrong because free settings fit noise. Repeat the same search on matched null data and compare winners. Warning signs include a result at the edge of the scanned range, a score inside the band of null winners, gains from settings chosen after seeing the data, or readable fragments in every run, including nulls."
 updated = "2026-09-04"
 
 [[blocks]]

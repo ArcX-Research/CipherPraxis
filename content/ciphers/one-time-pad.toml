@@ -1,13 +1,13 @@
 id = "one-time-pad"
 section = "ciphers"
 title = "One-time pad"
-subtitle = "Additive cipher with a uniformly random key used once"
+subtitle = "Add a truly random key that is as long as the message and never reused"
 status = "UNTESTED"
-status_note = "The corpus contains an encryption utility (a 153-letter pad from a fixed key text, plain or keyed tableau, with a decryption check) but no cryptanalytic lane, because a genuinely random single-use key admits none; the entry documents the model and its role as the limit of the running-key family."
+status_note = "The project includes an encryption tool for a 153-letter pad from fixed key text, with plain or keyed tables and a decryption check. It has no attack for a truly random, single-use key because none is possible. This entry explains the model and why it marks the secure limit of running-key ciphers."
 family = "Stream and machine ciphers"
 tags = ["additive", "random key", "perfect secrecy", "unbreakable"]
 related = ["vigenere", "running-key", "book-cipher", "autokey", "index-of-coincidence", "g-tabula-recta"]
-summary = "A one-time pad adds a key letter to each plaintext letter where the key is uniformly random, as long as the message, and never reused. Every plaintext of the same length is then equally consistent with the ciphertext, so no statistic can decide between them. It is the reference point against which running-key and book ciphers are understood: those are pads whose key has structure, and structure is all a cryptanalyst has."
+summary = "A one-time pad adds one key letter to each plaintext letter. The key must be truly random, as long as the message, and never reused. Then every plaintext of that length fits the ciphertext equally well, so no statistic can choose the real one. Running-key and book ciphers look similar but use structured key text. That structure is what makes them attackable."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -45,7 +45,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 There is none against a correctly used pad. What can be tested is whether a ciphertext *is* one: a flat histogram, uniform-level index of coincidence and an empty lag profile are consistent with a pad (and with any strong cipher), and any departure from them is evidence of structure. Between two ciphertexts, the difference test above detects a reused key.
 '''
@@ -72,7 +72,7 @@ No planted-control receipt exists for this entry; the corpus utility only verifi
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Plaintext `HELLO`, key `XMCKL` (used once):
 

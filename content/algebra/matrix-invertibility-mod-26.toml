@@ -1,13 +1,13 @@
 id = "matrix-invertibility-mod-26"
 section = "algebra"
 title = "Matrix invertibility modulo 26"
-subtitle = "Determinants as units, invertible rows, and the Hill matrices they admit"
+subtitle = "Use determinants to tell which Hill matrices can be reversed"
 status = "CLOSED"
-status_note = "Invertibility over Z26 (determinant odd and not divisible by 13) is implemented exactly with primitive-row enumeration (504 rows for 2 by 2, 15,372 for 3 by 3) and passing planted controls. The arbitrary Hill-2 and Hill-3 composite families were tested on the measured zones of the three texts and gave no language endpoint; these are scoped negatives for the declared shortlists and zones."
+status_note = "The exact test requires a determinant that is odd and not divisible by 13. Enumeration found 504 valid rows for 2 by 2 matrices and 15,372 for 3 by 3 matrices, and planted controls passed. Tests of the stated Hill-2 and Hill-3 combinations found no language in the chosen text zones. Those negatives apply only to those lists and zones."
 family = "Linear algebra over finite rings and fields"
 tags = ["matrix", "determinant", "Hill", "GL(n, Z26)", "adjugate"]
 related = ["modular-inverse-and-crt", "units-mod-26", "finite-field-linear-algebra", "lcm-of-periods", "hill-cipher", "periodic-substitution-dp", "shuffled-null-z-score", "hill-lab", "g-unit-group"]
-summary = "A square matrix over Z26 is invertible exactly when its determinant is a unit, equivalently when the matrix is invertible both modulo 2 and modulo 13. This decides which Hill matrices exist, which rows can belong to one, and how many there are. Attacks enumerate candidate decryption rows, score each row's output stream on its own, and join rows only when their determinant is a unit."
+summary = "A square matrix over Z26 can be reversed exactly when its determinant is a unit. This is the same as being invertible both modulo 2 and modulo 13. The rule tells us which Hill keys are valid and which rows can belong to them. An attack lists possible decryption rows, scores each output stream, and joins rows only when their determinant passes the unit test."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -65,7 +65,7 @@ Hill-2: n96/p7 control recovered 96/96 letters, hidden $D = \begin{pmatrix} 15 &
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 $M = \begin{pmatrix} 3 & 3 \\ 2 & 5 \end{pmatrix}$: $\det M = 15 - 6 = 9$, a unit with $9^{-1} = 3$ ($27 \equiv 1$). $\operatorname{adj} M = \begin{pmatrix} 5 & -3 \\ -2 & 3 \end{pmatrix} \equiv \begin{pmatrix} 5 & 23 \\ 24 & 3 \end{pmatrix}$, so $M^{-1} = 3 \operatorname{adj} M \equiv \begin{pmatrix} 15 & 17 \\ 20 & 9 \end{pmatrix}$. Check: $M M^{-1} = \begin{pmatrix} 45 + 60 & 51 + 27 \\ 30 + 100 & 34 + 45 \end{pmatrix} = \begin{pmatrix} 105 & 78 \\ 130 & 79 \end{pmatrix} \equiv \begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix}$.
 

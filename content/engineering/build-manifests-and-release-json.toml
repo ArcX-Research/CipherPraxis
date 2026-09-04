@@ -1,13 +1,13 @@
 id = "build-manifests-and-release-json"
 section = "engineering"
 title = "Build manifests and release JSON"
-subtitle = "Detached, canonical one-line JSON records that pin an implementation, its ancestors and its authorisation without a hash cycle"
+subtitle = "Use small JSON records to fix each input, audit, and approval without circular hashes"
 status = "VERIFIED"
-status_note = "Thirteen manifest and release records exist in the research program; their fields were verified against live files by independent auditors, and one release record authorised the single hidden-bank transaction that was later admitted."
+status_note = "The project has thirteen build-manifest and release records. Independent auditors checked their fields against the real files. One release record approved the single hidden-bank run that was later admitted."
 family = "Audit and release governance"
 tags = ["manifest", "release", "json", "pinning", "provenance"]
 related = ["seal-and-audit-protocol", "reproducibility-receipts", "hash-chained-transcripts", "seed-determinism", "run-script-log-convention", "g-manifest"]
-summary = "A build manifest is written after the source, parser and runner are frozen and before anyone audits them; it names every input by path and SHA-256, every constant the run depends on, and every path the run may create. A release record is written by the release authority after the audits and binds the manifest, the audits and an authorisation token. Neither contains the hash of anything written after it, so the provenance graph is acyclic and every executable can compare the records with the live files before it does anything."
+summary = "Write a build manifest after freezing the source, parser, and runner but before the audit. It lists every input path and SHA-256 hash, every fixed value the run uses, and every path it may create. After the audits, the release authority writes a release record that links the manifest, audits, and approval token. Neither record hashes later output, so the chain has no cycles. A program can compare every record with the live files before it runs."
 updated = "2026-09-04"
 
 [[blocks]]

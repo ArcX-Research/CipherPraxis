@@ -1,13 +1,13 @@
 id = "playfair"
 section = "ciphers"
 title = "Playfair cipher"
-subtitle = "Digraphic substitution on a 5 x 5 keyed square"
+subtitle = "Encrypt pairs of letters on a 5 x 5 keyed square"
 status = "VERIFIED"
-status_note = "An independently verified external annealer recovered a 504-letter arbitrary-square Playfair control at 504/504 with exact forward reconstruction; the seriated variant failed its controls at 144-153 letters (3.9%, 3.5%) and at 504 letters (8.1%), so seriated Playfair is power-limited."
+status_note = "An independently checked external annealer recovered all 504 letters of an arbitrary-square Playfair control and reproduced its ciphertext exactly. The seriated form recovered only 3.9% and 3.5% on 144- and 153-letter controls, and 8.1% at 504 letters. Seriated Playfair is therefore power-limited."
 family = "Polygraphic substitution"
 tags = ["polygraphic", "digraphic", "polybius square", "5x5"]
 related = ["two-square-four-square", "bifid", "hill-cipher", "polybius-square", "simulated-annealing", "known-answer-tests", "g-polygraphic", "g-transposition-grid"]
-summary = "Playfair encrypts letter pairs on a 5 x 5 square built from a keyword, with I and J merged. Pairs in the same row or column shift along it; other pairs swap columns across the rectangle they define. It is a digraphic substitution with a 25-letter key and a well-known set of weaknesses (reversed pairs encrypt to reversed pairs, no letter maps to itself). The program used it mainly as a control family for its square annealers and as an inner layer under periodic keys."
+summary = "Playfair encrypts letter pairs on a 5 x 5 square built from a keyword, with I and J sharing a cell. Pairs in one row or column shift along it. Other pairs take the opposite corners of their rectangle. Reversing a pair reverses its ciphertext pair, and no letter maps to itself. Tests used Playfair to check square-search methods and as an inner layer beneath repeating keys."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -47,7 +47,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Check the 25-symbol constraint and digraph invariants.
 2. Anneal the square under a quadgram objective with row/column swaps, cell swaps and full-square moves; the program's external engine used 1,000,000 iterations with 8 restarts for arbitrary squares at 504 letters.
@@ -78,7 +78,7 @@ External engine, independently forward-verified (log 184): direct Playfair, 504-
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Keyword `PLAYFAIREXAMPLE` gives the square
 

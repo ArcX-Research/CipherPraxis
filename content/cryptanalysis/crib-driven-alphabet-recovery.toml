@@ -1,13 +1,13 @@
 id = "crib-driven-alphabet-recovery"
 section = "cryptanalysis"
 title = "Crib-driven alphabet recovery"
-subtitle = "Using a crib to remove the shifts of a keyed periodic substitution and search only the unknown mixed alphabet"
+subtitle = "Use likely plaintext to fix repeating shifts, then search only the mixed alphabet"
 status = "VERIFIED"
-status_note = "With one unknown alphabet on either side, a 13-letter crib lets a batch annealer recover the alphabet at 100% on planted 153-letter texts (3/3 seeds at every crib length from 7 for the mixed plaintext alphabet; 12/21 for the mixed ciphertext alphabet); with the same unknown alphabet acting on both sides the annealer fails 0/21 even with 25-letter cribs, and only an exact constraint solver with the key word known and cribs of 15 to 20 letters pins the alphabet (logs/22, 42)."
+status_note = "With one unknown alphabet on either side, a 13-letter crib let batch annealing recover planted 153-letter alphabets at 100%. Mixed plaintext alphabets passed 3/3 seeds at every crib length from 7; mixed ciphertext alphabets passed 12/21 cases. When the same unknown alphabet acts on both sides, annealing failed 0/21 even with 25-letter cribs. Only an exact solver with a known keyword and 15- to 20-letter cribs fixed that alphabet (logs/22, 42)."
 family = "Known-plaintext methods"
 tags = ["crib", "mixed alphabet", "keyed substitution", "simulated annealing", "constraint satisfaction", "polish basin"]
 related = ["quagmire-i", "quagmire-ii", "quagmire-iii", "quagmire-iv", "keyword-mixed-alphabet", "crib-dragging", "simulated-annealing", "parallel-tempering", "polish-basin-measurement", "constraint-satisfaction-forward-checking", "all-different-constraints", "power-measurement", "g-crib", "g-selection-freedom"]
-summary = "A periodic keyed substitution has two unknowns, the shifts and the mixed alphabet. A crib of at least one period fixes every shift for whatever alphabet is being tried, leaving a single unknown permutation. When that permutation acts on only one side (mixed plaintext or mixed ciphertext alphabet) a batch annealer over alphabets recovers it from a 13-letter crib. When one alphabet acts on both sides every swap moves letters in every coset at once, the search basin shrinks to a few swaps, and only an exact constraint solver with the key word known and a long crib succeeds."
+summary = "A repeating keyed substitution hides both its shifts and its mixed alphabet. A crib at least as long as the period fixes every shift for each trial alphabet. Only the alphabet remains unknown. If that alphabet acts on just the plaintext or ciphertext side, batch annealing can recover it from a 13-letter crib. If one alphabet acts on both sides, each swap changes every coset and the useful search area becomes tiny. That harder case needs a known keyword and a longer crib in an exact solver."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -45,7 +45,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. For each family, crib and offset, run the batch annealer; print any placement whose polished rate beats $-5.0$ and the null level of all wrong placements.
 2. Re-anneal the top placements with four times the restarts and twice the steps; a real hit reads language end to end at about $-4.3$.
@@ -85,7 +85,7 @@ Exact solver with the key word known (logs/42): 13 letters 1/3 (2,148 assignment
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Mixed plaintext alphabet $A$ = `ZEBRASCDFGHIJKLMNOPQTUVWXY` (keyword-mixed), straight ciphertext alphabet, period 2 with shifts $(3, 10)$. Encrypting `ATTACKATDAWN` by $\operatorname{idx}_B(c) = \operatorname{idx}_A(p) + k_{i \bmod 2}$ gives `HEXOJXHEKOAA` (A is at position 4 in $A$, so $c_0 = 4 + 3 = 7 = $ H; T is at 20, so $c_1 = 20 + 10 \equiv 4 = $ E).
 

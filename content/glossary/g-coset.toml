@@ -6,5 +6,5 @@ status_note = "Standard term."
 family = "Cipher structure"
 tags = ["periodic"]
 related = ["vigenere", "index-of-coincidence"]
-summary = "For a cipher whose key repeats with period m, the coset b is the set of ciphertext positions i with i ≡ b (mod m). Each coset is enciphered with one key element, so it behaves like a monoalphabetic substitution of the plaintext letters at those positions."
+summary = "If a cipher key repeats every m letters, coset b contains the positions i where i ≡ b (mod m). One key element encrypts every position in that coset. Each coset therefore acts like its own monoalphabetic substitution."
 updated = "2026-09-04"

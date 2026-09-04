@@ -6,5 +6,5 @@ status_note = "Standard term."
 family = "Cipher structure"
 tags = ["digraphic", "block"]
 related = ["hill-cipher", "playfair", "two-square-four-square", "digraphic-slide", "g-fractionation"]
-summary = "A substitution acting on groups of letters at once (digraphs for Playfair, two-square, four-square and slide ciphers; d-letter blocks for Hill). Single-letter frequencies are destroyed but block-level statistics survive, and linear polygraphic ciphers separate by row so that each output position can be attacked on its own decimated stream."
+summary = "A polygraphic substitution encrypts groups of letters together. Playfair, two-square, four-square, and slide ciphers use pairs; Hill ciphers use d-letter blocks. This hides single-letter frequencies, but patterns at the block level may remain. Linear polygraphic ciphers can also separate by matrix row, letting each output position be tested on its own sampled stream."
 updated = "2026-09-04"

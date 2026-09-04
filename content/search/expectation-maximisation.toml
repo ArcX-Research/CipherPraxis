@@ -1,13 +1,13 @@
 id = "expectation-maximisation"
 section = "search"
 title = "Expectation-maximisation over latent letter classes"
-subtitle = "Alternating class posteriors and shift re-estimation for a mixture under a periodic layer; hard-EM as alternating exact maximisation"
+subtitle = "Alternate between likely letter classes and better shift estimates"
 status = "VERIFIED"
-status_note = "Class-EM refinement of the outer shifts is implemented in the mixture solver and corrects the one or two cosets the evidence fit gets wrong on every planted control (7/7 after EM); the four planted sandwiches solve from cold with the true width on top at z 6-13."
+status_note = "Class-EM refines outer shifts in the mixture solver. It corrected the one or two wrong cosets left by the first evidence fit in every planted control, reaching 7/7 after EM. Four planted layered ciphers solved from a cold start and ranked the true width first at z 6–13."
 family = "Deterministic heuristics"
 tags = ["EM", "latent class", "mixture", "posterior", "alternating maximisation"]
 related = ["mixture-inference-under-transposition", "order-free-width-statistic", "bayesian-evidence-model-selection", "exact-dynamic-programming", "coordinate-descent", "sandwich-construction", "vigenere", "columnar-transposition", "shuffled-null-z-score", "planted-controls"]
-summary = "When a short-period inner substitution sits under a transposition and a period-7 outer key, each ciphertext letter came from one of k inner alphabets. Expectation-maximisation alternates an E-step that assigns every position a class posterior (via the column layout that best explains the pattern) and an M-step that re-estimates each outer coset's shift from the class-conditional likelihood of its letters. In the corpus it is the refinement that turns an evidence-based fit with one or two wrong cosets into a complete solve."
+summary = "Suppose a short-period substitution sits below a transposition and a period-7 outer key. Each ciphertext letter then came from one of k inner alphabets. Expectation-maximization alternates two steps. The E-step estimates the likely class of every position from the best column layout. The M-step updates each outer coset's shift from those class-weighted letters. Repeating these steps can correct the last one or two wrong cosets and complete the solve."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -52,7 +52,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Fit the inner mixture by evidence with the outer shifts marginalised; read the inner spacing off the $\delta$-marginal (correct on 7/8 planted seeds; the top three carried).
 2. For each width $w$, run the order-free pattern statistic (DP over long and short columns) and refine the shifts by class-EM; report the width's $z$ against shuffled ciphertexts pushed through the identical pipeline.
@@ -84,7 +84,7 @@ Four planted sandwiches (exact 17x9 grid; ragged width 8; width 12 with nine lon
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Two classes over a three-letter alphabet with $E_0 = (0.6, 0.3, 0.1)$ and $E_1 = (0.1, 0.3, 0.6)$ for letters A, B, C, equal priors, no shift. Observed letters A, C, A, B.
 

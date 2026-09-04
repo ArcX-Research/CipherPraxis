@@ -1,13 +1,13 @@
 id = "index-of-coincidence"
 section = "statistics"
 title = "Index of coincidence"
-subtitle = "Probability that two letters drawn from a text coincide, with its exact standard error"
+subtitle = "The chance that two letters from a text are the same"
 status = "VERIFIED"
-status_note = "Implemented with the exact standard deviation of the estimator and calibrated on planted references: a plain period-7 substitution of English shows within-coset IC 0.0713 against the monoalphabetic expectation 0.0652 (z +0.8), while a fractionated inner text drops to 0.0575 (z -1.0)."
+status_note = "The implementation includes the exact standard deviation and planted references. A plain period-7 substitution of English has within-coset IC 0.0713 against the monoalphabetic expectation 0.0652, or z +0.8. A fractionated inner text falls to 0.0575, or z -1.0."
 family = "Coincidence and frequency statistics"
 tags = ["coincidence", "frequency", "period detection", "monoalphabetic test"]
 related = ["coincidence-lag-profile", "estimator-standard-error", "shuffled-null-z-score", "within-coset-null", "chi-squared-fit", "exact-period-alignment", "vigenere", "g-coset", "coincidence-lab"]
-summary = "The index of coincidence (IC) is the probability that two letters chosen at random from a text are the same. It is about 0.066 for English and 1/26 = 0.0385 for uniformly random letters, and it is invariant under any monoalphabetic substitution and any transposition. That makes it the basic instrument for deciding whether a text, a coset, or a segment is monoalphabetic, for finding key periods, and for aligning cosets without knowing the key. Because the estimator averages correlated pairs, its standard error is larger than a binomial guess; the exact formula is derived and used here."
+summary = "The index of coincidence (IC) is the chance that two randomly chosen letters from a text match. It is about 0.066 for English and 1/26 = 0.0385 for uniform random letters. A simple substitution or transposition does not change it. IC can show whether a text, coset, or segment is monoalphabetic, help find key periods, and align cosets without the key. Its letter pairs are not independent, so this site uses the exact standard error rather than a simple binomial estimate."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -49,7 +49,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. **Is it monoalphabetic?** Compare the whole-text IC with $0.066$ and $0.0385$, using the exact standard deviation at that length.
 2. **Period.** Scan the periodic IC over candidate periods; the true period (and its multiples) shows cosets at the plaintext level. The [lag profile](/statistics/coincidence-lag-profile) is the same signal read pairwise.

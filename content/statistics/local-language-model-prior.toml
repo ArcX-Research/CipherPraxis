@@ -1,13 +1,13 @@
 id = "local-language-model-prior"
 section = "statistics"
 title = "Local language-model prior"
-subtitle = "Neural or large-vocabulary models run locally as proposal priors and rerankers, and the gates they must pass"
+subtitle = "Use a local language model to suggest or rerank answers, then check them exactly"
 status = "POWER-LIMITED"
-status_note = "Three local models were tried as priors or rerankers under frozen development gates and none passed: a character GRU proposal placed at least one true cell below rank 8 in every one of 20 clean controls (max true rank 9-23), a distilled transformer reranker reached exact rank 1 on 24 of 34 planted orderings against a required 40/40 (worst rank 689), and a local server could not expose prompt log-probabilities at all (37 of 72 directed edges observed, half the planted path censored). The exact back ends they feed remain valid."
+status_note = "Three local models were tested with fixed development gates, and none passed. A character GRU put at least one true cell below rank 8 in all 20 clean controls, with worst true ranks 9–23. A small transformer ranked 24 of 34 planted orders first, below the required 40/40, and once ranked the truth 689. A local server exposed only 37 of 72 directed-edge scores and hid half the planted path. The exact back ends remain valid."
 family = "Language priors"
 tags = ["neural prior", "language model", "reranking", "proposal", "contamination"]
 related = ["semi-markov-word-model", "quadgram-log-likelihood", "local-llm-server-integration", "beam-search", "shared-cycle-attack", "exact-chain-oracle", "held-out-gates", "power-analysis", "g-held-out"]
-summary = "A local language model can serve an attack in two ways: as a proposal prior that narrows the plaintext letters admitted at each observed cipher cell before an exact solver takes over, or as a reranker of complete candidates such as the 9! orderings of nine recovered chunks. In both roles it is only a proposal; the exact algebra and the null-ranked endpoint decide. Its use is gated by held-out, decontaminated controls, by the availability of a deterministic full-sequence likelihood, and by the same power measurement as any other selector."
+summary = "A local language model can help in two ways. It can suggest likely plaintext letters before an exact solver takes over, or rerank complete answers such as the 9! orders of nine recovered chunks. In both cases, the model only suggests candidates. Exact algebra and scores against null data make the decision. The model must pass separate, uncontaminated controls, provide repeatable full-sequence scores, and meet the same power standard as any other selector."
 updated = "2026-09-04"
 
 [[blocks]]

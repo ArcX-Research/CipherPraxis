@@ -1,13 +1,13 @@
 id = "viterbi-decoding"
 section = "search"
 title = "Viterbi decoding of a periodic key"
-subtitle = "Exact maximum of an order-three chain objective over key positions, with state = the last three key letters"
+subtitle = "Find the exact best repeating key while tracking its last three letters"
 status = "VERIFIED"
-status_note = "The cyclic order-three quadgram DP is implemented for arbitrary period in two solvers and passes blind planted controls at the target information budgets (63 and 95 letters at period 7, 126 at period 26, each 100% plaintext with exact key and forward reconstruction); a KAT compares it with exhaustive enumeration at width two (8/8)."
+status_note = "Two solvers implement the cyclic order-three quadgram dynamic program for any period. Blind controls passed at the target information sizes: 63 and 95 letters at period 7, and 126 letters at period 26. Each recovered 100% plaintext, the exact key, and the forward ciphertext. At width two, 8/8 known-answer checks match complete enumeration."
 family = "Dynamic programming"
 tags = ["viterbi", "dynamic programming", "periodic key", "quadgram", "exact within shortlist"]
 related = ["periodic-substitution-dp", "exact-dynamic-programming", "k-best-lists", "coordinate-descent", "vigenere", "beaufort", "porta", "affine-cipher", "quadgram-log-likelihood", "within-coset-null", "planted-controls", "g-objective-function"]
-summary = "A periodic key of length p is a chain: the plaintext quadgram ending at position i depends on the key letters at four consecutive key positions. The best key under the full quadgram likelihood is therefore a Viterbi maximisation over states made of three consecutive key letters, exact for an open chain and made exact for the cyclic closure by enumerating the first three states. Unlike per-coset statistics it works with four or five letters per coset, which is what makes long periods (26 on 126 letters) solvable."
+summary = "For a key of period p, the plaintext quadgram ending at position i depends on four neighboring key positions. A Viterbi dynamic program can therefore track states made from the last three key letters and keep the exact best path. An open chain is direct. To close the repeating cycle exactly, try every starting three-letter state. Unlike separate coset scores, this uses letter order and can work with only four or five letters per coset, such as period 26 on 126 letters."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -53,7 +53,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 Run the DP for every period in a range, both alphabet orders and both relations, and compare each finish with the same solve on a shuffled ciphertext (or on within-coset shuffles, which preserve every coset histogram and destroy only adjacency). A real key gives a decrypt that reads as English and a large excess over the null; a wrong period gives an excess near zero. The same finisher is used inside larger selectors: after an exact stage-one enumeration of alphabets, each retained alphabet's seven shifts are initialised by the width-8 cyclic DP and four polish rounds.
 '''
@@ -81,7 +81,7 @@ Cyclic periodic DP: three blind controls (63 letters period 7; 95 letters period
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 One Viterbi step with four states. Previous scores $V_{t-1} = (-2.0, -1.0, -3.0, -1.5)$ for states $0..3$; transition-plus-emission scores into state $1$ from states $0..3$ are $(-1.0, -2.0, -0.5, -1.0)$. Then
 

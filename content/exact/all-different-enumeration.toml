@@ -1,13 +1,13 @@
 id = "all-different-enumeration"
 section = "exact"
 title = "All-different enumeration over CRT null spaces"
-subtitle = "Solving homogeneous linear systems in letter positions modulo 26 by splitting into GF(2) and GF(13), enumerating the null space, and keeping only injective (all-different) assignments"
+subtitle = "Split letter-position equations into GF(2) and GF(13), then keep only true permutations"
 status = "VERIFIED"
-status_note = "The factorised feasibility test (a partial assignment is injective iff every GF(13) residue is used at most twice with opposite GF(2) parities) is verified against brute force over 240 systems and 538,656 solutions with zero mismatches; planted cycles are recovered inside the enumerated solution sets (144 all-different solutions containing the truth; 312 = one gauge orbit) and 8,851 tail systems were exhausted at 13^7 with zero reads."
+status_note = "The split test says a partial assignment is one-to-one exactly when each GF(13) residue appears at most twice with opposite GF(2) parity. It matched brute force across 240 systems and 538,656 answers with zero errors. Planted cycles appeared in the full answer sets: 144 all-different answers containing the truth, and 312 for one gauge orbit. A complete search of 8,851 tail systems at 13^7 found zero readable results."
 family = "Constraint programming"
 tags = ["null space", "CRT", "GF(2)", "GF(13)", "all-different", "gauge", "nullity"]
 related = ["all-different-constraints", "modular-inverse-and-crt", "conjugacy-and-gauge", "units-mod-26", "permutation-cycles", "exact-chain-oracle", "word-prefix-csp", "constraint-satisfaction-forward-checking", "cp-sat-and-smt-solvers", "k-best-lists", "shared-cycle-attack", "gauge-defect-invalidation", "g-certificate"]
-summary = "When a crib or a proposed plaintext is placed under a keyed substitution with an unknown alphabet, every letter yields a homogeneous linear equation over Z26 in the positions of the letters involved. Ranks alone never reject such a system (the zero vector always solves it); the decision comes from enumerating the null space and demanding that the 26 positions be all different. Splitting Z26 into GF(2) x GF(13) makes both null spaces exact and turns the injectivity test into a residue-count rule, so feasibility costs 2^d2 + 13^d13 rather than their product."
+summary = "Place a crib or proposed plaintext under a keyed substitution with an unknown alphabet. Each letter gives a homogeneous linear equation over Z26 in the alphabet positions. Rank alone cannot reject the system because the zero vector always solves it. The solver must list the null-space answers and require all 26 positions to differ. Splitting Z26 into GF(2) x GF(13) turns that rule into simple remainder counts. The feasibility work becomes 2^d2 + 13^d13 instead of their product."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -33,11 +33,11 @@ Every distinct all-different read is retained (not only the best-scoring one), b
 [[blocks]]
 kind = "equations"
 body = '''
-Chain elimination (one shared cycle $z$, signs $e_8, e_9 \in \{\pm 1\}$, key class $\kappa$):
+Chain elimination (one shared cycle $z$, signs $e_A, e_B \in \{\pm 1\}$, key class $\kappa$):
 
-$$z(P_i) - e_8\, z(C_i) + e_8 e_9\, z(C'_i) - e_8 e_9\, \kappa = 0 \pmod{26};$$
+$$z(P_i) - e_A\, z(C_i) + e_A e_B\, z(C'_i) - e_A e_B\, \kappa = 0 \pmod{26};$$
 
-differencing two positions in the same class removes $\kappa$. Gauges: translation $z \mapsto z + b$ is a symmetry with $\kappa \mapsto \kappa + b(1 + e_8 e_9 - e_9)$, fixed validly by one row $z(X_0) = 0$ (fixing $\kappa$ instead is invalid); unit multiplication $(z, \kappa) \mapsto (uz, u\kappa)$ for the 12 units is a symmetry of the homogeneous system and cannot be fixed by a linear row, so solutions are canonicalised after enumeration.
+differencing two positions in the same class removes $\kappa$. Gauges: translation $z \mapsto z + b$ is a symmetry with $\kappa \mapsto \kappa + b(1 + e_A e_B - e_B)$, fixed validly by one row $z(X_0) = 0$ (fixing $\kappa$ instead is invalid); unit multiplication $(z, \kappa) \mapsto (uz, u\kappa)$ for the 12 units is a symmetry of the homogeneous system and cannot be fixed by a linear row, so solutions are canonicalised after enumeration.
 
 Injectivity rule: with $z \equiv (z \bmod 2,\ z \bmod 13)$, two letters collide iff they share both residues; hence at most two letters per GF(13) residue and, when two share one, opposite parities. Cost: $2^{d_2} + 13^{d_{13}}$ instead of $2^{d_2} \cdot 13^{d_{13}}$.
 '''
@@ -53,7 +53,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 - **Two-crib systems.** Pairs of candidate phrases placed anywhere in a zone; after the first 240 high-dimension pairs per bank, the remaining systems were processed at a $13^7$ budget: 8,851 systems (941 from the semantic bank, 7,910 from nine matched decoy banks), zero all-different reads, so zero completions; the earlier stage had found all 245,766 candidate pairs linearly consistent, which is the rank-never-rejects fact in production.
 - **Word-pair chain CSP.** Two words of at least 18 letters combined in one constant-key class: 3,860 placements and 299,563 candidate pairs on a plant; nullity histogram over 600 random pairs $0{:}4,\ 1{:}23,\ 2{:}102,\ 3{:}198,\ 4{:}194,\ 5{:}55,\ 6{:}24$; 12.4 ms per pair on average; a planted pair returned 144 all-different solutions containing the planted cycle up to the unit gauge.
@@ -84,7 +84,7 @@ Factorised feasibility versus brute force: 240 systems, 538,656 solutions, 0 mis
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Three letters with gauge $z(A) = 0$ and rows $z(B) - z(A) \equiv 13$, $z(C) - z(A) \equiv 13 \pmod{26}$. Modulo 13 both rows read $z(B) \equiv z(C) \equiv 0$; modulo 2 both read $z(B) \equiv z(C) \equiv 1$. The null spaces are trivial ($d_2 = d_{13} = 0$), the unique solution is $z(B) = z(C) = 13$, and the injectivity rule rejects it: B and C share the GF(13) residue $0$ and also share parity $1$. The system is linearly consistent and infeasible, which is the whole point: only the all-different check can say no.
 

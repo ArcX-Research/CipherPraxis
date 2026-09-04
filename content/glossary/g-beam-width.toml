@@ -6,5 +6,5 @@ status_note = "Standard term."
 family = "Search and optimisation"
 tags = ["beam search", "decoding"]
 related = ["beam-search", "meet-in-the-middle", "k-best-lists"]
-summary = "The number W of partial solutions retained after each extension step of a beam search. A prefix ranked below W at any position is discarded permanently, so the width needed is set by the worst rank the true prefix ever takes, not by its final rank; on planted 63-letter controls the true English prefix sat at rank 81,978 at character 5, beyond any beam that was run. Ranked pools larger than the beam can be screened by an exact solver before the cut."
+summary = "Beam width W is the number of partial answers kept after each step of a beam search. Any prefix ranked below W is discarded for good. The needed width depends on the true prefix's worst rank at any step, not its final rank. In a planted 63-letter check, the true English prefix fell to rank 81,978 at character 5, beyond every beam that was tried. An exact solver can screen a larger ranked pool before this cut."
 updated = "2026-09-04"

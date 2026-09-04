@@ -1,13 +1,13 @@
 id = "meet-in-the-middle"
 section = "search"
 title = "Meet in the middle"
-subtitle = "Enumerating two halves of a key independently and joining them on a shared invariant; the bidirectional beam as its heuristic form"
+subtitle = "Search two halves separately, then join pairs that agree on a shared value"
 status = "POWER-LIMITED"
-status_note = "The classical two-table meet is standard and is documented with a worked example. The corpus's implemented form is a bidirectional exact-meet beam decoder (forward and reverse character models, exact compatibility on the union of partial maps); its four hidden controls at 63 and 95 letters all failed, with the true state at raw pair rank 17,019,599 where the pool holds 80,000, so it delivers no target information at these lengths."
+status_note = "The standard two-table method is shown in a worked example. The implemented decoder grows text from both ends with forward and reverse character models, then checks whether their partial maps agree. All four hidden controls at 63 and 95 letters failed. The true state reached pair rank 17,019,599 while the pool held 80,000, so this decoder gives no target information at those lengths."
 family = "Enumeration strategies"
 tags = ["bidirectional", "time-memory trade-off", "join", "beam", "reverse language model"]
 related = ["beam-search", "exhaustive-enumeration", "k-best-lists", "cp-sat-and-smt-solvers", "all-different-enumeration", "quagmire-iii", "shared-cycle-attack", "local-language-model-prior", "planted-controls", "g-beam-width"]
-summary = "Meet in the middle splits a key into two parts, enumerates each part on its own, and matches the two enumerations on a value both must agree on, replacing a product of sizes by a sum. In classical form it turns a double encryption with keys of size N each into about 2N work plus a table. The corpus applied the heuristic version to decoding: a forward and a reverse language model grow a plaintext from both ends and an exact modular check tests the union of their partial key maps. On planted 63- and 95-letter controls the true state was ranked millions deep before any algebraic closure could help."
+summary = "Meet in the middle splits a key into two parts and lists each half separately. It joins only pairs that agree on a shared value. This replaces a search over every pair with two shorter lists and a lookup. For double encryption with N choices per key, the work falls from about N squared to about 2N plus a table. A decoding version grows plaintext from both ends and checks whether the partial key maps fit. On 63- and 95-letter controls, the truth ranked millions deep before exact rules could help."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -46,7 +46,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 The decoding form targets a period-7 keyed substitution with one unknown 26-cycle on a 63- or 95-letter zone. Forward GRU (frozen, generic-text) and reverse GRU (same 64/192 two-layer architecture, eight epochs on the same 1,350,000-letter training range read right to left, final 1.5222 nats per letter) score the two fronts; the exact Z3 all-different system is sampled on 48 maps by four workers at 20 ms per query, and a full ranked scan activates only if the pilot yields decisive `unsat` results. Hidden plaintext is used only to report the truth's post-selection rank.
 '''
@@ -74,7 +74,7 @@ Independently planted random cycles and non-zero distinct shifts over held-out E
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Two non-commuting layers on $\mathbb{Z}_{26}$: first a shift $k_1$, then a multiplication by a unit $u_2$: $c = u_2 (p + k_1) \bmod 26$. Known pair $(p, c) = (3, 20)$.
 

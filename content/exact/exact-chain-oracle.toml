@@ -1,13 +1,13 @@
 id = "exact-chain-oracle"
 section = "exact"
 title = "Exact chain oracle"
-subtitle = "A black-box decision procedure for chained constructions: given a proposed plaintext prefix, reject it or return every compatible alphabet, then finish and re-encrypt literally"
+subtitle = "Give it a possible plaintext opening; it rejects it or returns every matching alphabet"
 status = "VERIFIED"
-status_note = "The oracle's algebra (elimination of the intermediate text, gauge handling, GF(2) x GF(13) all-different enumeration) is verified on 50/50 random plants and against brute force; its alphabet-free pre-filter passed 256 synthetic chains with 256/256 mutations rejected; it was deployed unchanged as a black box over a 2.34-million-letter corpus bank (control gate 1/1, zero endpoints). Its own full planted-control panel for the word-prefix front end was still in calibration at the time of writing."
+status_note = "The exact algebra removes the middle text, handles gauge equivalents, and checks all-different answers over GF(2) x GF(13). It passed 50/50 random planted cases and matched brute force. Its alphabet-free filter passed 256 synthetic chains and rejected 256/256 mutations. Used unchanged on a 2.34-million-letter corpus bank, it passed its 1/1 control and found zero answers. The full word-prefix control panel was still being calibrated."
 family = "Exactness guarantees"
 tags = ["oracle", "chain", "shared cycle", "gauge", "pre-filter", "black box"]
 related = ["all-different-enumeration", "word-prefix-csp", "corpus-bank-screen", "segment-chain-analysis", "shared-cycle-attack", "conjugacy-and-gauge", "modular-inverse-and-crt", "running-key", "gauge-defect-invalidation", "target-absent-controls", "g-certificate"]
-summary = "In a chained construction one text is enciphered with a keyed substitution and a second text is enciphered with the first text's plaintext acting as a running key under the same unknown alphabet. Eliminating the intermediate plaintext leaves one homogeneous equation per position in the alphabet's position function. An exact chain oracle takes a proposed opening of the second plaintext, applies alphabet-free collision tests, solves the resulting system by CRT null spaces with the all-different constraint, and returns every compatible alphabet with the derived key classes; each is finished on the full texts and both ciphertexts must be re-encrypted byte for byte."
+summary = "In this chain, the first text uses a keyed substitution. Its plaintext then acts as a running key for the second text under the same unknown alphabet. Removing that middle plaintext leaves one homogeneous equation per position in the alphabet map. The exact oracle takes a proposed opening of the second plaintext, runs fast alphabet-free collision checks, and solves the remaining CRT null spaces under an all-different rule. It returns every matching alphabet and key class. Each answer must re-encrypt both ciphertexts byte for byte."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -15,9 +15,9 @@ kind = "definition"
 body = '''
 Generating relations for position $i$ of the second text and $j = i \bmod 144$ of the first (a 144-letter first text; positions beyond it wrap to the first class):
 
-$$z(C'_j) = e_9\, z(P'_j) + \kappa_j, \qquad z(C_i) = e_8\, z(P_i) + z(P'_j),$$
+$$z(C'_j) = e_B\, z(P'_j) + \kappa_j, \qquad z(C_i) = e_A\, z(P_i) + z(P'_j),$$
 
-with $e_8, e_9 \in \{\pm 1\}$, $z$ an unknown bijection of the 26 letters onto $\mathbb{Z}_{26}$, and $\kappa_j$ a key class that is constant on the first segment and periodic afterwards.
+with $e_A, e_B \in \{\pm 1\}$, $z$ an unknown bijection of the 26 letters onto $\mathbb{Z}_{26}$, and $\kappa_j$ a key class that is constant on the first segment and periodic afterwards.
 
 ```
 oracle(prefix P[0..L-1], signs):
@@ -33,11 +33,11 @@ oracle(prefix P[0..L-1], signs):
 [[blocks]]
 kind = "equations"
 body = '''
-Elimination: $z(P'_j) = e_9 (z(C'_j) - \kappa_j)$ and $z(P_i) = e_8 (z(C_i) - z(P'_j))$ give
+Elimination: $z(P'_j) = e_B (z(C'_j) - \kappa_j)$ and $z(P_i) = e_A (z(C_i) - z(P'_j))$ give
 
-$$z(P_i) - e_8\, z(C_i) + e_8 e_9\, z(C'_j) - e_8 e_9\, \kappa_j = 0 \pmod{26}.$$
+$$z(P_i) - e_A\, z(C_i) + e_A e_B\, z(C'_j) - e_A e_B\, \kappa_j = 0 \pmod{26}.$$
 
-Subtracting two positions $i, r$ of the same $\kappa$ class removes $\kappa$ exactly. Translation $z \mapsto z + b$ is a symmetry with $\kappa \mapsto \kappa + b(1 + e_8 e_9 - e_9)$; the second text's decrypt is invariant only up to that translation, so any score of it must be maximised over the 26 translations of each candidate, and the first text's positions are ranked invariantly.
+Subtracting two positions $i, r$ of the same $\kappa$ class removes $\kappa$ exactly. Translation $z \mapsto z + b$ is a symmetry with $\kappa \mapsto \kappa + b(1 + e_A e_B - e_B)$; the second text's decrypt is invariant only up to that translation, so any score of it must be maximised over the 26 translations of each candidate, and the first text's positions are ranked invariantly.
 
 Collision invariants: $z$ injective and the equation linear in $z(P_i)$ imply that equal $(C_i, C'_j)$ pairs force equal $P_i$, and exactly one equal component forces unequal $P_i$, for every $z$, $\kappa$ and sign pair.
 '''
@@ -53,7 +53,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 - **Word-prefix front end.** Complete English words are proposed for the opening of the second text; cheap GF(2)/GF(13) consistency precedes a local all-different check; language-model selection happens only among algebraically feasible complete words; an adaptive mode keeps feasible prefixes as particles at 18, 21 and 24 clean letters and asks the model to continue them.
 - **Word-pair front end.** Two words of at least 18 letters placed anywhere in the constant-$\kappa$ class; each surviving cycle decrypts all 62 class positions of the second text and the 53-letter prefix of the first directly, with no shift search, which is the selection statistic; the completion of unobserved letters is exhaustive over at most 7 unused positions, else greedy.
@@ -83,9 +83,9 @@ Equation and gauges: 50/50 random plants across all four sign cells with the cyc
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
-Take $e_8 = e_9 = +1$ and two positions $i, r$ in the same $\kappa$ class. From the eliminated equation,
+Take $e_A = e_B = +1$ and two positions $i, r$ in the same $\kappa$ class. From the eliminated equation,
 
 $$z(P_i) - z(P_r) = \big[z(C_i) - z(C_r)\big] - \big[z(C'_i) - z(C'_r)\big] \pmod{26}.$$
 

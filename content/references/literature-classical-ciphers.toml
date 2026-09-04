@@ -1,13 +1,13 @@
 id = "literature-classical-ciphers"
 section = "references"
 title = "Classical cipher literature"
-subtitle = "Primary and standard secondary sources for the cipher models in the taxonomy"
+subtitle = "Original and standard later sources for the cipher types on this site"
 status = "VERIFIED"
-status_note = "Bibliographic entry: the works listed are the standard sources for the constructions described in the cipher taxonomy; no experimental claim is made here."
+status_note = "These works are standard sources for the listed cipher types. This bibliography makes no experimental claim."
 family = "Literature"
 tags = ["bibliography", "classical ciphers", "history"]
 related = ["vigenere", "beaufort", "porta", "quagmire-iii", "alberti-progressive", "chaocipher", "bifid", "trifid", "hill-cipher", "playfair", "gromark", "condi", "columnar-transposition", "literature-cryptanalysis-statistics"]
-summary = "The sources behind the cipher taxonomy: Alberti's disc and the sixteenth-century polyalphabetic tradition, the nineteenth-century field ciphers and their fractionating descendants, Hill's algebraic cipher, the recreational cipher types standardised by the American Cryptogram Association, and the one twentieth-century hand cipher whose mechanism stayed secret for six decades. Kahn and Bauer are the surveys; Friedman's Military Cryptanalysis is the reference for how each was attacked."
+summary = "These sources cover Alberti's disc, early polyalphabetic ciphers, nineteenth-century field ciphers and later fractionation, Hill's matrix cipher, American Cryptogram Association types, and Chaocipher. Kahn and Bauer give broad histories. Friedman's Military Cryptanalysis explains the classic attacks. Original works document the constructions themselves."
 updated = "2026-09-04"
 
 [[blocks]]

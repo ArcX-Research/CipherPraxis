@@ -1,13 +1,13 @@
 id = "affine-lab"
 section = "labs"
 title = "Affine cipher & units lab"
-subtitle = "c = a·p + b (mod 26), the twelve invertible multipliers and their inverses"
+subtitle = "Try c = a·p + b (mod 26) and see which multipliers have inverses"
 status = "VERIFIED"
-status_note = "Unit-tested against the standard AFFINECIPHER → IHHWVCSWFRCP vector (a = 5, b = 8); non-unit multipliers are rejected with an explanation."
+status_note = "The lab matches the standard AFFINECIPHER → IHHWVCSWFRCP example for a = 5 and b = 8. It explains and rejects multipliers that have no inverse."
 family = "Algebra labs"
 tags = ["affine", "modular arithmetic", "unit group"]
 related = ["affine-cipher", "caesar-shift", "units-mod-26", "modular-inverse-and-crt", "crt-lab"]
-summary = "An affine substitution multiplies each letter index by a and adds b modulo 26. Decryption needs the inverse of a, which exists only for the twelve residues coprime to 26. The lab shows the unit group, each unit's inverse, and what happens when a non-unit is chosen."
+summary = "An affine substitution multiplies each letter number by a, then adds b modulo 26. Decryption needs an inverse for a. Only the twelve values that share no factor with 26 have one. This lab lists those values and their inverses and shows why the other choices cannot decrypt."
 updated = "2026-09-04"
 lab = "affine"
 

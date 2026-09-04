@@ -1,13 +1,13 @@
 id = "within-coset-null"
 section = "statistics"
 title = "Within-coset null"
-subtitle = "Permuting positions inside each residue class: the valid-model null for language scores under a periodic key"
+subtitle = "Shuffle positions inside each coset while keeping the repeating-key structure"
 status = "VERIFIED"
-status_note = "Implemented and audited: 99 within-residue transformations preserved every per-coset histogram and the exact key-space geometry across 700 full selections (algebra KAT with 6,489,600 key-geometry clauses and 54,600 histogram clauses), four planted English positives ranked 1 of 100 and three valid-model random negatives ranked 84, 55 and 6; a live bank search was correctly rejected when eight of nine such nulls beat it."
+status_note = "An audit confirmed that 99 within-coset shuffles preserve every coset histogram and the exact key-space shape across 700 full selections. Algebra checks covered 6,489,600 key-shape clauses and 54,600 histogram clauses. Four planted English positives ranked 1 of 100; three valid-model random negatives ranked 84, 55, and 6. A live bank candidate was rejected when eight of nine such nulls beat it."
 family = "Null distributions and calibration"
 tags = ["null distribution", "permutation", "coset", "valid-model null", "matched null"]
 related = ["permutation-test", "shuffled-null-z-score", "family-wise-null", "selection-overfit-diagnostic", "valid-model-nulls", "vigenere", "quagmire-iii", "exact-period-alignment", "g-coset", "g-null-distribution"]
-summary = "For a hypothesis of the form 'a periodic substitution of period p over a language-like plaintext', a whole-text shuffle is too destructive: it changes the coset histograms that the hypothesis itself predicts. The within-coset null permutes positions only inside each residue class i mod p. It keeps every coset histogram, the coset IC, the letter multiset and, for any tested progressive slope, the de-progressed monogram multiset, while destroying the language order inside and across cosets. Every key still decrypts the null to a permutation of what it would decrypt on the original, so the key-space geometry is unchanged and any excess score on the original is attributable to order alone."
+summary = "For a period-p substitution over language-like plaintext, shuffling the whole text destroys patterns the model itself predicts. A within-coset null shuffles positions only inside each class i mod p. This keeps every coset histogram, coset IC, total letter count, and the single-letter counts after removing any tested progressive slope. It destroys language order within and across cosets. Each key still decrypts to the same letters in another order, so any extra score in the original comes from order alone."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -119,7 +119,7 @@ note = "Minimal matched permutation for a period-26 span: permute positions with
 [[provenance]]
 path = "withmath/LOG_AUDIT.md"
 kind = "audit"
-note = "Family ledger: 'PK8 p7, PK9 p7 and PK10 p26 are at/below within-coset familywise nulls'; no promotion of a string unless the full selected-family null is lower."
+note = "Family ledger: 'the period-7 readings of texts A and B and the period-26 reading of text C are at/below within-coset familywise nulls'; no promotion of a string unless the full selected-family null is lower."
 
 [[references]]
 title = "Permutation Tests: A Practical Guide to Resampling Methods for Testing Hypotheses"

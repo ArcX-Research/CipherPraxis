@@ -61,16 +61,17 @@ pub fn SearchPalette() -> impl IntoView {
                 class="palette glass"
                 role="dialog"
                 aria-modal="true"
-                aria-label="Search the knowledge base"
+                aria-labelledby="palette-title"
                 on:click=move |ev| ev.stop_propagation()
             >
                 <div class="palette-input-row">
+                    <span class="sr-only" id="palette-title">"Search the knowledge base"</span>
                     <span class="palette-icon" aria-hidden="true" inner_html=crate::components::motif::ICON_SEARCH></span>
                     <input
                         node_ref=input_ref
                         class="palette-input"
                         type="search"
-                        placeholder="Search ciphers, methods, instruments, terms…"
+                        placeholder="Search ciphers, methods, tools, or terms…"
                         aria-label="Search query"
                         aria-controls="palette-results"
                         autocomplete="off"
@@ -111,9 +112,9 @@ pub fn SearchPalette() -> impl IntoView {
                         let q = query.get();
                         if list.is_empty() {
                             if q.trim().is_empty() {
-                                view! { <li class="palette-hint mono">"Type to search · ↑↓ to move · ↵ to open"</li> }.into_any()
+                                view! { <li class="palette-hint mono">"Type to search · use ↑↓ to move · press ↵ to open"</li> }.into_any()
                             } else {
-                                view! { <li class="palette-hint">"No entries match "<b>{q}</b>"."</li> }.into_any()
+                                view! { <li class="palette-hint">"No entries match "<b>{q}</b>". Try fewer words or a broader term."</li> }.into_any()
                             }
                         } else {
                             list.into_iter().enumerate().map(|(i, h)| {
@@ -145,8 +146,8 @@ pub fn SearchPalette() -> impl IntoView {
                     }}
                 </ul>
                 <div class="palette-foot mono">
-                    <span>{move || format!("{} indexed entries", state.index.len())}</span>
-                    <a href=move || format!("/find?q={}", js_sys::encode_uri_component(&query.get())) on:click=move |_| open.set(false)>"Open results page →"</a>
+                    <span>{move || format!("{} entries", state.index.len())}</span>
+                    <a href=move || format!("/find?q={}", js_sys::encode_uri_component(&query.get())) on:click=move |_| open.set(false)>"See all results →"</a>
                 </div>
             </div>
         </div>

@@ -1,13 +1,13 @@
 id = "tautological-gate-rule"
 section = "validation"
 title = "Tautological gate rule"
-subtitle = "Prove that a check can fail before citing it as evidence"
+subtitle = "Show that a check rejects bad cases before treating a pass as evidence"
 status = "VERIFIED"
-status_note = "The rule is applied in the research program's gate designs (a valid-model negative that the gate must reject, and a random-input power row) and was enforced by audits that blocked a lane whose null could not fail and a ledger rule that a fitted invertible key always roundtrips."
+status_note = "Gate designs include a valid-model negative that must fail and a random-input power row. Audits used this rule to block a test whose null could never fail. The ledger also warns that any fitted reversible key will always complete a round trip."
 family = "Power and calibration"
 tags = ["gates", "roundtrip", "nulls", "self-deception"]
 related = ["valid-model-nulls", "planted-controls", "power-measurement", "selection-overfit-check", "kat-harness", "shuffled-null-z-score", "english-gate-calibration"]
-summary = "A gate that every candidate passes carries no information, however impressive it looks in a log. The rule requires two demonstrations before any check is cited: a necessity row (conforming inputs pass) and a power row (inputs that should fail do fail, with the failure fraction printed). The program's recurring tautology was the forward roundtrip: a key fitted by inverting the ciphertext re-encrypts the plaintext to the ciphertext by construction, so every false state passes it."
+summary = "A check that every candidate passes tells us nothing. Before citing a gate, show both sides: valid input passes, and input that should fail does fail at a measured rate. A common empty check is forward round-trip. If a key was fitted by reversing the ciphertext, it will re-encrypt that fitted plaintext by construction. False keys pass too, so the round trip alone does not prove correctness."
 updated = "2026-09-04"
 
 [[blocks]]

@@ -1,13 +1,13 @@
 id = "selection-overfit-check"
 section = "validation"
 title = "Selection overfit check"
-subtitle = "A score chosen as the best of many candidates is compared with a null that repeats the whole selection"
+subtitle = "Compare the winning score with null runs that repeat the full search"
 status = "VERIFIED"
-status_note = "Applied as a ledger rule and executed in the research program: a ciphertext-derived cycle bank's best target score was beaten by 8 of 9 complete-pipeline null maxima and rejected as overfit; a cross-text maximum fell from +5.7 sigma to +0.8 sigma under the family-wise null."
+status_note = "The ledger requires this check. In one ciphertext-based cycle bank, 8 of 9 full-pipeline null winners beat the best target score, so it was rejected as overfit. A cross-text maximum fell from +5.7 standard deviations in one trial to +0.8 after the family-wide comparison."
 family = "Power and calibration"
 tags = ["selection", "overfitting", "multiplicity", "nulls"]
 related = ["selection-overfit-diagnostic", "family-wise-null", "within-coset-null", "shuffled-null-z-score", "valid-model-nulls", "tautological-gate-rule", "quadgram-log-likelihood", "bayesian-evidence-model-selection"]
-summary = "Every attack selects: the best key of a bank, the best placement of a crib, the best of several widths. The maximum of many noisy scores is not distributed like one score, so a target's best must be compared with the maximum the same selection produces on data known to contain nothing. The program's rule is that the null repeats the full selection, including every stage that follows the first screen; where that was done, several attractive target scores turned out to sit inside the null."
+summary = "Every attack chooses a winner: the best key, crib position, or width. The best of many noisy scores is naturally higher than one score. Compare the target winner with winners from the same search on data known to contain no signal. Each null run must repeat every stage after the first screen. Several strong-looking target scores disappeared inside this fair null range."
 updated = "2026-09-04"
 
 [[blocks]]

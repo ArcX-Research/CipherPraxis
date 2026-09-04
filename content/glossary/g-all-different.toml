@@ -6,5 +6,5 @@ status_note = "Standard constraint-programming term; the CRT factorisation used 
 family = "Algebra"
 tags = ["CSP", "bijection"]
 related = ["all-different-constraints", "modular-inverse-and-crt", "all-different-enumeration", "g-nullity"]
-summary = "The constraint that a set of variables take pairwise distinct values. For an unknown cipher alphabet it states that the 26 letter coordinates form a permutation of 0 to 25. Linear cipher relations rarely contradict a wrong guess on their own; the contradiction appears when their solutions are required to be permutations. Over Z26 the constraint factorises: each residue modulo 13 must occur exactly twice and its two carriers must have opposite parity."
+summary = "An AllDifferent constraint requires every variable to have a different value. For an unknown cipher alphabet, the 26 letter positions must be a permutation of 0 to 25. Linear cipher equations rarely reject a wrong guess by themselves. Requiring their answers to form a permutation exposes the conflict. Over Z26, each residue modulo 13 must appear exactly twice, once at each parity."
 updated = "2026-09-04"

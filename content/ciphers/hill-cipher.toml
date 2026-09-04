@@ -1,13 +1,13 @@
 id = "hill-cipher"
 section = "ciphers"
 title = "Hill cipher"
-subtitle = "Linear block substitution by an invertible matrix over Z26"
+subtitle = "Multiply letter blocks by a reversible matrix modulo 26"
 status = "VERIFIED"
-status_note = "Arbitrary-matrix attacks are control-qualified at every tested size: Hill-2 over a periodic layer (96- and 126-letter controls exact), Hill-3 with 15,372 primitive rows (controls at 153, 144 and 504 letters), and direct Hill-4 (two random GL(4) controls exact); the dictionary-matrix screen in the recipe-free cascade recovered a solved corpus text."
+status_note = "Arbitrary-matrix attacks passed controls at every tested size. Hill-2 over a periodic layer solved 96- and 126-letter controls exactly. Hill-3 controls passed at 153, 144, and 504 letters while checking 15,372 valid rows. Two random direct Hill-4 controls also passed. A dictionary-matrix screen recovered an earlier solved text."
 family = "Polygraphic substitution"
 tags = ["polygraphic", "linear", "matrix", "block"]
 related = ["affine-cipher", "playfair", "matrix-invertibility-mod-26", "finite-field-linear-algebra", "units-mod-26", "periodic-substitution-dp", "meet-in-the-middle", "family-wise-null", "hill-lab", "g-polygraphic"]
-summary = "The Hill cipher multiplies each block of d letters by an invertible d x d matrix modulo 26. Decryption separates by row: each row of the inverse matrix produces every d-th plaintext letter on its own, so rows can be scored independently on their decimated streams and joined only when the assembled matrix is invertible. The program used this row separability to attack arbitrary matrices of sizes 2, 3 and 4, alone and over a periodic additive layer."
+summary = "The Hill cipher treats each d-letter block as numbers and multiplies it by a reversible d x d matrix modulo 26. During decryption, each row of the inverse matrix produces every d-th plaintext letter. A solver can score those sampled streams one row at a time, then join rows only if the full matrix is reversible. Tests covered arbitrary matrices of sizes 2, 3, and 4, both alone and over a repeating additive layer."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -51,7 +51,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Enumerate every primitive row of $D$ and score its decimated stream (monogram likelihood for direct Hill; shift-marginalised periodic likelihood for Hill over a periodic layer; a lag-$d$ trigram likelihood for $d = 4$).
 2. Join the top rows into unit-determinant matrices in every row order; rescore the full decrypt with quadgrams.
@@ -82,7 +82,7 @@ Hill-3 free rows (log 149): controls matched to target lengths and decimated per
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 $d = 2$, $E = \begin{pmatrix} 3 & 3 \\ 2 & 5 \end{pmatrix}$, $\det E = 15 - 6 = 9$, a unit ($9 \times 3 = 27 \equiv 1$). Plaintext `HELP`:
 

@@ -21,16 +21,16 @@ pub fn CoincidenceLab() -> impl IntoView {
     view! {
         <div class="lab">
             <div class="lab-controls">
-                <TextField label="Ciphertext" value=text multiline=true mono=true hint="paste any text; non-letters are ignored"/>
+                <TextField label="Ciphertext" value=text multiline=true mono=true hint="Paste any text. The lab ignores non-letters."/>
             </div>
             <div class="stat-row">
                 <div class="stat"><div class="stat-label mono">"letters"</div><div class="stat-value mono">{move || n.get()}</div></div>
                 <div class="stat"><div class="stat-label mono">"IC (whole text)"</div><div class="stat-value mono">{move || format!("{:.4}", ic.get())}</div></div>
-                <div class="stat"><div class="stat-label mono">"English reference"</div><div class="stat-value mono">{format!("{:.4} ± {:.4}", english_ic(), 0.0)}</div><div class="stat-sub mono">{move || format!("s.d. at n={}: {:.4}", n.get(), ic_std_dev(&ENGLISH, n.get()))}</div></div>
+                <div class="stat"><div class="stat-label mono">"English reference"</div><div class="stat-value mono">{format!("{:.4} ± {:.4}", english_ic(), 0.0)}</div><div class="stat-sub mono">{move || format!("standard deviation at n={}: {:.4}", n.get(), ic_std_dev(&ENGLISH, n.get()))}</div></div>
                 <div class="stat"><div class="stat-label mono">"uniform reference"</div><div class="stat-value mono">{format!("{UNIFORM_IC:.4}")}</div></div>
             </div>
             <div class="lab-viz">
-                <div class="lab-viz-head mono">"Mean coset IC by trial period m = 1…15 · dashed line = English IC"</div>
+                <div class="lab-viz-head mono">"Mean coset IC for each trial period, m = 1…15 · dashed line shows English IC"</div>
                 {move || {
                     let data: Vec<(String, f64)> = scan.get().into_iter().map(|(m, v)| (m.to_string(), v)).collect();
                     let best = scan.get().iter().skip(1).enumerate().max_by(|a, b| a.1 .1.partial_cmp(&b.1 .1).unwrap()).map(|(i, _)| i + 1);
@@ -39,7 +39,7 @@ pub fn CoincidenceLab() -> impl IntoView {
                 }}
             </div>
             <div class="lab-viz">
-                <div class="lab-viz-head mono">"Coincidence rate at lag t = 1…24 · fraction of positions with cᵢ = cᵢ₊ₜ"</div>
+                <div class="lab-viz-head mono">"Coincidence rate at each lag, t = 1…24 · share of positions where cᵢ = cᵢ₊ₜ"</div>
                 {move || {
                     let data: Vec<(String, f64)> = lags.get().into_iter().map(|(l, v)| (l.to_string(), v)).collect();
                     let top = lags.get().iter().enumerate().max_by(|a, b| a.1 .1.partial_cmp(&b.1 .1).unwrap()).map(|(i, _)| i);
@@ -47,7 +47,7 @@ pub fn CoincidenceLab() -> impl IntoView {
                 }}
             </div>
             <div class="lab-viz">
-                <div class="lab-viz-head mono">"Kasiski examination · repeated 3–6-grams and the periods dividing their distances"</div>
+                <div class="lab-viz-head mono">"Kasiski examination · repeated groups of 3–6 letters and periods that divide their distances"</div>
                 <div class="kasiski">
                     <div class="table-scroll">
                         <table class="mini-table mono">
@@ -64,7 +64,7 @@ pub fn CoincidenceLab() -> impl IntoView {
                     }}
                 </div>
             </div>
-            <Note>"The sample is a Vigenère ciphertext with a five-letter key. Period 5 (and its multiple 10) stand out in all three instruments; on a short text the whole-text IC alone says little, which is why the exact standard deviation of the estimator is printed next to it."</Note>
+            <Note>"The sample uses Vigenère with a five-letter key. Period 5 and its multiple 10 stand out in all three tests. For a short text, the whole-text IC alone is weak evidence. The standard deviation shows how much that estimate can vary."</Note>
         </div>
     }
 }

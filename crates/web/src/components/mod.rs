@@ -4,3 +4,4 @@ pub mod evidence;
 pub mod markdown;
 pub mod motif;
 pub mod palette;
+pub mod sidebar;

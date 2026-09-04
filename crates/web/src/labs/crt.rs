@@ -12,16 +12,16 @@ pub fn CrtLab() -> impl IntoView {
             .map(|s| {
                 let parts: Vec<&str> = s.split("mod").map(|p| p.trim()).collect();
                 if parts.len() != 2 {
-                    return Err(format!("cannot read “{}”: use the form r mod m", s.trim()));
+                    return Err(format!("Cannot read “{}”. Use the form r mod m.", s.trim()));
                 }
                 let r = parts[0]
                     .parse::<i64>()
-                    .map_err(|_| format!("bad residue “{}”", parts[0]))?;
+                    .map_err(|_| format!("“{}” is not a valid residue.", parts[0]))?;
                 let m = parts[1]
                     .parse::<i64>()
-                    .map_err(|_| format!("bad modulus “{}”", parts[1]))?;
+                    .map_err(|_| format!("“{}” is not a valid modulus.", parts[1]))?;
                 if m <= 0 {
-                    return Err("moduli must be positive".into());
+                    return Err("Each modulus must be positive.".into());
                 }
                 Ok((r, m))
             })
@@ -32,7 +32,7 @@ pub fn CrtLab() -> impl IntoView {
     view! {
         <div class="lab">
             <div class="lab-controls">
-                <TextField label="Congruences" value=spec mono=true hint="comma-separated: r mod m"/>
+                <TextField label="Congruences" value=spec mono=true hint="Separate them with commas: r mod m"/>
             </div>
             {move || match parsed.get() {
                 Err(e) => view! { <p class="lab-error" role="alert">{e}</p> }.into_any(),
@@ -48,7 +48,7 @@ pub fn CrtLab() -> impl IntoView {
                                 {cs.iter().map(|&(r, mm)| view! { <tr><td>{format!("x ≡ {r} (mod {mm})")}</td><td>{format!("{x} mod {mm} = {} {}", x.rem_euclid(mm), if x.rem_euclid(mm) == r.rem_euclid(mm) { "✓" } else { "✗" })}</td></tr> }).collect_view()}
                             </tbody></table></div>
                         }.into_any(),
-                        None => view! { <p class="lab-error" role="alert">"The system is inconsistent: two congruences disagree on a shared factor of their moduli."</p> }.into_any(),
+                        None => view! { <p class="lab-error" role="alert">"There is no solution. Two congruences disagree on a factor shared by their moduli."</p> }.into_any(),
                     }
                 }
             }}
@@ -57,10 +57,10 @@ pub fn CrtLab() -> impl IntoView {
                 <div class="lab-row">
                     <TextField label="a" value=inv_a mono=true/>
                     <TextField label="m" value=inv_m mono=true/>
-                    <div class="stat"><div class="stat-label mono">"a⁻¹ mod m"</div><div class="stat-value mono">{move || match (inv_a.get().trim().parse::<i64>(), inv_m.get().trim().parse::<i64>()) { (Ok(a), Ok(m)) => mod_inverse(a, m).map(|i| i.to_string()).unwrap_or_else(|| "none (not coprime)".into()), _ => "—".into() }}</div></div>
+                    <div class="stat"><div class="stat-label mono">"a⁻¹ mod m"</div><div class="stat-value mono">{move || match (inv_a.get().trim().parse::<i64>(), inv_m.get().trim().parse::<i64>()) { (Ok(a), Ok(m)) => mod_inverse(a, m).map(|i| i.to_string()).unwrap_or_else(|| "none (a and m are not coprime)".into()), _ => "—".into() }}</div></div>
                 </div>
             </div>
-            <Note>"The Chinese remainder theorem reassembles a residue from its images modulo pairwise coprime factors; with shared factors the system may be inconsistent. In cryptanalysis it lifts partial information recovered modulo small primes into a full key residue, and it is the reason mixed periods combine to their least common multiple."</Note>
+            <Note>"The Chinese remainder theorem combines residues for pairwise coprime moduli into one residue. If the moduli share factors, the congruences may have no common solution. In cryptanalysis, this can combine partial key results modulo small primes. The same idea explains why mixed periods join at their least common multiple."</Note>
         </div>
     }
 }

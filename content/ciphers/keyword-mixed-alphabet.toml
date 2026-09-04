@@ -1,13 +1,13 @@
 id = "keyword-mixed-alphabet"
 section = "ciphers"
 title = "Keyword-mixed alphabet"
-subtitle = "Simple substitution whose alphabet is generated from a keyword or phrase"
+subtitle = "Build a substitution alphabet from a word or phrase"
 status = "VERIFIED"
-status_note = "Keyed-alphabet generators (six keying styles) and the phrase-keyed search passed their planted control at 100% over 202,504 alphabets; the general arbitrary-substitution solver recovered all six hidden 504-letter positives."
+status_note = "Six keyed-alphabet styles and the phrase-keyed search passed their planted control at 100% across 202,504 alphabets. The general substitution solver also recovered all six hidden 504-letter controls."
 family = "Monoalphabetic substitution"
 tags = ["monoalphabetic", "keyword", "mixed alphabet", "structured key"]
 related = ["caesar-shift", "quagmire-i", "quagmire-iii", "phrase-keyed-alphabet-attack", "dictionary-attack", "simulated-annealing", "frequency-analysis", "g-keyed-alphabet", "g-mixed-alphabet"]
-summary = "A keyword-mixed alphabet writes the distinct letters of a keyword first and then the unused letters in some fixed order; the plaintext alphabet is mapped onto it position by position. As a cipher it is a simple substitution with a small structured key space. Its importance in the program was as the alphabet inside Quagmire ciphers: a search over every phrase-keyed alphabet is cheap, whereas a blind search over all 26! alphabets is not."
+summary = "A keyword-mixed alphabet writes each keyword letter once, then adds the unused letters in a fixed order. Mapping the normal alphabet to this new order gives a simple substitution. The keyword creates a small, structured set of keys. This matters inside Quagmire ciphers: a solver can try every phrase-keyed alphabet, while all 26! arbitrary alphabets are far too many."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -48,7 +48,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. **Structured bank.** Generate every alphabet from the bank in every style, decrypt, and rank by quadgram rate. The true alphabet reads as English at once; the wrong ones sit near $-6$ per letter.
 2. **Blind substitution.** Frequency initialisation followed by simulated annealing over letter swaps with a quadgram objective and a steepest pair-swap finish. At 504 letters this is reliable; the program's frozen schedule is 3 restarts of 10,000 steps over all cells, then 5 of 30,000 and 11 of 80,000 over the leaders.
@@ -72,12 +72,12 @@ body = '''
 [[blocks]]
 kind = "controls"
 body = '''
-Phrase-keyed Quagmire sweep: the planted control (a 31-letter phrase in the keyword-mixed style) was recovered at 100% match, rate $-4.34$, and the two live texts scored $-6.54$ and $-6.35$, i.e. noise (logs/07_phrase.log). General arbitrary-substitution solver: six hidden 504-letter positives recovered exactly (observed alphabet sizes 20, 22, 24, 25, 26, 26), three random-latent negatives scored $-15.06$ to $-15.01$ and nineteen shuffled-prose nulls $-13.96$ to $-13.50$ against a frozen gate of $-10.0$ (logs/327_pk10_alberti_monosub_controls.log; the slope-0 cell of that lane is a plain substitution).
+Phrase-keyed Quagmire sweep: the planted control (a 31-letter phrase in the keyword-mixed style) was recovered at 100% match, rate $-4.34$, and the two live texts scored $-6.54$ and $-6.35$, i.e. noise (log 7). General arbitrary-substitution solver: six hidden 504-letter positives recovered exactly (observed alphabet sizes 20, 22, 24, 25, 26, 26), three random-latent negatives scored $-15.06$ to $-15.01$ and nineteen shuffled-prose nulls $-13.96$ to $-13.50$ against a frozen gate of $-10.0$ (log 327; the slope-0 cell of that lane is a plain substitution).
 '''
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Keyword `ZEBRAS`, straight remainder:
 

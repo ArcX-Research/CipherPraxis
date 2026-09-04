@@ -1,13 +1,13 @@
 id = "coincidence-lab"
 section = "labs"
 title = "Coincidence & Kasiski lab"
-subtitle = "Index of coincidence, periodic IC scan, lag coincidence profile and Kasiski repeats on any text"
+subtitle = "Use IC, matching-letter gaps, and Kasiski repeats to look for a key period"
 status = "VERIFIED"
-status_note = "The statistics are unit-tested on a Vigenère ciphertext with a five-letter key: the periodic IC, the lag profile and the Kasiski factor votes all single out period 5."
+status_note = "On a Vigenère test with a five-letter key, periodic IC, the gap profile, and Kasiski factor votes all identify period 5."
 family = "Analysis labs"
 tags = ["index of coincidence", "kasiski", "period", "statistics"]
 related = ["index-of-coincidence", "coincidence-lag-profile", "kasiski-examination", "estimator-standard-error", "null-lab"]
-summary = "Three classical period-finding instruments on one page. The whole-text index of coincidence says whether the letters are drawn from a language-like or a flat distribution; the periodic scan finds the key length as the period whose cosets look monoalphabetic; the lag profile and the Kasiski table show the same period from repeated fragments."
+summary = "This lab puts three classic period tests together. Whole-text index of coincidence shows whether letter counts look language-like or flat. The periodic scan finds a key length whose cosets look monoalphabetic. The gap profile and Kasiski table look for the same period in matching letters and repeated fragments."
 updated = "2026-09-04"
 lab = "coincidence"
 

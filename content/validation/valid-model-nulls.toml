@@ -1,13 +1,13 @@
 id = "valid-model-nulls"
 section = "validation"
 title = "Valid-model nulls"
-subtitle = "Negatives that satisfy every assumption of the model except the one being tested"
+subtitle = "Use negative cases that obey the cipher rules but remove the signal being tested"
 status = "VERIFIED"
-status_note = "Sealed control suites in the research program pair positives with independent-letter negatives of correct monogram statistics and with model-violating negatives; the independent-letter negative is the one that caught an English gate which would otherwise have passed on algebra alone."
+status_note = "Sealed control sets pair positives with two kinds of negatives: independent letters with the right single-letter counts, and cases that break the cipher model. The independent-letter negative caught an English gate that would otherwise have passed on algebra alone."
 family = "Power and calibration"
 tags = ["nulls", "negatives", "controls", "calibration"]
 related = ["tautological-gate-rule", "planted-controls", "selection-overfit-check", "family-wise-null", "within-coset-null", "shuffled-null-z-score", "permutation-test", "english-gate-calibration"]
-summary = "A model-violating negative (an independent random key stream, a broken chain) is rejected for a trivial reason: the algebra does not hold. A valid-model null is harder and more useful: the construction is exactly right, the key is legal, the letter frequencies are English, but the letters are independent draws. Only a gate that looks at adjacency, order or language can reject it, so it tests the part of the pipeline that is actually claimed to detect plaintext, and it measures what the selector does when the model is true but there is nothing to find."
+summary = "A negative that breaks the cipher rules may be easy to reject for the wrong reason. A valid-model null keeps the correct construction, a legal key, and English single-letter frequencies, but draws letters independently. Only a gate that uses adjacency, order, or language can reject it. This tests whether the pipeline really detects plaintext when the cipher's algebra is present but the language signal is not."
 updated = "2026-09-04"
 
 [[blocks]]

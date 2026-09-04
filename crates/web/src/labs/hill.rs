@@ -16,7 +16,7 @@ pub fn HillLab() -> impl IntoView {
             .collect();
         match vals {
             Ok(v) => Matrix::new(size.get(), v),
-            Err(_) => Err("matrix entries must be integers".to_string()),
+            Err(_) => Err("Enter whole numbers for every matrix value.".to_string()),
         }
     });
     let cipher = Signal::derive(move || {
@@ -45,7 +45,7 @@ pub fn HillLab() -> impl IntoView {
                             <option value="3" selected=move || size.get() == 3>"3 × 3"</option>
                         </select>
                     </div>
-                    <TextField label="Key matrix (row-major)" value=cells mono=true hint="entries mod 26"/>
+                    <TextField label="Key matrix (one row at a time)" value=cells mono=true hint="Values are taken modulo 26"/>
                 </div>
             </div>
             {move || err.get().map(|e| view! { <p class="lab-error" role="alert">{e}</p> })}
@@ -54,7 +54,7 @@ pub fn HillLab() -> impl IntoView {
                 let inv = m.inverse();
                 view! {
                     <div class="lab-viz">
-                        <div class="lab-viz-head mono">{format!("det K ≡ {det} (mod 26) · {}", if inv.is_some() { "invertible: gcd(det, 26) = 1" } else { "NOT invertible: gcd(det, 26) ≠ 1 — decryption impossible" })}</div>
+                        <div class="lab-viz-head mono">{format!("det K ≡ {det} (mod 26) · {}", if inv.is_some() { "invertible because gcd(det, 26) = 1" } else { "not invertible because gcd(det, 26) ≠ 1; this key cannot decrypt" })}</div>
                         <div class="matrix-row">
                             <MatrixView label="K" m=m.clone()/>
                             {inv.map(|i| view! { <MatrixView label="K⁻¹" m=i/> })}
@@ -62,9 +62,9 @@ pub fn HillLab() -> impl IntoView {
                     </div>
                 }
             })}
-            <Output label="Ciphertext (blocks padded with X)" value=cipher/>
+            <Output label="Ciphertext (X fills incomplete blocks)" value=cipher/>
             <Output label="Decrypted" value=back/>
-            <Note>"A Hill key is a linear map on n-letter blocks; it is breakable with n² known plaintext letters because the key satisfies a linear system over Z26. Try determinant 13 or an even determinant to see the invertibility condition bite."</Note>
+            <Note>"A Hill key applies a linear map to blocks of n letters. With n² known plaintext letters, an attacker can solve a linear system over Z26 to find the key. Try a matrix with determinant 13 or any even determinant. It has no inverse modulo 26, so it cannot decrypt."</Note>
         </div>
     }
 }

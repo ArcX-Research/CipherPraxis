@@ -1,13 +1,13 @@
 id = "literature-modern-schemes"
 section = "references"
 title = "Modern scheme literature"
-subtitle = "Textbook RSA and its attacks, mnemonic word-list key encodings, the one-time pad, and the general references"
+subtitle = "Sources for textbook RSA, mnemonic word lists, one-time pads, and their attacks"
 status = "VERIFIED"
-status_note = "Bibliographic entry: standard sources for the modern constructions that appear in the taxonomy as hypotheses; no experimental claim is made here."
+status_note = "These are standard sources for the modern constructions tested as possibilities. This bibliography makes no experimental claim."
 family = "Literature"
 tags = ["bibliography", "rsa", "mnemonic encoding", "one-time pad"]
 related = ["rsa-textbook", "mnemonic-wordlist-encoding", "one-time-pad", "modular-inverse-and-crt", "units-mod-26", "literature-search-and-exact-solvers"]
-summary = "Modern schemes enter a classical-cipher atlas as hypotheses about how a setter might have produced a text: a textbook RSA transform of letter blocks, a checksummed mnemonic word list spelled into letters, a genuinely random pad. The sources here define those constructions exactly, which is what a controls-first test of the hypothesis needs: the RSA paper and its attack survey, the BIP-39 specification with its checksum rule and 2,048-word list, Vernam and Shannon for the pad, and the two standard handbooks."
+summary = "A puzzle text might use a modern construction such as textbook RSA on letter blocks, a checksummed mnemonic phrase, or a truly random pad. These sources define those ideas precisely enough to build fair tests. They include the original RSA paper and an attack survey, the BIP-39 checksum and 2,048-word list, Vernam and Shannon on pads, and two standard cryptography handbooks."
 updated = "2026-09-04"
 
 [[blocks]]

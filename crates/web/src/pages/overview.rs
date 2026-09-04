@@ -38,20 +38,20 @@ pub fn Overview() -> impl IntoView {
         <section class="hero">
             <div class="wrap hero-grid">
                 <div class="hero-copy">
-                    <p class="eyebrow mono">"Dilate · Cryptography Knowledge Base"</p>
-                    <h1 class="display display-xl">"Cryptography, made "<em class="serif">"operational"</em>"."</h1>
+                    <p class="eyebrow mono">"Dilate · Cryptography knowledge base"</p>
+                    <h1 class="display display-xl">"Learn cryptography."<br/><em class="serif">"Test what you learn."</em></h1>
                     <p class="lede">
-                        "Cipher Praxis preserves the models, algebra, attack strategies, statistical instruments, solvers and validation protocols developed in a long cryptanalytic research program, and turns them into pages you can read, equations you can check, and code you can run in your browser."
+                        "Cipher Praxis explains cipher models, the math behind them, ways to attack them, and the checks that make results trustworthy. Read the guides, check the equations, and run the code in your browser."
                     </p>
                     <div class="hero-actions">
-                        <a class="btn btn-primary" href="/ciphers">"Start with the cipher taxonomy"</a>
-                        <a class="btn btn-ghost" href="/labs">"Open a WebAssembly lab"</a>
+                        <a class="btn btn-primary" href="/ciphers">"Browse ciphers"</a>
+                        <a class="btn btn-ghost" href="/labs">"Try a lab"</a>
                         <button type="button" class="btn btn-ghost" on:click=move |_| palette.set(true)>"Search "<kbd class="kbd">"⌘K"</kbd></button>
                     </div>
                     <dl class="hero-stats mono">
                         <div><dt>"entries"</dt><dd>{total}</dd></div>
                         <div><dt>"sections"</dt><dd>{Section::ALL.len()}</dd></div>
-                        <div><dt>"evidence files cited"</dt><dd>{prov_files}</dd></div>
+                        <div><dt>"evidence files"</dt><dd>{prov_files}</dd></div>
                         <div><dt>"runtime"</dt><dd>"Rust → WASM"</dd></div>
                     </dl>
                 </div>
@@ -64,9 +64,9 @@ pub fn Overview() -> impl IntoView {
 
         <section class="wrap section-block" aria-labelledby="ia-h">
             <div class="section-head">
-                <p class="eyebrow mono">"Information architecture"</p>
-                <h2 id="ia-h" class="display">"Eleven sections, one evidence trail."</h2>
-                <p class="lede-sm">"Every page states what a method is, how it is attacked, where it fails, which controls were run and which files back the numbers."</p>
+                <p class="eyebrow mono">"Browse the knowledge base"</p>
+                <h2 id="ia-h" class="display">"Explore ciphers, methods, and tools."</h2>
+                <p class="lede-sm">"Each page explains the method, how to test or attack it, when it can fail, which checks were run, and where the numbers came from."</p>
             </div>
             <div class="ia-grid">
                 {Section::ALL.into_iter().map(|s| {
@@ -86,7 +86,7 @@ pub fn Overview() -> impl IntoView {
         <section class="wrap section-block" aria-labelledby="status-h">
             <div class="section-head">
                 <p class="eyebrow mono">"Reading a page"</p>
-                <h2 id="status-h" class="display">"Status is a claim about evidence, not a verdict about the cipher."</h2>
+                <h2 id="status-h" class="display">"A status tells you what the evidence supports."</h2>
             </div>
             <div class="status-grid">
                 {Status::ALL.into_iter().map(|s| {
@@ -100,10 +100,10 @@ pub fn Overview() -> impl IntoView {
                 }).collect_view()}
             </div>
             <div class="rules glass">
-                <div class="rule"><span class="rule-n mono">"01"</span><p><b>"Controls first."</b>" A solver prints its planted controls before any target row; a control that does not read as language means the instrument is broken."</p></div>
-                <div class="rule"><span class="rule-n mono">"02"</span><p><b>"Numbers trace to receipts."</b>" Every pass rate, z-score and throughput figure names the log, audit or note it came from."</p></div>
-                <div class="rule"><span class="rule-n mono">"03"</span><p><b>"Negatives are scoped."</b>" A closure says what was excluded, at what text length, with what control power. It never claims a universal impossibility."</p></div>
-                <div class="rule"><span class="rule-n mono">"04"</span><p><b>"Gates must be able to fail."</b>" A check is cited only after it has been shown to reject something; nulls that satisfy the model are run alongside nulls that violate it."</p></div>
+                <div class="rule"><span class="rule-n mono">"01"</span><p><b>"Run controls first."</b>" A solver shows its planted controls before the target. If a control fails to recover readable language, do not trust the target results."</p></div>
+                <div class="rule"><span class="rule-n mono">"02"</span><p><b>"Trace every number."</b>" Each pass rate, z-score, and speed figure points to its source log, audit, or note."</p></div>
+                <div class="rule"><span class="rule-n mono">"03"</span><p><b>"Keep negative claims narrow."</b>" State exactly what the test ruled out, the text length, and the control power. Do not claim that something is impossible in every case."</p></div>
+                <div class="rule"><span class="rule-n mono">"04"</span><p><b>"Prove that checks can fail."</b>" Use a check only after it rejects a known bad case. Test null cases that fit the model and cases that break it."</p></div>
             </div>
         </section>
 
@@ -120,9 +120,9 @@ pub fn Overview() -> impl IntoView {
         {(!labs.is_empty()).then(|| view! {
             <section class="wrap section-block" aria-labelledby="labs-h">
                 <div class="section-head">
-                    <p class="eyebrow mono">"Interactive"</p>
-                    <h2 id="labs-h" class="display">"Labs compiled to WebAssembly."</h2>
-                    <p class="lede-sm">"The same Rust code that is unit-tested natively runs here, in your browser, with no server round-trips."</p>
+                    <p class="eyebrow mono">"Try it yourself"</p>
+                    <h2 id="labs-h" class="display">"Run the labs in your browser."</h2>
+                    <p class="lede-sm">"The labs use the same tested Rust code as the main project. They run on your device and do not send work to a server."</p>
                 </div>
                 <div class="card-grid">
                     {labs.into_iter().map(|e| view! { <EntryCard entry=e/> }).collect_view()}

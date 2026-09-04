@@ -1,13 +1,13 @@
 id = "blind-controls"
 section = "validation"
 title = "Blind controls"
-subtitle = "Planted instances whose truth is hidden from the solver and from its author"
+subtitle = "Hide known test answers from both the solver and its author"
 status = "VERIFIED"
-status_note = "One-shot hidden control banks with committed seeds were executed and admitted in the research program; one bank of 34 hidden cases returned POWER_BLOCKED at its fourth case although the disclosed bank had passed 34/34, which is the effect blind controls exist to detect."
+status_note = "The project ran one-shot hidden control banks from seeds fixed in advance. One bank of 34 cases returned POWER_BLOCKED at case four even though a visible development bank had passed 34/34. Blind controls exist to expose that gap."
 family = "Control design"
 tags = ["controls", "hidden bank", "one-shot", "seed commitment"]
 related = ["planted-controls", "target-absent-controls", "held-out-gates", "power-measurement", "seal-and-audit-protocol", "seed-determinism", "hash-chained-transcripts", "g-planted-control"]
-summary = "A blind control is a planted control whose plaintext, key and even corpus position are unknown to the person who wrote the solver until the run is over. The program implements two forms: a hidden bank derived from a seed that only the release authority holds and that is consumed by a single durable attempt, and blind full-root searches in which the solver must reach the planted truth by its own schedule with no oracle. Disclosed controls tune a tool; blind controls measure it."
+summary = "A blind control has a known answer, but the solver's author cannot see its plaintext, key, or source position until the run ends. One form builds a hidden bank from a seed held only by the release authority and allows one recorded attempt. Another hides the answer in the full search space and gives the solver no shortcut. Visible controls help develop a tool. Blind controls measure how well the finished tool really works."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -16,7 +16,7 @@ body = '''
 Two kinds of blindness are distinguished:
 
 - **Hidden bank.** Fixtures are derived deterministically from a seed $s$ supplied by the release authority after the code is frozen and audited. The attempt record stores only $\operatorname{SHA256}(s)$; the seed is revealed in the final transcript so that admission can regenerate the bank. Because the attempt path is occupied durably before any fixture is derived, a second try is impossible: the bank is **burned** by any attempt, successful or not.
-- **Blind search (no oracle).** The solver is given the planted ciphertext and no hint about where the truth lies in its task order (`oracle=False`). It passes only if it reaches the planted truth under the same ordering, budget and pruning the live run will use.
+- **Blind search (no oracle).** The solver is given the planted ciphertext and no information about where the truth lies in its task order (`oracle=False`). It passes only if it reaches the planted truth under the same ordering, budget and pruning the live run will use.
 
 A *disclosed* control, by contrast, is one whose seed and truth the author may inspect. It is admissible for development and for robustness diagnostics, and it never authorises a target run.
 '''

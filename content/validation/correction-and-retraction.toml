@@ -1,13 +1,13 @@
 id = "correction-and-retraction"
 section = "validation"
 title = "Correction and retraction"
-subtitle = "Wrong claims are withdrawn in a dated entry that names the defect and its consequences"
+subtitle = "Correct a wrong claim in a dated entry that explains the error and what it affects"
 status = "VERIFIED"
-status_note = "The research program's ledger contains explicit retractions (a novelty claim found false by source inspection), reclassifications (a power pass downgraded to a wiring test), voided collisions and corrections of record carried in receipts; each names the earlier entry, the defect and what still stands."
+status_note = "The ledger records full retractions, changed classifications, voided number collisions, and corrections carried into receipts. Examples include a novelty claim disproved by checking sources and a supposed power pass reduced to a wiring check. Each correction names the earlier entry, the defect, and what still stands."
 family = "Audit and release governance"
 tags = ["retraction", "correction", "ledger", "integrity"]
 related = ["ledger-reservations", "seal-and-audit-protocol", "reproducibility-receipts", "gauge-defect-invalidation", "selection-overfit-check", "power-measurement"]
-summary = "A research program that runs hundreds of negative experiments will make wrong claims, and its credibility rests on how it withdraws them. The practice here is a dated correction entry that quotes the false statement, states the evidence that refutes it, says which conclusions fall and which stand, and leaves the original untouched. Retractions in the program came from source audits (a 'never tested' family had been swept generically), from auditors (a power pass that was really a wiring test), and from arithmetic (a gate count of 17 that was 16)."
+summary = "A large research project will make some wrong claims. A dated correction should quote the error, give the evidence against it, state which conclusions fall and which remain, and leave the original record unchanged. Corrections here came from source checks, independent audits, and arithmetic. They found a supposedly untested family that had been covered by a broader search, a power test that checked only wiring, and a gate count of 17 that was really 16."
 updated = "2026-09-04"
 
 [[blocks]]

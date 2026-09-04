@@ -1,13 +1,13 @@
 id = "word-prefix-csp"
 section = "exact"
 title = "Word-prefix and crib-pair constraint solving"
-subtitle = "Exact rejection or completion of proposed plaintext openings and crib pairs by null-space enumeration, with language machinery reduced to a proposal role"
+subtitle = "Let language suggest openings or crib pairs, then let exact algebra accept or reject them"
 status = "VERIFIED"
-status_note = "The crib-pair instance passed both target-absent planted controls (full plants recovered at rates -4.247 and -4.503 with forced-crib and roundtrip gates) and closed its finite slice; the tail continuation passed its known-answer test and exhausted 8,851 systems with zero reads; the word-prefix chain variant has a passing KAT (144 all-different solutions containing the planted cycle) and a 1/1 control gate in deployment while its complete control panel was still being calibrated."
+status_note = "The crib-pair solver passed both target-absent planted controls, recovering full answers at rates -4.247 and -4.503 with forced-crib and round-trip checks, then completed its finite search. The tail continuation passed its known-answer test and checked 8,851 systems with zero readable results. The word-prefix chain form passed a known-answer test with 144 all-different answers containing the planted cycle and a 1/1 deployment control. Its full control panel was still in calibration."
 family = "Constraint programming"
 tags = ["crib pair", "word prefix", "null space", "particle filter", "decoy bank", "scoped closure"]
 related = ["all-different-enumeration", "exact-chain-oracle", "constraint-satisfaction-forward-checking", "beam-search", "corpus-bank-screen", "crib-dragging", "crib-driven-alphabet-recovery", "quagmire-iii", "family-wise-null", "local-language-model-prior", "target-absent-controls", "g-forward-checking"]
-summary = "Instead of searching an alphabet with a language model, a word-prefix CSP lets language propose short plaintext fragments (a complete opening of 18-24 letters, or two long cribs) and lets exact algebra decide: each fragment letter is a linear equation in unknown letter positions modulo 26, the system's GF(2) and GF(13) null spaces are enumerated under the all-different constraint, and every surviving alphabet is completed, scored and re-encrypted. Wrong fragments die exactly; matched decoy banks calibrate what the surviving completions look like by chance."
+summary = "A word-prefix solver uses language only to suggest short plaintext pieces, such as an 18- to 24-letter opening or two long cribs. Exact algebra decides whether each suggestion can work. Every fragment letter adds a linear equation in unknown alphabet positions modulo 26. The solver lists the GF(2) and GF(13) null-space answers under an all-different rule. It completes, scores, and re-encrypts every surviving alphabet. Matched false banks show how often wrong fragments survive by chance."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -47,7 +47,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 - **Crib-pair CSP on two zones.** Ten candidate instruction-like phrases placed pairwise at every offset under both relations; exact enumeration of consistent assignments, completion budget top 24 with 4 restarts, forced-crib and roundtrip gates, familywise decoy gate. Controls: one zone's plant recovered under the Vigenère relation with two phrases at offsets 0 and 72 (rate $-4.247$), the other under Beaufort with phrases at offsets 0 and 33 (rate $-4.503$), both reading as English with literal roundtrip and forced-crib PASS; none of the nine decoy banks produced a completed candidate. Live zones: zero completed rows in the finite slice.
 - **Tail continuation.** Deterministic reconstruction of the 20 ordered large-system lists (23/23 lists verified against the frozen transcript with 0 mismatches), processing of every remaining $d_{13} = 5$ system: 8,851 systems, zero all-different reads, familywise endpoint $-\infty$.
@@ -78,7 +78,7 @@ Crib-pair: 2/2 every-offset planted controls PASS (rates $-4.247$, $-4.503$; ENG
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Alphabet positions $z(\cdot)$ unknown, key word letters $W_0, W_1$ at cosets 0 and 1, relation $z(c) = z(p) + z(W_b)$. A two-letter crib `AB` under ciphertext `CD` at cosets 0, 1 gives $z(C) - z(A) - z(W_0) \equiv 0$ and $z(D) - z(B) - z(W_1) \equiv 0$. Two rows in six unknowns leave a four-dimensional null space per field: nothing is decided. Add a second crib `BA` under `EC` at the same cosets: $z(E) - z(B) - z(W_0) \equiv 0$ and $z(C) - z(A) - z(W_1) \equiv 0$. Subtracting the first and fourth rows gives $z(W_0) \equiv z(W_1)$; with $W_0 \ne W_1$ as letters, injectivity of $z$ makes the pair infeasible. The single crib could not be refuted; the pair is rejected exactly, and that asymmetry is the whole design.
 '''

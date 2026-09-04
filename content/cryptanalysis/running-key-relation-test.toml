@@ -1,13 +1,13 @@
 id = "running-key-relation-test"
 section = "cryptanalysis"
 title = "Running-key relation test"
-subtitle = "Testing whether a ciphertext is keyed by a known text, or whether two ciphertexts share a running key"
+subtitle = "Check whether a known text is the key or two ciphertexts reuse one long key"
 status = "POWER-LIMITED"
-status_note = "Against a known key text the exact window solver has full power: a planted window is found (5 solutions in 255 nodes) while a wrong window dies in 26 nodes, and in the solved part of the series the relation between two texts was recovered this way; against an unknown shared running key the difference of two 144- to 153-letter ciphertexts carries too little signal: the IC test sits inside its family-wise null and a language-model beam on the two-plaintext difference failed 3/3 hidden controls (logs/60, 63, 03, 166)."
+status_note = "For a known key text, the exact window solver found the planted passage with 5 answers in 255 nodes, while a wrong passage failed in 26 nodes. It also recovered a link between two earlier solved texts. For an unknown shared key, differences between 144- to 153-letter ciphertexts carried too little signal. The IC test stayed inside its family-wide null, and a language beam failed 3/3 hidden controls (logs/60, 63, 03, 166)."
 family = "Relations between ciphertexts"
 tags = ["running key", "known text", "difference text", "family-wise null", "constraint satisfaction"]
 related = ["running-key", "book-cipher", "one-time-pad", "key-cancellation", "autokey-difference-periodicity", "family-wise-null", "index-of-coincidence", "constraint-satisfaction-forward-checking", "beam-search", "power-measurement", "g-key-cancellation", "g-selection-freedom"]
-summary = "A running key is a long text added to the plaintext. Two questions follow: is this ciphertext keyed by some text we possess, and are these two ciphertexts keyed by the same unknown text? The first is answered exactly, by solving for a free alphabet under each candidate window and watching wrong windows die; the second reduces to the difference of the two plaintexts, whose signal at 150 letters is small enough that the corpus measured it as a power failure. Both tests need family-wise nulls, because offsets, orientations, signs and orders multiply the trials."
+summary = "A running key adds a long text to the plaintext. One test asks whether a passage we have was used as that key. An exact solver tries each window with a free alphabet, and wrong windows quickly fail. Another test asks whether two ciphertexts share an unknown running key. Subtraction then leaves the difference between their plaintexts, but at about 150 letters this signal was too weak for the tested decoder. Both searches need family-wide nulls because they try many offsets, directions, signs, and alphabet orders."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -36,7 +36,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Known-text test: for every candidate text and window, solve the free-alphabet CSP with a node cap; report consistent windows, capped windows (undecided) and dead windows; re-run capped windows with a larger cap.
 2. Difference test: compute $c \pm c'$ at every offset and orientation in each common order; score by IC and by a language model; compare the maximum with the family-wise null.
@@ -71,7 +71,7 @@ body = '''
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Key text `LEMONLEMONLE`; two plaintexts `ATTACKATDAWN` and `HOLDTHEGATES`:
 

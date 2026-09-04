@@ -1,13 +1,13 @@
 id = "shuffled-null-z-score"
 section = "statistics"
 title = "Shuffled-null z-score"
-subtitle = "Standardising a statistic against its distribution on position-shuffled copies of the same text"
+subtitle = "Compare a statistic with the same text after its positions are shuffled"
 status = "VERIFIED"
-status_note = "Every instrument in the toolkit prints its reading with a shuffle null; on planted references the exact period-7 alignment reads z +9.6 for a plain periodic substitution of English and z +4.0 for the same key over a fractionated inner text (200 shuffles), which fixes the scale on which target readings of +2.9 to +4.2 are interpreted."
+status_note = "Every analysis tool prints its result with a shuffle null. Against 200 shuffles, an exact period-7 alignment reaches z +9.6 for a plain repeating substitution of English and z +4.0 for the same key over fractionated text. These checks set the scale for target readings from +2.9 to +4.2."
 family = "Null distributions and calibration"
 tags = ["null distribution", "z-score", "shuffle", "permutation", "calibration"]
 related = ["permutation-test", "within-coset-null", "family-wise-null", "estimator-standard-error", "index-of-coincidence", "exact-period-alignment", "g-null-distribution", "g-z-score", "g-empirical-p-value", "null-lab"]
-summary = "A shuffle null answers the question 'how large would this statistic be on a text with the same letters in random order?'. The statistic is recomputed on N random permutations of the ciphertext positions, and the observed value is reported as z = (observed - null mean)/null sd together with the empirical p-value, the fraction of shuffles at or above the observed value. Because the null keeps the letter multiset, it is the right reference for anything that claims structure in the order of the letters, including coset structure, periodicity and alignment."
+summary = "A shuffle null asks how large a statistic would be if the same letters appeared in random order. Compute the statistic on N shuffled copies of the ciphertext. Report z = (observed - null mean)/null sd and the empirical p-value, the share of shuffles at least as large as the observation. Shuffling keeps total letter counts, so it is a useful reference for claims about letter order, including cosets, periods, and alignment."
 updated = "2026-09-04"
 
 [[blocks]]

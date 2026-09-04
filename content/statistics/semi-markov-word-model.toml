@@ -1,13 +1,13 @@
 id = "semi-markov-word-model"
 section = "statistics"
 title = "Semi-Markov word model"
-subtitle = "Scoring letter strings as sequences of whole words with explicit lengths, and decoding under it with exact completion bounds"
+subtitle = "Score text as whole words of different lengths and bound unfinished guesses"
 status = "POWER-LIMITED"
-status_note = "Implemented as a dictionary segmentation DP for display and as a complete-token decoder with an exact trie completion bound; on a held-out 95-letter word-aligned control the decoder kept the truth at ranks 3 to 42,571 through the first word at beam 8,192 and lost it at position 10, a quantified decoder-power failure, so it is not yet a selector."
+status_note = "The project implements a dynamic program that splits text into dictionary words and a full-token decoder with an exact trie bound for unfinished words. On a separate 95-letter control aligned to word edges, the truth ranged from rank 3 to 42,571 during the first word in a beam of 8,192 and was lost at position 10. This measured power failure means the decoder is not yet used to select answers."
 family = "Language priors"
 tags = ["semi-Markov", "word model", "segmentation", "lexicon", "beam"]
 related = ["quadgram-log-likelihood", "local-language-model-prior", "beam-search", "viterbi-decoding", "word-prefix-csp", "dictionary-attack", "shared-cycle-attack", "power-analysis", "g-quadgram"]
-summary = "A semi-Markov (segmental) language model treats a letter string as a sequence of words of variable length and scores it by the words rather than by overlapping n-grams. It captures what quadgrams cannot: that a candidate decrypt is a concatenation of real words. Two uses appear in the evidence corpus, a cheap segmentation for human inspection of candidates, and a decoder in which every retained hypothesis declares a complete token length at each word boundary and competes under an exact completion bound; the second is elegant but, at 63-95 letters under shared-alphabet constraints, has so far lost the planted truth before the constraints become selective."
+summary = "A semi-Markov, or segmental, language model treats text as a sequence of words with different lengths. It scores whole words instead of overlapping n-grams. This can see whether a decryption is made of real words, which quadgrams do not model directly. One version simply splits candidates for a person to inspect. Another decodes word by word and uses an exact bound for possible completions. At 63–95 letters with shared-alphabet rules, that decoder loses the planted truth too early."
 updated = "2026-09-04"
 
 [[blocks]]

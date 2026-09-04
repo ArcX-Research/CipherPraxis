@@ -6,5 +6,5 @@ status_note = "Usage as recorded in the corpus's sealed audits."
 family = "Exactness guarantees"
 tags = ["exactness", "reproducibility"]
 related = ["bound-benchmarks-and-certificates", "known-answer-tests", "rank-sharding", "reproducibility-receipts", "hash-chained-transcripts"]
-summary = "A record that lets a reader verify an exact search's conclusion without re-running it: pinned input hashes, the declared space and its census, the winning state written literally, its score recomputed by an independent scalar routine, the tie count within tolerance, an independent forward re-encryption, and the outcome token (complete, incomplete, structural zero, tied best). A transcript that ends without its terminal line, or whose replay disagrees, certifies nothing and is retained as a failed attempt."
+summary = "A certificate records enough detail to check an exact search without running it again. It includes fixed input hashes, the search space and its size, the winning state, a separately recomputed score, the number of near ties, a separate forward encryption, and the final outcome token (complete, incomplete, structural zero, or tied best). A transcript with no final line, or one that fails replay, proves nothing and stays marked as a failed attempt."
 updated = "2026-09-04"

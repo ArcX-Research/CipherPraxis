@@ -1,13 +1,13 @@
 id = "seed-determinism"
 section = "engineering"
 title = "Seed determinism"
-subtitle = "Domain-separated, hash-derived seeds that make every fixture, null and search a pure function of pinned inputs"
+subtitle = "Derive every random seed from labeled hashes so the same inputs reproduce the same run"
 status = "VERIFIED"
-status_note = "The research program's sealed designs derive all randomness from labelled SHA-256 streams with rejection sampling; an independent auditor reproduced a 68-seed, 34-case bank from the design text alone, and a fresh re-execution of a sealed run reproduced every semantic record."
+status_note = "Sealed designs derive all random values from labeled SHA-256 streams with rejection sampling. An independent auditor rebuilt a 68-seed, 34-case bank from the design text alone. A fresh rerun of a sealed job reproduced every meaningful record."
 family = "Reproducibility"
 tags = ["seeds", "determinism", "randomness", "replay"]
 related = ["blind-controls", "reproducibility-receipts", "hash-chained-transcripts", "valid-model-nulls", "compiled-hot-cores", "state-checkpoints"]
-summary = "Reproducibility of a randomised experiment is a property of how its randomness is derived. The program fixes one root value, derives every fixture, permutation and search seed from a labelled hash stream with a private counter per label, forbids rerolls and stream switching, and feeds the same selector seed to the observation and to every null so that a heuristic search becomes a deterministic statistic of its input. Language, scores, wall-clock values and implementation RNG state never enter the derivation."
+summary = "A randomized experiment is repeatable only when its random values are repeatable. Start from one fixed root value. Derive every case, shuffle, and search seed from a labeled hash stream with its own counter. Do not reroll or switch streams. Use the same selector seed for the observation and each null so a heuristic search becomes a fixed function of its input. Language, scores, timing, and hidden random-generator state never affect the seed."
 updated = "2026-09-04"
 
 [[blocks]]

@@ -6,5 +6,5 @@ status_note = "Term as used in the research program."
 family = "Validation vocabulary"
 tags = ["coordination"]
 related = ["ledger-reservations", "correction-and-retraction", "internal-evidence-corpus"]
-summary = "An append-only, dated record shared by all agents of a research program in which log numbers and file names are reserved before work, seals and audit verdicts are recorded with hashes, outcomes are stated with their scope, and errors are corrected by later entries rather than edits. The program also keeps a negative-results ledger that classifies every transcript as complete, failed, interrupted or exploratory."
+summary = "A ledger is a dated record that is only appended to. Before work starts, it reserves log numbers and file names. It later records file hashes, seals, audit results, and the exact scope of each outcome. Errors are corrected in new entries instead of rewriting old ones. A separate negative-results ledger marks each transcript as complete, failed, interrupted, or exploratory."
 updated = "2026-09-04"

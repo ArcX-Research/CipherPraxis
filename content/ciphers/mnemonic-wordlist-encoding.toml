@@ -1,13 +1,13 @@
 id = "mnemonic-wordlist-encoding"
 section = "ciphers"
 title = "Mnemonic word-list encoding"
-subtitle = "A checksummed 2,048-word mnemonic hidden as letter blocks under a keyed cipher"
+subtitle = "Hide a checksummed phrase from a 2,048-word list under a keyed cipher"
 status = "CLOSED"
-status_note = "Exact solvers for a 24-word (and 12- to 21-word) mnemonic written as unique four-letter prefixes or full spellings under a period-2, -4 or -7 keyed cipher recovered blind planted mnemonics with their cycle and shifts, then drained every live task with zero endpoints in the declared geometries; other origins, padded three-letter words and an unknown alphabet under seven free shifts remain open."
+status_note = "Exact solvers recovered hidden planted mnemonics, their alphabet cycle, and their shifts. Tests covered 12 to 24 words written as unique four-letter prefixes or full words under period-2, -4, or -7 keyed ciphers. Every stated live search finished with zero answers. Other source lists, padded three-letter words, and an unknown alphabet under seven free shifts remain open."
 family = "Modern and encoding schemes"
 tags = ["mnemonic", "word list", "checksum", "structured key", "exact search"]
 related = ["quagmire-iii", "quagmire-iv", "keyword-mixed-alphabet", "word-prefix-csp", "constraint-satisfaction-forward-checking", "modular-inverse-and-crt", "all-different-enumeration", "shared-cycle-attack", "g-mixed-alphabet"]
-summary = "A standard mnemonic encodes 128 to 256 random bits as 12 to 24 words from a fixed 2,048-word list, each word carrying 11 bits and the last word including a hash checksum. Every English list word is identified by its first four letters, so 24 words fit exactly into 96 letters. The program treated such a mnemonic as a candidate high-entropy structured plaintext, wrote it in letter blocks, enciphered it with a keyed periodic cipher, and built exact solvers in which the checksum is part of the search rather than a score."
+summary = "A standard mnemonic stores 128 to 256 random bits as 12 to 24 words from a fixed list of 2,048. Each word carries 11 bits, and the last word includes a hash checksum. The first four letters uniquely identify every English word, so 24 words fit in 96 letters. Exact solvers tested these blocks beneath repeating keyed ciphers and enforced the checksum as a rule, not just a score."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -46,7 +46,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Freeze the geometry (words, origin, period, tie) and the list hash.
 2. Run the compiled most-constrained-first DFS with split prefixes scheduled by the size of the next domain; stop at the first verified endpoint for a power test, or drain every task for an exhaustive zero.
@@ -77,7 +77,7 @@ Period-7 tie (log 445): blind full-root Vigenère and Beaufort plants recovered 
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 The all-zero entropy vectors show the checksum rule. With 128 zero bits, $\operatorname{SHA256}(16 \text{ zero bytes})$ begins `37...`, so the 4 checksum bits are `0011` $= 3$, and the 12-word mnemonic is `abandon` eleven times followed by word 3, `about`. With 256 zero bits, $\operatorname{SHA256}(32 \text{ zero bytes})$ begins `66...`, so the 8 checksum bits give index $102$, and the 24-word mnemonic is `abandon` twenty-three times followed by `art`. Written as four-letter prefixes, the 24-word vector is `ABAN` repeated 23 times and then `ART` padded, which is why three-letter words were treated as a separate model.
 '''

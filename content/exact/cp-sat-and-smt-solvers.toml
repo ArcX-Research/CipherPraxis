@@ -1,13 +1,13 @@
 id = "cp-sat-and-smt-solvers"
 section = "exact"
 title = "CP-SAT and SMT solvers for cipher constraints"
-subtitle = "Encoding an unknown alphabet, key shifts and a finite plaintext language as integer, table, automaton and Boolean constraints, and reading SAT, UNSAT or UNKNOWN honestly"
+subtitle = "Express alphabet, key, and language rules for general solvers and report SAT, UNSAT, or UNKNOWN"
 status = "VERIFIED"
-status_note = "Exact encodings are implemented for Z3 (CNF and bounded-integer forms) and OR-Tools CP-SAT with forced/blocked known-answer panels passing 4/4 in each backend (worst checks 1.82 s and 1.32 s), and exact SAT/UNSAT decisions with independent forward checks are recorded for finite-vocabulary models at 91-95 letters (controls 8/8). Unforced identification with a 1,024-word language at 95 letters returned UNKNOWN at 300 s in every backend and is recorded as solver-power failure, not as a negative."
+status_note = "Exact Z3 encodings use both CNF and bounded integers, and OR-Tools uses CP-SAT. Forced and blocked known-answer checks passed 4/4 in each system, taking at most 1.82 s and 1.32 s. Finite-word models at 91–95 letters made exact SAT or UNSAT decisions with separate forward checks, passing 8/8 controls. With 1,024 possible words at 95 letters, every solver returned UNKNOWN after 300 s. That is a solver limit, not a negative."
 family = "Constraint programming"
 tags = ["CP-SAT", "SMT", "Z3", "SAT", "automaton", "all-different", "table constraint", "timeout"]
 related = ["constraint-satisfaction-forward-checking", "all-different-enumeration", "exact-chain-oracle", "known-answer-tests", "bound-benchmarks-and-certificates", "beam-search", "all-different-constraints", "units-mod-26", "quagmire-iii", "throughput-fail", "reproducibility-receipts", "g-certificate"]
-summary = "Constraint-programming and SMT solvers decide whether an unknown alphabet permutation, a handful of key shifts and a plaintext drawn from a finite language can jointly explain a ciphertext. The alphabet is an AllDifferent array of 26 positions, modular equations become 676-row tables or Boolean carries, and the language is a minimised automaton. The corpus records exact decisions, including UNSAT by a cardinality argument and SAT that is provably non-unique, and it also records the wall every backend hit: unforced 95-letter instances with a 1,024-word language time out at 300 s."
+summary = "CP-SAT and SMT solvers can ask whether one unknown alphabet, several key shifts, and plaintext from a fixed language explain a ciphertext together. The alphabet becomes 26 different positions. Modular equations become tables with 676 rows or Boolean carry rules. A small automaton represents the language. The solver may prove SAT, prove UNSAT, or return UNKNOWN. In tests, unforced 95-letter cases with 1,024 possible words reached the 300-second limit in every solver."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -52,7 +52,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 - **Finite-vocabulary tiling, exact.** Compile a bank to a DFA, encode one shared cycle and five tied shifts as one-hot CNF with three-way channel clauses, decide each window: six bank/window cells UNSAT by cardinality, two cells SAT with an explicit second model after blocking the first (5,186 variables / 3,012,112 clauses, 13-16 s per solve).
 - **Cross-chain with two finite languages.** Element-symbol DFA on one plaintext, top-1,024 generic-word DFA on the other, one cycle and five shifts; encodings from 301,760 CNF variables / 1,778,174 clauses down to 1,950 Z3 declarations / 2,841 assertions (154.75 times fewer) and 411-437 CP-SAT variables; incremental activation of word transitions in 13-character blocks.
@@ -83,7 +83,7 @@ Toy language equivalence: 254 strings, 207 accepted by both the old and the comp
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Variables $x, y, z \in \{0, 1, 2\}$, constraints $\text{AllDifferent}(x, y, z)$, $x + y \equiv 1 \pmod 3$, $z = 2$. Then $\{x, y\} = \{0, 1\}$ and both orders satisfy $x + y = 1$: solutions $(0, 1, 2)$ and $(1, 0, 2)$. A forced model (fix $x = 0$) is SAT; forced plus blocked (fix $x = 0$ and forbid the tuple $(0, 1, 2)$) is UNSAT, which is the known-answer pattern. The unforced model is SAT but not unique: blocking $(0, 1, 2)$ returns $(1, 0, 2)$, so the instance identifies the set $\{x, y\}$ but not the labels, exactly the situation recorded for the short-token banks.
 '''

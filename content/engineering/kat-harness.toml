@@ -1,13 +1,13 @@
 id = "kat-harness"
 section = "engineering"
 title = "KAT harness"
-subtitle = "Known-answer tests for cores, parsers, transactions and control filters, run before every mode"
+subtitle = "Run fixed-answer tests on cores, parsers, file writes, and control filters before any mode"
 status = "VERIFIED"
-status_note = "Self-KATs, static KATs, parser mutation panels, transaction fail-once KATs, differential KATs and segment KATs are implemented and recorded in the research program, with counts such as 420 parser mutations rejected, 18 interruption failpoints classified and every swap delta checked against a full rescore."
+status_note = "Recorded checks include self-tests, static fixed answers, parser mutations, one-time write failures, comparisons between implementations, and segment tests. Examples include 420 rejected parser mutations, 18 classified interruption points, and every fast swap-score change checked against a full rescore."
 family = "Tooling"
 tags = ["kat", "testing", "self-test", "mutation"]
 related = ["compiled-hot-cores", "hash-chained-transcripts", "state-checkpoints", "control-first-policy", "tautological-gate-rule", "gauge-defect-invalidation", "known-answer-tests", "g-kat"]
-summary = "A known-answer test asserts that a component produces a predetermined result on a predetermined input. The program layers them: the core checks its own algebra and incremental scoring; the Python wrapper checks its derivations against published vectors and its parser against hundreds of mutated transcripts; the transaction layer checks that every failure point leaves a fail-closed filesystem state; and control filters are checked against planted truths so that a control cannot be failed by its own filter. No mode runs before its KATs pass."
+summary = "A known-answer test requires a fixed result from a fixed input. Several layers use them. The core checks its algebra and fast score updates. The Python wrapper compares results with published examples and rejects damaged transcripts. File-write tests interrupt every failure point and require a safe closed state. Control filters must keep planted truths. No mode runs until all these checks pass."
 updated = "2026-09-04"
 
 [[blocks]]

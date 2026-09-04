@@ -1,13 +1,13 @@
 id = "constraint-satisfaction-forward-checking"
 section = "exact"
 title = "Constraint satisfaction with forward checking"
-subtitle = "Backtracking search over discrete variables that filters the domains of unassigned neighbours after every assignment and orders variables by minimum remaining values"
+subtitle = "Assign one value at a time, remove impossible choices early, and backtrack when none remain"
 status = "VERIFIED"
-status_note = "Implemented for word-row assignment under fixed column substitutions (planted control found in 244 nodes), for crib plus key-word linear systems over letter positions (planted completions read at -4.12 to -4.27 with 100% match from 13-20-letter cribs), and for token tilings of finite vocabularies; every instrument prints its control before any target row."
+status_note = "The method assigns word rows under fixed column substitutions, solving a planted control in 244 nodes. It also solves crib-plus-keyword equations over alphabet positions, recovering planted answers at 100% from 13- to 20-letter cribs with scores -4.12 to -4.27. A third form tiles finite word lists. Every tool prints its control before target results."
 family = "Constraint programming"
 tags = ["CSP", "forward checking", "backtracking", "MRV", "node budget", "all-different"]
 related = ["word-prefix-csp", "all-different-enumeration", "cp-sat-and-smt-solvers", "exhaustive-enumeration", "all-different-constraints", "crib-driven-alphabet-recovery", "crib-dragging", "quagmire-iii", "dictionary-attack", "planted-controls", "g-forward-checking"]
-summary = "A constraint satisfaction problem assigns values from finite domains to variables so that all constraints hold. Forward checking makes backtracking practical: after each assignment the domains of the still-unassigned variables are filtered by the constraints they share with the new value, and an emptied domain triggers an immediate backtrack. Ordering variables by the smallest remaining domain keeps the search tree narrow. In classical cryptanalysis the variables are words on rows, letter positions in an unknown alphabet, or tokens in a tiling, and the constraints come from the cipher's equalities and injectivity."
+summary = "A constraint satisfaction problem gives each variable one value from a fixed set while obeying every rule. Forward checking removes newly impossible choices from unassigned variables after each step. If any variable has no choices left, the solver backs up at once. Choosing the variable with the fewest options next keeps the search small. In cryptanalysis, variables may be row words, positions in an unknown alphabet, or tiles. Cipher equalities and one-to-one mappings supply the rules."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -55,7 +55,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 - **Rows of words.** A period-7 zone read as a list of 7-letter words under seven fixed substitutions; families of 704 (four words with one-letter variations), about 52,000 (two-letter variations) and about 25,000 (all 7-letter dictionary words); every phase of the period; budgets of 2,000,000 and 150,000 nodes; solutions capped at three.
 - **Crib plus key word.** Cribs of 7-20 letters at every offset for each candidate key word; consistent assignments are ranked by the quadgrams of their pinned letters and completed by a quadgram climb over the free letters; wrong placements die in tens to hundreds of nodes when the key word is right.
@@ -86,7 +86,7 @@ Word rows: planted nine rows (four words with one-letter variations) under seven
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Three ciphertext rows of length 3 under three unknown column substitutions: `XYZ`, `XQZ`, `PYW`. Word bank $\{$CAT, COT, DOG, CAR, BAT, BAR, RAT$\}$. Pairwise constraints: rows 1,2 must agree in columns 0 and 2 and differ in column 1; rows 1,3 must agree only in column 1; rows 2,3 must differ everywhere.
 

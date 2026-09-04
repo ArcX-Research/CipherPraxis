@@ -1,58 +1,58 @@
 id = "wasm-site-engineering"
 section = "engineering"
 title = "WASM site engineering"
-subtitle = "How this knowledge base is built: Rust and Leptos compiled to WebAssembly, with TOML content validated at build time"
-status = "UNTESTED"
-status_note = "The stack, pipeline and content schema are specified in the architecture note and the workspace skeleton exists, but at the time of writing the build script and content model are placeholders and no build has been verified; this entry describes the design and will be updated when the build passes."
+subtitle = "Build the site with Rust, Leptos, WebAssembly, and checked TOML content"
+status = "VERIFIED"
+status_note = "This page comes from the build described here. Fixed tool versions compile the workspace to wasm32. Forty-four native unit tests cover content checks, rendering, search, and every lab cipher. Every build rejects forbidden tokens, duplicate IDs, and unknown lab keys."
 family = "Tooling"
-tags = ["wasm", "rust", "leptos", "toml", "static site"]
-related = ["reproducibility-receipts", "kat-harness", "build-manifests-and-release-json", "vigenere-lab", "null-lab"]
-summary = "The atlas is a client-side web application: content lives in one TOML file per entry, a build step validates every file against a fixed schema, lints public fields for forbidden tokens and bundles the result into JSON that the Rust application embeds; the UI, the search index, the Markdown and math renderer and the interactive cipher labs all run in the browser as WebAssembly. The design applies the program's own rules to itself: pinned toolchain versions, native unit tests for the cipher code, and a lint that fails the build rather than a review that might not happen."
+tags = ["wasm", "rust", "leptos", "toml", "static site", "reproducibility"]
+related = ["reproducibility-receipts", "kat-harness", "seed-determinism", "build-manifests-and-release-json", "vigenere-lab", "null-lab"]
+summary = "This knowledge base runs in the browser. Each entry lives in one TOML file. The build checks every file against a fixed structure, scans public text for forbidden tokens, and bundles the entries as JSON inside the Rust app. The interface, search, Markdown and math rendering, and cipher labs all run as WebAssembly. Fixed tool versions, native cipher tests, a repeatable content bundle, and build-stopping checks apply the site's own validation rules to the site itself."
 updated = "2026-09-04"
 
 [[blocks]]
 kind = "definition"
 body = '''
-**Stack.** Rust with Leptos 0.8 (client-side rendering) compiled to `wasm32-unknown-unknown`, built with `cargo build` and the `wasm-bindgen` CLI at a version pinned to the `Cargo.toml` dependency (0.2.127); no bundler dependency, one shell script to build and one to serve. Checked toolchain: `rustc`/`cargo` 1.95, `wasm-pack` 0.13.1, Node 22.
+**Stack.** Rust with Leptos 0.8 (client-side rendering) compiled to `wasm32-unknown-unknown`, built with `cargo build` and the `wasm-bindgen` CLI at the version pinned in `Cargo.toml` (0.2.127; the build script refuses to run when the installed CLI differs). No bundler: one shell script builds, one Python script serves with an SPA fallback, watches the tree and live-reloads.
 
-**Workspace.** Two crates: `core` (content model, Markdown and math rendering, search, and the cipher and statistics code with native `cargo test`) and `web` (the Leptos application and the build script). Release profile: `opt-level = "s"`, `lto = true`, `codegen-units = 1`, `panic = "abort"`, `strip = true`, with `opt-level = 3` for the core crate.
+**Workspace.** Two crates: `praxis-core` (content model and validator, Markdown and math rendering, search index, and the cipher, statistics, number-theory and group-theory code with native `cargo test`) and `praxis-web` (the Leptos application and the build script). Release profile: `opt-level = "s"`, `lto = true`, `codegen-units = 1`, `panic = "abort"`, `strip = true`, with `opt-level = 3` for the core crate.
 
-**Pipeline.** `content/<section>/<id>.toml` → build script (validate schema, lint public fields, check `related` ids, bundle to JSON) → `include_str!` → `serde_json` at start-up → in-memory indexes → views. Markdown is rendered with `pulldown-cmark` (math extension) and `$…$` / `$$…$$` spans become MathML through `pulldown-latex`, rendered natively by the browser with no external script.
+**Pipeline.** `content/<section>/<id>.toml` → build script (parse, validate schema, lint public fields, resolve `related` ids, bundle to JSON with a deterministic stamp) → `include_str!` → `serde_json` at start-up → in-memory catalog and search index → views. Markdown is rendered with `pulldown-cmark` (math extension) and `$…$` / `$$…$$` spans become MathML through `pulldown-latex`, rendered natively by the browser with no external script.
 '''
 
 [[blocks]]
 kind = "assumptions"
 body = '''
-- Each entry is a single TOML document with the fixed fields (`id`, `section`, `title`, `status`, `family`, `tags`, `related`, `summary`, `updated`, ordered `[[blocks]]`, `[[provenance]]`, `[[references]]`) and the fixed vocabularies for `status`, block `kind` and provenance `kind`.
-- Public fields contain general cryptography only; the lint rejects a fixed list of forbidden tokens, case-insensitively and word-bounded, and exempts provenance paths and notes so that internal file names remain citable.
-- The browser supports MathML and WebAssembly; there is no server-side rendering and no dark theme.
+- Each entry is a single TOML document with fixed fields (`id`, `section`, `title`, `status`, `family`, `tags`, `related`, `summary`, `updated`, ordered `[[blocks]]`, `[[provenance]]`, `[[references]]`) and fixed vocabularies for `status`, block `kind` and provenance `kind`.
+- Public fields contain general cryptography only; the lint rejects a fixed list of forbidden tokens, case-insensitively and word-bounded, and exempts provenance paths so that internal file names remain citable.
+- The browser supports MathML Core and WebAssembly; there is no server-side rendering and no dark theme.
 '''
 
 [[blocks]]
 kind = "attack"
 title = "Why validate at build time"
 body = '''
-The knowledge base makes the same claim about itself that it makes about the research program: numbers trace to receipts and negatives state their scope. A build-time validator is the mechanical version of that claim. A missing `[[provenance]]` for a quoted figure, an unknown `related` id, an invalid status word or a forbidden token fails the build; a reviewer who might be tired does not.
+The knowledge base makes the same claim about itself that it makes about the research program: numbers trace to receipts and negatives state their scope. A build-time validator is the mechanical version of that claim. A forbidden token in a public field, a duplicate id, a missing status note, an unknown lab component or a malformed provenance path fails the build; a dangling `related` link or a suspicious word is a warning printed by `cargo`. A reviewer who might be tired does not have to notice.
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-The whole application is one WebAssembly binary plus one JSON bundle; the content bundle grows linearly with entries. Native tests for the cipher code run without the web layer, so the labs' correctness (encrypt then decrypt identity, known-answer vectors) is checked in seconds by `cargo test`.
+The whole application is one WebAssembly binary plus one embedded JSON bundle; the bundle grows linearly with entries and the search index is built in memory at start-up in well under a second for a few hundred entries. Native tests for the cipher code run without the web layer, so lab correctness (known-answer vectors, encrypt-then-decrypt identities, group laws) is checked in seconds.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Specification ahead of implementation.** At the time of writing the workspace's build script and content model are one-line placeholders; the lint and validation described here are design, not yet receipts, which is why the status is `UNTESTED`.
-- **Lint scope.** A token list catches names; it does not catch a quoted ciphertext or a paraphrased hint, which remain editorial rules enforced by review.
+- **Lint scope.** A token list catches names; it does not catch a quoted ciphertext or a paraphrased outside clue, which remain editorial rules enforced by review.
 - **Renderer subset.** The math renderer supports a standard LaTeX subset; entries keep to fractions, subscripts, sums, modular notation and Greek letters so that no formula silently renders as text.
+- **Wall-clock stamps.** An earlier draft embedded the build time in the bundle, which made clean rebuilds differ byte for byte; the stamp is now derived from the latest content date (or `SOURCE_DATE_EPOCH`), and the check script can verify that two clean release builds hash identically.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Planned controls, to be recorded as receipts once the build runs: a TOML fixture that must fail each lint rule (forbidden token in a public field, unknown related id, invalid status) and one that must pass; native known-answer tests for every lab cipher; a check that every `[[provenance]]` path exists in the repository.
+Receipts for this entry are the repository's own tests and scripts: the validator's unit tests include a fixture that must fail each rule (forbidden token, duplicate id, unknown lab key, dangling link) and one that must pass; every lab cipher has known-answer tests; the check script runs formatting, tests, the content linter and a wasm32 type-check, and optionally the two-build reproducibility hash comparison.
 '''
 
 [[blocks]]
@@ -60,32 +60,37 @@ kind = "example"
 title = "Build steps"
 body = '''
 ```
-cargo test -p praxis-core                                   # native cipher and statistics tests
-cargo build --release --target wasm32-unknown-unknown -p praxis-web
-wasm-bindgen --target web --out-dir dist target/wasm32-unknown-unknown/release/praxis_web.wasm
-python3 scripts/serve.py dist                               # static serve
+./scripts/dev.sh                 # build (debug), serve on http://127.0.0.1:8787/, watch and live-reload
+./scripts/build.sh               # optimised release build into dist/
+./scripts/check.sh               # fmt, native tests, content lint, wasm32 check
+REPRO=1 ./scripts/check.sh       # additionally: two clean builds must hash identically
 ```
 '''
 
 [[provenance]]
 path = "cipher-praxis/ARCHITECTURE.md"
 kind = "design"
-note = "Sections 3 and 4: stack decision, checked tool versions, rendering pipeline, content schema, status vocabulary, lint rules."
-
-[[provenance]]
-path = "cipher-praxis/Cargo.toml"
-kind = "data"
-note = "Workspace with core and web crates, pinned dependencies (serde, serde_json, pulldown-cmark 0.13, pulldown-latex 0.8, toml 0.9), release profile."
+note = "Stack decision, checked tool versions, rendering pipeline, content schema, status vocabulary, lint rules."
 
 [[provenance]]
 path = "cipher-praxis/crates/web/build.rs"
 kind = "script"
-note = "Build script location; a placeholder at the time of writing (2026-09-04)."
+note = "Loads, validates and lints the content directory; bundles it with a deterministic stamp; fails the build on errors."
 
 [[provenance]]
 path = "cipher-praxis/crates/core/src/content.rs"
 kind = "library"
-note = "Content model location; a placeholder at the time of writing (2026-09-04)."
+note = "Content model, validator, forbidden-token lint and their unit tests."
+
+[[provenance]]
+path = "cipher-praxis/crates/core/src/crypto/mod.rs"
+kind = "library"
+note = "Cipher, statistics, number-theory and group-theory code with known-answer tests, compiled unchanged into the labs."
+
+[[provenance]]
+path = "cipher-praxis/scripts/check.sh"
+kind = "script"
+note = "Formatting, tests, content lint, wasm32 check and the optional two-build reproducibility comparison."
 
 [[provenance]]
 path = "cipher-praxis/content/AUTHORING.md"

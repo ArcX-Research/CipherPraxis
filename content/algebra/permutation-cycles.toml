@@ -1,13 +1,13 @@
 id = "permutation-cycles"
 section = "algebra"
 title = "Permutation cycles"
-subtitle = "Cycle types, conjugates of rotations, and completing a partial map to one 26-cycle"
+subtitle = "Use cycle shapes to complete a partial alphabet map"
 status = "VERIFIED"
-status_note = "The cycle algebra is exact and tested: the one-cycle extension test and the 720-way completion of a seven-component partial map recovered 64/64 planted cycles (63/64 at rank one) when given the true partial map. The language beam that must supply that map retained it in only 32/64 cases, so the end-to-end attack built on it is power-limited and its one live run was inconclusive."
+status_note = "Given the true partial map, the one-cycle test and 720-way completion recovered 64/64 planted cycles, with 63/64 ranked first. The earlier language beam kept that true map in only 32/64 cases. The full attack is therefore power-limited, and its one live run was inconclusive."
 family = "Group theory"
 tags = ["permutation", "cycle type", "conjugacy", "completion", "involution"]
 related = ["conjugacy-and-gauge", "group-actions-on-alphabets", "dihedral-group", "all-different-constraints", "units-mod-26", "keyword-mixed-alphabet", "quagmire-iii", "beaufort", "shared-cycle-attack", "beam-search", "power-measurement", "g-cycle-type", "g-conjugate-permutation"]
-summary = "Every permutation of the alphabet splits into disjoint cycles, and conjugate permutations have the same cycle type. A keyed additive alphabet with a unit shift is a conjugate of a rotation and therefore a single 26-cycle; Beaufort-type classes are reflections whose pairwise products are rotations. These facts turn alphabet recovery into a completion problem: a partial decryption map extends to one 26-cycle only if it closes no cycle, and its path components can be joined in a small, enumerable number of ways."
+summary = "Every alphabet permutation splits into separate cycles. Relabelling a permutation does not change its cycle lengths. A keyed additive alphabet with a unit shift is a relabelled rotation, so it forms one 26-cycle. Beaufort-like classes are reflections whose paired products are rotations. These facts turn alphabet recovery into a small completion problem: a partial map must not close a short cycle, and its remaining paths can be joined in a limited number of ways."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -65,7 +65,7 @@ Completion in isolation (true 19-edge map supplied): 64/64 disjoint 144-letter c
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Five-letter alphabet with keyed order `CEBAD`, so $z(C)=0, z(E)=1, z(B)=2, z(A)=3, z(D)=4$, and shift $k = 2$: $w(x) = z^{-1}(z(x) + 2 \bmod 5)$ gives $A \to C$, $C \to B$, $B \to D$, $D \to E$, $E \to A$, the single 5-cycle $(A\,C\,B\,D\,E)$, as $\gcd(2,5) = 1$ predicts.
 

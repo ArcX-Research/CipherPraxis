@@ -1,28 +1,31 @@
-# Cipher Praxis — A Dilate Cryptography Knowledge Base
+# Cipher Praxis: A Cryptography Knowledge Base
 
 A public, general-cryptography knowledge base: cipher models, algebra, cryptanalysis techniques,
 statistical instruments, search and exact solvers, validation protocols, implementation
 engineering and interactive labs, all compiled from Rust to WebAssembly and running entirely in
-the browser. The sibling `../poemanalysis` repository is the internal evidence corpus that the
-content's provenance panels point at; it is never published.
+the browser.
 
 ## Run it locally
 
 ```bash
 cd cipher-praxis
-./scripts/dev.sh            # builds (debug profile), serves http://127.0.0.1:8787/, watches and live-reloads
+make dev                    # builds, serves, watches and live-reloads
 ```
 
 Other commands:
 
 ```bash
-./scripts/build.sh          # optimised release build into ./dist (static files)
-./scripts/build.sh dev      # fast debug build into ./dist
-python3 scripts/serve.py --no-build            # serve ./dist as is (no watcher)
-PORT=9000 ./scripts/dev.sh                      # custom port
-./scripts/check.sh          # fmt, tests, content lint, wasm type-check
-cargo run -p praxis-core --features authoring --bin praxis-check -- content   # content lint only
+make help                   # list the available development commands
+make build                  # optimised release build into ./dist
+make build-dev              # fast debug build into ./dist
+make serve                  # serve ./dist without rebuilding
+make dev PORT=9000          # use a custom development port
+make check                  # format, lint, test, content and wasm checks
+make content                # content lint only
 ```
+
+The server starts at `http://127.0.0.1:8787/`. If that port is occupied, it reports the conflict
+and uses the next available port.
 
 Requirements (all pinned, nothing downloaded at build time except crates on first build):
 Rust ≥ 1.85 with the `wasm32-unknown-unknown` target, the `wasm-bindgen` CLI at the version pinned

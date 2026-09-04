@@ -1,13 +1,13 @@
 id = "simulated-annealing"
 section = "search"
 title = "Simulated annealing"
-subtitle = "Metropolis local search with a cooling schedule, run as thousands of vectorised chains"
+subtitle = "Explore nearby keys while slowly becoming less willing to accept worse moves"
 status = "VERIFIED"
-status_note = "Implemented as a scalar routine and as a batch numpy routine; planted 5x5-square, one-sided keyed-alphabet and transposition-order controls are recovered at 100% with logged receipts. On a two-sided unknown alphabet (Quagmire III) at 63-96 letters the same machinery plateaus at 30-40% of the alphabet, which is documented under failure modes and in the parallel-tempering and polish-basin entries."
+status_note = "Both single-search and batched NumPy versions are implemented. Planted 5x5-square, one-sided keyed-alphabet, and transposition-order controls recovered at 100%, with saved records. On a two-sided unknown alphabet in Quagmire III at 63–96 letters, the same search stops at 30–40% correct. Parallel-tempering and search-basin pages measure that limit."
 family = "Stochastic local search"
 tags = ["metropolis", "cooling schedule", "swap moves", "batch chains", "quadgram objective"]
 related = ["parallel-tempering", "hill-climbing", "polish-basin-measurement", "coordinate-descent", "quadgram-log-likelihood", "bifid", "playfair", "quagmire-i", "quagmire-iii", "columnar-transposition", "planted-controls", "shuffled-null-z-score", "numpy-instrument-pattern", "g-move-set", "g-temperature-schedule", "g-objective-function"]
-summary = "Simulated annealing walks a discrete key space (an alphabet permutation, a 5x5 square, a column order) by proposing a random local move and accepting it with the Metropolis probability at a temperature that decays geometrically. Its objective is a language-model score of the trial decrypt. It reliably solves squares over a fixed inner text and keyed alphabets whose shifts are pinned by a crib, and it is the workhorse behind many transposition-order searches; its recorded limit is the two-sided unknown alphabet, where the landscape rather than the budget stops it."
+summary = "Simulated annealing explores a key by making random small changes. It always keeps improvements and sometimes accepts worse moves, with that chance falling as the temperature cools. A language model scores each trial decryption. The method works well for keyed squares over fixed inner text, alphabets whose shifts a crib fixes, and many transposition orders. It fails on short texts when one unknown alphabet acts on both sides; the score landscape, not just the computing budget, blocks progress."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -57,7 +57,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 - **Squares over a fixed inner text.** A 5x5 square (Bifid, Playfair) is annealed with the outer periodic layer held fixed: moves are letter swaps (85%), row swaps (5%), column swaps (5%) and a transpose or flip (5%); schedule $T_0 = 12 \to T_1 = 0.08$ over $10^6$ steps, six restarts, best-of-restarts reported.
 - **One-sided unknown alphabet with a crib.** A contiguous crib of at least the period pins every shift, so only the alphabet is annealed (swap or insertion moves); the best chain per placement is finished by an exhaustive 925-neighbour polish and the top placements are re-annealed with more restarts.
@@ -90,7 +90,7 @@ body = '''
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Schedule $T_0 = 12$, $T_1 = 0.08$, $N = 10^6$. At the midpoint $t = N/2$:
 

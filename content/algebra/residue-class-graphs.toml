@@ -1,13 +1,13 @@
 id = "residue-class-graphs"
 section = "algebra"
 title = "Residue-class graphs"
-subtitle = "Key residues as vertices, observed differences as edges, and potentials as the key-existence condition"
+subtitle = "Turn key remainders into a graph and test whether the key can exist"
 status = "CLOSED"
-status_note = "The graph formulation is exact and its solver passed 4/4 planted controls with two clean negatives. The common-plaintext, common-cycle family with periods 26 and 7 (3,128 geometries) and the equal-period window family (132 cells) returned exact structural zeros on the target texts, closing those families in scope; the complete-bipartite period-7/period-9 lane has a designed control protocol and no target run."
+status_note = "The exact graph solver passed 4/4 planted controls and two negative controls. Target tests returned structural zeros for the stated shared-plaintext periods 26 and 7 family (3,128 layouts) and equal-period window family (132 cases). Those families are ruled out only in that scope. The period-7/period-9 test has a control plan but no target run."
 family = "Combinatorial constraints"
 tags = ["graph", "potential", "cycle space", "bipartite", "spanning tree", "components"]
 related = ["difference-operators", "lcm-of-periods", "finite-field-linear-algebra", "all-different-constraints", "dihedral-group", "key-cancellation", "segment-chain-analysis", "exact-chain-oracle", "g-residue-class", "g-invariant"]
-summary = "When two ciphertexts share a plaintext under independent periodic keys, the difference of their coordinates at each position equals a difference of two key values indexed by residue classes. Draw one vertex per residue class and one edge per position: the keys exist exactly when the observed differences are a potential difference on the graph, that is, when every cycle sums to zero. The cycle space gives an exact, key-free system of equations in the unknown alphabet, and the number of graph components gives the number of free key offsets."
+summary = "Suppose two ciphertexts share one plaintext but use different repeating keys. At each position, subtracting their coordinates leaves the difference between two key values. Draw a vertex for each key remainder and an edge for each position. The keys can exist exactly when every cycle in this graph sums to zero. This gives exact equations for the unknown alphabet without knowing either key. The number of separate graph parts tells us how many key offsets remain free."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -69,7 +69,7 @@ Periods 26/7: static KAT proved the closed-form basis equals a spanning-tree fun
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 $K_{2,3}$ with left potentials $A = (0, 5)$ and right potentials $B = (1, 2, 3)$, $\varepsilon = +1$, edge labels $d_{(r,g)} = A_r - B_g \pmod{26}$:
 $$d = \begin{pmatrix} 25 & 24 & 23 \\ 4 & 3 & 2 \end{pmatrix}.$$

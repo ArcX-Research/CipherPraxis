@@ -1,13 +1,13 @@
 id = "porta"
 section = "ciphers"
 title = "Porta cipher"
-subtitle = "Reciprocal periodic cipher with 13 half-alphabet tables selected by key-letter pairs"
+subtitle = "A repeating reciprocal cipher with 13 tables chosen by key-letter pairs"
 status = "CLOSED"
-status_note = "The free periodic Porta solver passed all three target-length controls (63, 95 and 126 letters) exactly; on the three measured zones every endpoint failed the language gate, closing free periodic Porta in the two fixed orders at those lengths. The Porta autokey variant is control-locked at 144 and 504 letters."
+status_note = "The free periodic Porta solver passed all three target-length controls at 63, 95, and 126 letters. Every result in the three measured target zones failed the language check, ruling out free periodic Porta in the two fixed orders at those lengths. The Porta autokey test cannot pass its 144- and 504-letter controls."
 family = "Polyalphabetic substitution"
 tags = ["periodic", "reciprocal", "polyalphabetic", "half-alphabet"]
 related = ["beaufort", "vigenere", "autokey", "digraphic-slide", "periodic-substitution-dp", "exact-dynamic-programming", "g-reciprocal-cipher", "g-period"]
-summary = "Porta splits the alphabet into two halves of 13 and, for each key letter, exchanges the halves with a rotation chosen by the key letter's pair (AB, CD, ...). Only 13 distinct tables exist, the cipher is its own inverse, and letters never map into their own half. The program attacked it with a free effective key in Z13 per coset, solved exactly by the same cyclic dynamic programme as the additive ciphers, and separately tested word keys and a plaintext-fed autokey version."
+summary = "Porta splits the alphabet into two groups of 13. Each key-letter pair, such as AB or CD, chooses one rotation that swaps the two halves. There are 13 distinct tables. The same operation decrypts, and a letter never maps within its own half. An exact cyclic dynamic program solved one free Z13 key value per coset. Separate tests covered word keys and plaintext autokey."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -47,7 +47,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. For each coset rank the 13 tables by monogram likelihood of the decrypted coset; keep the best eight.
 2. Solve the shortlisted product exactly with the cyclic order-three quadgram dynamic programme, then let all 13 tables enter through coordinate and adjacent-pair polish (see [Periodic substitution DP](/exact/periodic-substitution-dp)).
@@ -76,7 +76,7 @@ Free periodic Porta (log 204): three blind controls at 63 letters/period 7 (stra
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Straight order, key `KEY`: K is letter 10, pair index $t = 5$; E gives $t = 2$; Y gives $t = 12$. Plaintext `HELLO`:
 

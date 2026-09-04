@@ -1,13 +1,13 @@
 id = "family-wise-null"
 section = "statistics"
 title = "Family-wise null"
-subtitle = "The null distribution of the best statistic over an entire search family, not of a single trial"
+subtitle = "Compare the best search result with the best result from each null run"
 status = "VERIFIED"
-status_note = "Implemented as 'max over the family on each shuffled text' in the alignment, algebra, grammar and cascade solvers; on planted controls it recovers a period-7 key at z +15.3 and a composite-period control reads only +0.9 (correctly weak), while a cross-text relation that looked like +5.7 sigma per trial fell to +0.8 sigma family-wise after 1,296 trials."
+status_note = "Alignment, algebra, grammar, and cascade solvers take the best family score on each shuffled text. On controls, a period-7 key reaches z +15.3 while a weak compound-period case correctly reaches only +0.9. A cross-text match that looked like +5.7 standard deviations in one trial fell to +0.8 after accounting for all 1,296 trials."
 family = "Null distributions and calibration"
 tags = ["multiple comparisons", "selection", "null distribution", "max statistic", "familywise"]
 related = ["shuffled-null-z-score", "selection-overfit-diagnostic", "permutation-test", "within-coset-null", "bayesian-evidence-model-selection", "coincidence-lag-profile", "kasiski-examination", "g-null-distribution", "g-empirical-p-value"]
-summary = "A cryptanalytic search rarely tests one hypothesis: it scans periods, offsets, widths, relations, alphabets and keys, and reports the best. The right null for 'the best over the family' is the distribution of the best over the same family on shuffled texts. A per-trial null, which asks how one fixed hypothesis would score on random order, makes the winner of a large search look significant when it is only the expected maximum of many chances. Every reading that involved a scan in the evidence corpus is therefore quoted against a family-wise null, and the per-trial figure is kept only as a warning."
+summary = "A cipher search tries many periods, offsets, widths, relations, alphabets, and keys, then reports the best. Chance alone makes that winner better than one fixed trial. A family-wise null repeats the whole search on each shuffled text and saves each run's best score. Comparing best with best prevents a large search from looking significant only because it had many chances. Results from scans are therefore judged against family-wise nulls."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -41,7 +41,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Define the family before the scan (periods, widths, offsets, relations, alphabet orders, cribs, keys) and write the maximiser as one function.
 2. Evaluate that function on the target and on $N$ shuffles; report the target's rank.

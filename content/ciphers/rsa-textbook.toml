@@ -1,13 +1,13 @@
 id = "rsa-textbook"
 section = "ciphers"
 title = "Textbook RSA on letter blocks"
-subtitle = "Modular exponentiation of fixed-width base-26 blocks with a small modulus"
+subtitle = "Raise fixed-width base-26 letter blocks to a power modulo a small number"
 status = "CLOSED"
-status_note = "Every distinct-prime semiprime and every squarefree multi-prime modulus below 26^b at widths 2-3, with every invertible exponent and every fixed column-subset payload, was enumerated with exact planted-control recovery and literal modular replay; widths 2-4 with an exponent bank and a width-9 word-factor family were likewise negative, and two short hits were rejected by selection-matched nulls (p = .70 and 1.00)."
+status_note = "At widths 2 and 3, exact searches covered every stated product of distinct primes below 26^b, every invertible exponent, and every fixed column subset. Planted controls passed with direct modular replay. Widths 2–4 with an exponent bank and a width-9 word-factor family were also negative. Matching nulls rejected two short hits with p = .70 and 1.00."
 family = "Modern and encoding schemes"
 tags = ["rsa", "modular exponentiation", "block", "base 26", "semiprime"]
 related = ["hill-cipher", "caesar-shift", "modular-inverse-and-crt", "units-mod-26", "exhaustive-enumeration", "family-wise-null", "selection-overfit-diagnostic", "g-polygraphic"]
-summary = "Textbook RSA raises a message block to a public exponent modulo a product of primes. Applied to letters, each b-letter block becomes a base-26 integer below 26^b, so the modulus must also be below 26^b for the ciphertext to fit in b letters. That constraint makes small-width RSA a finite family: the program enumerated every admissible modulus and exponent class at widths 2 and 3, every bank exponent at width 4, and a word-structured prime family at width 9, all under a mandatory modular-power replay."
+summary = "Textbook RSA raises a message block to a public power modulo a product of primes. For letters, a b-letter block is one base-26 number below 26^b. The modulus must also stay below 26^b if the result must fit in b letters. This makes small blocks a finite search. Tests covered all allowed modulus and exponent classes at widths 2 and 3, bank exponents at width 4, and a word-based prime family at width 9. Every answer had to pass a direct modular-power replay."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -47,7 +47,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Read $c_{\max}$ from the serialised ciphertext in each cell; enumerate every admissible $N$ (sieve, then products).
 2. For each $N$ and exponent class decrypt every block; score each payload subset by quadgrams.
@@ -77,7 +77,7 @@ Every lane recovered its exact planted modulus, exponent pair, serialisation and
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Width $b = 2$, $N = 667 = 23 \times 29$, $\lambda(N) = \operatorname{lcm}(22, 28) = 308$, $E = 3$, $D = 103$ (since $3 \times 103 = 309 \equiv 1 \pmod{308}$). Block `HI` in straight order, most significant first: $X = 7 \times 26 + 8 = 190$.
 

@@ -1,13 +1,13 @@
 id = "hash-chained-transcripts"
 section = "engineering"
 title = "Hash-chained transcripts"
-subtitle = "Canonical typed records, a commit digest over the exact prefix, a strict parser, and a durable one-shot write"
+subtitle = "Write strict typed records once and hash the exact bytes before the final commit"
 status = "VERIFIED"
-status_note = "Implemented and audited in the research program: canonical JSONL transcripts with COMMIT digests, parsers that reject hundreds of mutations, retained-descriptor publication with fsync and inode checks, and admission by full semantic replay; one 4 MB canonical transcript was admitted this way."
+status_note = "The audited format uses standard JSONL records with COMMIT hashes. Parsers reject hundreds of damaged variants. Files are written through one retained descriptor, flushed with fsync, checked by inode, and accepted only after full semantic replay. One 4 MB transcript passed this process."
 family = "Reproducibility"
 tags = ["transcripts", "hash chain", "parser", "durability", "admission"]
 related = ["reproducibility-receipts", "build-manifests-and-release-json", "seed-determinism", "kat-harness", "seal-and-audit-protocol", "blind-controls", "run-script-log-convention"]
-summary = "A transcript that will be cited as evidence is written so that it cannot be partially true. Records are typed JSON lines in a fixed order; a COMMIT record carries the SHA-256 of every byte before it and the record count; the terminal line is implied by the summary and recomputed by the parser; and the file is created once, written through a retained descriptor, fsynced, read back through the same descriptor and parsed before its name is published. Admission then regenerates everything from the pinned inputs and requires canonical equality."
+summary = "An evidence transcript must not look valid when only part of it is valid. It stores typed JSON lines in a fixed order. A COMMIT line gives the SHA-256 hash of every earlier byte and the record count. The parser recomputes the final result from the summary. The writer creates the file once, writes and flushes it through one open descriptor, reads it back the same way, and parses it before publishing its name. Admission then rebuilds the records from fixed inputs and requires an exact standard match."
 updated = "2026-09-04"
 
 [[blocks]]

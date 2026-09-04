@@ -1,13 +1,13 @@
 id = "numpy-instrument-pattern"
 section = "engineering"
 title = "NumPy instrument pattern"
-subtitle = "Vectorised statistics with error bars, batch search over many chains, and a null printed beside every reading"
+subtitle = "Use array operations to score many candidates and print a null comparison with every result"
 status = "VERIFIED"
-status_note = "The research program's shared mathematics library and its instruments are written in this pattern and pass their planted controls; batch annealing over thousands of chains and integer-matrix feasibility tests were profiled and tuned in the recorded logs."
+status_note = "The shared math library and analysis tools use this pattern and pass their planted controls. Recorded profiles guided the tuning of batch annealing across thousands of chains and tests of whether integer matrices are possible."
 family = "Numerical engineering"
 tags = ["numpy", "vectorisation", "instruments", "batch search"]
 related = ["compiled-hot-cores", "seed-determinism", "kat-harness", "run-script-log-convention", "estimator-standard-error", "shuffled-null-z-score", "simulated-annealing", "exact-period-alignment", "index-of-coincidence"]
-summary = "An instrument is a measurement that prints its own null: a statistic, the distribution it would have on data with nothing to find, and the resulting z or evidence. In this pattern the whole computation is expressed as array operations so that one call scores thousands of candidates, shuffles or chains at once, error bars come from exact formulas or vectorised resampling, and the code stays short enough to audit. Compiled cores take over only the innermost loops that arrays cannot express."
+summary = "An analysis tool should print its statistic, the matching result range when no signal is present, and the resulting z-score or evidence. NumPy array operations can score thousands of candidates, shuffles, or search chains in one call. Exact formulas or batched resampling provide error ranges, while the code stays short enough to review. Small compiled cores handle only the deepest loops that arrays cannot express well."
 updated = "2026-09-04"
 
 [[blocks]]

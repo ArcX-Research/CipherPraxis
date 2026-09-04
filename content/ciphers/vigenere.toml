@@ -1,13 +1,13 @@
 id = "vigenere"
 section = "ciphers"
 title = "Vigenère cipher"
-subtitle = "Periodic additive substitution over Z26 with a repeating key"
+subtitle = "Add a repeating key to the plaintext modulo 26"
 status = "VERIFIED"
-status_note = "The model, its exact period alignment and its planted-control generators are implemented and pass matched controls; period recovery and shift recovery are routine at 150+ letters of English."
+status_note = "The cipher, exact period alignment, and planted-control generators are implemented and pass matched checks. With at least about 150 letters of English, the tests routinely recover the period and shifts."
 family = "Polyalphabetic substitution"
 tags = ["periodic", "additive", "polyalphabetic", "tabula recta"]
 related = ["beaufort", "variant-beaufort", "quagmire-iii", "index-of-coincidence", "exact-period-alignment", "vigenere-lab"]
-summary = "The Vigenère cipher adds a repeating key to the plaintext letter by letter modulo 26. Its only secret is a key of length m, so the ciphertext splits into m cosets, each a Caesar shift of the plaintext letters at those positions. That coset structure is what every attack on it exploits, and it is the reference model against which keyed-alphabet and compound variants are measured."
+summary = "Vigenère adds a repeating key to the plaintext one letter at a time modulo 26. A key of length m splits the ciphertext into m cosets. Each coset is a Caesar shift of the plaintext letters at those positions. Attacks use this repeated structure to find the period and shifts. Vigenère is also the baseline for keyed-alphabet and layered versions."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -56,7 +56,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. **Find the period.** Kasiski repeats, the periodic index of coincidence, or an exact alignment objective over all shift vectors (see [Exact period alignment](/cryptanalysis/exact-period-alignment)).
 2. **Recover shifts per coset.** Correlate each coset histogram with the reference distribution; with $n/m \ge 20$ letters per coset this is reliable for English.
@@ -87,7 +87,7 @@ Every solver run prints planted controls first: real English of the same length,
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Plaintext `ATTACKATDAWN`, key `LEMON` ($m = 5$):
 

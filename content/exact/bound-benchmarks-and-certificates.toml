@@ -1,13 +1,13 @@
 id = "bound-benchmarks-and-certificates"
 section = "exact"
 title = "Bound benchmarks and certificates"
-subtitle = "Admissible upper bounds that prune exactly, benchmarks that decide feasibility before compute is spent, and replayable certificates of what an exact search concluded"
+subtitle = "Prove safe pruning, measure cost before a full run, and save results that others can replay"
 status = "VERIFIED"
-status_note = "A branch-and-bound core proves global maxima over 26^7 keys with tie counts (6/6 plants, ties = 1, about 50 ms each); a compiled whole-cell bound passed every algebra and parity gate and met its frozen CPU ceilings (2.506529 and 5.837933 CPU-hours against 4.0 and 12.0); a proposed relaxation was proved identically zero and rejected; three invalid benchmark attempts are preserved with their defects named; a read-only certificate route re-derives a no-candidate conclusion from a frozen transcript with 8/8 and 4/4 mutation rejections."
+status_note = "A branch-and-bound core proved global maxima over 26^7 keys, including tie counts. It passed 6/6 planted cases with one tie each in about 50 ms. A compiled whole-cell bound passed all algebra and parity gates and used 2.506529 and 5.837933 CPU-hours against limits of 4.0 and 12.0. A useless always-zero bound was rejected. Three invalid benchmarks remain recorded with their defects. Read-only certificate replay reproduced a no-candidate result and rejected 8/8 and 4/4 mutations."
 family = "Exactness guarantees"
 tags = ["branch and bound", "admissible bound", "majorant", "benchmark", "certificate", "replay"]
 related = ["rank-sharding", "exhaustive-enumeration", "known-answer-tests", "exact-dynamic-programming", "cp-sat-and-smt-solvers", "reproducibility-receipts", "seal-and-audit-protocol", "hash-chained-transcripts", "throughput-fail", "correction-and-retraction", "g-certificate", "g-drainability"]
-summary = "An exact search over a large key space is only as trustworthy as three things: the bound that lets it skip states (which must be a true upper bound, and not vacuous), the benchmark that showed the whole run fits its declared budget (measured in the right clock), and the certificate that lets a reader replay the conclusion from frozen inputs. The corpus records all three, including the failed attempts, because a bound that is identically zero, a wall clock read as CPU time, or a memory parameter that is not a limit each produced a run that had to be thrown away."
+summary = "A large exact search needs three safeguards. A pruning bound must never skip a possible winner and must actually remove work. A benchmark must show that the full run fits its stated time and memory budget using the right measurements. A certificate must let someone replay the result from fixed inputs. Failed attempts stay recorded. An always-zero bound, wall time mistaken for CPU time, and a memory setting that was not a true limit each made a run invalid."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -86,7 +86,7 @@ Branch and bound: core self-test 3 KATs against direct brute force and cyclic DP
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Maximise $F(k_0, k_1)$ with $k_0, k_1 \in \{0, 1, 2\}$, $F = g_0(k_0) + g_1(k_1) + h(k_0, k_1)$ where $g_0 = (4, 1, 0)$, $g_1 = (3, 2, 0)$ and the interaction $h \le 0$ is $h(0,0) = -6$, $h(0,1) = 0$, $h(1,0) = -1$, all other $h = -2$. Bound for a partial key with $k_0$ fixed: $U(k_0) = g_0(k_0) + \max g_1 = g_0(k_0) + 3$ (admissible since $h \le 0$).
 

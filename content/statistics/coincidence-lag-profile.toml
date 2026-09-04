@@ -1,13 +1,13 @@
 id = "coincidence-lag-profile"
 section = "statistics"
 title = "Coincidence lag profile"
-subtitle = "Rate of equal letters at each displacement, per segment and per window, with an alignment z-profile across periods"
+subtitle = "Count matching letters at each gap to reveal periods and boundaries"
 status = "VERIFIED"
-status_note = "Implemented with within-segment and within-coset permutation nulls and planted prose references; a planted period-7 substitution shows its period at lag 7 with inherited peaks at 14 and 21 (z +7.4, +4.9, +3.1 at 153 letters), and the same profile is flat (z -0.7) when a width-9 transposition is applied outside the periodic layer."
+status_note = "The test uses shuffled nulls within segments and cosets plus planted prose. A planted period-7 substitution has peaks at gaps 7, 14, and 21, with z +7.4, +4.9, and +3.1 at 153 letters. Adding a width-9 transposition outside that layer flattens the same profile to z -0.7."
 family = "Coincidence and frequency statistics"
 tags = ["coincidence", "lag", "period detection", "zone detection", "fingerprint"]
 related = ["index-of-coincidence", "shuffled-null-z-score", "family-wise-null", "within-coset-null", "kasiski-examination", "exact-period-alignment", "change-point-zone-detection", "family-identification", "coincidence-lab"]
-summary = "The coincidence rate at lag d is the fraction of position pairs (i, i+d) that carry the same letter. Under a repeating key of period m the rate at multiples of m sits at the plaintext level (about 0.066 for English) and elsewhere near the random level (about 0.04), so the profile over d reveals the period. Read per segment and in sliding windows it also localises where a periodic layer starts and stops; read across candidate periods after coset alignment it becomes a fingerprint that separates constructions such as 'substitution outside a transposition' from 'transposition outside a substitution'."
+summary = "At gap d, the coincidence rate is the share of pairs (i, i+d) that contain the same letter. With a key of period m, gaps that are multiples of m have the plaintext rate, about 0.066 for English. Other gaps stay near the random rate of 0.04. Plotting the rate across gaps can reveal the period. Computing it by segment or sliding window also shows where a periodic layer starts and stops. After coset alignment, its shape helps tell different layer orders apart."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -41,7 +41,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Compute $\kappa(d)$ for $d = 1 \dots 70$ and list the lags whose $z$ against shuffles exceeds $2.5$; a comb at $m, 2m, 3m$ is the period.
 2. Slide a window along the text at the candidate lag to find where the periodic layer starts and stops; one zoned 153-letter text showed a lag-7 rate of $0.00$ in its first four 42-letter windows, $0.11$–$0.14$ across its middle and $0.00$ again at the end, and a 144-letter text rose from $0.03$–$0.09$ in its first half to $0.11$–$0.17$ in its second, i.e. periodic layers confined to zones.

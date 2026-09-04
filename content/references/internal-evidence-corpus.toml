@@ -1,13 +1,13 @@
 id = "internal-evidence-corpus"
 section = "references"
 title = "Internal evidence corpus"
-subtitle = "The research repository that every provenance panel in this atlas points into: its directories, note types and record conventions"
+subtitle = "How to read the project paths, record types, and log names cited on this site"
 status = "VERIFIED"
-status_note = "Counts in this entry are directory listings of the evidence corpus taken on 2026-09-04; the corpus is the source of every receipt cited elsewhere in the atlas and is not itself a claim."
+status_note = "The counts come from directory listings taken on 2026-09-04. This repository supplies the records cited elsewhere on the site; its directory listing is not an experimental claim."
 family = "Provenance"
 tags = ["provenance", "corpus", "ledger", "logs"]
 related = ["ledger-reservations", "reproducibility-receipts", "run-script-log-convention", "seal-and-audit-protocol", "build-manifests-and-release-json", "state-checkpoints", "literature-methodology"]
-summary = "Every `[[provenance]]` entry in this atlas names a path in one research repository. This page maps that repository generically so that a reader can interpret a path: an inference toolkit directory holding solver scripts, launchers, compiled cores, design and audit notes, JSON manifests and a coordination ledger; a logs directory of numbered transcripts with a failed-logs subdirectory, attempt markers and state checkpoints; an earlier key-search layer with its own logs; and an archive of the public pages and the generic corpus the controls are planted from."
+summary = "Every `[[provenance]]` item on this site points into one research repository. This page explains its layout. The toolkit directory holds solvers, launchers, compiled cores, designs, audits, JSON manifests, and a shared ledger. The logs directory holds numbered transcripts, failed logs, attempt markers, and saved state. Other folders hold earlier key searches, archived public pages, and the general text corpus used to make controls."
 updated = "2026-09-04"
 
 [[blocks]]

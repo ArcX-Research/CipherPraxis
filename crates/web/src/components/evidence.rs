@@ -4,14 +4,18 @@ use leptos::prelude::*;
 use praxis_core::content::{Provenance, Reference};
 
 #[component]
-pub fn EvidencePanel(provenance: Vec<Provenance>, references: Vec<Reference>) -> impl IntoView {
+pub fn EvidencePanel(
+    provenance: Vec<Provenance>,
+    references: Vec<Reference>,
+    #[prop(optional)] wide: bool,
+) -> impl IntoView {
     let has_prov = !provenance.is_empty();
     let has_refs = !references.is_empty();
     view! {
-        <section class="evidence" aria-labelledby="evidence-h">
+        <section class="evidence" class:evidence-wide=wide aria-labelledby="evidence-h">
             <h2 id="evidence-h" class="side-h"><span class="mono meta">"§"</span>" Evidence"</h2>
             {has_prov.then(|| view! {
-                <p class="evidence-note">"Internal provenance: files in the research corpus that back the claims on this page. Paths are relative to the corpus root "<code>{CORPUS_ROOT}</code>"."</p>
+                <p class="evidence-note">"These internal files support the claims on this page. Each path starts at "<code>{CORPUS_ROOT}</code>" unless it begins with "<code>"cipher-praxis/"</code>", which points to this website's repository."</p>
                 <ul class="prov-list">
                     {provenance.into_iter().map(|p| view! {
                         <li class="prov">
@@ -26,7 +30,7 @@ pub fn EvidencePanel(provenance: Vec<Provenance>, references: Vec<Reference>) ->
                 </ul>
             })}
             {has_refs.then(|| view! {
-                <h3 class="side-h side-h-sm">"Literature"</h3>
+                <h3 class="side-h side-h-sm">"Books and papers"</h3>
                 <ul class="ref-list">
                     {references.into_iter().map(|r| {
                         let meta = [r.author.clone(), r.year.map(|y| y.to_string())]
@@ -47,7 +51,7 @@ pub fn EvidencePanel(provenance: Vec<Provenance>, references: Vec<Reference>) ->
                     }).collect_view()}
                 </ul>
             })}
-            {(!has_prov && !has_refs).then(|| view! { <p class="evidence-note">"No provenance recorded for this entry."</p> })}
+            {(!has_prov && !has_refs).then(|| view! { <p class="evidence-note">"This entry does not list any source files, books, or papers yet."</p> })}
         </section>
     }
 }

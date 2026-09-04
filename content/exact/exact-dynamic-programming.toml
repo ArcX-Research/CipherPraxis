@@ -1,13 +1,13 @@
 id = "exact-dynamic-programming"
 section = "exact"
 title = "Exact dynamic programming"
-subtitle = "Optimal substructure in cipher objectives: layouts of long and short columns, order-three key chains, assignment tables and mixed-radix counts"
+subtitle = "Reuse smaller exact answers to solve column layouts, key chains, and assignments"
 status = "VERIFIED"
-status_note = "Four DP formulations are implemented and checked: the long/short column layout DP behind the order-free width statistic (four planted sandwiches solve at 100%), the cyclic order-three key chain (three blind controls at 100%; KAT against exhaustive width-2 enumeration 8/8), the exact 9x9 assignment DP used in bound geometry proofs (126 cases), and an exact inner-subset DP in a two-transposition selector (development control at exact tuple rank 1 of 4,096)."
+status_note = "Four dynamic programs are checked. A long/short column-layout solver recovered four planted layered ciphers at 100%. A cyclic three-step key solver passed three blind controls at 100% and matched full width-2 search in 8/8 known-answer checks. A 9x9 assignment solver covered 126 cases. A two-transposition subset solver ranked its development control 1 of 4,096."
 family = "Dynamic programming"
 tags = ["dynamic programming", "optimal substructure", "column layout", "chain objective", "assignment"]
 related = ["viterbi-decoding", "periodic-substitution-dp", "order-free-width-statistic", "mixture-inference-under-transposition", "expectation-maximisation", "k-best-lists", "columnar-transposition", "sandwich-construction", "transposition-width-recovery", "known-answer-tests", "g-objective-function"]
-summary = "Dynamic programming computes an exact optimum over an exponential family by exploiting optimal substructure: the best way to lay out a ragged columnar grid, the best periodic key under a chain of overlapping quadgram terms, the best assignment of column chunks to labels. The corpus uses it where enumeration would be wasteful but the objective decomposes, and pairs every DP with a brute-force check at a size where enumeration is affordable."
+summary = "Dynamic programming finds an exact best answer by reusing solutions to smaller parts. It can choose the layout of long and short columns in an uneven grid, find a repeating key under overlapping quadgram scores, or assign column chunks to labels. It works when a large problem splits cleanly into linked smaller ones. Every dynamic program here is compared with brute force on a small case where checking every answer is practical."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -47,7 +47,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 The layout DP measures, for every width $w$, how well the class posteriors of a mixture form the block pattern a columnar transposition would imprint (constant per column for even $w$, alternating for odd $w$) without knowing the column order; the resulting $z$ against shuffled ciphertexts pushed through the same DP selects the widths to hand to the order solver. The key-chain DP finishes periodic keys exactly inside a shortlist. The assignment DP proves properties of relaxations (that a proposed bound is identically zero) by exhausting all $2 \times 9 \times 7 = 126$ geometry cases.
 '''
@@ -75,7 +75,7 @@ Layout DP inside the mixture pipeline: planted sandwiches at width 9 ($z = +12.8
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 $n = 8$, $w = 3$: rows $= 3$, extra $= 2$, so two columns are long (length 3) and one short (length 2); the three layouts are LLS, LSL, SLL with blocks starting at $0, 3, 6$ / $0, 3, 5$ / $0, 2, 5$. Toy block scores: $B(0,3) = 2.0$, $B(3,3) = 1.5$, $B(2,3) = 0.5$, $B(5,3) = 1.0$, $B(6,2) = 0.8$, $B(3,2) = 0.2$, $B(0,2) = 0.3$.
 

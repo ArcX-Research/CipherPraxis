@@ -1,13 +1,13 @@
 id = "literature-cryptanalysis-statistics"
 section = "references"
 title = "Cryptanalysis and statistics literature"
-subtitle = "Coincidence, evidence, nulls, multiplicity and power"
+subtitle = "Sources for coincidence tests, Bayesian evidence, nulls, repeated testing, and power"
 status = "VERIFIED"
-status_note = "Bibliographic entry: standard sources for the statistical instruments and the validation vocabulary; no experimental claim is made here."
+status_note = "These are standard sources for the statistical tests and validation terms used here. This bibliography makes no experimental claim."
 family = "Literature"
 tags = ["bibliography", "statistics", "cryptanalysis"]
 related = ["index-of-coincidence", "kasiski-examination", "chi-squared-fit", "quadgram-log-likelihood", "bayesian-evidence-model-selection", "mahalanobis-family-distance", "family-wise-null", "permutation-test", "power-analysis", "selection-overfit-check", "literature-classical-ciphers"]
-summary = "Friedman's index of coincidence and Kullback's statistical methods founded quantitative cryptanalysis; Shannon supplied the information-theoretic frame (unicity distance, redundancy). The evidence-based instruments in this atlas draw on Jaynes, MacKay and Kass and Raftery for marginal likelihood and model comparison, on Fisher and on Westfall and Young for permutation and family-wise nulls, on Mahalanobis for family distance, and on Cohen for the notion that a negative without power is not a result."
+summary = "Friedman introduced the index of coincidence, Kullback developed statistical cryptanalysis, and Shannon supplied ideas such as redundancy and unicity distance. Jaynes, MacKay, Kass, and Raftery cover marginal likelihood and model comparison. Fisher, Westfall, and Young support permutation and family-wide null tests. Mahalanobis provides the distance used for family comparison, and Cohen explains why a negative without enough power is not useful."
 updated = "2026-09-04"
 
 [[blocks]]

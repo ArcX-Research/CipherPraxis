@@ -1,13 +1,13 @@
 id = "affine-cipher"
 section = "ciphers"
 title = "Affine cipher"
-subtitle = "Multiply-and-add substitution over Z26, alone or one map per coset"
+subtitle = "Multiply and add modulo 26, either once or separately in each coset"
 status = "VERIFIED"
-status_note = "The periodic-affine solver (one of the 312 affine maps per coset, exact cyclic quadgram DP) passed both period-7 planted controls at 63 and 95 letters exactly; a period-26 control at 126 letters failed because four to five letters per coset cannot identify a map of that family."
+status_note = "The exact periodic-affine solver chooses among 312 maps per coset. It solved both period-7 planted controls at 63 and 95 letters. A 126-letter period-26 control failed because four or five letters per coset do not identify one map."
 family = "Monoalphabetic substitution"
 tags = ["monoalphabetic", "affine", "units mod 26", "periodic"]
 related = ["caesar-shift", "vigenere", "affine-maps-mod-26", "units-mod-26", "periodic-substitution-dp", "exact-dynamic-programming", "within-coset-null", "affine-lab"]
-summary = "The affine cipher maps each letter x to ax + b modulo 26 with a a unit. There are 12 x 26 = 312 such maps, so a single affine substitution is a small exhaustive search. The program used the family as the tractable middle ground between additive periodic keys and seven unrelated substitutions: one affine map per coset of a periodic cipher, solved exactly by dynamic programming and gated by planted controls."
+summary = "The affine cipher maps each letter x to ax + b modulo 26, where a has an inverse. There are 12 x 26 = 312 maps, so a single affine substitution can be checked completely. A periodic version uses one affine map per coset. It sits between simple additive keys and unrelated substitutions, and an exact dynamic program can solve it."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -50,7 +50,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. For each coset rank all 312 maps by monogram likelihood of the decrypted coset; keep the best eight.
 2. Run the exact cyclic order-three dynamic programme over the shortlisted product with a quadgram objective, which is exact inside the shortlist (see [Periodic substitution DP](/exact/periodic-substitution-dp)).
@@ -80,7 +80,7 @@ Two target-length period-7 controls passed exactly: 63/63 and 95/95 plaintext le
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Key $a = 5$, $b = 8$ ($a^{-1} = 21$ since $5 \times 21 = 105 = 4 \times 26 + 1$). Plaintext `AFFINE`:
 

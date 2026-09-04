@@ -1,13 +1,13 @@
 id = "autokey-difference-periodicity"
 section = "cryptanalysis"
 title = "Autokey difference periodicity"
-subtitle = "Cancelling a self-feeding key with a lag difference and testing what is left for periodicity"
+subtitle = "Subtract a shifted copy to remove a self-feeding key, then test what remains"
 status = "VERIFIED"
-status_note = "The lag-difference screen (both signs, lags 1-20, period-7 alignment of the difference text against shuffles, family-wise null over all lags) and affine-lag filters are implemented, and a control-qualified plaintext-autokey solver recovers planted texts exactly at 144-504 letters for the additive and reciprocal relations (6/6 gates); its Porta variant failed its exact-recovery gate at two lengths and those target rows are void (logs/03, 185, 11)."
+status_note = "The lag-difference screen checks both signs and lags 1–20, aligns the difference text at period 7, and compares the full scan with shuffled nulls. Affine-lag filters are also implemented. A plaintext-autokey solver recovered 6/6 planted additive and reciprocal cases at 144–504 letters. Its Porta form failed exact recovery at two lengths, so those target rows are void (logs/03, 185, 11)."
 family = "Period and structure recovery"
 tags = ["autokey", "difference text", "lag filter", "recurrence", "family-wise null"]
 related = ["autokey", "vigenere", "running-key", "difference-operators", "linear-recurrences-lcg", "exact-period-alignment", "family-wise-null", "running-key-relation-test", "coincidence-lag-profile", "g-selection-freedom"]
-summary = "An autokey feeds the plaintext or the ciphertext back into the key stream, so the key is aperiodic and coset statistics say nothing. Subtracting the ciphertext from itself at the feedback lag cancels the feedback: for ciphertext autokey the lag difference is the plaintext, for plaintext autokey it is a difference of two plaintext letters, and any periodic component added to the feedback survives as a periodic cipher of the difference text. The same idea, with an affine lag filter, cancels keys that obey a linear recurrence. The corpus screens all lags with a family-wise null and confirms candidates with a solver whose controls must recover primer, plaintext and forward encryption exactly."
+summary = "An autokey feeds plaintext or ciphertext back into its key, so the key does not repeat. Subtracting a shifted copy of the ciphertext can cancel that feedback. For ciphertext autokey, the result is the plaintext. For plaintext autokey, it is a difference between plaintext letters. Any extra repeating layer remains visible in the difference text. An affine-lag filter can similarly remove a linearly changing key. The full lag scan uses a family-wide null, and confirmation must recover the primer, plaintext, and forward ciphertext."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -41,7 +41,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Difference/sum screen over lags with shuffled nulls per lag and a family-wise null over all lags and signs.
 2. Affine-lag filter screen for recurrent keys (linear congruential, progressive, drifting), same null structure.
@@ -76,7 +76,7 @@ body = '''
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Ciphertext autokey with primer `K` ($m = 1$) on `ATTACKATDAWN`: $c_0 = A + K = K$, then each letter adds the previous ciphertext letter:
 

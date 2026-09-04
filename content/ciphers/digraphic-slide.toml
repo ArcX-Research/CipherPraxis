@@ -1,13 +1,13 @@
 id = "digraphic-slide"
 section = "ciphers"
 title = "Digraphic slide ciphers (Slidefair and Portax)"
-subtitle = "Digraph rectangles between a fixed top row and a key-shifted bottom row"
+subtitle = "Encrypt letter pairs with rectangles between a fixed row and a shifted row"
 status = "CLOSED"
-status_note = "All four direct families (Portax; Slidefair with Vigenère, Variant and Beaufort rules) recovered their 504-letter controls exactly with periods 1-12 selected blind and byte-matched a source generator; every live endpoint on the 504-letter text scored -7.42 to -7.58 and the family is excluded there at periods 1-12."
+status_note = "All four direct forms passed their 504-letter controls: Portax and Slidefair with Vigenère, Variant, or Beaufort rules. They found periods 1–12 without hints and matched a source generator byte for byte. Every result for the live 504-letter text scored from -7.42 to -7.58, ruling out these forms there at periods 1–12."
 family = "Polygraphic substitution"
 tags = ["digraphic", "slide", "periodic", "reciprocal"]
 related = ["porta", "vigenere", "beaufort", "variant-beaufort", "playfair", "two-square-four-square", "g-polygraphic", "g-reciprocal-cipher"]
-summary = "Slide ciphers pair the plaintext letters of a digraph across two rows of a rectangle: the top row is the straight alphabet and the bottom row is the alphabet shifted by a key letter that changes with a period. The two letters of a digraph mark two columns and the ciphertext takes the other corners, as in Playfair's rectangle rule. Portax uses the Porta half-alphabet rectangle instead. Both are periodic and digraphic, so they combine a period search with a rectangle rule."
+summary = "Slide ciphers encrypt two letters at a time with a two-row rectangle. The top row is the straight alphabet. A repeating key shifts the bottom row. The plaintext pair marks two corners, and the ciphertext uses the other two, as in Playfair. Portax uses Porta's half-alphabet rectangle instead. Both ciphers need a period search followed by the rectangle rule."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -50,7 +50,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Enumerate the period $P = 1 \dots 12$ exhaustively; for each, search the key with the external annealer under a quadgram objective.
 2. Re-implement the rectangle rules independently and verify every recovered result by forward encryption.
@@ -78,7 +78,7 @@ Log 200: Portax with a nine-letter key (period 9) recovered at rate $-4.18$; Sli
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Slidefair, Vigenère rule, key shift $k = 3$, digraph `HI` ($a = 7$, $b = 8$):
 

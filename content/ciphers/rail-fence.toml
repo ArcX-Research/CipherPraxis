@@ -1,13 +1,13 @@
 id = "rail-fence"
 section = "ciphers"
 title = "Rail-fence transposition"
-subtitle = "Zigzag over r rails, read rail by rail"
+subtitle = "Write in a zigzag across r rows, then read one row at a time"
 status = "VERIFIED"
-status_note = "The transposition sweep's planted control, a five-rail fence with offset 2 under a period-7 keyed layer with a key change, was recovered at 100% match (rate -4.17) among 192,853 permutations; the live 144-letter text was negative at every rail count 2-40 and offset."
+status_note = "Among 192,853 permutations, the transposition search recovered its planted five-rail control with offset 2 at 100% and a -4.17 rate. The control sat under a period-7 keyed layer with a key change. The live 144-letter text was negative for every rail count from 2 to 40 and every offset."
 family = "Transposition"
 tags = ["transposition", "zigzag", "rails", "offset"]
 related = ["route-transposition", "columnar-transposition", "myszkowski", "transposition-width-recovery", "exhaustive-enumeration", "g-transposition-grid"]
-summary = "A rail fence writes the message in a zigzag across r rails and reads the rails one after another. With the rail count and the starting offset as the only key it has a tiny key space, and the position permutation is fixed once those two numbers are chosen, so the cipher is enumerated rather than searched. The program included every rail count from 2 to 40 and every offset in its transposition sweeps under a periodic layer."
+summary = "A rail fence writes a message in a zigzag across r rows, then reads those rows in order. Its only key values are the row count and starting offset. Once those are chosen, the letter positions are fixed, so a solver can check every case. The transposition search covered every row count from 2 to 40 and every offset beneath a repeating layer."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -47,7 +47,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Precompute the permutation for every $(r, o)$.
 2. For each, undo the fence (and, in the layered model, fit the periodic key on the un-fenced text in both alphabet orders and relations), score by quadgrams, and polish the best few.
@@ -75,7 +75,7 @@ Transposition sweep control (logs/29_pk9x.log): a planted five-rail fence with o
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Three rails, no offset, plaintext `WEAREDISCOVEREDFLEEATONCE`:
 

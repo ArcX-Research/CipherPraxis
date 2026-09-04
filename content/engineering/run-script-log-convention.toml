@@ -1,13 +1,13 @@
 id = "run-script-log-convention"
 section = "engineering"
 title = "Run-script and log convention"
-subtitle = "One launcher per lane, numbered transcripts, a failed-logs directory with defect suffixes, and attempt markers"
+subtitle = "Give each test one launcher, numbered logs, clear failed-log names, and durable attempt markers"
 status = "VERIFIED"
-status_note = "The convention is followed by 325 launchers and 1,334 log-directory entries in the research program (1,284 numbered transcripts, 21 files under the failed directory with status suffixes, 9 attempt markers), and a complete audit of the directory classified every artefact."
+status_note = "The project follows this rule across 325 launchers and 1,334 log-directory items: 1,284 numbered transcripts, 21 failed files with status suffixes, and 9 attempt markers. A full directory audit classified every item."
 family = "Tooling"
 tags = ["launchers", "logs", "naming", "provenance"]
 related = ["control-first-policy", "reproducibility-receipts", "ledger-reservations", "state-checkpoints", "compiled-hot-cores", "hash-chained-transcripts"]
-summary = "A launcher is a small shell script that fixes everything about a run that a human might otherwise vary: the compiler line, the self-test, the hash pins, the mode, the seeds and the transcript path. Transcripts are numbered by the ledger's log number and stamped in UTC; a run that is discovered to be defective is moved to a failed-logs directory with a suffix naming the defect, never deleted and never cited. The convention is what makes the ledger and the logs mutually checkable."
+summary = "A small launcher script fixes every setting a person might otherwise change: compiler command, self-test, hashes, mode, seeds, and transcript path. The ledger number also names the transcript, and UTC gives its time. If a run is later found defective, move it to failed logs with the problem in its suffix. Never delete or cite it. These rules let the ledger and files check each other."
 updated = "2026-09-04"
 
 [[blocks]]

@@ -22,7 +22,7 @@ pub fn cipher_field_svg(rows: usize, cols: usize) -> String {
     let w = cols as f64 * cell;
     let h = rows as f64 * cell;
     s.push_str(&format!(
-        r##"<svg class="cipher-field" viewBox="0 0 {w} {h}" width="100%" role="img" aria-label="Animated fragment of a tabula recta">"##
+        r##"<svg class="cipher-field" viewBox="0 0 {w} {h}" width="100%" role="img" aria-label="Tabula recta grid with each alphabet row shifted by one letter">"##
     ));
     s.push_str(r##"<defs><linearGradient id="cf-spectral" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0454ff"/><stop offset="0.5" stop-color="#6764ff"/><stop offset="1" stop-color="#a95dc9"/></linearGradient>
 <radialGradient id="cf-glow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#e1e0ff" stop-opacity="0.9"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient></defs>"##);

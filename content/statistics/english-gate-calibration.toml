@@ -1,13 +1,13 @@
 id = "english-gate-calibration"
 section = "statistics"
 title = "English gate calibration"
-subtitle = "Measuring a language-score threshold on held-out prose before letting it terminate an attack"
+subtitle = "Set a safe language-score cutoff with separate real prose"
 status = "VERIFIED"
-status_note = "The protocol exists because an audited gate failed it: a threshold of mean - 0.7 on the quadgram rate rejected 11 of 1,545 genuine 153-letter English windows (0.71%), while a threshold anchored to the random-letter ceiling plus a margin rejected none. Gates re-anchored that way had 0 of 14,277 genuine 63-letter windows below threshold and are the ones now used."
+status_note = "An audit found that a quadgram cutoff of mean - 0.7 rejected 11 of 1,545 genuine 153-letter English windows, or 0.71%. A cutoff set above the random-letter ceiling rejected none. Updated gates also rejected 0 of 14,277 genuine 63-letter windows and are now used."
 family = "Language-model scoring"
 tags = ["gate", "threshold", "calibration", "false negative", "held-out"]
 related = ["quadgram-log-likelihood", "power-analysis", "permutation-test", "tautological-gate-rule", "held-out-gates", "valid-model-nulls", "estimator-standard-error", "g-held-out"]
-summary = "A language gate is a threshold on a score (usually the quadgram rate) that decides whether a candidate decrypt 'reads as English'. Because a live attack is often one-shot, a gate that is too tight burns the attempt on a correct but atypical plaintext. Calibration means measuring, on many held-out windows of genuine prose of the same length and under the same table, the mean, spread, minimum and the fraction of real English the gate would reject, and anchoring the threshold to the random-letter ceiling rather than to the prose mean."
+summary = "A language gate is a score cutoff, usually based on quadgrams, that decides whether a trial decryption looks like English. A cutoff that is too strict can reject correct but unusual prose. Set it with many separate English samples of the same length and the same scoring table. Measure their mean, spread, minimum, and rejection rate. Place the cutoff safely above the best random-letter score, not just below the average prose score."
 updated = "2026-09-04"
 
 [[blocks]]

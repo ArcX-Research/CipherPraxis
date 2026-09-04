@@ -1,13 +1,13 @@
 id = "held-out-gates"
 section = "validation"
 title = "Held-out gates"
-subtitle = "Fresh fixtures from reserved corpus ranges, with a predeclared pass threshold, run before any live release"
+subtitle = "Test fresh cases from separate text ranges against a pass mark set in advance"
 status = "VERIFIED"
-status_note = "Executed in the research program as a frozen no-argument gate of 24 fresh cases with a predeclared 18/24 threshold that was met exactly, and as disjoint corpus reservoirs (training, calibration, development, gap, hidden) enforced by an interval registry and checked by an independent range audit."
+status_note = "A frozen no-argument gate tested 24 fresh cases against a pass mark of 18/24 set in advance, and met it exactly. An interval registry keeps training, calibration, development, gap, and hidden text ranges separate. An independent audit checked those ranges."
 family = "Power and calibration"
 tags = ["held-out", "corpus ranges", "leakage", "gates"]
 related = ["blind-controls", "power-measurement", "planted-controls", "control-first-policy", "seed-determinism", "run-script-log-convention", "english-gate-calibration"]
-summary = "A selector tuned on development fixtures will pass them; the question is whether it passes fixtures it has never seen, drawn from corpus material that neither it nor its language model was trained or calibrated on. A held-out gate reserves such material by explicit intervals, plants fresh cases with new seeds, fixes the success criterion in advance (for example 18 of 24 exact recoveries) and refuses to release the live successor until the gate's receipt says PASS."
+summary = "A selector may do well on the same examples used to tune it. The real test is fresh material that neither the selector nor its language model used for training or calibration. A held-out gate reserves separate text ranges, makes new cases with new seeds, and sets the pass mark in advance, such as 18 exact recoveries out of 24. The live version cannot run until the gate's record says PASS."
 updated = "2026-09-04"
 
 [[blocks]]

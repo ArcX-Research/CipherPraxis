@@ -76,7 +76,7 @@ def snapshot():
         if f.exists():
             count += 1
             latest = max(latest, f.stat().st_mtime)
-    return (latest, count)
+    return latest, count
 
 
 def build(profile):
@@ -84,7 +84,12 @@ def build(profile):
         STATE["building"] = True
     print(f"▸ build ({profile}) started", flush=True)
     t0 = time.time()
-    proc = subprocess.run([str(ROOT / "scripts" / "build.sh"), profile], cwd=ROOT, capture_output=True, text=True)
+    proc = subprocess.run(
+        [str(ROOT / "scripts" / "build.sh"), profile],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+    )
     out = (proc.stdout or "") + (proc.stderr or "")
     with LOCK:
         STATE["building"] = False
@@ -96,7 +101,8 @@ def build(profile):
         else:
             STATE["status"] = "failed"
             print(out, flush=True)
-            print(f"▸ build FAILED after {time.time() - t0:.1f}s (see output above)", flush=True)
+            elapsed = time.time() - t0
+            print(f"▸ build FAILED after {elapsed:.1f}s (see output above)", flush=True)
     return proc.returncode == 0
 
 
@@ -190,19 +196,40 @@ def bind_server(host, requested_port, attempts=20):
     )
 
 
+def port_number(value):
+    try:
+        port = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("port must be an integer") from exc
+    if not 1 <= port <= 65_535:
+        raise argparse.ArgumentTypeError("port must be between 1 and 65535")
+    return port
+
+
 def main():
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--port", type=int, default=int(os.environ.get("PORT", "8787")))
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--port", type=port_number, default=os.environ.get("PORT", "8787"))
     ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--watch", action="store_true", help="rebuild on source changes and live-reload")
-    ap.add_argument("--profile", default="dev", choices=["dev", "release"], help="cargo profile for rebuilds")
-    ap.add_argument("--no-build", action="store_true", help="serve the existing dist/ without building first")
+    ap.add_argument(
+        "--profile",
+        default="dev",
+        choices=["dev", "release"],
+        help="cargo profile for rebuilds",
+    )
+    ap.add_argument(
+        "--no-build",
+        action="store_true",
+        help="serve the existing dist/ without building first",
+    )
     ap.add_argument("--interval", type=float, default=1.0, help="watch poll interval in seconds")
     args = ap.parse_args()
     STATE["profile"] = args.profile
-    if not args.no_build:
-        if not build(args.profile):
-            print("▸ initial build failed; serving anyway so the overlay can show the error", flush=True)
+    if not args.no_build and not build(args.profile):
+        print(
+            "▸ initial build failed; serving anyway so the overlay can show the error",
+            flush=True,
+        )
     if args.watch:
         threading.Thread(target=watcher, args=(args.profile, args.interval), daemon=True).start()
     try:
@@ -218,7 +245,11 @@ def main():
     print("  ┌" + "─" * len(line) + "┐", flush=True)
     print("  │" + line + "│", flush=True)
     print("  └" + "─" * len(line) + "┘", flush=True)
-    print(f"  serving {DIST}  ·  watch={'on' if args.watch else 'off'}  ·  profile={args.profile}  ·  Ctrl+C to stop\n", flush=True)
+    watch = "on" if args.watch else "off"
+    print(
+        f"  serving {DIST}  ·  watch={watch}  ·  profile={args.profile}  ·  Ctrl+C to stop\n",
+        flush=True,
+    )
     try:
         srv.serve_forever()
     except KeyboardInterrupt:

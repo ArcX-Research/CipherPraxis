@@ -6,5 +6,5 @@ status_note = "Standard term."
 family = "Algebra"
 tags = ["permutation", "group theory"]
 related = ["permutation-cycles", "conjugacy-and-gauge", "dihedral-group", "g-conjugate-permutation"]
-summary = "The multiset of cycle lengths in the disjoint-cycle decomposition of a permutation. Conjugate permutations have the same cycle type, and the k-th power of an n-cycle splits into gcd(n, k) cycles of length n divided by gcd(n, k). For a 26-letter alphabet the powers of a single 26-cycle have cycle lengths only among 26, 13, 2 and 1, a fact used to prune alphabet searches in which several substitution classes are powers of one cycle."
+summary = "A permutation's cycle type is the list of lengths of its separate cycles. Conjugate permutations have the same cycle type. The k-th power of an n-cycle splits into gcd(n, k) cycles, each of length n divided by gcd(n, k). For a 26-letter alphabet, powers of one 26-cycle can have only cycle lengths 26, 13, 2, or 1. Solvers use this rule to reject impossible alphabets early."
 updated = "2026-09-04"

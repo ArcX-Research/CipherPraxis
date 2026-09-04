@@ -1,13 +1,13 @@
 id = "exhaustive-enumeration"
 section = "exact"
 title = "Exhaustive enumeration"
-subtitle = "Scoring every element of an explicitly counted finite space, with completeness certified by census and no early stopping"
+subtitle = "Count a finite search space, test every member, and never stop early"
 status = "VERIFIED"
-status_note = "Complete enumerations are implemented in Python and compiled cores with printed counts and planted controls found at rank 1: 1-4 keyed rounds (up to 1,572,864 combinations), all 5,408 schedules of a piecewise progressive-key family (4/4 controls, live result non-English), all 26^6 shift vectors of a period-7 alignment, and stage-one families whose provenance counts are bound to a structural identity (26,624 = 104 x 256 rows)."
+status_note = "Python and compiled searches print their counts and rank planted controls first. They cover 1–4 keyed rounds with up to 1,572,864 combinations, all 5,408 piecewise progressive-key schedules with 4/4 controls, all 26^6 shift vectors for period-7 alignment, and first-stage families whose count is fixed by 26,624 = 104 x 256 rows. The live progressive-key result was non-English."
 family = "Enumeration strategies"
 tags = ["brute force", "census", "completeness", "scoped closure", "compiled core"]
 related = ["dictionary-attack", "rank-sharding", "all-different-enumeration", "known-answer-tests", "bound-benchmarks-and-certificates", "exact-period-alignment", "multiple-rounds-analysis", "alberti-progressive", "compiled-hot-cores", "seed-determinism", "g-certificate", "g-shard"]
-summary = "Exhaustive enumeration decrypts and scores every key in a stated finite space. Its value is not speed but certainty: a planted key inside the space is found with probability one, and a miss is a closure of exactly that space. The corpus enforces the discipline that makes the closure meaningful: the space is counted before the run, the count is checked by an independent census, every element is finished, nothing stops early on a hit, and a heuristic finisher inside an exhaustive outer loop is labelled as such."
+summary = "Exhaustive enumeration decrypts and scores every key in a stated finite set. It trades speed for certainty. A planted key inside the set must be found, and a miss rules out exactly that set. Before a run, count the space and check that count separately. Finish every member and do not stop after a promising hit. If a complete outer loop uses a heuristic finishing step, report that limit clearly."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -48,7 +48,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 - **Rounds.** Every ordered selection of $r$ distinct key words from four, each round in one of eight alphabets and two relations, undone last-first and scored by quadgrams; the true construction reads at once ($-4.34$) while everything else stays near $-7$.
 - **Progressive-key schedules.** For each of 5,408 (order, quarter, velocity pair) schedules, deprogress the ciphertext and hand the stream to a frozen substitution engine with top-192 / top-32 refinement stages; multithreaded compiled core; three seeds must agree.
@@ -79,7 +79,7 @@ Rounds: the planted three-round construction is the unique top of 98,304 combina
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Affine maps $x \mapsto ux + d \pmod{26}$: $u$ ranges over the 12 units $\{1, 3, 5, 7, 9, 11, 15, 17, 19, 21, 23, 25\}$ and $d$ over 26 offsets, so the space has $12 \times 26 = 312$ elements; a per-residue affine family at period 7 therefore has $312^7 \approx 2.9 \times 10^{17}$ keys, too many to enumerate, which is why that family is attacked by a shortlist plus DP instead. By contrast, two rounds from four words have $12 \times 256 = 3{,}072$ combinations and are enumerated in under a second. Counting the space first decides the method.
 '''

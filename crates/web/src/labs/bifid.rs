@@ -18,8 +18,8 @@ pub fn BifidLab() -> impl IntoView {
             <div class="lab-controls">
                 <TextField label="Plaintext" value=plain multiline=true/>
                 <div class="lab-row">
-                    <TextField label="Square keyword" value=kw mono=true hint="J merges into I"/>
-                    <NumberField label="Period (0 = whole text)" value=period min=0 max=100/>
+                    <TextField label="Square keyword" value=kw mono=true hint="J is treated as I"/>
+                    <NumberField label="Period (use 0 for all text)" value=period min=0 max=100/>
                 </div>
             </div>
             <div class="lab-viz">
@@ -51,7 +51,7 @@ pub fn BifidLab() -> impl IntoView {
             </div>
             <Output label="Ciphertext" value=cipher/>
             <Output label="Decrypted" value=back/>
-            <Note>"Each block's row digits are written out followed by its column digits, and the combined stream is re-paired into letters: one ciphertext letter depends on two plaintext letters up to a period apart. That mixing is what defeats single-letter frequency analysis and why the period is the first parameter an attack has to recover."</Note>
+            <Note>"For each block, Bifid writes all row numbers and then all column numbers. It pairs that new number stream back into letters. One ciphertext letter can therefore depend on two plaintext letters up to one period apart. This hides simple letter frequencies, so an attack usually finds the period first."</Note>
         </div>
     }
 }

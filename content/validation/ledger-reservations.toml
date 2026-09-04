@@ -1,13 +1,13 @@
 id = "ledger-reservations"
 section = "validation"
 title = "Ledger reservations"
-subtitle = "An append-only coordination ledger in which log numbers and file names are claimed before work begins"
+subtitle = "Reserve log numbers and file names in an append-only record before work starts"
 status = "VERIFIED"
-status_note = "The research program's ledger holds 240 headed entries over 13,552 lines, including 82 reservations, 8 seals, 25 terminal entries and 12 corrections; collisions were resolved by voiding the later claim and renumbering rather than by editing."
+status_note = "The project ledger has 240 headed entries across 13,552 lines: 82 reservations, 8 seals, 25 final entries, and 12 corrections. When two jobs claimed the same number, the later claim was voided and renumbered instead of editing old records."
 family = "Audit and release governance"
 tags = ["ledger", "coordination", "reservations", "append-only"]
 related = ["seal-and-audit-protocol", "correction-and-retraction", "reproducibility-receipts", "run-script-log-convention", "g-ledger"]
-summary = "When several agents attack the same texts, the ledger is the shared memory that prevents duplicated work, silent overwrites and retroactive claims. Each lane reserves a log number and the exact new-only file names it will create, records its seal with hashes, and records its terminal outcome or correction. Nothing is edited after the fact: a wrong claim is followed by a dated correction, and a numbering collision voids the later claim and renumbers it. The ledger is also what a later audit reads to decide which negatives are real."
+summary = "When several people test the same texts, a shared ledger prevents duplicate work, silent overwrites, and claims added after the fact. Each task reserves a log number and the new file names it will create. It later records file hashes, the final outcome, or a correction. Old entries are never rewritten. A wrong claim gets a dated correction, and a number collision voids and renumbers the later task. Auditors use this history to decide which negative results are valid."
 updated = "2026-09-04"
 
 [[blocks]]

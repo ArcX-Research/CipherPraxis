@@ -1,13 +1,13 @@
 id = "mixture-inference-under-transposition"
 section = "cryptanalysis"
 title = "Mixture inference under transposition"
-subtitle = "Reading an inner short-period substitution through an unknown transposition and an outer periodic layer, by evidence rather than key search"
+subtitle = "Read a short repeating inner layer through an unknown transposition and outer layer"
 status = "VERIFIED"
-status_note = "Bayesian inference of the inner mixture with the outer shifts marginalised solves four planted sandwiches from cold (true width on top at z 4 to 13, 100% match) and shows the expected negative signatures on a fractionated, a plain and a double-columnar control; the same pipeline finds no mixture and no width in the two unsolved corpus texts in any combination of alphabet orders (logs/05)."
+status_note = "The Bayesian fit averages over outer shifts and solved four planted layered ciphers from a cold start. It ranked the true width first at z 4 to 13 and matched 100%. Fractionated, plain, and double-columnar negative controls showed the expected patterns. The same pipeline found no mixture or width in either unsolved project text under any alphabet-order pair (logs/05)."
 family = "Layered-construction inference"
 tags = ["mixture", "Bayesian evidence", "sandwich", "transposition-invariant", "class posterior", "EM"]
 related = ["sandwich-construction", "vigenere", "quagmire-iii", "columnar-transposition", "bayesian-evidence-model-selection", "expectation-maximisation", "order-free-width-statistic", "transposition-width-recovery", "exact-period-alignment", "family-identification", "g-inner-and-outer-layer", "g-selection-freedom", "g-coset"]
-summary = "If a short-period substitution is applied, then any transposition, then a longer-period additive layer, the transposition cannot change the multiset of inner letters. Each outer coset is therefore a rotation of a mixture of rotated language distributions, and the mixture can be inferred from coset histograms alone, with the outer shifts integrated out. The class posteriors that fall out of the fit then expose the transposition through the block structure they must show at the right width. The corpus built this as an attack that needs no key search and validated it on planted sandwiches."
+summary = "Consider a short-period substitution, followed by a transposition, then a longer-period additive layer. The transposition changes letter order but not inner letter counts. Each outer coset is therefore a shifted mixture of language distributions. A solver can estimate that mixture from coset counts while averaging over the outer shifts. The resulting class probabilities reveal block patterns at the correct transposition width. This attack needs no key search and passed planted layered controls."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -46,7 +46,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Coset histograms in the outer order; evidence of $M_1$, $M_2$, $M_3$ with shifts and banks marginalised; $z$ of each evidence against shuffled texts.
 2. Read the top spacings $\delta$ from the $\delta$-marginal (correct on 7/8 planted seeds; the top three are carried).
@@ -77,7 +77,7 @@ Four planted sandwiches at 153 letters, all solved from cold with the true width
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Inner period 2 with spacing $\delta = 13$: the inner distribution is $f(x) = \tfrac12\big(E(x) + E(x-13)\big)$, so E and R (13 apart) both have inner frequency $\tfrac12(0.127 + 0.060) = 0.0935$, and every letter is paired with its antipode. The index of coincidence of $f$ is about $0.054$, well below the language value $0.066$ and above uniform $0.0385$; a transposition of any kind leaves that distribution untouched, and an outer period-7 layer shows it rotated in each of its seven cosets. The $\delta$-marginal evidence then peaks at $\delta = 13$ regardless of the transposition, and in plaintext order the classes read `0101...`; a columnar transposition of even width turns that into constant-class columns, of odd width into alternating ones.
 '''

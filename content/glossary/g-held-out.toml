@@ -6,5 +6,5 @@ status_note = "Standard term; the audited lanes pin three disjoint corpus ranges
 family = "Validation"
 tags = ["calibration", "contamination", "corpus"]
 related = ["english-gate-calibration", "power-analysis", "local-language-model-prior", "held-out-gates", "g-power"]
-summary = "Text that was not used to build the model being evaluated. A language table trained on one corpus range must be calibrated (thresholds, prose tails) on a second, disjoint range, and planted controls must be drawn from a third; a gate whose calibration windows overlap the training data is optimistic, and a control found verbatim in the training data (as happened with duplicated boilerplate in a concatenated corpus) demonstrates nothing about decoder power. Held-out also describes validation controls that are declared but left unopened until a development gate has passed."
+summary = "Held-out text was not used to build the model being tested. A language table should train on one part of a corpus, set its thresholds on a separate part, and draw planted controls from a third part. Overlap makes the results look better than they are. A control copied from the training data says nothing about decoding power. A held-out control can also be declared in advance and kept hidden until development checks pass."
 updated = "2026-09-04"

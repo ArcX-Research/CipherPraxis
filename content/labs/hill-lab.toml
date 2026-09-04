@@ -1,13 +1,13 @@
 id = "hill-lab"
 section = "labs"
 title = "Hill cipher lab"
-subtitle = "2×2 and 3×3 linear maps on letter blocks, determinants and inverses modulo 26"
+subtitle = "Try 2×2 and 3×3 letter-block matrices and see whether they can be reversed"
 status = "VERIFIED"
-status_note = "Unit-tested against the standard vectors HELP → HIAT with key (3 3 / 2 5) and ACT → POH with the 3×3 key from Hill's 1929 example; singular keys are detected."
+status_note = "The lab matches HELP → HIAT with key (3 3 / 2 5) and ACT → POH with the 3×3 key from Hill's 1929 example. It also detects matrices that have no inverse."
 family = "Algebra labs"
 tags = ["hill", "polygraphic", "linear algebra", "matrix"]
 related = ["hill-cipher", "matrix-invertibility-mod-26", "finite-field-linear-algebra", "affine-lab"]
-summary = "The Hill cipher multiplies each block of n letters by an n×n key matrix modulo 26. The key is usable only when its determinant is a unit modulo 26, and it is recoverable from n² known plaintext letters by solving a linear system. The lab computes the determinant, the adjugate inverse and both directions of the cipher."
+summary = "The Hill cipher turns each n-letter block into numbers and multiplies them by an n×n key matrix modulo 26. The key works only when its determinant has an inverse modulo 26. With n² known plaintext letters, linear equations can recover it. This lab calculates the determinant and inverse, then encrypts and decrypts."
 updated = "2026-09-04"
 lab = "hill"
 

@@ -1,13 +1,13 @@
 id = "planted-controls"
 section = "validation"
 title = "Planted controls"
-subtitle = "Synthetic instances with known truth, run through the identical pipeline before any target"
+subtitle = "Run known synthetic cases through the same pipeline before the target"
 status = "VERIFIED"
-status_note = "Every instrument in the research program ships with planted-control generators; recorded pass rates range from 100% (exact periodic finish, three controls) to 0% (blind unknown-alphabet annealing, by design), and each rate is tied to a log."
+status_note = "Every analysis tool includes a planted-control generator. Recorded pass rates range from 100% for three exact periodic controls to 0% for blind unknown-alphabet annealing. Each rate links to a log."
 family = "Control design"
 tags = ["controls", "synthetic truth", "power", "calibration"]
 related = ["control-first-policy", "target-absent-controls", "blind-controls", "power-measurement", "valid-model-nulls", "held-out-gates", "gauge-defect-invalidation", "power-analysis", "vigenere", "g-planted-control"]
-summary = "A planted control is a ciphertext manufactured from a plaintext and key that the experimenter chose, using the exact construction the solver claims to attack, at the same length and information budget as the real target. It is decrypted by the same code path, and the recovered plaintext and key are compared with the plant. Planted controls are the only way to know whether a negative result on a real text means anything: if the instrument cannot recover what it was built to recover, its silence on the target is uninformative."
+summary = "A planted control is a ciphertext made from a known plaintext and key with the exact cipher under test. It matches the real target's length and available information. The same code path must decrypt it, and the result is compared with the known answer. If a tool cannot recover a case it was built to solve, a miss on the target tells us nothing."
 updated = "2026-09-04"
 
 [[blocks]]

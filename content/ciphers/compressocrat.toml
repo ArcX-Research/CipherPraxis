@@ -1,13 +1,13 @@
 id = "compressocrat"
 section = "ciphers"
 title = "Compressocrat"
-subtitle = "Variable-length ternary letter codes regrouped into trigraphs and substituted"
+subtitle = "Turn letters into variable-length base-3 codes, group the digits by threes, and substitute"
 status = "CLOSED"
-status_note = "Two independent 504-letter controls with keyed alphabets were recovered exactly (527/527 and 520/520 letters, forward PASS) and byte-matched a separately compiled generator; the live 504-letter text failed both the language gate and the forward replay, so the direct family is excluded there."
+status_note = "Two independent 504-letter controls with keyed alphabets were recovered exactly: 527/527 and 520/520 plaintext letters, both with a passing forward check. Their output also matched a separately compiled generator byte for byte. The live 504-letter text failed both the language check and forward replay, ruling out this direct family for that text."
 family = "Fractionation"
 tags = ["fractionation", "variable-length code", "trigraph", "prefix-free"]
 related = ["trifid", "bifid", "keyword-mixed-alphabet", "simulated-annealing", "known-answer-tests", "g-fractionation"]
-summary = "Compressocrat gives each plaintext letter a fixed prefix-free code over the digits 1, 2, 3, concatenates the codes, pads with at most two 1s to a multiple of three, and replaces each digit trigraph by a ciphertext letter through a keyed alphabet. Since the code never produces the trigraph 333, exactly 26 trigraphs occur and the substitution is a bijection. It is a fractionation like Trifid but with variable-length codes, so ciphertext and plaintext lengths differ."
+summary = "Compressocrat gives each plaintext letter a prefix-free code made from 1, 2, and 3. It joins the codes, adds at most two 1s to make groups of three, and maps each digit triplet to a ciphertext letter through a keyed alphabet. The code never makes 333, leaving exactly 26 triplets and a one-to-one mapping. Like Trifid, it splits letters into parts, but its codes have different lengths, so plaintext and ciphertext lengths can differ."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -45,7 +45,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Anneal $\sigma$ with an external search whose objective parses the digit stream and scores the resulting text (three predeclared seeds, best score selected).
 2. Independently re-implement encryption and decryption; require each control to byte-match a separately compiled generator before it counts.
@@ -74,7 +74,7 @@ Two generic-corpus controls chosen to produce exactly 504 ciphertext letters (pl
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 A small prefix-free code that never creates `333`: `E=1, T=2, A=31, O=32, N=331, S=332`. Plaintext `NOTES` encodes as `331 32 2 1 332` $=$ `3313221332` (10 digits); pad with `11` to 12 digits and split: `331 322 133 211`.
 

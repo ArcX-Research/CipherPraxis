@@ -1,33 +1,33 @@
 id = "key-cancellation"
 section = "cryptanalysis"
 title = "Key cancellation"
-subtitle = "Subtracting one ciphertext from another so that a shared latent stream disappears"
+subtitle = "Subtract two ciphertexts to remove a stream they share"
 status = "VERIFIED"
-status_note = "The cancellation algebra passed an exhaustive synthetic known-answer test (144 offset, orientation and sign combinations with both inverses and both forward reconstructions), and a segment-aware selector built on it recovered 16/16 hidden positive pairs and rejected 4/4 negatives with 99 full-pipeline nulls each; the two corpus texts were never run through it because a family-consistency check disfavoured the chain premise beforehand (segment-cancellation review, logs/373, coupling note)."
+status_note = "The exact cancellation checks covered 144 combinations of offset, direction, and sign, including both inverses and forward reconstructions. A segment-aware selector then recovered 16/16 hidden positive pairs and rejected 4/4 negatives, each against 99 full-pipeline nulls. It did not test the two project texts because an earlier family check found that the required chain did not fit them (segment-cancellation review, logs/373, coupling note)."
 family = "Relations between ciphertexts"
 tags = ["two ciphertexts", "running key", "difference", "gauge", "cancellation", "index map"]
 related = ["running-key", "vigenere", "beaufort", "one-time-pad", "segment-chain-analysis", "running-key-relation-test", "shared-cycle-attack", "affine-maps-mod-26", "conjugacy-and-gauge", "difference-operators", "valid-model-nulls", "target-absent-controls", "known-answer-tests", "g-key-cancellation", "g-selection-freedom"]
-summary = "If two ciphertexts share a latent stream additively, one plaintext used as the other's running key, or one running key used twice, a signed subtraction in a common index space cancels the shared stream and leaves a simpler cipher of what remains. Key cancellation is exact algebra, but it is only valid when the two texts are represented in the same alphabet order (or orders related by an affine map), it leaves a 26-fold gauge, and the cipher it exposes still has to be solved and validated. The corpus worked the algebra through with known-answer tests, built a control-validated selector on it, and recorded why the premise must be checked against the texts' own invariants before any target run."
+summary = "Two ciphertexts may share one hidden stream because one plaintext keys the other or one running key is reused. Subtracting them with the right sign can remove that shared stream and leave a simpler cipher. This works only when both texts use the same alphabet index order, or orders linked by an affine map. It also leaves 26 equivalent shifts. The remaining cipher still needs to be solved and checked. Before any target run, key-independent patterns must support the shared-stream premise."
 updated = "2026-09-04"
 
 [[blocks]]
 kind = "definition"
 body = '''
-All arithmetic is in $\mathbb{Z}_{26}$ with one letter-to-index map $z$. Text B is enciphered as $x_j = \epsilon_9 z(P_j) + K_j$ ($\epsilon = +1$ additive, $-1$ reciprocal) and text A uses B's plaintext, read at position $\phi(i)$, as a running key: $y_i = \epsilon_8 z(Q_i) + z(P_{\phi(i)})$. Since $\epsilon_9^2 = 1$, $z(P_j) = \epsilon_9 (x_j - K_j)$, and
+All arithmetic is in $\mathbb{Z}_{26}$ with one letter-to-index map $z$. Text B is enciphered as $x_j = \epsilon_B z(P_j) + K_j$ ($\epsilon = +1$ additive, $-1$ reciprocal) and text A uses B's plaintext, read at position $\phi(i)$, as a running key: $y_i = \epsilon_A z(Q_i) + z(P_{\phi(i)})$. Since $\epsilon_B^2 = 1$, $z(P_j) = \epsilon_B (x_j - K_j)$, and
 
-$$d_i := y_i - \epsilon_9 x_{\phi(i)} = \epsilon_8 z(Q_i) - \epsilon_9 K_{\phi(i)}.$$
+$$d_i := y_i - \epsilon_B x_{\phi(i)} = \epsilon_A z(Q_i) - \epsilon_B K_{\phi(i)}.$$
 
-The unknown plaintext $P$ has cancelled; $d$ is $Q$ under the (signed) key of text B. Once $K$ is recovered from $d$, both plaintexts follow: $z(Q_i) = \epsilon_8(d_i + \epsilon_9 K_{\phi(i)})$, $z(P_j) = \epsilon_9(x_j - K_j)$. The same identity with the roles of key and plaintext swapped gives the classical two-ciphertext difference under one running key: $c_i - c'_i = p_i - p'_i$.
+The unknown plaintext $P$ has cancelled; $d$ is $Q$ under the (signed) key of text B. Once $K$ is recovered from $d$, both plaintexts follow: $z(Q_i) = \epsilon_A(d_i + \epsilon_B K_{\phi(i)})$, $z(P_j) = \epsilon_B(x_j - K_j)$. The same identity with the roles of key and plaintext swapped gives the classical two-ciphertext difference under one running key: $c_i - c'_i = p_i - p'_i$.
 '''
 
 [[blocks]]
 kind = "equations"
 title = "Conditions, counts and gauge"
 body = '''
-- **Common index space.** If B's plaintext is indexed by $z_9$ and A converts the running-key letters by $z_8$, cancellation requires the physical-letter conversion $F(u) = z_8(z_9^{-1}(u))$ to be affine, $F(u) = au + b$ with $\gcd(a, 26) = 1$: then $a\epsilon_9 x$ cancels the plaintext and $b$ is absorbed into the key. The straight order and the keyword-mixed order of the corpus admit **no** affine map between them (checked over all 12 units and 26 translations), so only matched-order cells cancel literally; mixed-order subtraction tests a shared numeric stream, not a shared plaintext.
-- **Signs.** With the plaintext sign convention, four sign cells $(\epsilon_9, \epsilon_8)$ give two observably different streams ($y - x$ and $y + x$) with two endpoint relations each; a convention that puts the sign on the key instead has only two effective cells. A production source must declare one convention and prove it with known-answer tests.
+- **Common index space.** If B's plaintext is indexed by $z_9$ and A converts the running-key letters by $z_8$, cancellation requires the physical-letter conversion $F(u) = z_8(z_9^{-1}(u))$ to be affine, $F(u) = au + b$ with $\gcd(a, 26) = 1$: then $a\epsilon_B x$ cancels the plaintext and $b$ is absorbed into the key. The straight order and the keyword-mixed order of the corpus admit **no** affine map between them (checked over all 12 units and 26 translations), so only matched-order cells cancel literally; mixed-order subtraction tests a shared numeric stream, not a shared plaintext.
+- **Signs.** With the plaintext sign convention, four sign cells $(\epsilon_B, \epsilon_A)$ give two observably different streams ($y - x$ and $y + x$) with two endpoint relations each; a convention that puts the sign on the key instead has only two effective cells. A production source must declare one convention and prove it with known-answer tests.
 - **Alignment.** For a cycled 144-letter key the offsets live in $\mathbb{Z}/144$; with two orientations there are 288 raw alignments (not 592, which counts non-wrapped edge overlaps of a different model).
-- **Gauge.** For any $b$, $K'_j = K_j + b$, $z(P'_j) = z(P_j) - \epsilon_9 b$, $z(Q'_i) = z(Q_i) + \epsilon_8\epsilon_9 b$ leave both ciphertexts unchanged: "recover the key exactly" is meaningful only after a gauge is fixed or a unique physical plaintext is selected.
+- **Gauge.** For any $b$, $K'_j = K_j + b$, $z(P'_j) = z(P_j) - \epsilon_B b$, $z(Q'_i) = z(Q_i) + \epsilon_A\epsilon_B b$ leave both ciphertexts unchanged: "recover the key exactly" is meaningful only after a gauge is fixed or a unique physical plaintext is selected.
 '''
 
 [[blocks]]
@@ -40,7 +40,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Fix the convention, the alignment $\phi$ and the common order; enumerate the sign cells (16 cells for two orders and two signs per text).
 2. Form $d$ for each cell and solve it as the cipher the residual key implies (a constant Caesar segment, a periodic segment, or both when the key changes regime, see [Segment chain analysis](/cryptanalysis/segment-chain-analysis)).
@@ -76,7 +76,7 @@ body = '''
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Text B plaintext `ATTACKATDAWN` under a segmented key (constant 3 on positions 0 to 5, then $(5, 20)$ repeating): $x = $ `DWWDFNFNIUBH`. Text A plaintext `HOLDTHEGATES` with B's plaintext as running key at offset 0 (both additive): $y = $ `HHEDVREZDTAF`. Subtracting letter by letter,
 

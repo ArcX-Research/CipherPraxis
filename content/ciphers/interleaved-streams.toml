@@ -1,13 +1,13 @@
 id = "interleaved-streams"
 section = "ciphers"
 title = "Interleaved streams"
-subtitle = "Several independently enciphered texts merged position by position"
+subtitle = "Merge several separately encrypted texts one letter at a time"
 status = "VERIFIED"
-status_note = "De-interleaving two streams each under its own period-7 keyed cipher recovered the planted control at 100% on both streams; with three streams at 153 letters (51 letters each) the same solver reached only 16%, 4% and 4%, so three-way interleaving is power-limited at that length. A nine-stream shared-key deal across three texts passed both its controls and was excluded."
+status_note = "Splitting two streams, each with its own period-7 keyed cipher, recovered both planted plaintexts at 100%. With three streams in 153 letters, each stream had only 51 letters and recovery fell to 16%, 4%, and 4%. Three-way interleaving is therefore power-limited at that length. A nine-stream shared-key deal across three texts passed both controls and was ruled out."
 family = "Composite constructions"
 tags = ["composite", "interleaving", "de-interleave", "streams"]
 related = ["vigenere", "quagmire-iii", "columnar-transposition", "compound-periodic-key", "coincidence-lag-profile", "exact-period-alignment", "g-coset", "g-period"]
-summary = "If k plaintexts are enciphered separately and their ciphertexts interleaved letter by letter, every coset of the merged text is a mixture of k different substitutions, which mimics the signature of a flat inner text. The cure is to de-interleave: stream r is the letters at positions congruent to r modulo k, and each stream is solved alone. The program tested two- and three-way interleavings under period-7 keyed ciphers and a nine-column deal shared by three texts."
+summary = "If k plaintexts are encrypted separately and merged letter by letter, each coset mixes k substitutions. That can look like a flat inner text. Split the ciphertext back into streams instead: stream r contains positions congruent to r modulo k. Then solve each stream on its own. Tests covered two- and three-way mixes under period-7 keyed ciphers and a nine-column deal shared by three texts."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -42,7 +42,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. For $k = 2, 3$ (and 9 for the deal), split the text into residue streams.
 2. Solve each stream as a period-$m$ cipher in each alphabet order and relation (the program's periodic solver with quadgram annealing of the shifts), and report the rate and, on controls, the match per stream.
@@ -71,7 +71,7 @@ Two-stream control (logs/11_misc.log): both streams recovered at 100% match (rat
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Plaintext `INTERLEAVED` split into even positions `ITREVD` and odd positions `NELAE`. Stream A is Vigenère with key `KEY`, stream B with key `AXE`:
 

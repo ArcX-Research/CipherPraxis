@@ -29,12 +29,12 @@ pub fn ColumnarLab() -> impl IntoView {
                 <TextField label="Plaintext" value=plain multiline=true/>
                 <div class="lab-row">
                     <TextField label="Keyword" value=key mono=true/>
-                    <label class="filter-toggle field"><input type="checkbox" prop:checked=move || padded.get() on:change=move |ev| padded.set(event_target_checked(&ev))/><span>"Pad the last row (regular columnar)"</span></label>
+                    <label class="filter-toggle field"><input type="checkbox" prop:checked=move || padded.get() on:change=move |ev| padded.set(event_target_checked(&ev))/><span>"Fill the last row with padding"</span></label>
                 </div>
             </div>
             <ErrorNote message=err/>
             <div class="lab-viz">
-                <div class="lab-viz-head mono">"Grid · columns are read out in keyword order"</div>
+                <div class="lab-viz-head mono">"Grid · read columns in keyword order"</div>
                 {move || {
                     let k = normalize(&key.get());
                     let order = key_order(&k);
@@ -53,7 +53,7 @@ pub fn ColumnarLab() -> impl IntoView {
             </div>
             <Output label="Ciphertext" value=cipher/>
             <Output label="Decrypted" value=back/>
-            <Note>"An irregular (unpadded) grid leaves the last row short, so the leftmost columns are one letter longer: the decryptor must reconstruct which columns are long from the text length alone. That long/short pattern is exactly what an order-free width statistic measures without knowing the keyword."</Note>
+            <Note>"Without padding, the last row is short and the leftmost columns hold one extra letter. During decryption, the text length tells you which columns are longer. An order-free width test uses this long-and-short pattern to estimate the grid width without knowing the keyword."</Note>
         </div>
     }
 }

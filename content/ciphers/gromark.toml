@@ -1,13 +1,13 @@
 id = "gromark"
 section = "ciphers"
 title = "Gromark"
-subtitle = "Keyed substitution driven by a lagged-Fibonacci digit chain from a numeric primer"
+subtitle = "A keyed substitution driven by a digit chain from a short numeric primer"
 status = "CLOSED"
-status_note = "Direct basic Gromark was control-qualified at primer lengths 4, 5, 6 and 7 (every 504-letter control recovered plaintext, primer and alphabet exactly, including a leading-zero primer) and excluded on the 504-letter text at those lengths; primer length 8 and layered variants remain open."
+status_note = "Basic Gromark controls passed at primer lengths 4, 5, 6, and 7. Every 504-letter control recovered the plaintext, primer, and alphabet exactly, including a primer that began with zero. Tests ruled out those lengths on the 504-letter target. Primer length 8 and layered forms remain open."
 family = "Stream and machine ciphers"
 tags = ["running digit chain", "primer", "keyed alphabet", "lagged fibonacci", "stream"]
 related = ["keyword-mixed-alphabet", "condi", "linear-recurrences-lcg", "meet-in-the-middle", "modular-inverse-and-crt", "exhaustive-enumeration", "simulated-annealing", "g-autokey-primer", "g-keyed-alphabet"]
-summary = "Gromark adds a running decimal digit to each plaintext letter before a keyed substitution. The digits come from a short numeric primer extended by a lagged Fibonacci rule, so the key is the primer plus an alphabet. The primer stage is exact and costs 10 to the power of the primer length; the program paid that cost through length 7 by meeting two half-chains modulo 10 and using a substitution-invariant selector before any alphabet search."
+summary = "Gromark adds a changing decimal digit to each plaintext letter, then applies a keyed substitution. A short numeric primer grows into the digit stream through a lagged-Fibonacci rule. The key is therefore the primer plus an alphabet. Checking every primer costs 10 to the power of its length. A meet-in-the-middle method handled lengths through 7 and used an alphabet-free filter before searching any substitution."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -56,7 +56,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Enumerate all $10^P$ primers (meet in the middle at $P = 6, 7$) and score each by the substitution-invariant difference model.
 2. Give the top cells (32,768 at $P = 6$, 131,072 at $P = 7$) a one-to-one monogram assignment (Hungarian) and a provisional quadgram score.
@@ -86,7 +86,7 @@ $P = 4$: exhaustive primer pre-pass, control PASS in 13.39 s; periodic Gromark $
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Primer `27182`, alphabet $\sigma$ keyed by `ZEBRAS` (`ZEBRASCDFGHIJKLMNOPQTUVWXY`), plaintext `GROMARK`. Chain: $2, 7, 1, 8, 2$, then $d_5 = 2 + 7 = 9$, $d_6 = 7 + 1 = 8$.
 

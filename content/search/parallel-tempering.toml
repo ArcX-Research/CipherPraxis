@@ -1,13 +1,13 @@
 id = "parallel-tempering"
 section = "search"
 title = "Parallel tempering (replica exchange)"
-subtitle = "Batch annealing over a geometric temperature ladder with periodic exchange of states between adjacent levels"
+subtitle = "Run searches at several temperatures and swap states between nearby levels"
 status = "POWER-LIMITED"
-status_note = "Implemented as a 2000-chain batch solver over (alphabet, shifts) with 8-12 temperature levels and replica exchange. On planted two-sided unknown-alphabet controls of 63+96 and 96 letters it recovers 3-42% of the alphabet at best and its best-of-N score does not improve with more chains, so negatives from it carry no family information."
+status_note = "A 2,000-chain batch solver searches the alphabet and shifts across 8–12 temperatures and swaps states between levels. On planted two-sided unknown-alphabet controls of 63+96 and 96 letters, it recovered only 3–42% of the alphabet. Adding more chains did not improve the best score, so its negative results say nothing about the cipher family."
 family = "Stochastic local search"
 tags = ["replica exchange", "temperature ladder", "batch chains", "quagmire iii", "unknown alphabet"]
 related = ["simulated-annealing", "hill-climbing", "polish-basin-measurement", "quagmire-iii", "quadgram-log-likelihood", "shuffled-null-z-score", "planted-controls", "power-measurement", "cp-sat-and-smt-solvers", "g-temperature-schedule", "g-search-basin"]
-summary = "Parallel tempering runs many Metropolis chains at different temperatures and periodically swaps states between neighbouring levels, so a hot chain can carry a state across barriers that trap a cold one. The corpus implements it as vectorised batch annealing over an unknown 26-letter alphabet plus seven shifts per text, with quadgram (optionally bigram and trigram) scoring and a deterministic polish of the best chains. Planted controls show that it does not reach a blind two-sided alphabet at 63-96 letters: the search plateaus at roughly a third of the alphabet however many chains are used."
+summary = "Parallel tempering runs many Metropolis searches at different temperatures. Hot searches cross score barriers more easily, while cold searches refine strong answers. Swapping states between nearby temperatures combines those benefits. The implementation searches an unknown 26-letter alphabet plus seven shifts and then polishes the best chains. Controls show that at 63–96 letters it cannot recover an alphabet used on both sides. It stops near one-third correct no matter how many chains run."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -50,7 +50,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 Target family: a period-7 keyed substitution whose single unknown alphabet acts on both sides (Quagmire III), possibly shared by two texts with separate shift vectors, on zones of 63 and 96 letters. Moves: with probability $p_\alpha = 0.5$ an alphabet move (swap with probability 0.7, else an insertion), otherwise one shift of one text redrawn uniformly; exchange every 20 steps. Optional key-word mode derives shifts from the positions of a candidate key word in the alphabet, removing 33 bits from the state. Nulls: shuffled zones through the identical pipeline calibrate the polished score, because free shifts overfit short texts.
 '''
@@ -78,7 +78,7 @@ Planted Quagmire III with a random alphabet and random shifts on real English, 2
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Ladder with $L = 4$, $T_{cold} = 0.4$, $T_{hot} = 12$: $T_l = 0.4 \cdot 30^{l/3}$, giving $0.4,\ 1.243,\ 3.862,\ 12$.
 

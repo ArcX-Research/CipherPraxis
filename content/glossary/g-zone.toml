@@ -6,5 +6,5 @@ status_note = "Corpus usage: a contiguous stretch of a ciphertext with its own s
 family = "Cryptanalysis technique"
 tags = ["segmentation"]
 related = ["change-point-zone-detection", "g-change-point", "assumption-review-protocol", "exact-period-alignment"]
-summary = "A zone is a contiguous part of a ciphertext that behaves as one cipher: for example a 63-letter stretch of a 153-letter text whose period-7 cosets look monoalphabetic, flanked by ends whose letters are flat at every lag. Statistics computed on the whole text pool the zones and can mimic a construction that is not there (a monoalphabetic-coset zone plus flat ends pools to the coset index of coincidence of a mixed inner). Once zones are found, every instrument is re-run per zone, and controls are planted at the zone's own length and geometry."
+summary = "A zone is one continuous part of a ciphertext that behaves like a single cipher. For example, 63 letters of a 153-letter text may have period-7 cosets that look monoalphabetic while both ends look flat. Whole-text statistics mix these zones and can suggest a cipher that is not present. After finding the zones, analysts rerun every test on each one and build controls with the same length and shape."
 updated = "2026-09-04"

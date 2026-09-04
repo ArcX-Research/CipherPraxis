@@ -1,13 +1,13 @@
 id = "columnar-transposition"
 section = "ciphers"
 title = "Columnar transposition"
-subtitle = "Write in rows of width w, read the columns in a keyed order"
+subtitle = "Write in rows, then read the columns in a key-controlled order"
 status = "VERIFIED"
-status_note = "Column-order recovery is verified in several forms: exhaustive 9! orders with an exact inner-order DP (23/24 development controls), an order-free width statistic that solved 4/4 planted sandwiches from cold, two 504-letter width-9 controls over a periodic layer recovered exactly, and the recipe-free cascade re-solving the transpositions of the corpus's solved texts."
+status_note = "Several checks support column recovery. A full search of 9! orders passed 23/24 development controls. An order-free width test solved 4/4 planted layered ciphers from a cold start. Two 504-letter width-9 controls over a periodic layer were recovered exactly. The general cascade also re-solved transpositions in earlier solved texts."
 family = "Transposition"
 tags = ["transposition", "columnar", "keyword order", "width"]
 related = ["route-transposition", "myszkowski", "rail-fence", "sandwich-construction", "transposition-width-recovery", "order-free-width-statistic", "mixture-inference-under-transposition", "exact-dynamic-programming", "all-different-constraints", "columnar-lab", "g-transposition-grid"]
-summary = "A columnar transposition writes the message into rows of a chosen width and reads the columns out in the order given by a key word. Letters keep their identities, so frequencies are untouched and the whole attack is about recovering the width and the column order. The program solved it exhaustively at width 9, by annealing at larger widths, and, when it sat between two substitution layers, by an order-free statistic that finds the width without knowing the order."
+summary = "A columnar transposition writes the message in rows of a chosen width, then reads columns in an order set by a keyword. The letters do not change, so their total frequencies stay the same. The task is to recover the width and column order. Tests checked every order at width 9, used annealing at larger widths, and used an order-free statistic to find the width when the transposition sat between two substitutions."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -48,7 +48,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. **Width.** Scan widths; for plain columnar, score adjacency of candidate column pairs by digram likelihood; under an outer periodic layer use the order-free width statistic (a DP over the long and short columns of the unpadded grid that measures the block pattern of coset classes without knowing the order).
 2. **Order.** Exhaustive for $w \le 9$ (or 10), dictionary words for 10 to 20 letters, restarted annealing with a full-neighbourhood finish beyond; or the exact 90,720-phase profile plus subset DP when a period-7 layer sits on top.
@@ -78,7 +78,7 @@ Order-free width statistic (logs/05_mix.log): four planted sandwiches (width 9 e
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Key `ZEBRAS` (alphabetical ranks: A=1, B=2, E=3, R=4, S=5, Z=6, so the read order is columns 4, 2, 1, 3, 5, 0), plaintext `WEAREDISCOVEREDFLEEATONCE` (25 letters, irregular):
 

@@ -1,13 +1,13 @@
 id = "shared-cycle-attack"
 section = "cryptanalysis"
 title = "Shared-cycle attack"
-subtitle = "Hypothesising one mixed alphabet (a 26-cycle) common to a text's keys or to two texts, from a mechanically built bank, and finishing exactly"
+subtitle = "Build a bank of possible 26-cycle alphabets, then test each as a shared order"
 status = "VERIFIED"
-status_note = "A ciphertext-derived bank of 66,628 rotation-canonical 26-cycles, screened by a relaxed independent-edge bigram statistic and finished by an exact cyclic dynamic programme, recovers two blind planted controls at 100% (rates -4.217 and -4.135); on the 126-letter period-26 zone the best candidate (-4.869) is beaten by eight of nine complete-pipeline within-coset nulls (mean -4.836 +/- 0.024, p = 0.90) and is rejected as selection overfit (logs/151, 152)."
+status_note = "A bank of 66,628 distinct 26-cycles was built from ciphertext, ignoring rotation. A loose bigram screen made a shortlist, and an exact cyclic dynamic program finished it. Two blind controls recovered at 100%, with rates -4.217 and -4.135. In the 126-letter period-26 zone, eight of nine full-pipeline nulls beat the best target candidate (-4.869 versus null mean -4.836 +/- 0.024, p = 0.90). The candidate was rejected as selection overfit (logs/151, 152)."
 family = "Relations between ciphertexts"
 tags = ["mixed alphabet", "cycle bank", "relaxation", "cyclic DP", "selection overfit", "within-coset null"]
 related = ["quagmire-iii", "keyword-mixed-alphabet", "permutation-cycles", "periodic-substitution-dp", "exact-dynamic-programming", "selection-overfit-diagnostic", "within-coset-null", "blind-controls", "corpus-bank-screen", "crib-driven-alphabet-recovery", "modular-inverse-and-crt", "g-selection-freedom", "g-family-sweep"]
-summary = "When the alphabet order of a keyed periodic substitution is unknown and a blind search is out of reach, a bank of candidate 26-cycles can be built without semantics, from first-occurrence orders of ciphertext substrings and grid reads, and every member screened as the shared order of all cosets. A cheap relaxation shortlists, an exact cyclic dynamic programme finishes, and a null that repeats the entire selection on within-coset shuffles decides whether the best finish is anything but the best of many. The corpus validated the pipeline on blind controls and used it to reject its own most attractive candidate."
+summary = "If a keyed periodic cipher's alphabet is unknown, a blind search may be too large. Instead, build possible 26-cycles from first-occurrence orders in ciphertext fragments and grid reads. Test each cycle as the shared alphabet of all cosets. A cheap approximate score makes a shortlist, and an exact cyclic dynamic program finishes it. Then repeat the whole selection on within-coset shuffles. This showed that the strongest target candidate was only the best of many choices."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -43,7 +43,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Build the bank from ciphertext only; canonicalise by rotation.
 2. Plant two blind controls: hidden bank cycles, random free keys, unseen generic plaintext; the identities are opened only after blind recovery, and a failed control blocks the target.
@@ -76,7 +76,7 @@ Blind controls at 126 letters, period 26, hidden bank cycles and random free key
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Bank member from the toy ciphertext `HEXOJXHEKOAA`: first-occurrence order `HEXOJKA`, completed with the straight remainder to `HEXOJKABCDFGILMNPQRSTUVWYZ`, canonicalised by rotating to start at A: `ABCDFGILMNPQRSTUVWYZHEXOJK`. Every substring of at least three letters of every source, and of every reversed source, contributes such a member; substrings that produce the same cycle are stored once. Under a period-2 test of this toy, a cycle is scored by the relaxation on the single edge $0 \to 1$ (maximising the two shifts independently) and finished by an exact two-shift search.
 '''

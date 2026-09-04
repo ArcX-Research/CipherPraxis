@@ -1,13 +1,13 @@
 id = "order-free-width-statistic"
 section = "cryptanalysis"
 title = "Order-free width statistic"
-subtitle = "Scoring a transposition width from class structure alone, before any column order is known"
+subtitle = "Score a transposition width from class patterns before knowing the column order"
 status = "VERIFIED"
-status_note = "The residue-pattern reduction and the class-posterior block statistic are implemented; the reduction ranks the true residue pattern first on a 153-letter planted control (reported at z +9.4 against the familywise null) and the block statistic puts the true width on top at z 4 to 13 on four planted sandwiches, with shuffled ciphertexts pushed through the identical pipeline as the null (logs/300, 05)."
+status_note = "The project implements both residue-pattern reduction and a class-probability block score. On a 153-letter planted control, the true residue pattern ranked first at z +9.4 against the family-wide null. On four planted layered ciphers, the block score ranked the true width first at z 4 to 13. Shuffled ciphertexts went through the same full pipeline (logs/300, 05)."
 family = "Layered-construction inference"
 tags = ["order-free", "transposition", "width", "residue pattern", "class posterior", "dynamic programming"]
 related = ["transposition-width-recovery", "mixture-inference-under-transposition", "sandwich-construction", "columnar-transposition", "exact-period-alignment", "bayesian-evidence-model-selection", "shuffled-null-z-score", "exact-dynamic-programming", "conjugacy-and-gauge", "g-order-free-statistic", "g-residue-pattern", "g-selection-freedom"]
-summary = "When a transposition is still in place, any statistic that depends on letter order is blind: the correct configuration scores like noise on quadgrams. Order-free width statistics score a width from quantities the transposition cannot touch, the multiset of letters in each coset, the inner class of each position, and the block structure those classes must show if the width is right. The corpus formulates the rule that governs the choice of statistic and two order-free instruments that reach widths an annealer could not."
+summary = "While a transposition remains, letter-order scores cannot see the correct answer; even true plaintext scores like noise on quadgrams. Order-free tests use facts the transposition cannot change. These include the letters in each coset, the likely inner class of each position, and the block pattern those classes form at the right width. Two such methods found widths that annealing missed."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -41,7 +41,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Fit the inner mixture with the outer shifts marginalised; keep the top spacings $\delta$ and per-letter class posteriors (see [Mixture inference under transposition](/cryptanalysis/mixture-inference-under-transposition)).
 2. For every width $2 \le w \le w_{\max}$ and orientation, compute $S(w)$ with the layout DP; refine the outer shifts by class-EM for that width and keep the better statistic.
@@ -75,7 +75,7 @@ body = '''
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Continue the width-4 example of [Transposition width recovery](/cryptanalysis/transposition-width-recovery): output `TAWACDATNTKA` from `ATTACKATDAWN` with $\sigma = (2,0,3,1)$. With a period-2 inner, position $j$ has class $\tau(j) \bmod 2 = \sigma(s) \bmod 2$, so the twelve output positions carry the classes
 

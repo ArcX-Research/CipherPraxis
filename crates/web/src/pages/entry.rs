@@ -1,6 +1,6 @@
 //! Entry pages: method pages (blocks + evidence), lab pages (instrument + notes), glossary terms.
 use crate::components::badges::StatusBadge;
-use crate::components::cards::EntryRow;
+use crate::components::cards::RowList;
 use crate::components::evidence::EvidencePanel;
 use crate::components::markdown::Markdown;
 use crate::labs::render_lab;
@@ -44,6 +44,8 @@ fn EntryView(entry: Entry) -> impl IntoView {
     let catalog = state.catalog.clone();
     let related: Vec<Entry> = catalog.related(&entry).into_iter().cloned().collect();
     let backlinks: Vec<Entry> = catalog.backlinks(&entry.id).into_iter().cloned().collect();
+    let has_backlinks = !backlinks.is_empty();
+    let backlinks_len = backlinks.len();
     let section = entry.section;
     let is_lab = section == Section::Labs;
     let is_glossary = section == Section::Glossary;
@@ -94,9 +96,14 @@ fn EntryView(entry: Entry) -> impl IntoView {
 
             <div class="entry-grid">
                 <div class="entry-main">
+                    {(!toc.is_empty()).then(|| view! {
+                        <nav class="toc toc-strip" aria-label="On this page">
+                            {toc.iter().map(|(id, h)| view! { <a href=format!("#{id}")>{h.clone()}</a> }).collect_view()}
+                        </nav>
+                    })}
                     {lab_key.map(|k| view! {
                         <section class="lab-panel" aria-label="Interactive lab">
-                            <div class="lab-panel-head mono"><span class="lab-live"><i></i>"WebAssembly · running locally"</span><span>{format!("lab/{k}")}</span></div>
+                            <div class="lab-panel-head mono"><span class="lab-live"><i></i>"Running in your browser"</span><span>{format!("lab/{k}")}</span></div>
                             {render_lab(&k)}
                         </section>
                     })}
@@ -109,29 +116,36 @@ fn EntryView(entry: Entry) -> impl IntoView {
                             </section>
                         }
                     }).collect_view()}
-                    {is_glossary.then(|| view! { <p class="prose">"This is a glossary term. Follow the related entries for the methods that use it."</p> })}
+                    {is_glossary.then(|| view! { <p class="prose">"See the related entries for examples of this term in use."</p> })}
                 </div>
                 <aside class="entry-side">
                     {(!toc.is_empty()).then(|| view! {
                         <nav class="toc" aria-label="On this page">
                             <h2 class="side-h">"On this page"</h2>
-                            <ol>{toc.iter().map(|(id, h)| view! { <li><a href=format!("#{id}")>{h.clone()}</a></li> }).collect_view()}</ol>
+                            <ol>
+                                {toc.iter().map(|(id, h)| view! { <li><a href=format!("#{id}")>{h.clone()}</a></li> }).collect_view()}
+                                <li class="toc-end"><a href="#evidence-h">"Evidence"</a></li>
+                                {has_backlinks.then(|| view! { <li class="toc-end"><a href="#cited-h">"Cited by"</a></li> })}
+                            </ol>
                         </nav>
                     })}
                     {(!related.is_empty()).then(|| view! {
                         <section class="related" aria-labelledby="related-h">
                             <h2 id="related-h" class="side-h">"Related"</h2>
-                            <div class="row-list">{related.into_iter().map(|e| view! { <EntryRow entry=e/> }).collect_view()}</div>
+                            <RowList entries=related limit=4/>
                         </section>
                     })}
-                    {(!backlinks.is_empty()).then(|| view! {
-                        <section class="related" aria-labelledby="cited-h">
-                            <h2 id="cited-h" class="side-h">"Cited by"</h2>
-                            <div class="row-list">{backlinks.into_iter().map(|e| view! { <EntryRow entry=e/> }).collect_view()}</div>
-                        </section>
-                    })}
-                    <EvidencePanel provenance=provenance references=references/>
                 </aside>
+            </div>
+
+            <div class="entry-endmatter">
+                <EvidencePanel provenance=provenance references=references wide=true/>
+                {has_backlinks.then(|| view! {
+                    <section class="related row-grid" aria-labelledby="cited-h">
+                        <h2 id="cited-h" class="side-h">"Cited by"<span class="mono meta">{format!(" · {}", backlinks_len)}</span></h2>
+                        <RowList entries=backlinks limit=12/>
+                    </section>
+                })}
             </div>
         </article>
     }

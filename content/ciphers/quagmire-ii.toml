@@ -1,13 +1,13 @@
 id = "quagmire-ii"
 section = "ciphers"
 title = "Quagmire II"
-subtitle = "Periodic shifts from a straight plaintext alphabet into a keyed ciphertext alphabet"
+subtitle = "Repeat shifts from a straight plaintext alphabet into a keyed ciphertext alphabet"
 status = "VERIFIED"
-status_note = "The crib-driven solver recovered planted Quagmire II ciphers in 12 of 21 seed-by-crib-length cases at 153 letters (all three seeds at a 25-letter crib), so the family is solvable with moderate power; blind unknown-alphabet search is not."
+status_note = "At 153 letters, the crib-based solver recovered 12 of 21 planted cases across seeds and crib lengths. It recovered all three seeds with a 25-letter crib. The method has moderate power with a crib, but blind search for an unknown alphabet does not."
 family = "Polyalphabetic substitution"
 tags = ["periodic", "keyed alphabet", "polyalphabetic", "quagmire"]
 related = ["vigenere", "quagmire-i", "quagmire-iii", "quagmire-iv", "keyword-mixed-alphabet", "crib-driven-alphabet-recovery", "exact-period-alignment", "quagmire-lab", "g-keyed-alphabet"]
-summary = "Quagmire II keeps the plaintext alphabet straight and writes the ciphertext in a mixed alphabet, so the period-alignment signature that a straight-order Vigenère shows disappears from the ciphertext index space. Cosets remain simple substitutions, and a crib still fixes the shifts, but each alphabet swap now re-slots ciphertext letters rather than plaintext letters, which makes the crib search noticeably harder than for Quagmire I."
+summary = "Quagmire II uses a straight plaintext alphabet and a mixed ciphertext alphabet. This hides the usual Vigenère period pattern when ciphertext letters use normal indices. Each coset is still a simple substitution, and a crib can still fix the shifts. However, changing the alphabet moves ciphertext letters rather than plaintext letters, so crib search is harder than for Quagmire I."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -47,7 +47,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Recover the period from coincidence statistics (alignment in a guessed order is uninformative here).
 2. **Bank**: decrypt with every structured ciphertext alphabet, fit the shifts, rank by quadgrams.
@@ -72,12 +72,12 @@ body = '''
 [[blocks]]
 kind = "controls"
 body = '''
-Crib calibration (planted ciphers, random ciphertext alphabet, random shifts, 153 letters of English): Quagmire II solved 2/3, 1/3, 1/3, 2/3, 2/3, 2/3 and 3/3 seeds at crib lengths 7, 9, 11, 13, 16, 20 and 25, always at 100% match when it solved; wrong placements averaged $-6.01 \pm 0.18$ (logs/22_crib_smoke.log). The live sweep over both short texts found nothing above the wrong-placement null (logs/23_crib_pk8_pk9.log), and the phrase-keyed bank of 202,504 ciphertext alphabets was likewise negative with its control at 100% (logs/07_phrase.log).
+Crib calibration (planted ciphers, random ciphertext alphabet, random shifts, 153 letters of English): Quagmire II solved 2/3, 1/3, 1/3, 2/3, 2/3, 2/3 and 3/3 seeds at crib lengths 7, 9, 11, 13, 16, 20 and 25, always at 100% match when it solved; wrong placements averaged $-6.01 \pm 0.18$ (log 22). The live sweep over both short texts found nothing above the wrong-placement null (log 23), and the phrase-keyed bank of 202,504 ciphertext alphabets was likewise negative with its control at 100% (log 7).
 '''
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Plaintext alphabet straight, ciphertext alphabet keyed by `ZEBRAS` ($C$ = `ZEBRASCDFGHIJKLMNOPQTUVWXY`), shifts $(3, 7, 12)$. Plaintext `QUAGMIRE`:
 

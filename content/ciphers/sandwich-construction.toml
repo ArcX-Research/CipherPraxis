@@ -1,13 +1,13 @@
 id = "sandwich-construction"
 section = "ciphers"
 title = "Sandwich construction"
-subtitle = "A short-period substitution inside a transposition inside a longer-period substitution"
+subtitle = "Place a transposition between a short repeating substitution and a longer one"
 status = "VERIFIED"
-status_note = "Four planted sandwiches (widths 8, 9, 9 and 12; inner periods 2 and 3; mixed alphabets) were solved 100% from cold by the mixture-inference and order-free width solver with the true width ranked first at z +4.3 to +12.8, and the exact cross-derived width-9 solver recovered 23/24 development controls; the reading was excluded for the two short corpus texts."
+status_note = "The mixture and order-free width solvers recovered four planted layered ciphers from a cold start. Widths were 8, 9, 9, and 12; inner periods were 2 and 3. The true width ranked first at z +4.3 to +12.8. An exact width-9 solver passed 23/24 development controls. Tests ruled out this reading for the two short project texts."
 family = "Composite constructions"
 tags = ["composite", "layered", "transposition", "mixture", "periodic"]
 related = ["vigenere", "columnar-transposition", "compound-periodic-key", "mixture-inference-under-transposition", "order-free-width-statistic", "bayesian-evidence-model-selection", "expectation-maximisation", "within-coset-null", "g-period", "g-transposition-grid"]
-summary = "A sandwich is c = Q_m(T(Q_k(p))): a short-period substitution, then a transposition, then a longer-period substitution. The inner layer depresses letter statistics, the transposition removes its periodicity and all digram structure, and the outer layer supplies visible cosets. The program's key observation is that the multiset of inner letters does not depend on the transposition, so the inner mixture can be inferred first and the transposition width read off from the pattern of inner classes without knowing the column order."
+summary = "A sandwich has the form c = Q_m(T(Q_k(p))): first a short-period substitution, then a transposition, then a longer-period substitution. The inner layer flattens letter statistics. The transposition hides its period and letter-pair order. The outer layer creates visible cosets. Because transposition does not change the inner letter counts, a solver can estimate the inner mixture first and find the width from its class pattern before knowing the column order."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -48,7 +48,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Fit the inner mixture by evidence (one, two or three alphabets), marginalising the outer shifts; read the inner spacing $\delta = g_2 - g_1$ from its marginal evidence (correct on 7 of 8 planted seeds; the top three $\delta$ are carried).
 2. Compute class posteriors for every letter and the order-free width statistic for every width; run class-EM to re-estimate each outer shift from its coset's class-conditional likelihood (this fixes the one or two cosets the evidence fit gets wrong).
@@ -79,7 +79,7 @@ Mixture and width solver (logs/05_mix.log): four planted sandwiches, all solved 
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Inner shifts $(3, 10)$ of period 2, columnar of width 4 with key `CADB` (read order 1, 3, 0, 2), outer shifts $(1, 5, 7)$ of period 3, plaintext `SANDWICHLAYER`:
 

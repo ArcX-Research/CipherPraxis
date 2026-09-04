@@ -1,13 +1,13 @@
 id = "alberti-progressive"
 section = "ciphers"
 title = "Alberti disc and progressive keys"
-subtitle = "A fixed outer disc against an arbitrary inner disc that advances by a schedule"
+subtitle = "A fixed outer disc and an inner disc that turns as the message continues"
 status = "CLOSED"
-status_note = "Constant-advance, unit-acceleration and constant-acceleration schedules were all reduced to one substitution problem per schedule cell and control-qualified (6/6, 30/30 and 4/4 hidden cases); on the 504-letter text the constant-advance parent was ambiguous at a random-like level and all 1,352 constant-acceleration schedules were non-English. Irregular, key-driven or piecewise advances are outside this closure."
+status_note = "Tests reduced each turning schedule to one substitution problem. Hidden controls passed 6/6 for constant advance, 30/30 for unit acceleration, and 4/4 for constant acceleration. On the 504-letter text, constant advance stayed ambiguous at a random-like score and all 1,352 constant-acceleration schedules gave non-English text. Irregular, key-driven, and piecewise turns were not tested."
 family = "Stream and machine ciphers"
 tags = ["disc", "progressive key", "polyalphabetic", "schedule", "monoalphabetic reduction"]
 related = ["vigenere", "keyword-mixed-alphabet", "chaocipher", "conjugacy-and-gauge", "permutation-cycles", "simulated-annealing", "shuffled-null-z-score", "g-progressive-key", "g-gauge-class"]
-summary = "An Alberti-style cipher reads the plaintext on one disc and the ciphertext on another, turning the inner disc by a schedule as the message proceeds. When the schedule is a known function of position, subtracting it from the ciphertext index leaves a single monoalphabetic substitution, so the whole family collapses to a handful of substitution problems. The program enumerated constant advance, constant acceleration and their unit cases, each with a fixed outer order and an arbitrary inner order."
+summary = "An Alberti cipher places plaintext and ciphertext alphabets on two discs. The inner disc turns according to a schedule as the message continues. If that schedule is known for each position, subtracting it from the ciphertext leaves one fixed substitution. The project tested every constant-advance and constant-acceleration schedule in the stated ranges, with a fixed outer alphabet and any inner alphabet."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -48,7 +48,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. For every cell, deprogress the ciphertext and solve the resulting substitution with the frozen annealer (3 restarts of 10,000 steps for all cells, 5 of 30,000 for the top 12, 11 of 80,000 for the top 4, steepest pair-swap finish).
 2. Group cells into exact RGS classes; rank distinct classes globally, never aliases.
@@ -78,7 +78,7 @@ Finite-prior constant advance (log 295): 6/6 positives recovered the exact passa
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Outer order straight, inner order $M$ keyed by `ZEBRAS` (`ZEBRASCDFGHIJKLMNOPQTUVWXY`), constant advance $d = 1$. Plaintext `ALBERTI`:
 

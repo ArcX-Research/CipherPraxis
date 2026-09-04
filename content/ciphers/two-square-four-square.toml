@@ -1,13 +1,13 @@
 id = "two-square-four-square"
 section = "ciphers"
 title = "Two-square and four-square"
-subtitle = "Digraphic substitution across two or four Polybius squares"
+subtitle = "Encrypt letter pairs across two or four Polybius squares"
 status = "INCONCLUSIVE"
-status_note = "Arbitrary two-square is control-verified at 504 letters (100% at 1,000,000 iterations x 8 restarts) and excluded on the 504-letter text at that budget; four-square stopped at 503/504 and 97.8% on its controls and seriated forms at 8.1%, so those remain control-locked; at 144-153 letters all square families are unidentifiable by annealing."
+status_note = "Arbitrary two-square recovered a 504-letter control at 100% with 1,000,000 iterations x 8 restarts, then was ruled out on the 504-letter target at that budget. Four-square reached 503/504 and 97.8% on its controls, while seriated forms reached 8.1%. Those tests remain blocked by controls. At 144–153 letters, annealing cannot identify any of these square families."
 family = "Polygraphic substitution"
 tags = ["polygraphic", "digraphic", "polybius square", "two squares", "four squares"]
 related = ["playfair", "bifid", "polybius-square", "simulated-annealing", "selection-overfit-diagnostic", "known-answer-tests", "g-polygraphic"]
-summary = "Two-square and four-square generalise Playfair by reading the two letters of a digraph in different keyed squares and exchanging coordinates across them. Four-square uses two plain squares for the plaintext and two keyed squares for the ciphertext; two-square uses two keyed squares side by side or one above the other. The program's annealers recover an arbitrary two-square at 504 letters but not four-square, and none of the family at 150 letters."
+summary = "Two-square and four-square extend Playfair by finding the two letters of a pair in different squares and exchanging their coordinates. Four-square uses two plain plaintext squares and two keyed ciphertext squares. Two-square uses two keyed squares placed side by side or one above the other. Annealing can recover an arbitrary two-square at 504 letters, but not four-square or any of these forms near 150 letters."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -49,7 +49,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Enumerate the configuration (layout, offset, swap, reversal).
 2. Anneal both squares jointly under a quadgram objective; at 504 letters the program's engine used $1{,}000{,}000$ iterations with 8 restarts per configuration.
@@ -79,7 +79,7 @@ External engine (log 184): two-square horizontal and vertical 504-letter control
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Two-square, horizontal, $S_1$ keyed by `EXAMPLE` and $S_2$ by `KEYWORD` (J merged into I):
 

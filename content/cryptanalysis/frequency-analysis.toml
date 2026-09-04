@@ -1,13 +1,13 @@
 id = "frequency-analysis"
 section = "cryptanalysis"
 title = "Frequency analysis"
-subtitle = "Letter, coset and polygraph statistics as the first instrument on any classical ciphertext"
+subtitle = "Start with letter counts, coset counts, and patterns across letter groups"
 status = "VERIFIED"
-status_note = "Monogram fits (maximum likelihood, chi-square, correlation), coincidence statistics with exact standard errors, and alphabet-free histogram comparisons are the base instruments of the corpus, each with planted calibration: a per-coset likelihood screen ranks a planted alphabet first of 2.06 million, a chi-square fit reads a planted keyed text at 100%, and the segment-identity references reproduce the expected z (logs/24, 07, 38, 01)."
+status_note = "The basic tests include single-letter likelihood, chi-square, correlation, coincidence rates with exact errors, and alphabet-free count comparisons. Planted checks calibrate each one. A coset-likelihood screen ranked the planted alphabet first of 2.06 million. A chi-square fit recovered a keyed text at 100%, and segment checks reproduced the expected z-scores (logs/24, 07, 38, 01)."
 family = "Period and structure recovery"
 tags = ["monogram", "histogram", "index of coincidence", "chi-square", "monoalphabetic", "calibration"]
 related = ["caesar-shift", "keyword-mixed-alphabet", "index-of-coincidence", "chi-squared-fit", "estimator-standard-error", "coset-shift-recovery", "exact-period-alignment", "family-identification", "hill-climbing", "g-coset"]
-summary = "Frequency analysis compares the letter statistics of a ciphertext with those of the plaintext language. A monoalphabetic substitution preserves the histogram up to a relabelling, a Caesar shift up to a rotation, and a periodic cipher does the same per coset, so histograms, the index of coincidence and their standard errors decide what kind of layer sits on top before any key is searched. The corpus's contribution is calibration: every frequency statistic is reported with its exact or simulated error bar and against planted references of the same length."
+summary = "Frequency analysis compares a ciphertext's letter patterns with those of the expected language. A simple substitution keeps the same counts under different labels. A Caesar shift rotates those labels. A repeating cipher does the same within each coset. Letter counts and the index of coincidence can therefore suggest the outer cipher before any key search. Every result here includes an exact or simulated error range and planted comparisons at the same length."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -42,7 +42,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Histogram, index of coincidence with error bar, number of distinct letters; compare with language, uniform and planted references at the same length.
 2. If the text is monoalphabetic ($\operatorname{IC}$ near the language value), map the most frequent ciphertext letters to the most frequent plaintext letters as a start and finish with a quadgram hill-climb over the substitution.
@@ -78,7 +78,7 @@ body = '''
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Plaintext (39 letters) `ATTACKTHEEASTGATEATDAWNANDHOLDTHEBRIDGE` has counts A 7, T 7, E 5, D 4, H 3. A Caesar shift by 5 gives
 

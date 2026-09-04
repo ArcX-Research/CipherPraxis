@@ -1,13 +1,13 @@
 id = "dihedral-lab"
 section = "labs"
 title = "Dihedral group lab"
-subtitle = "Compose rotations and reflections of a ring of positions and read off the resulting permutation"
+subtitle = "Combine rotations and reflections of a ring and see the resulting position order"
 status = "VERIFIED"
-status_note = "The group law is unit-tested by comparing composition in affine form (x ↦ ±x + k) with composition of the induced permutations for every pair of elements of D₈."
+status_note = "For every pair in D₈, tests compare composition as x ↦ ±x + k with composition of the matching position permutations."
 family = "Algebra labs"
 tags = ["dihedral", "group theory", "permutation", "cycles"]
 related = ["dihedral-group", "permutation-cycles", "group-actions-on-alphabets", "conjugacy-and-gauge"]
-summary = "The dihedral group D_n contains the n rotations and n reflections of a ring of n positions. Its elements act on text positions as permutations, so a cipher that reads a text around a circle or in reverse lives inside D_n. The lab composes two elements in either order and shows the cycle structure of the result."
+summary = "The dihedral group D_n contains n rotations and n reflections of a ring with n positions. Each operation rearranges text positions. Ciphers that read around a circle or in reverse therefore use this group. This lab combines two operations in either order and shows the cycles in the resulting rearrangement."
 updated = "2026-09-04"
 lab = "dihedral"
 

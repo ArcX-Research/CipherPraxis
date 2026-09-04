@@ -1,13 +1,13 @@
 id = "state-checkpoints"
 section = "engineering"
 title = "State checkpoints"
-subtitle = "Carried scan state that records whether its control passed, and exact task-frontier checkpoints for resumable exhaustive search"
+subtitle = "Save control status between stages and completed work during long exact searches"
 status = "VERIFIED"
-status_note = "Both forms are implemented in the research program: staged instruments carry JSON state whose downstream stage refuses to run on a failed control, and an exhaustive core's completion-bitmap checkpoint passed a differential KAT and an independent audit before a resumed run was relied on."
+status_note = "Both checkpoint forms are implemented. Staged tools pass JSON state forward, and the next stage refuses to run after a failed control. An exact core saves a bitmap of completed tasks. That resume format passed a comparison test and an independent audit before any resumed result was trusted."
 family = "Reproducibility"
 tags = ["checkpoints", "resume", "state", "exhaustive search"]
 related = ["run-script-log-convention", "drainability-and-throughput", "throughput-fail", "compiled-hot-cores", "kat-harness", "seed-determinism", "control-first-policy", "exhaustive-enumeration"]
-summary = "Long pipelines are split into stages, and long searches are split into resumable segments; both need a checkpoint format that cannot smuggle a failure past the stage boundary. The program's scan state carries a control_pass flag that the next stage checks before touching a text, and its exhaustive cores checkpoint a completion bitmap whose frontier is the longest fully completed prefix of a deterministic task order, so a resume can repeat work but cannot skip it."
+summary = "Long pipelines have stages, and long searches need to resume. Their checkpoints must not hide a failed control or skipped work. Scan state includes a control_pass flag that the next stage checks before reading text. Exact cores save a bitmap of finished tasks. The safe resume point is the longest fully completed prefix of a fixed task order. Restarting may repeat work, but it cannot jump over unfinished tasks."
 updated = "2026-09-04"
 
 [[blocks]]

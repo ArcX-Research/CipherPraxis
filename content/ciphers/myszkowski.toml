@@ -1,13 +1,13 @@
 id = "myszkowski"
 section = "ciphers"
 title = "Myszkowski transposition"
-subtitle = "Columnar transposition with a repeated-letter key: tied columns are read row-wise together"
+subtitle = "A columnar transposition where repeated key letters make columns read together"
 status = "INCONCLUSIVE"
-status_note = "The Myszkowski read-out was implemented and swept over dictionary key words with repeated letters (about 190,000 permutations, both directions) under a periodic layer on the 144-letter text, but the sweep's only planted control was a rail fence, so the negative is not Myszkowski-specific and no dedicated control receipt exists."
+status_note = "The search tested about 190,000 dictionary-key permutations in both directions beneath a periodic layer on the 144-letter text. Its only planted control used a rail fence, not Myszkowski. The negative is therefore not a qualified Myszkowski result, and no dedicated control record exists."
 family = "Transposition"
 tags = ["transposition", "columnar", "repeated key letters"]
 related = ["columnar-transposition", "route-transposition", "rail-fence", "dictionary-attack", "transposition-width-recovery", "g-transposition-grid"]
-summary = "A Myszkowski transposition uses a key word with repeated letters. Columns under distinct letters are read as in a columnar transposition, but columns under the same letter are read together, row by row, left to right. The tie rule changes the permutation enough that a plain columnar solver does not cover it, so the program enumerated it as its own vocabulary of dictionary words with repeated letters."
+summary = "A Myszkowski transposition uses a keyword with repeated letters. Columns under unique letters are read like normal columnar transposition. Columns tied by the same letter are read together, one row at a time from left to right. This tie rule creates different permutations, so a plain columnar solver does not cover them. The search used its own list of dictionary words with repeated letters."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -45,7 +45,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Enumerate candidate key words with repeated letters (the program used its whole dictionary, lengths 4 to 16, with at least one repeated letter) and precompute the ciphertext-to-plaintext permutation for each, in both directions.
 2. For each permutation, undo the transposition, fit any periodic layer on top (both orders, both relations, a prefix drift for a key change) and score by quadgrams; polish the best.
@@ -74,7 +74,7 @@ The transposition sweep (logs/29_pk9x.log) passed its planted rail-fence control
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Key `TOMATO`, plaintext `WEAREDISCOVEREDFLEEATONCE`:
 

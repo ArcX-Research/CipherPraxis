@@ -27,14 +27,14 @@ pub fn FindPage() -> impl IntoView {
     view! {
         <section class="wrap page">
             <p class="eyebrow mono">"Search"</p>
-            <h1 class="display">"Find an entry."</h1>
+            <h1 class="display">"Search the knowledge base."</h1>
             <form class="find-form" role="search" on:submit=move |ev| ev.prevent_default()>
                 <label class="sr-only" for="find-input">"Search query"</label>
                 <input
                     id="find-input"
                     class="find-input"
                     type="search"
-                    placeholder="e.g. coincidence, annealing, Quagmire, planted control"
+                    placeholder="Try coincidence, annealing, Quagmire, or planted control"
                     prop:value=move || local.get()
                     on:input=move |ev| local.set(event_target_value(&ev))
                 />
@@ -42,8 +42,14 @@ pub fn FindPage() -> impl IntoView {
             <p class="mono meta">{move || {
                 let n = hits.with(|h| h.len());
                 let q = local.get();
-                if q.trim().is_empty() { "Type to search across every section.".to_string() } else { format!("{n} result{} for “{q}”", if n == 1 { "" } else { "s" }) }
+                if q.trim().is_empty() { "Enter a word or phrase to search every section.".to_string() } else { format!("{n} result{} for “{q}”", if n == 1 { "" } else { "s" }) }
             }}</p>
+            {move || {
+                let has_query = !local.get().trim().is_empty();
+                (has_query && hits.with(|h| h.is_empty())).then(|| view! {
+                    <p class="empty">"No entries match that search. Try fewer words or a broader term."</p>
+                })
+            }}
             <div class="card-grid">
                 {move || hits.get().into_iter().filter_map(|h| catalog.get(&h.id).cloned()).map(|e| view! { <EntryCard entry=e/> }).collect_view()}
             </div>

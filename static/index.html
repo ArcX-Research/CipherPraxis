@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
   <meta name="theme-color" content="#ffffff">
-  <meta name="description" content="Cipher Praxis — A Dilate Cryptography Knowledge Base. Cipher models, algebra, cryptanalysis techniques, statistical instruments, solvers, validation protocols and WebAssembly labs.">
+  <meta name="description" content="Cipher Praxis explains ciphers, cryptanalysis, statistics, solvers, checks, and browser-based labs.">
   <title>Cipher Praxis — A Dilate Cryptography Knowledge Base</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,8 +17,8 @@
 <body>
   <div id="boot" class="boot" aria-live="polite">
     <div class="boot-mark" aria-hidden="true"></div>
-    <div class="boot-text mono">Loading Cipher Praxis · compiling nothing, just fetching a WebAssembly module…</div>
-    <noscript><p class="boot-noscript">Cipher Praxis runs entirely in your browser and needs JavaScript and WebAssembly enabled.</p></noscript>
+    <div class="boot-text mono">Loading Cipher Praxis in your browser…</div>
+    <noscript><p class="boot-noscript">Turn on JavaScript and WebAssembly to use Cipher Praxis in your browser.</p></noscript>
   </div>
   <script type="module">
     import init from '/pkg/praxis.js';
@@ -27,7 +27,7 @@
       if (b) b.remove();
     }).catch((err) => {
       const t = document.querySelector('.boot-text');
-      if (t) t.textContent = 'The WebAssembly module failed to load: ' + err;
+      if (t) t.textContent = 'Cipher Praxis could not load: ' + err;
       console.error(err);
     });
   </script>

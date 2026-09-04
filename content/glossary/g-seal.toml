@@ -6,5 +6,5 @@ status_note = "Term as used in the research program's ledger."
 family = "Validation vocabulary"
 tags = ["audit", "release"]
 related = ["seal-and-audit-protocol", "ledger-reservations", "g-independent-audit"]
-summary = "The act of freezing an implementation's exact bytes (source, parser, runner, manifest) by SHA-256 and recording them in the ledger together with the creator's own audit, so that a different agent can audit precisely those bytes. Sealed bytes are never edited; a defect produces a new-only successor under a fresh log number."
+summary = "A seal fixes the exact source, parser, runner, and manifest files by their SHA-256 hashes. The ledger records those hashes with the creator's audit so another person can review the same bytes. Sealed files are never edited. If a defect appears, a new version gets a new log number."
 updated = "2026-09-04"

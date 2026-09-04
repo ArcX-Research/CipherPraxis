@@ -6,5 +6,5 @@ status_note = "Standard term; measured on planted fixtures for every lane that c
 family = "Statistics"
 tags = ["false negative", "planted controls", "gate"]
 related = ["power-analysis", "power-measurement", "planted-controls", "permutation-test", "g-held-out"]
-summary = "The probability that a pipeline recovers the planted truth exactly when the hypothesised construction is true, estimated as the fraction of planted fixtures recovered by the frozen pipeline (with an independent forward check) and reported with a confidence interval. A live miss excludes a family only at the measured power: at 0.92 power an 8% chance remains that the truth was simply not found. Power is a property of the whole pipeline on the exact hypothesis grid and text length; a coverage fraction or a single step's success rate is not power, in either direction."
+summary = "Power is the chance that a full pipeline finds the truth when the tested cipher is present. It is estimated from the share of planted cases the frozen pipeline solves, with a separate forward check and a confidence interval. A miss rules out a family only with that measured power. At 0.92 power, there is still an 8% chance of missing a real answer. Power belongs to the whole pipeline at the tested settings and text length, not to one step or a coverage estimate."
 updated = "2026-09-04"

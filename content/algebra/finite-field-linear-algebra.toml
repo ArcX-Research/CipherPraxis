@@ -1,13 +1,13 @@
 id = "finite-field-linear-algebra"
 section = "algebra"
 title = "Linear algebra over GF(2) and GF(13)"
-subtitle = "Row reduction, rank and nullity as the engine of exact alphabet solvers"
+subtitle = "How row reduction, rank, and nullity narrow an exact alphabet search"
 status = "VERIFIED"
-status_note = "Row reduction over the two prime fields with CRT recombination is the exact engine of every cycle solver in the corpus. Nullities, not consistency, carry the information: a homogeneous system with a gauge row is always consistent, and controls show that rejection comes only from the bijection constraint. Engines pass exhaustive known-answer tests and planted controls (4/4 hidden common-plaintext fixtures, 32/32 exact crib solves)."
+status_note = "Every cycle solver uses exact row reduction over two prime fields and joins the answers with CRT. Nullity, not simple consistency, carries the useful information. Known-answer tests passed, as did 4/4 hidden shared-plaintext controls and 32/32 exact crib solves."
 family = "Linear algebra over finite rings and fields"
 tags = ["GF(2)", "GF(13)", "rank", "nullity", "null space", "row reduction"]
 related = ["modular-inverse-and-crt", "all-different-constraints", "modular-arithmetic-z26", "units-mod-26", "residue-class-graphs", "matrix-invertibility-mod-26", "constraint-satisfaction-forward-checking", "word-prefix-csp", "exact-chain-oracle", "g-nullity", "g-all-different"]
-summary = "Cipher relations that are linear in the unknown alphabet coordinates form a system over Z26, which is not a field. Reducing the same system over GF(2) and over GF(13) gives two null spaces whose dimensions determine how many candidate alphabets remain. Ranks never reject a guess on their own; they price the enumeration, and small nullities are what make exact crib solving possible."
+summary = "Linear cipher rules create equations in the unknown alphabet positions over Z26, which is not a field. Solve the same equations over GF(2) and GF(13) instead. The sizes of the two null spaces tell us how many possible alphabets remain. Rank alone does not reject a guess, but it predicts the cost of checking the answers. Small nullities make exact crib solving practical."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -69,7 +69,7 @@ Exhaustive small KATs: all $2 \times 3$ matrices over $\mathrm{GF}(2)$ with comp
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Unknowns $x_1, x_2, x_3$ (positions of three letters; a fourth letter is fixed at 0 by the gauge). Rows: $x_1 + x_2 + x_3 \equiv 0$ and $x_1 - x_2 \equiv 0 \pmod{26}$.
 

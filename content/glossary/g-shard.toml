@@ -6,5 +6,5 @@ status_note = "Usage as recorded in the corpus's rank-sharded and range-sharded 
 family = "Enumeration strategies"
 tags = ["partition", "enumeration"]
 related = ["rank-sharding", "k-best-lists", "exhaustive-enumeration", "g-drainability"]
-summary = "One predeclared, half-open interval of an enumeration's index space (a rank range of a k-best schedule, a lexicographic range of key-permutation indices, or a segment of a hash-ordered task list), run to completion as an independent process. Adjacent shards partition the space with no gaps or overlap; each emits its local maximum and every state within tolerance of it, and a reducer merges them exactly. An incomplete shard has no evidentiary value."
+summary = "A shard is one declared half-open range of an exact search. It may cover ranks in a k-best list, key-permutation indices, or part of a hash-ordered task list. Adjacent shards divide the full space with no gaps or overlap. Each runs on its own and saves its best score plus every near tie. A reducer combines the results exactly. An unfinished shard cannot support a conclusion."
 updated = "2026-09-04"

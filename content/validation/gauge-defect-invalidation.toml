@@ -1,13 +1,13 @@
 id = "gauge-defect-invalidation"
 section = "validation"
 title = "Gauge-defect invalidation"
-subtitle = "Comparing a recovered key in one fixed gauge instead of modulo its orbit produces false control failures, and the run is void"
+subtitle = "Treat equivalent keys as equal or a correct control may look wrong"
 status = "VERIFIED"
-status_note = "A controls run in the research program was killed and its transcript filed as invalid when the selector was found to score and compare the secondary plaintext in a fixed gauge; the successor maximises over the 26 translation gauges and compares modulo the orbit. Orbit handling is now an explicit clause of sealed control designs."
+status_note = "One control run was stopped and marked invalid because it scored and compared the second plaintext in one fixed gauge. Its replacement checks all 26 equivalent translations and compares keys by orbit. Sealed control designs must now state how they handle equivalent forms."
 family = "Control design"
 tags = ["gauge", "orbit", "invalidation", "controls"]
 related = ["conjugacy-and-gauge", "permutation-cycles", "planted-controls", "correction-and-retraction", "run-script-log-convention", "exact-period-alignment", "shared-cycle-attack"]
-summary = "Many cipher models have a gauge: a change of key representation that leaves the ciphertext-plaintext relation unchanged, such as adding a constant to every shift of one layer and subtracting it from the other, or translating a cycle. A solver that fixes the gauge arbitrarily is fine until a control compares its recovered key with the planted one letter for letter; then the true key 'misses' in 25 of 26 plants. The program treats the discovery of such a defect as invalidating the run outright: killed, filed under failed logs with a defect suffix, never a gate."
+summary = "Many ciphers have several key descriptions that act exactly the same. For example, one layer's shifts can all gain a constant while another layer loses it. A solver may choose any one of these gauges. A control that compares raw keys letter for letter will then reject 25 of 26 correct equivalents. Finding this defect makes the whole run invalid. The transcript moves to failed logs with the defect named and cannot be used as a gate."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -26,9 +26,9 @@ Examples in the program:
 kind = "equations"
 title = "The defect, algebraically"
 body = '''
-For the chain case with signs $e_8, e_9$, the recorded relations under $z' = u\,z + b$ are
+For the chain case with signs $e_A, e_B$, the recorded relations under $z' = u\,z + b$ are
 
-$$z(P') = z(P) - u^{-1} b\, e_8, \qquad c' = u\,c + b\,(1 + e_8 e_9 - e_9),$$
+$$z(P') = z(P) - u^{-1} b\, e_A, \qquad c' = u\,c + b\,(1 + e_A e_B - e_B),$$
 
 so fixing $z(C_0) = 0$ and demanding the planted secondary plaintext exactly rejects the true cycle whenever $b \ne 0$. The repaired selector uses the invariant primary-class rate plus the secondary rate **maximised over the 26 translation gauges**, compares the primary exactly and the secondary modulo the translation orbit, and reports the recovered shift. The plant proof recorded primary match $1.0$ and secondary match $0.0$ in all four sign cells with translations $[19, 5, 10, 16]$ recovering the secondary uniquely.
 '''

@@ -1,13 +1,13 @@
 id = "affine-maps-mod-26"
 section = "algebra"
 title = "Affine maps modulo 26"
-subtitle = "x ↦ ux + b with a unit multiplier: cipher keys, key recurrences, position routes and gauges"
+subtitle = "How x ↦ ux + b describes cipher keys, changing keys, reading routes, and equivalent forms"
 status = "VERIFIED"
-status_note = "Affine maps with unit multipliers are exact and invertible and appear as cipher keys, key recurrences, position routes and gauge transformations. Planted controls pass for the affine position-route family (3/3 held-out texts) and for polynomial key schedules (4/4); the corresponding target results were negative within their declared scopes, and the affine-lag key screen showed no family-wise excess on any of the three texts."
+status_note = "Affine maps with unit multipliers are exact and reversible. Tests passed for affine position routes (3/3 held-out texts) and polynomial key schedules (4/4). The matching target tests were negative only within their stated scopes. The affine-lag key screen found no family-wide excess in any of the three texts."
 family = "Modular arithmetic"
 tags = ["affine", "AGL", "route", "recurrence", "gauge"]
 related = ["units-mod-26", "modular-arithmetic-z26", "linear-recurrences-lcg", "conjugacy-and-gauge", "group-actions-on-alphabets", "affine-cipher", "route-transposition", "alberti-progressive", "selection-overfit-diagnostic", "affine-lab", "g-affine-orbit"]
-summary = "An affine map multiplies by a unit and adds a constant. It is the affine cipher on letters, the one-step recurrence behind LCG-type running keys, a way of reading a text along positions ui + d, and the coordinate change that leaves a keyed cipher alphabet equivalent to itself. The maps form a group of order 312, and each of these uses comes with a gauge that must be fixed before recovered parameters can be compared."
+summary = "An affine map multiplies by a unit and then adds a constant. The same rule appears in affine ciphers, LCG-style running keys, text routes of the form ui + d, and equivalent views of a keyed alphabet. There are 312 such maps modulo 26. Before comparing recovered settings, a solver must account for maps that describe the same result, called a gauge."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -70,7 +70,7 @@ Polynomial schedules: four full-length controls with accelerations 2, 7, 12 and 
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 $f(x) = 3x + 5$. Since $3^{-1} = 9$ and $-45 \equiv 7$, the inverse is $f^{-1}(y) = 9y + 7$: $x = 2 \mapsto 11 \mapsto 9 \cdot 11 + 7 = 106 \equiv 2$.
 

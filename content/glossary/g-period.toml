@@ -6,5 +6,5 @@ status_note = "Standard term."
 family = "Cipher structure"
 tags = ["periodic"]
 related = ["vigenere", "compound-periodic-key", "bifid", "kasiski-examination", "coincidence-lag-profile", "lcm-of-periods", "g-coset"]
-summary = "The length m after which a cipher's key repeats (Vigenère, Quagmire, Porta, Slidefair) or the block length over which a fractionation regroups coordinates (Bifid, Trifid). A periodic key makes positions i and i + m behave alike, which shows as a coincidence excess at lag m and its multiples; two periodic layers in one alphabet combine to period lcm(m, q); an autokey or running key has no period."
+summary = "A period m is the number of letters before a key repeats, as in Vigenère, Quagmire, Porta, and Slidefair. For Bifid or Trifid, it is the block length used to regroup coordinates. A periodic key makes positions i and i + m behave alike, causing extra matches at lag m and its multiples. Two periodic layers in one alphabet combine to period lcm(m, q). Autokeys and running keys do not repeat this way."
 updated = "2026-09-04"

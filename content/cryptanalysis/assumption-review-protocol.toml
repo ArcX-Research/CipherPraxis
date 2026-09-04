@@ -1,13 +1,13 @@
 id = "assumption-review-protocol"
 section = "cryptanalysis"
 title = "Assumption review protocol"
-subtitle = "How to stop a campaign of negative results from compounding: facts with nulls, assumptions with verdicts, constructions ranked, corrections recorded"
+subtitle = "Check the facts behind repeated negative results before testing another cipher family"
 status = "VERIFIED"
-status_note = "The protocol (facts with nulls, assumptions with keep/drop/undecidable verdicts, ranked constructions, decisive tests, recorded corrections) was run as two independent passes on the same brief and reconciled by data; it produced recorded corrections, including the withdrawal of a statistic biased by fitting on the whole text and the reclassification of earlier whole-text verdicts as zone artefacts, and it feeds the successor-review method used for later families (STEP3 notes, logs/38, 58)."
+status_note = "Two independent reviews used the same brief and resolved differences with data. They listed facts with nulls, marked assumptions keep/drop/undecidable, ranked possible ciphers, chose decisive tests, and recorded corrections. One biased whole-text statistic was withdrawn, and earlier whole-text results were reclassified as zone effects. Later family reviews use this method (STEP3 notes, logs/38, 58)."
 family = "Method governance"
-tags = ["governance", "assumptions", "review", "selection bias", "successor review", "hint-free"]
+tags = ["governance", "assumptions", "review", "selection bias", "successor review", "ciphertext-only"]
 related = ["control-first-policy", "tautological-gate-rule", "valid-model-nulls", "seal-and-audit-protocol", "correction-and-retraction", "selection-overfit-check", "change-point-zone-detection", "family-identification", "segment-chain-analysis", "g-successor-review", "g-family-sweep", "g-selection-freedom", "g-zone"]
-summary = "A long cryptanalytic campaign accumulates negatives that all rest on the same estimated facts. The assumption review protocol stops the sweep, lists every fact with the null it was measured against, names every assumption the negatives depend on, gives each a verdict with the test that decides it, ranks the constructions consistent with everything, and records corrections explicitly, with a second independent pass reconciled by data rather than argument. Its successor-review form governs each new family proposal: a duplicate audit, exact algebra, an alias census, a ranked decision table, a controls-first build plan and a stop rule."
+summary = "Many negative results may all depend on the same weak assumption. An assumption review pauses the search and lists every measured fact with its null test. It names each assumption, says how to test it, and marks it keep, drop, or undecidable. It then ranks the cipher families that still fit and records any corrections. A second reviewer repeats the work, and data settle disagreements. Before a new family is built, a shorter successor review checks overlap, algebra, equivalent cases, cost, controls, and the stop rule."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -21,7 +21,7 @@ The protocol is a fixed sequence of documents and measurements:
 4. **Constructions** consistent with all kept facts, ranked, each with the test that would distinguish it and what each outcome buys.
 5. **Decisive tests** chosen by cost times decisiveness, then **corrections**: verdicts withdrawn, negatives reclassified, and why.
 
-The **hint-free policy** restricts the admitted inputs of any model selection to ciphertext, generic language statistics, modular algebra and prior instrument measurements; everything else is quarantined.
+The **ciphertext-only policy** restricts the admitted inputs of any model selection to ciphertext, generic language statistics, modular algebra and prior instrument measurements; everything else is quarantined.
 '''
 
 [[blocks]]
@@ -128,7 +128,7 @@ ref = "logs/38_step3_facts.log"
 [[provenance]]
 path = "withmath/PK8_PK10_HINTFREE.md"
 kind = "note"
-note = "The hint-free policy: admitted and excluded inputs; roundtrip never accepted as proof; controls and familywise nulls as separate mandatory gates."
+note = "The ciphertext-only policy: admitted and excluded inputs; roundtrip never accepted as proof; controls and familywise nulls as separate mandatory gates."
 
 [[provenance]]
 path = "withmath/PK10_POST357_IRREGULAR_SUCCESSOR_REVIEW.md"

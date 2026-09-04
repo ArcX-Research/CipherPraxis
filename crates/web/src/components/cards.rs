@@ -27,6 +27,32 @@ pub fn EntryCard(entry: Entry, #[prop(optional)] compact: bool) -> impl IntoView
     }
 }
 
+/// A list of entry rows; entries beyond `limit` sit behind a native disclosure so long
+/// "cited by" lists do not push the evidence panel off the rail.
+#[component]
+pub fn RowList(entries: Vec<Entry>, #[prop(default = 8)] limit: usize) -> impl IntoView {
+    let total = entries.len();
+    let (head, tail): (Vec<Entry>, Vec<Entry>) = if total > limit + 2 {
+        let mut e = entries;
+        let tail = e.split_off(limit);
+        (e, tail)
+    } else {
+        (entries, Vec::new())
+    };
+    let more = tail.len();
+    view! {
+        <div class="row-list">
+            {head.into_iter().map(|e| view! { <EntryRow entry=e/> }).collect_view()}
+            {(more > 0).then(|| view! {
+                <details class="row-more">
+                    <summary>{format!("Show {more} more")}</summary>
+                    <div class="row-list">{tail.into_iter().map(|e| view! { <EntryRow entry=e/> }).collect_view()}</div>
+                </details>
+            })}
+        </div>
+    }
+}
+
 #[component]
 pub fn EntryRow(entry: Entry) -> impl IntoView {
     let route = entry.route();

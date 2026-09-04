@@ -1,13 +1,13 @@
 id = "power-analysis"
 section = "statistics"
 title = "Power analysis"
-subtitle = "Measuring the probability that a pipeline recovers a planted truth before its live miss is allowed to mean anything"
+subtitle = "Measure how often the full pipeline finds a known answer before trusting a miss"
 status = "VERIFIED"
-status_note = "Measured per stage on target-absent planted fixtures with frozen pipelines: 98.93% end-to-end recovery over 1,024 trials for one selector (with 100% cross-cell discrimination on 64 further fixtures), 99.83% shortlist retention over 600 trials and 97.5% on the 200 hardest windows for another, 100% over 256 trials for a third, while a fourth measured 59/64 = 0.922 and correctly refused its live pass at a 0.95 gate."
+status_note = "Frozen, target-absent pipelines were measured stage by stage. One selector recovered 98.93% across 1,024 trials and separated cells perfectly on 64 more. Another kept the truth in 99.83% of 600 shortlists and 97.5% of the 200 hardest windows. A third passed 256/256. A fourth reached 59/64 = 0.922 and correctly stopped before a live run because its gate required 0.95."
 family = "Power and error control"
 tags = ["power", "planted controls", "false negative", "gate", "sample size"]
 related = ["power-measurement", "planted-controls", "control-first-policy", "blind-controls", "permutation-test", "english-gate-calibration", "estimator-standard-error", "throughput-fail", "held-out-gates", "g-power", "g-held-out"]
-summary = "A negative result from a search is worth exactly as much as the probability that the search would have found the answer had it been there. Power analysis measures that probability directly: the frozen pipeline is run on many planted fixtures (real held-out prose enciphered with random keys under the hypothesised construction), stage by stage, and the fraction recovered exactly is reported with its confidence interval. Coverage ratios, step-level success rates and intuition are all poor proxies for it, in both directions: a shortlist that covers 0.026% of the key space had 99.8% power because it was adaptive, and an initialisation that is right only 42% of the time fed a pipeline with 98.9% power because later stages repaired it."
+summary = "A search miss matters only if the search usually finds an answer when one exists. Power analysis measures that chance directly. Freeze the full pipeline, run it on many planted cases made from separate real prose and random keys, and record exact recovery at each stage with a confidence interval. Simple coverage can mislead. One adaptive shortlist covered only 0.026% of the key space but had 99.8% power. Another pipeline repaired weak starting points and reached 98.9% overall power."
 updated = "2026-09-04"
 
 [[blocks]]

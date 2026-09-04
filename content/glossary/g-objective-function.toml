@@ -6,5 +6,5 @@ status_note = "Standard term; the corpus's objective is the smoothed quadgram lo
 family = "Search and optimisation"
 tags = ["search", "scoring"]
 related = ["simulated-annealing", "quadgram-log-likelihood", "hill-climbing", "viterbi-decoding"]
-summary = "The function a search maximises or minimises over candidate keys. In classical cryptanalysis it is usually a language-model score of the trial decrypt, such as the mean log10 quadgram probability per letter (English near -4.3, random text near -6.5), sometimes with bigram or trigram terms to smooth the landscape. A search is only as meaningful as its objective: a score that a wrong key can maximise (coincidence counting, free refits on short text) must be calibrated on shuffled nulls."
+summary = "An objective function is the score that a search tries to raise or lower. In classical cryptanalysis, it is often a language score for a trial decryption. One example is mean log10 quadgram probability per letter: about -4.3 for English and -6.5 for random text. Bigram or trigram terms can make the search smoother. A useful objective must prefer correct keys. If wrong keys can also maximize it, the score needs calibration against shuffled null data."
 updated = "2026-09-04"

@@ -6,5 +6,5 @@ status_note = "Standard term."
 family = "Cipher structure"
 tags = ["involution"]
 related = ["beaufort", "porta", "digraphic-slide", "chaocipher", "g-tabula-recta"]
-summary = "A cipher whose encryption map is an involution, so the same operation with the same key decrypts: Beaufort (c = k - p), Porta, Portax and Slidefair are reciprocal. The property is convenient for the user and irrelevant to security, but it has one consequence for validation: any fitted key round-trips, so a round-trip can never be evidence that the key is right."
+summary = "A reciprocal cipher uses the same operation and key to encrypt and decrypt. Mathematically, its encryption map is an involution. Beaufort (c = k - p), Porta, Portax, and Slidefair are reciprocal. This is convenient but does not add security. It also means any fitted key can complete a round trip, so a round trip does not prove that the key is correct."
 updated = "2026-09-04"

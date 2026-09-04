@@ -1,13 +1,13 @@
 id = "permutation-test"
 section = "statistics"
 title = "Permutation test"
-subtitle = "Exact randomisation inference: rank the observed selection among re-selections on transformed copies of the data"
+subtitle = "Rank the observed result among results from shuffled or otherwise transformed data"
 status = "VERIFIED"
-status_note = "The strict rank-1-of-100 rule (99 matched nulls, ties reject, randomisation size at most 0.01) is implemented in the audited exact lanes; on 700 target-absent selections it admitted 4 of 4 planted English positives and rejected 3 of 3 valid-model random negatives, and a live lane reported its candidate at rank 100 of 100 with p_perm 0.01 as the attainable resolution."
+status_note = "Audited exact tests use a strict rank-1-of-100 rule: 99 matched nulls, with ties rejected and a smallest possible p-value of 0.01. Across 700 target-absent selections, it accepted 4/4 planted English positives and rejected 3/3 valid-model random negatives. One live test reported its candidate at rank 100 of 100 and p_perm 0.01 as the available resolution."
 family = "Null distributions and calibration"
 tags = ["permutation test", "randomisation", "exact test", "rank", "p-value"]
 related = ["shuffled-null-z-score", "within-coset-null", "family-wise-null", "power-analysis", "english-gate-calibration", "valid-model-nulls", "seal-and-audit-protocol", "g-empirical-p-value", "g-null-distribution", "null-lab"]
-summary = "A permutation test replaces distributional assumptions with a symmetry: if the null hypothesis holds, the data are exchangeable under a group of transformations, so the observed statistic is one draw from the set of values obtained on transformed copies. The p-value is the rank of the observed value among N transformed copies plus itself. The test is exact for any statistic, including the output of an entire solver, provided the transformation group really is a symmetry of the null and every copy is put through the same selection as the original."
+summary = "A permutation test avoids assuming a particular probability distribution. Under the null, allowed transformations such as shuffles should make equivalent data. Compute the statistic on the original and N transformed copies, then rank the original among all N + 1 values. This gives the p-value. The method works for any statistic, even a full solver's final score, if the transformations truly preserve the null and every copy goes through the same selection process."
 updated = "2026-09-04"
 
 [[blocks]]

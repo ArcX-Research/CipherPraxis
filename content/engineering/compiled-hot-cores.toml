@@ -1,13 +1,13 @@
 id = "compiled-hot-cores"
 section = "engineering"
 title = "Compiled hot cores"
-subtitle = "Single-file C++ solvers with a self-KAT, a line protocol and integer scores, driven from Python"
+subtitle = "Put the slowest loops in small C++ programs that Python controls and checks"
 status = "VERIFIED"
-status_note = "Fifty single-file cores exist in the research program; each is compiled by its launcher, must pass --self-kat before use, and is driven over pipes; recorded throughput includes an exhaustive drain of 248,405 pairs in 307.5 s and a 209 ms benchmark at 96 MB peak memory."
+status_note = "The project has fifty single-file cores. Each launcher compiles its core, requires --self-kat to pass, and controls it through pipes. Recorded examples include a complete search of 248,405 pairs in 307.5 s and a 209 ms benchmark using at most 96 MB."
 family = "Compute and throughput"
 tags = ["c++", "cores", "protocol", "threads", "integer scores"]
 related = ["numpy-instrument-pattern", "kat-harness", "seed-determinism", "run-script-log-convention", "drainability-and-throughput", "state-checkpoints", "exhaustive-enumeration", "simulated-annealing"]
-summary = "When a search is dominated by an inner loop that arrays cannot express, the program moves that loop into one C++ file: no build system, one compiler line in the launcher, a self-test mode, and a text protocol so that Python still owns the experiment, the controls and the transcript. Scores are integers at a fixed scale so that ties, ranks and replays are exact across machines. A validated core is reused by embedding it byte for byte and pinning its hash, never by copying code."
+summary = "When one loop makes a search slow and array code cannot express it well, move that loop into one C++ file. A single compiler command builds it, a self-test checks it, and a text protocol lets Python control the experiment, controls, and transcript. Fixed-scale integer scores make ties, ranks, and replays exact across machines. Reuse a validated core by keeping its exact bytes and hash, not by copying pieces into new code."
 updated = "2026-09-04"
 
 [[blocks]]

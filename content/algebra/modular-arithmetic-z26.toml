@@ -1,13 +1,13 @@
 id = "modular-arithmetic-z26"
 section = "algebra"
 title = "Modular arithmetic in Z26"
-subtitle = "The ring Z/26Z as the coordinate system of letter ciphers"
+subtitle = "Treat letters as the numbers 0 to 25 and calculate around a 26-value loop"
 status = "VERIFIED"
-status_note = "Every additive cipher model and exact solver in the corpus is written in this ring, and its identities are exercised by known-answer tests before any target use: derived-stream, inverse and independent-forward checks 32/32 over random cycles and sign cells, and chain-equation plants 50/50."
+status_note = "Every additive cipher model and exact solver here uses Z26. Before any target test, known-answer checks passed for 32/32 derived streams, inverses, and separate forward runs over random cycles and sign choices. Planted chain equations passed 50/50."
 family = "Modular arithmetic"
 tags = ["ring", "residues", "coordinates", "additive", "zero divisors"]
 related = ["units-mod-26", "modular-inverse-and-crt", "affine-maps-mod-26", "conjugacy-and-gauge", "difference-operators", "vigenere", "beaufort", "caesar-shift", "exact-period-alignment", "g-residue-class", "g-coset"]
-summary = "Letters are identified with the residues 0 to 25 and every additive cipher relation becomes a congruence modulo 26. Because 26 = 2 times 13 the ring has zero divisors and only twelve invertible elements, which is why exact solvers work over the two prime components and lift back. A mixed alphabet only changes the coordinate function z that sends each letter to its position, so one formula covers straight and keyed alphabets alike."
+summary = "Give each letter a number from 0 to 25 and every additive cipher rule becomes an equation modulo 26. Because 26 = 2 times 13, some nonzero values multiply to zero and only twelve values have inverses. Exact solvers therefore work modulo 2 and modulo 13, then join the answers. A mixed alphabet changes only the function z that maps a letter to its position, so the same formulas still work."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -78,7 +78,7 @@ Eight random cycles times four sign cells: derived stream, both inverses and two
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Straight alphabet, plaintext letter $T = 19$, key $9$. Vigenère-type: $19 + 9 = 28 \equiv 2 = C$. Beaufort-type: $9 - 19 = -10 \equiv 16 = Q$; decrypting, $9 - 16 = -7 \equiv 19 = T$.
 

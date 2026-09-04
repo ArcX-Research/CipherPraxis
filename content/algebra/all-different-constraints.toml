@@ -1,13 +1,13 @@
 id = "all-different-constraints"
 section = "algebra"
 title = "All-different constraints"
-subtitle = "The bijection requirement on an unknown alphabet as the decisive constraint of exact solvers"
+subtitle = "Why every letter must take a different position in an exact alphabet solver"
 status = "VERIFIED"
-status_note = "The bijection constraint is what turns a linear system over Z26 into a decision. Rank consistency never rejects a guess (0/40 wrong crib pairs were linearly inconsistent); the CRT factorisation of all-different is verified against brute force (0 mismatches over 538,656 solutions); exact solvers built on it pass planted controls (32/32) and produced scoped exact negatives."
+status_note = "The one-position-per-letter rule turns a linear system over Z26 into a decision. Rank alone rejected none of 40 wrong crib pairs. The CRT version matched brute force across 538,656 solutions with 0 errors. Exact solvers using it passed 32/32 planted controls and produced exact negatives within stated scopes."
 family = "Combinatorial constraints"
 tags = ["all-different", "bijection", "CSP", "forward checking", "enumeration"]
 related = ["modular-inverse-and-crt", "finite-field-linear-algebra", "permutation-cycles", "residue-class-graphs", "all-different-enumeration", "constraint-satisfaction-forward-checking", "exact-chain-oracle", "word-prefix-csp", "corpus-bank-screen", "crib-driven-alphabet-recovery", "g-all-different", "g-nullity"]
-summary = "An unknown cipher alphabet assigns each of 26 letters a distinct position, so any candidate solution must satisfy AllDifferent over the 26 coordinates. Linear cipher relations alone almost never contradict a wrong guess; the contradiction appears only when the linear solutions are required to be permutations. The corpus enforces the constraint incrementally in search, exactly through a CRT factorisation, and always keeps every distinct permutation read of a system rather than the best-scoring one."
+summary = "An unknown cipher alphabet gives each of 26 letters its own position. Any answer must therefore satisfy an AllDifferent constraint. Linear equations alone rarely reject a wrong guess. Requiring their answers to form a permutation reveals the conflict. The solver applies this rule during search and through an exact CRT split, and it keeps every distinct valid permutation rather than only the best-scoring one."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -65,7 +65,7 @@ CRT factorisation set-identical to full-product enumeration and to brute force o
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Gauge $z(A) = 0$. Relations $z(B) - z(A) \equiv 13$ and $z(C) - z(B) \equiv 13$ give $z(B) = 13$ and $z(C) = 26 \equiv 0 = z(A)$: linearly consistent, but $A$ and $C$ collide, so the system has no permutation solution and is rejected. In CRT terms $z(A) = (0, 0)$ and $z(B) = (1, 0)$ share residue 0 modulo 13 with opposite parities (allowed), while $z(C) = (0, 0)$ duplicates $z(A)$ (forbidden). Replacing the second relation by $z(C) - z(B) \equiv 5$ gives $z(C) = 18 = (0, 5)$, and all three coexist.
 '''

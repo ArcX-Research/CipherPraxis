@@ -1,13 +1,13 @@
 id = "variant-beaufort"
 section = "ciphers"
 title = "Variant Beaufort"
-subtitle = "Ciphertext = plaintext minus key; Vigenère run backwards"
+subtitle = "Ciphertext = plaintext minus key, the reverse direction of Vigenère"
 status = "VERIFIED"
-status_note = "The variant relation is carried as a third sign choice by the program's interrupted-key, Slidefair and ciphertext-autokey lanes; the interrupted-key and Slidefair variant controls at 504 letters passed exactly."
+status_note = "Interrupted-key, Slidefair, and ciphertext-autokey tests all include Variant Beaufort as a third sign choice. The 504-letter Variant controls for interrupted-key and Slidefair passed exactly."
 family = "Polyalphabetic substitution"
 tags = ["periodic", "additive", "polyalphabetic"]
 related = ["vigenere", "beaufort", "porta", "autokey", "digraphic-slide", "coset-shift-recovery", "g-tabula-recta"]
-summary = "Variant Beaufort subtracts the key from the plaintext, which is the same as decrypting with a Vigenère table. Its cosets are Caesar shifts by the negated key, so it is cryptanalytically identical to Vigenère; it matters only when a solver must decide which of three sign conventions a setter used, and the program's audits treat it as a separately selected relation."
+summary = "Variant Beaufort subtracts the key from the plaintext. This is the same operation as Vigenère decryption. Its cosets are Caesar shifts by the negative key, so the same attacks work as for Vigenère. It still matters when a solver must choose among Vigenère, Beaufort, and Variant Beaufort, so tests select it as a separate relation."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -47,7 +47,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 Run the Vigenère attack. If the recovered shifts must be read as a key word, also read the complementary word $26 - k_b$; one of the two is the setter's key. For the interrupted-key form, enumerate periods 4 to 8, both reset strategies and all interruptor letters, and require the control to recover the hidden period, interruptor and keyword before any live text is scored.
 '''
@@ -74,7 +74,7 @@ Interrupted-key Variant: the 504-letter held-out control recovered 100% plaintex
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Plaintext `ATTACK`, key `CIPHER`:
 

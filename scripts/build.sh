@@ -26,14 +26,24 @@ if [ -n "$LOCK_VER" ] && [ "$CLI_VER" != "$LOCK_VER" ]; then
 fi
 
 case "$PROFILE" in
-  release) CARGO_FLAG="--release"; OUT_DIR="release" ;;
-  dev)     CARGO_FLAG="";          OUT_DIR="debug" ;;
-  *) echo "usage: $0 [release|dev]" >&2; exit 2 ;;
+  release)
+    OUT_DIR="release"
+    ;;
+  dev)
+    OUT_DIR="debug"
+    ;;
+  *)
+    echo "usage: $0 [release|dev]" >&2
+    exit 2
+    ;;
 esac
 
 echo "▸ cargo build (wasm32, $PROFILE)"
-# shellcheck disable=SC2086  # CARGO_FLAG is intentionally empty for dev
-cargo build -p praxis-web --target wasm32-unknown-unknown $CARGO_FLAG
+if [ "$PROFILE" = "release" ]; then
+  cargo build -p praxis-web --target wasm32-unknown-unknown --release
+else
+  cargo build -p praxis-web --target wasm32-unknown-unknown
+fi
 
 WASM="$ROOT/target/wasm32-unknown-unknown/$OUT_DIR/praxis-web.wasm"
 rm -rf "$ROOT/dist"
@@ -47,7 +57,8 @@ fi
 cp -R "$ROOT/static/." "$ROOT/dist/"
 # Cache-bust the module and stylesheet with a content hash.
 HASH="$(shasum -a 256 "$ROOT/dist/pkg/praxis_bg.wasm" | cut -c1-10)"
-sed -i.bak -e "s#/pkg/praxis.js#/pkg/praxis.js?v=$HASH#g" -e "s#/styles.css#/styles.css?v=$HASH#g" "$ROOT/dist/index.html" && rm -f "$ROOT/dist/index.html.bak"
+sed -i.bak -e "s#/pkg/praxis.js#/pkg/praxis.js?v=$HASH#g" -e "s#/styles.css#/styles.css?v=$HASH#g" "$ROOT/dist/index.html"
+rm -f "$ROOT/dist/index.html.bak"
 # SPA fallback for static hosts that serve 404.html.
 cp "$ROOT/dist/index.html" "$ROOT/dist/404.html"
 echo "▸ dist/ ready ($PROFILE)"

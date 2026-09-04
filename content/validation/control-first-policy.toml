@@ -1,13 +1,13 @@
 id = "control-first-policy"
 section = "validation"
 title = "Control-first policy"
-subtitle = "No target row is printed, and no target is loaded, until the planted controls pass"
+subtitle = "Do not load or print target results until planted checks pass"
 status = "VERIFIED"
-status_note = "Implemented as a fixed ordering in every launcher of the research program and as an explicit gate terminal (CONTROL_GATE PASS / FAIL, TARGET_REFUSED); the no-repeat checklist forbids any target run after a failed control."
+status_note = "Every launcher uses the same fixed order and prints an explicit CONTROL_GATE PASS, CONTROL_GATE FAIL, or TARGET_REFUSED result. A failed control stops the run, and the no-repeat checklist forbids trying the target afterward."
 family = "Control design"
 tags = ["controls", "gating", "launchers", "policy"]
 related = ["planted-controls", "target-absent-controls", "blind-controls", "throughput-fail", "run-script-log-convention", "kat-harness", "seal-and-audit-protocol", "g-planted-control"]
-summary = "The control-first policy fixes the order of every run: self-tests, then planted controls, then, only if the controls passed, the live text. A control failure is a statement about the tool, so the run stops there and records a gate failure rather than a target result. The policy converts the informal advice to calibrate your instrument into a mechanical property of the launchers, and it is what allows a long negative ledger to be trusted."
+summary = "Every run follows one order: self-tests, planted controls, and only then the live text if all controls pass. A failed control means the tool is not ready. The launcher stops and records that failure instead of loading the target. Enforcing this order in code prevents a weak test from creating a misleading negative result."
 updated = "2026-09-04"
 
 [[blocks]]

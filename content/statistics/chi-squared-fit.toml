@@ -1,13 +1,13 @@
 id = "chi-squared-fit"
 section = "statistics"
 title = "Chi-squared fit of a letter histogram"
-subtitle = "Misfit between an observed histogram and a reference distribution, normalised per letter and used as a gate"
+subtitle = "Measure how far observed letter counts are from a reference pattern"
 status = "VERIFIED"
-status_note = "Implemented as the monogram misfit chi-squared/n against English, minimised over 26 rotations in two alphabet orders; on the seven solved reference ciphertexts the gate stays quiet on the raw texts (chi-squared/n 2.4-3.3) and fires after the correct layer is peeled (0.061-0.142), which is the receipt for the transposition decision of the cascade solver."
+status_note = "The test uses single-letter chi-squared/n against English and chooses the best of 26 rotations in two alphabet orders. Across seven solved reference ciphertexts, raw text stays far from English at 2.4–3.3. After the correct layer is removed, the score drops to 0.061–0.142. This supports the cascade solver's transposition decision."
 family = "Coincidence and frequency statistics"
 tags = ["chi-squared", "goodness of fit", "monogram", "transposition gate", "change point"]
 related = ["index-of-coincidence", "frequency-analysis", "quadgram-log-likelihood", "bayesian-evidence-model-selection", "family-wise-null", "change-point-zone-detection", "columnar-transposition", "coset-shift-recovery"]
-summary = "The chi-squared statistic sums the squared differences between observed and expected letter counts, each divided by the expected count. Against the English distribution it measures how far a histogram is from plaintext monograms; against the uniform distribution it tests flatness. Divided by the text length it becomes a scale-free gate: an English multiset reads about 0.10, a partially peeled substitution 0.2-0.45, and a flattened polyalphabetic histogram 0.6 or more. Because a transposition preserves the multiset exactly, a small chi-squared on a text that does not read is the signature of a transposition."
+summary = "Chi-squared compares observed and expected letter counts. For each letter, it squares the difference and divides by the expected count, then adds the results. Comparing with English measures how close the text is to English single-letter frequencies; comparing with uniform counts measures flatness. Dividing by text length makes scores comparable: about 0.10 for English, 0.2–0.45 for a partly removed substitution, and at least 0.6 for a flat polyalphabetic text. A low score on unreadable text often points to a transposition."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -55,7 +55,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. **Transposition decision.** If $\chi^2_{\min}/n$ is small while the text does not read, the letter multiset is intact: solve for order (width scans, columnar keys) before touching substitution.
 2. **Order-free peel.** When a transposition may sit *below* a periodic layer, quadgrams of the peeled text are meaningless (see [quadgram log-likelihood](/statistics/quadgram-log-likelihood)); the per-coset $\chi^2$ peel is the correct objective, and the peel is accepted only if its reassembled histogram passes the gate.

@@ -1,13 +1,13 @@
 id = "condi"
 section = "ciphers"
 title = "Condi"
-subtitle = "Plaintext-feedback substitution: each rank shifts the next letter's rank"
+subtitle = "Each plaintext letter controls the shift for the next letter"
 status = "POWER-LIMITED"
-status_note = "Three successive decoders (transition-likelihood annealing, a gauge-aligned global population search, and an exhaustive parity decomposition with a bounded GF(13) lift) each scored 0/4 on planted 504-letter controls with arbitrary alphabets, although the hidden configurations are proven strict local optima; the family is unresolved, not excluded."
+status_note = "Three decoders each solved 0/4 planted 504-letter controls with arbitrary alphabets: annealing, a gauge-aligned population search, and an exact parity split with a bounded GF(13) lift. The hidden answers are proven strict local optima, but the full pipeline cannot find them. The family remains unresolved and is not ruled out."
 family = "Stream and machine ciphers"
 tags = ["feedback", "keyed alphabet", "autokey-like", "power limit"]
 related = ["gromark", "autokey", "keyword-mixed-alphabet", "modular-inverse-and-crt", "conjugacy-and-gauge", "simulated-annealing", "exhaustive-enumeration", "polish-basin-measurement", "g-autokey-primer"]
-summary = "Condi encrypts through a keyed alphabet in which the shift applied to each letter is the previous plaintext letter's rank plus one, seeded by a starter value. Changing one alphabet cell changes the feedback state and hence almost the whole decrypt, so ordinary swap-based search has no gradient. The program built three increasingly global decoders around exact algebra of the cipher; all three failed their planted controls, which makes Condi a documented power limit rather than a negative."
+summary = "Condi uses a keyed alphabet and lets each plaintext letter set the next shift from its rank plus one. A starting value handles the first letter. Changing one alphabet position changes the feedback and almost the whole decryption, so simple swap search gets little guidance. Three broader solvers used the cipher's exact algebra, but all failed their planted controls. This is a measured limit of the solvers, not evidence against Condi."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -46,7 +46,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. **Transition-likelihood annealing** over the rank permutation with a steepest-swap polish and basin hopping, then exact causal decryption under all 26 starters ranked by quadgrams.
 2. **Global population search**: minimise the full $L_2$ distance between predicted and observed transition tables (a complete Fourier-moment mismatch), then recombine gauge-aligned parents by whole alternating cycles of their assignment matchings, project elite votes back to a permutation by Hungarian assignment, and apply explicit 3-to-10-letter rank cycles.
@@ -77,7 +77,7 @@ Log 186: standard-alphabet control, 28/504 plaintext, gate FAIL, live text never
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Alphabet $\sigma$ keyed by `ZEBRAS` (`ZEBRASCDFGHIJKLMNOPQTUVWXY`), starter $s = 3$, plaintext `HELLO`. Ranks $u = r(H), r(E), r(L), r(L), r(O) = 10, 1, 14, 14, 17$.
 

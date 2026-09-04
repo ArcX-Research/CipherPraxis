@@ -1,13 +1,13 @@
 id = "bayesian-evidence-model-selection"
 section = "statistics"
 title = "Bayesian evidence and model selection"
-subtitle = "Marginal likelihood of coset histograms with the key shifts integrated out, compared across model families"
+subtitle = "Compare models by averaging over key shifts instead of choosing the best shifts"
 status = "VERIFIED"
-status_note = "Implemented for one-, two- and three-rotation inner models with all coset shifts marginalised under a uniform prior; on planted controls the single-rotation family wins on a plain periodic substitution (z +12.3 against shuffles), the two-rotation family wins on planted sandwiches (z +5.6 to +8.5), the inner spacing is read off the delta-marginal evidence on 7 of 8 planted seeds, and a fractionated inner text leaves every family at z about 0."
+status_note = "The implementation covers inner models with one, two, or three rotations and averages all coset shifts under a uniform prior. In planted checks, one rotation wins for a plain periodic substitution at z +12.3 against shuffles. Two rotations win for layered controls at z +5.6 to +8.5. Inner spacing is correct for 7 of 8 seeds. Fractionated inner text leaves every family near z 0."
 family = "Bayesian evidence and model selection"
 tags = ["evidence", "marginal likelihood", "model comparison", "Bayes factor", "shift marginalisation"]
 related = ["quadgram-log-likelihood", "index-of-coincidence", "family-wise-null", "selection-overfit-diagnostic", "mixture-inference-under-transposition", "order-free-width-statistic", "expectation-maximisation", "exact-period-alignment", "g-evidence", "g-marginal-likelihood", "g-nats-per-letter"]
-summary = "Instead of fitting the seven shifts of a periodic key and reporting the best likelihood, the evidence integrates the likelihood over every shift with a uniform prior. On a 153-letter text the profiled fit buys about 0.15 nats per letter of pure selection freedom, enough for wrong models to win; the marginalised evidence removes that freedom and, because bank members are averaged rather than maximised, it penalises larger model families automatically. Families such as 'inner text is rotated English', 'inner text is a mixture of two rotations' and 'of three rotations' are then compared by their evidence, and each is judged against the same computation on shuffled texts."
+summary = "A repeating key with seven positions gives seven shifts to choose. Reporting only the best likelihood rewards that freedom. On a 153-letter text, choosing the best shifts adds about 0.15 nats per letter even for wrong models. Bayesian evidence instead averages over every shift under a uniform prior. It also averages across members of a model family, which automatically penalizes larger families. One-, two-, and three-rotation models can then be compared fairly and checked against shuffled texts."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -49,7 +49,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. **Periodic gate.** In the cascade solver the best M1 gain over periods $2 \dots p_{\max}$, two alphabet orders and both relations is compared with the family-wise maximum of the same scan over shuffled texts; the decision fires when the gain clears that maximum by $0.02$ nats per letter. On the solved references the gains were $+0.255$, $+0.216$, $+0.229$ and $+0.080$ against shuffled maxima of $+0.024$, $+0.005$, $+0.010$ and $-0.015$.
 2. **Family comparison.** Compute the M1, M2, M3 family evidences and their differences; read the $\delta$-marginal; carry the top three $\delta$ forward.

@@ -36,7 +36,7 @@ pub fn AffineLab() -> impl IntoView {
                     {units(26).into_iter().map(|u| view! { <button type="button" class="unit" class:active=move || a.get() == u on:click=move |_| a.set(u)>{u}<span class="unit-inv">{format!("⁻¹={}", mod_inverse(u, 26).unwrap())}</span></button> }).collect_view()}
                 </div>
             </div>
-            <Note>"Only the twelve units of Z26 are valid multipliers, so the affine key space is 12 × 26 = 312: small enough to enumerate, which is why affine layers are attacked by exhaustion and the unit group matters for every multiplicative construction over the alphabet."</Note>
+            <Note>"Only the 12 units of Z26 can be multipliers. A unit is a number that has an inverse modulo 26. This gives 12 × 26 = 312 affine keys, so an attack can try every key."</Note>
         </div>
     }
 }

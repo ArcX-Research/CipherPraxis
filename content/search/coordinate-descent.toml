@@ -1,13 +1,13 @@
 id = "coordinate-descent"
 section = "search"
 title = "Coordinate descent over key shifts"
-subtitle = "Cyclic exact maximisation of one shift (26 values) or one adjacent pair (676 values) at a time, with perturbation restarts"
+subtitle = "Improve one shift, or one neighboring pair, at a time until the score stops rising"
 status = "VERIFIED"
-status_note = "Implemented as the shift polish in the periodic DP, the class solver and the Viterbi solver, and as the main search of the varied-copy key solver; planted controls at 153 letters are recovered at 100%, 71% and 79% in the logged run, and every DP control that includes the polish pass recovers 100%."
+status_note = "Coordinate descent finishes results from the periodic dynamic program, class solver, and Viterbi solver. It also drives the varied-copy key search. Logged 153-letter controls recovered at 100%, 71%, and 79%. Every dynamic-programming control that includes this finishing pass recovered 100%."
 family = "Deterministic heuristics"
 tags = ["coordinate ascent", "polish", "shift refit", "adjacent pair", "restarts"]
 related = ["hill-climbing", "viterbi-decoding", "periodic-substitution-dp", "expectation-maximisation", "simulated-annealing", "compound-periodic-key", "vigenere", "quadgram-log-likelihood", "shuffled-null-z-score", "selection-overfit-diagnostic"]
-summary = "Coordinate descent optimises a key one coordinate at a time: for each coset it tries all 26 shifts with the others fixed, keeps the best, and sweeps until nothing changes; an adjacent-pair sweep tries all 676 values of two neighbouring shifts to escape pairwise traps. It is cheap, deterministic and exact per coordinate, which makes it the standard finisher after a DP or an anneal, and a complete solver when the key has many weakly coupled shifts."
+summary = "Coordinate descent improves one part of a key at a time. For each coset, it tries all 26 shifts while keeping the others fixed. It repeats until no shift improves the score. A paired pass tries all 676 values for two neighboring shifts to escape simple traps. The method is cheap, repeatable, and exact for each chosen part. It works well after dynamic programming or annealing, and can solve keys whose shifts interact only weakly."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -52,7 +52,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 - **Finisher.** After the cyclic quadgram DP, an unrestricted 26-way coordinate and adjacent-pair pass lets a shift omitted by the monogram shortlist enter; after the open-chain Viterbi it repairs the wrap-around terms; in the rank-sharded selector four deterministic coordinate/pair polish rounds follow the width-8 DP; in the affine-map DP all 312 affine maps per residue enter through the same polish.
 - **Main search for varied-copy keys.** A key of $m \times 7$ letters ($m$ slightly different copies of one 7-letter word, period $7m$) is solved by exact period-7 alignment for the relative shifts, 26 absolute starts and the near-optimal alignment vectors as starts, then quadgram coordinate descent over the $7m$ sub-coset shifts (each moves about $n/7m$ letters) with random perturbation restarts; a constrained variant fits "copies differ by a constant" with $7 + m$ unknowns.
@@ -82,7 +82,7 @@ Varied-copy solver, planted keys over 153 letters of English: three-copy Beaufor
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Two shifts $k_0, k_1 \in \{0, 1, 2\}$ with objective table $F(k_0, k_1)$ (rows $k_1$, columns $k_0$):
 

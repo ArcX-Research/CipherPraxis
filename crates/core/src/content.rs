@@ -102,17 +102,17 @@ impl Section {
 
     pub fn blurb(self) -> &'static str {
         match self {
-            Section::Ciphers => "Families of classical and modern cipher models: definitions, key structure, invariants, and what makes each one breakable.",
-            Section::Algebra => "The modular arithmetic, group theory and linear algebra that turn cipher relations into solvable equations.",
-            Section::Cryptanalysis => "Attack strategies: period recovery, known-plaintext methods, relations between ciphertexts, layered-construction inference.",
-            Section::Statistics => "Estimators with error bars, null distributions, Bayesian evidence and power: how a reading becomes a claim.",
-            Section::Search => "Stochastic and deterministic heuristics that explore key spaces too large to enumerate.",
-            Section::Exact => "Constraint programming, dynamic programming and exhaustive enumeration with certificates.",
-            Section::Validation => "Planted controls, target-absent design, audits and receipts that keep an attack pipeline honest.",
-            Section::Engineering => "How the instruments are built: numerical patterns, compiled cores, run conventions, reproducibility.",
-            Section::Labs => "Cipher and analysis code compiled to WebAssembly and running in your browser.",
-            Section::Glossary => "Terms used across the knowledge base, each linked to the entries that define them in practice.",
-            Section::References => "External literature and a map of the internal evidence corpus behind every claim.",
+            Section::Ciphers => "Learn how each cipher works, how its key is built, what stays unchanged, and how it can be broken.",
+            Section::Algebra => "Use modular arithmetic, group theory, and linear algebra to turn cipher rules into equations you can solve.",
+            Section::Cryptanalysis => "Methods for finding periods, using known text, comparing ciphertexts, and untangling layered ciphers.",
+            Section::Statistics => "Tests that show how strong a result is, how uncertain it is, and whether chance could explain it.",
+            Section::Search => "Practical ways to explore key spaces that are too large to check one key at a time.",
+            Section::Exact => "Methods that check every allowed answer and can prove when no answer exists within a stated scope.",
+            Section::Validation => "Controls, audits, and saved records that show whether a test works and what its result really means.",
+            Section::Engineering => "How the tools are built, tested, run, and made repeatable.",
+            Section::Labs => "Run the same cipher and analysis code in your browser and see each step.",
+            Section::Glossary => "Plain definitions for terms used across the site, with links to fuller explanations.",
+            Section::References => "Books, papers, and project records that support the claims on this site.",
         }
     }
 
@@ -178,12 +178,12 @@ impl Status {
 
     pub fn description(self) -> &'static str {
         match self {
-            Status::Verified => "Implemented and validated on planted controls with recorded receipts.",
-            Status::Promising => "Positive evidence exists, but matched controls or audits are incomplete.",
-            Status::Closed => "Tested with validated instruments and excluded within a declared scope; a scoped closure, not a universal impossibility.",
-            Status::PowerLimited => "The instrument cannot detect the effect at the available text length or budget; negatives are uninformative.",
-            Status::Inconclusive => "Mixed evidence, an unresolved audit, or an invalidated run.",
-            Status::Untested => "Documented but not exercised.",
+            Status::Verified => "Built and checked with known test cases. The records are saved.",
+            Status::Promising => "The early evidence is positive, but some matching checks or audits are still missing.",
+            Status::Closed => "A tested method ruled this out within the stated scope. It does not prove universal impossibility.",
+            Status::PowerLimited => "This test cannot detect the effect with the available text or computing budget, so a negative result tells us little.",
+            Status::Inconclusive => "The evidence is mixed, an audit is unresolved, or a run was found to be invalid.",
+            Status::Untested => "Explained here, but not yet tested.",
         }
     }
 }
@@ -223,14 +223,14 @@ impl BlockKind {
     pub fn display_name(self) -> &'static str {
         match self {
             BlockKind::Definition => "Definition",
-            BlockKind::Equations => "Equations",
-            BlockKind::Variants => "Variants",
+            BlockKind::Equations => "Math and formulas",
+            BlockKind::Variants => "Types and variants",
             BlockKind::Assumptions => "Assumptions & invariants",
-            BlockKind::Attack => "Attack strategy",
-            BlockKind::Complexity => "Complexity",
-            BlockKind::FailureModes => "Failure modes",
-            BlockKind::Controls => "Controls",
-            BlockKind::Example => "Reproducible example",
+            BlockKind::Attack => "How to attack it",
+            BlockKind::Complexity => "Cost and limits",
+            BlockKind::FailureModes => "When it can fail",
+            BlockKind::Controls => "Checks and controls",
+            BlockKind::Example => "Worked example",
             BlockKind::Notes => "Notes",
             BlockKind::History => "History",
         }

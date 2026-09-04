@@ -61,7 +61,7 @@ fn MethodIndex(section: Section) -> impl IntoView {
             .iter()
             .filter(|e| sf.map(|s| e.status == s).unwrap_or(true))
             .filter(|e| ff.is_empty() || e.family_or_default() == ff)
-            .filter(|e| tf.is_empty() || e.tags.iter().any(|t| *t == tf))
+            .filter(|e| tf.is_empty() || e.tags.contains(&tf))
             .filter(|e| {
                 if terms.is_empty() {
                     return true;
@@ -91,12 +91,12 @@ fn MethodIndex(section: Section) -> impl IntoView {
             <div class="filters glass" role="region" aria-label="Filters">
                 <div class="filter-row">
                     <label class="filter-search">
-                        <span class="sr-only">"Filter by text"</span>
+                        <span class="sr-only">"Search within this section"</span>
                         <span class="filter-icon" aria-hidden="true" inner_html=crate::components::motif::ICON_SEARCH></span>
-                        <input type="search" placeholder="Filter this section…" prop:value=move || text_filter.get() on:input=move |ev| text_filter.set(event_target_value(&ev))/>
+                        <input type="search" placeholder="Search this section…" prop:value=move || text_filter.get() on:input=move |ev| text_filter.set(event_target_value(&ev))/>
                     </label>
                     <label class="filter-select">
-                        <span class="mono meta">"family"</span>
+                        <span class="mono meta">"Family"</span>
                         <select on:change=move |ev| family_filter.set(event_target_value(&ev))>
                             <option value="">"All families"</option>
                             {families.iter().map(|f| view! { <option value=f.clone()>{f.clone()}</option> }).collect_view()}
@@ -130,11 +130,11 @@ fn MethodIndex(section: Section) -> impl IntoView {
                     </div>
                 })}
             </div>
-            <p class="mono meta result-count">{move || format!("{} of {} shown", filtered.with(|f| f.len()), count)}</p>
+            <p class="mono meta result-count">{move || format!("Showing {} of {}", filtered.with(|f| f.len()), count)}</p>
             {move || {
                 let list = filtered.get();
                 if list.is_empty() {
-                    return view! { <p class="empty">"No entries match these filters."</p> }.into_any();
+                    return view! { <p class="empty">"No entries match. Clear a filter or try a broader search."</p> }.into_any();
                 }
                 if group_by_family.get() {
                     let mut groups: BTreeMap<String, Vec<Entry>> = BTreeMap::new();
@@ -143,7 +143,7 @@ fn MethodIndex(section: Section) -> impl IntoView {
                     }
                     groups.into_iter().map(|(family, items)| view! {
                         <div class="family-group">
-                            <h2 class="family-h"><span class="mono meta">{format!("{:02}", items.len())}</span>{family}</h2>
+                            <h2 class="family-h"><span>{family}</span><span class="mono meta">{format!("{} {}", items.len(), if items.len() == 1 { "entry" } else { "entries" })}</span></h2>
                             <div class="card-grid">{items.into_iter().map(|e| view! { <EntryCard entry=e/> }).collect_view()}</div>
                         </div>
                     }).collect_view().into_any()
@@ -206,6 +206,9 @@ fn GlossaryPage() -> impl IntoView {
                     {letters.iter().map(|c| view! { <a href=format!("#g-{c}")>{c.to_string()}</a> }).collect_view()}
                 </nav>
             </div>
+            {move || shown.with(|items| items.is_empty()).then(|| view! {
+                <p class="empty">"No glossary terms match. Try fewer letters or a broader word."</p>
+            })}
             <dl class="glossary">
                 {move || {
                     let mut last = ' ';
@@ -221,7 +224,7 @@ fn GlossaryPage() -> impl IntoView {
                                 <dd>
                                     <p>{t.summary.clone()}</p>
                                     {(!related.is_empty()).then(|| view! {
-                                        <p class="glossary-related">"See "{related.iter().enumerate().map(|(i, r)| view! { {(i > 0).then(|| ", ")}<a href=r.route()>{r.title.clone()}</a> }).collect_view()}"."</p>
+                                        <p class="glossary-related">"See "{related.iter().enumerate().map(|(i, r)| view! { {(i > 0).then_some(", ")}<a href=r.route()>{r.title.clone()}</a> }).collect_view()}"."</p>
                                     })}
                                 </dd>
                             </div>
@@ -280,9 +283,9 @@ fn ReferencesPage() -> impl IntoView {
                 }).collect_view()}
             </div>
             <div class="section-head">
-                <p class="eyebrow mono">"Evidence corpus index"</p>
-                <h2 class="display-sm">{format!("{prov_count} corpus files are cited across the knowledge base.")}</h2>
-                <p class="lede-sm">"Paths are relative to the corpus root "<code>{CORPUS_ROOT}</code>". The corpus is internal; these pointers exist so that every number on a page can be traced."</p>
+                <p class="eyebrow mono">"Source files"</p>
+                <h2 class="display-sm">{format!("{prov_count} source files support entries in this knowledge base.")}</h2>
+                <p class="lede-sm">"Each path starts at "<code>{CORPUS_ROOT}</code>". These internal links show where every reported number came from."</p>
             </div>
             <div class="table-scroll">
                 <table class="prov-table">
@@ -291,7 +294,7 @@ fn ReferencesPage() -> impl IntoView {
                         {prov_rows.into_iter().map(|(p, es)| view! {
                             <tr>
                                 <td><code>{p}</code></td>
-                                <td>{es.iter().enumerate().map(|(i, e)| view! { {(i > 0).then(|| ", ")}<a href=e.route()>{e.title.clone()}</a> }).collect_view()}</td>
+                                <td>{es.iter().enumerate().map(|(i, e)| view! { {(i > 0).then_some(", ")}<a href=e.route()>{e.title.clone()}</a> }).collect_view()}</td>
                             </tr>
                         }).collect_view()}
                     </tbody>

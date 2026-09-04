@@ -1,13 +1,13 @@
 id = "multiple-rounds-analysis"
 section = "cryptanalysis"
 title = "Multiple rounds analysis"
-subtitle = "What repeated substitution rounds do to coset structure, and how to enumerate them exactly"
+subtitle = "See how repeated substitutions change cosets and when every round can be checked"
 status = "CLOSED"
-status_note = "Exact enumeration of one to four periodic-substitution rounds, each keyed from a small word set in either reference alphabet or in six word-keyed alphabets, finds a planted three-round control exactly among 98k combinations; on the two corpus texts (1.57M combinations each, whole texts and zones) every combination stays at the noise level, so that family is excluded within that scope (logs/09, 34)."
+status_note = "An exact search checked one to four repeating-substitution rounds. Each round used a small word set in either reference alphabet or six word-keyed alphabets. It found a planted three-round control exactly among 98k combinations. On each of two project texts, all 1.57M combinations stayed at the noise level across whole texts and zones. This rules out only that stated family (logs/09, 34)."
 family = "Layered-construction inference"
 tags = ["rounds", "composition", "compound key", "lcm", "exact enumeration"]
 related = ["compound-periodic-key", "quagmire-iii", "vigenere", "lcm-of-periods", "group-actions-on-alphabets", "exhaustive-enumeration", "family-identification", "coset-shift-recovery", "mixture-inference-under-transposition", "g-family-sweep", "g-inner-and-outer-layer"]
-summary = "Applying a periodic substitution several times is not the same in every alphabet. In one alphabet the rounds compose to a single key whose period is the least common multiple of the round periods; in different keyed alphabets they do not collapse, but as long as every round is periodic the cosets of the composite stay monoalphabetic, so the result is a member of the general per-coset-substitution family. The corpus enumerates small round families exactly, compares their coincidence fingerprints with single-layer references, and records which readings are redundant, which are unfalsifiable and which were excluded."
+summary = "Several repeating substitutions combine differently depending on their alphabets. In one alphabet, they become one key whose period is the least common multiple of the round periods. Across different keyed alphabets, they do not collapse into one key. Their final cosets are still monoalphabetic, so the result belongs to the general per-coset substitution family. Exact searches cover small round sets and compare their match patterns with single-layer controls."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -36,7 +36,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Fix the candidate word set, the alphabets per round and the relation per round (additive or reciprocal).
 2. For $r = 1 \dots 4$ rounds enumerate every ordered choice of words, alphabets and relations; decrypt exactly (no search) and score with quadgrams; a true combination reads at the language rate at once.
@@ -70,7 +70,7 @@ body = '''
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Same alphabet, two rounds: key one $= (0, 1)$ (period 2), key two $= (0, 1, 2)$ (period 3). The composite key has period 6:
 

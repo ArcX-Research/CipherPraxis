@@ -1,13 +1,13 @@
 id = "beam-search"
 section = "search"
 title = "Beam search over plaintext prefixes"
-subtitle = "Left-to-right extension of the W best partial decrypts under a character or word language model, with exact constraints applied to each prefix"
+subtitle = "Build plaintext from left to right while keeping only the W best partial answers"
 status = "POWER-LIMITED"
-status_note = "Implemented in several forms (arbitrary per-residue substitutions, a shared 26-cycle with group-identity masks, exact-prefix Z3 filtering, word-level beams with a local language model). Every planted control at 63-95 letters lost the true prefix early: 19.0% and 9.5% plaintext recovered on two 63-letter controls, truth outside a 40,000-wide beam by character 5 or 13, and 0/84 survivals in a 3,000-wide beam even under an oracle hypothesis. Target runs were therefore never admitted."
+status_note = "Several versions are implemented, including per-residue substitutions, a shared 26-cycle, exact Z3 prefix filtering, and word beams with a local model. Every 63- to 95-letter control lost the true prefix early. Two 63-letter controls recovered 19.0% and 9.5%. The truth left a 40,000-wide beam by character 5 or 13 and survived 0/84 times in a 3,000-wide beam even with an oracle hint. No target runs were allowed."
 family = "Deterministic heuristics"
 tags = ["beam", "language model", "prefix", "constrained decoding", "identifiability"]
 related = ["k-best-lists", "meet-in-the-middle", "viterbi-decoding", "cp-sat-and-smt-solvers", "all-different-enumeration", "word-prefix-csp", "quagmire-iii", "local-language-model-prior", "within-coset-null", "planted-controls", "held-out-gates", "g-beam-width"]
-summary = "Beam search decodes a ciphertext letter by letter: every retained prefix is extended by each admissible plaintext letter, scored by a language model, and only the W best prefixes survive to the next position. Admissibility comes from the cipher model (equal ciphertext letters in one residue must decrypt equally, partial maps must be injective, partial rotation or reflection maps must close consistently). The corpus shows that at 63-95 letters the true prefix is ranked far below fluent wrong prefixes before any algebraic constraint bites, so the truth leaves the beam within the first 5-13 characters."
+summary = "Beam search decrypts one letter at a time. Extend every saved prefix with each legal next letter, score the results, and keep only the best W. Cipher rules reject impossible prefixes, such as inconsistent repeated letters or duplicate alphabet mappings. At 63–95 letters, fluent wrong prefixes outrank the truth before those rules become strong. In tests, the true prefix left the beam within the first 5–13 characters."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -55,7 +55,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 The family is a period-7 polyalphabetic substitution on a 63-95-letter zone whose alphabet is unstructured. Constraints from the ciphertext are the only key information: equal letters in a residue decrypt equally, distinct ones distinctly, and (for a shared cycle) the residue maps are related by group identities. The beam proposes plaintexts consistent with those constraints, ranked by a character GRU (64/192, two layers) or a local word-level language model. Endpoint nulls shuffle letters within each period coset, preserving every coset histogram and equality count while destroying cross-coset order; a fluent output must beat that familywise null. In the word-level variants exact GF(2) and GF(13) null spaces of the position equations are computed for each prefix, and once the nullity is small a CRT all-different enumeration becomes a hard gate.
 '''
@@ -84,7 +84,7 @@ Every beam decoder in the corpus is control-gated: hidden random cycles and shif
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Beam width $W = 2$, a three-letter alphabet, toy log-probabilities. Position 1: `T` $-0.5$, `A` $-1.0$, `X` $-3.0$; keep `T`, `A`. Position 2 extensions: `TH` $-0.5 - 0.3 = -0.8$, `TX` $-0.5 - 2.5 = -3.0$, `AN` $-1.0 - 0.4 = -1.4$, `AT` $-1.0 - 0.9 = -1.9$; keep `TH`, `AN`. If the true plaintext began `AT`, it is now gone: no later evidence, however strong, can revive a discarded prefix. That is exactly the recorded behaviour at positions 5 and 13 of the 63- and 95-letter controls.
 '''

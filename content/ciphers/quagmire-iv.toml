@@ -1,13 +1,13 @@
 id = "quagmire-iv"
 section = "ciphers"
 title = "Quagmire IV"
-subtitle = "Periodic shifts between two different mixed alphabets"
+subtitle = "Repeat shifts between separate mixed alphabets for plaintext and ciphertext"
 status = "POWER-LIMITED"
-status_note = "Blind annealing over two unknown alphabets recovered 0% of planted controls at 153 letters; with both alphabets drawn from a vocabulary bank (7,438 x 7,438 pairs) or from the two fixed orders, the search is exact and control-verified, and those structured readings were excluded for the corpus texts."
+status_note = "Blind annealing over two unknown alphabets recovered 0% of 153-letter planted controls. When both alphabets came from a 7,438 x 7,438 word bank or two fixed orders, exact searches passed their controls. Tests then ruled out those structured forms for the project texts."
 family = "Polyalphabetic substitution"
 tags = ["periodic", "keyed alphabet", "polyalphabetic", "quagmire", "power limit"]
 related = ["quagmire-i", "quagmire-ii", "quagmire-iii", "keyword-mixed-alphabet", "dictionary-attack", "simulated-annealing", "exact-period-alignment", "conjugacy-and-gauge", "quagmire-lab"]
-summary = "Quagmire IV indexes the plaintext in one mixed alphabet and the ciphertext in another, with a periodic shift between the two index spaces. It is the most general periodic additive cipher: every Quagmire and Vigenère is a special case. Two free alphabets are hopeless to search blind at short lengths, but when each alphabet comes from a bank the problem is a large exact enumeration, which the program ran with planted controls."
+summary = "Quagmire IV uses one mixed alphabet for plaintext and another for ciphertext, with a repeating shift between their index positions. It is the broadest periodic additive form; Vigenère and the other Quagmires are special cases. Two arbitrary alphabets are too hard to search from short text. If each alphabet comes from a known bank, an exact search can check every pair."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -46,7 +46,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. **Alignment in a candidate ciphertext order.** Score the aligned index of coincidence of the seven cosets in the straight order, a keyword-mixed order and every keyword alphabet in six keying styles against the same maximum on shuffled ciphertext; refine the ciphertext alphabet greedily under the aligned-IC objective.
 2. **Cryptogram stage.** With a ciphertext order fixed, the aligned index text is a simple substitution of the plaintext; anneal the plaintext alphabet and the shifts jointly under quadgrams, restarting from every combination of near-tie coset shifts.
@@ -71,12 +71,12 @@ body = '''
 [[blocks]]
 kind = "controls"
 body = '''
-Vocabulary-by-vocabulary Quagmire IV (both relations) on the 95-letter zone, the whole 144-letter text and the 153-letter text: best rates $-5.71$, $-6.25$ and $-6.22$, at the subsampled shuffled tops (logs/28_q4vocab.log, per the program's README). The first Quagmire IV solver's planted control (keyed plaintext alphabet, keyword-mixed ciphertext order, with and without a columnar transposition underneath) reached 100% anneal match on the plain case and read English through the columnar stage on the transposed case (ck_qiv_report.txt). Blind two-alphabet annealing: 0% on four planted controls (logs/08_q3.log). Full-spelling wordlist search under the four fixed-order alphabet pairs recovered all eight planted controls exactly before its live run (logs/472_pk9_bip39_fullwords_20260903T154646Z_30660.log).
+Vocabulary-by-vocabulary Quagmire IV (both relations) on the 95-letter zone, the whole 144-letter text and the 153-letter text: best rates $-5.71$, $-6.25$ and $-6.22$, at the subsampled shuffled tops (log 28). The first Quagmire IV solver's planted control (keyed plaintext alphabet, keyword-mixed ciphertext order, with and without a columnar transposition underneath) reached 100% anneal match on the plain case and read English through the columnar stage on the transposed case. Blind two-alphabet annealing recovered 0/4 planted controls (log 8). A full-spelling wordlist search under four fixed-order alphabet pairs recovered all eight planted controls exactly before its live run (log 472).
 '''
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 $P$ keyed by `ZEBRAS` (`ZEBRASCDFGHIJKLMNOPQTUVWXY`), $C$ keyed by `QUIET` (`QUIETABCDFGHJKLMNOPRSVWXYZ`), shifts $(3, 7, 12)$. Plaintext `QUAGMIRE`:
 

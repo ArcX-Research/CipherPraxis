@@ -1,13 +1,13 @@
 id = "difference-operators"
 section = "algebra"
 title = "Difference operators"
-subtitle = "Lag differences, cross-text differences and the exact cancellation of shared unknowns"
+subtitle = "Subtract shifted or paired texts to remove a shared unknown"
 status = "VERIFIED"
-status_note = "Lag differences and cross-text differences are exact cancellations, verified by known-answer tests (derived stream 32/32, chain plants 50/50, 256/256 implication-violating mutations rejected), and are the first step of every plaintext- or key-elimination attack in the corpus. The ciphertext-difference and running-key screens on the target texts recorded no lead."
+status_note = "Known-answer tests confirm the exact cancellations: 32/32 derived streams, 50/50 planted chains, and 256/256 rule-breaking mutations rejected. These differences start every attack that removes a plaintext or key. Screens of the target ciphertext differences and running keys found no lead."
 family = "Modular arithmetic"
 tags = ["difference", "lag", "cancellation", "derived stream", "autokey"]
 related = ["modular-arithmetic-z26", "linear-recurrences-lcg", "residue-class-graphs", "conjugacy-and-gauge", "key-cancellation", "autokey-difference-periodicity", "running-key-relation-test", "segment-chain-analysis", "autokey", "running-key", "vigenere", "index-of-coincidence", "g-invariant"]
-summary = "Subtracting a ciphertext from a lagged copy of itself, or from another ciphertext aligned with it, removes whatever the two share: a periodic key at a lag equal to its period, a running key common to two texts, or a common plaintext under two independent keys. What remains is a derived stream whose structure is exactly predictable, so differences turn two unknowns into one and give key-free necessary conditions."
+summary = "Subtract a ciphertext from a shifted copy of itself, or from an aligned second ciphertext, and anything shared can cancel. This may remove a periodic key at its period, a running key shared by two texts, or one plaintext used under two keys. The remaining stream has a predictable structure. A difference can turn two unknowns into one and give tests that do not need the key."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -70,7 +70,7 @@ Derived stream, inverses and two scalar forwards 32/32 over random cycles and si
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Vigenère with key `KEY` ($m = 3$) on `ATTACK`: $A{+}K = 10 = K$, $T{+}E = 23 = X$, $T{+}Y = 43 \equiv 17 = R$, $A{+}K = K$, $C{+}E = 6 = G$, $K{+}Y = 34 \equiv 8 = I$; ciphertext `KXRKGI`.
 

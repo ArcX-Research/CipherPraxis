@@ -1,13 +1,13 @@
 id = "exact-period-alignment"
 section = "cryptanalysis"
 title = "Exact period alignment"
-subtitle = "Bringing the cosets of a periodic substitution into register by exhaustive maximisation of pairwise coincidences"
+subtitle = "Try every relative shift and line up the cosets of a repeating substitution"
 status = "VERIFIED"
-status_note = "Exact maximisation over all 26^6 relative shift vectors of a period-7 layer is implemented with a closed-form pairwise objective; on a planted period-7 substitution over 153 letters of English it recovers the shift vector at z +9.6 against 200 position-shuffles, and a planted substitution over a transposed inner text sits at z +4.0 (logs/01)."
+status_note = "The exact period-7 solver checks all 26^6 relative shift vectors with a direct pairwise score. On a planted substitution over 153 English letters, it recovered the shift vector at z +9.6 against 200 position shuffles. A planted substitution over transposed inner text reached z +4.0 (logs/01)."
 family = "Period and structure recovery"
 tags = ["periodic", "coincidence", "exact", "alignment", "shift vector"]
 related = ["vigenere", "quagmire-iii", "coset-shift-recovery", "index-of-coincidence", "shuffled-null-z-score", "within-coset-null", "exhaustive-enumeration", "conjugacy-and-gauge", "family-identification", "g-coset", "g-inner-and-outer-layer"]
-summary = "Under a periodic additive layer every coset is a rotation of the same inner letter distribution. Exact period alignment finds the relative rotations that bring all cosets into register by maximising the total pairwise coincidence between shifted coset histograms over every relative shift vector. It needs no reference distribution, no word order and no key: it measures how strongly a periodic additive layer is present and which cosets are ambiguous, and it is the first instrument the corpus applies to any suspected periodic text."
+summary = "In a repeating additive cipher, every coset is a shifted copy of the same inner letter distribution. Exact period alignment tries every relative shift and chooses the one that makes coset letter counts match most strongly. It needs no language reference, word order, or key. The result shows how strongly a repeating additive layer is present and which cosets remain uncertain. It is the first test used on a suspected periodic text."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -44,7 +44,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Choose a period (from a period scan or by trying each candidate) and an index order; build $F_b$ and the cross tables.
 2. Maximise $J(s)$ exactly (or, for simulations and nulls, by multi-seed greedy assignment followed by single- and pair-move polish, which agreed with the exact optimum on every corpus text).
@@ -78,7 +78,7 @@ Planted references audited with the same code and 200 shuffles each (logs/01): a
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Three cosets of four letters each, produced from the plaintext letters E,E,T,A by rotations $k = (0, 3, 10)$:
 

@@ -1,13 +1,13 @@
 id = "book-cipher"
 section = "ciphers"
 title = "Book cipher"
-subtitle = "A running key taken from a specified passage of a shared text"
+subtitle = "Use a passage from an agreed book as a long key"
 status = "INCONCLUSIVE"
-status_note = "The bank sweep (four public novels, related public texts and every recovered plaintext and ciphertext of the corpus, every offset, three relations, two orders) reports a shuffled-ciphertext null but recorded no planted positive control; the exact known-text window test of a related model has both, so the negative is credible but not control-qualified as a book-cipher result."
+status_note = "The bank search checked four public novels, related public texts, and every recovered project text at every offset, under three relations and two alphabet orders. It used a shuffled-ciphertext null but no planted positive control. A related exact known-text test has both checks, so this negative is useful but not fully qualified as a book-cipher result."
 family = "Stream and machine ciphers"
 tags = ["running key", "book", "known text", "bank"]
 related = ["running-key", "one-time-pad", "vigenere", "dictionary-attack", "corpus-bank-screen", "running-key-relation-test", "frequency-analysis"]
-summary = "A book cipher uses a passage of an agreed book as the key of a running-key cipher; the key is identified by a location (page, line) rather than transmitted. Against an unknown book it is as hard as any running key, but against a candidate bank it is a sliding correlation: every window of every candidate text is tried as the key and the right one produces readable plaintext. The program's bank sweep is a vectorised version of that idea."
+summary = "A book cipher uses a passage from an agreed text as a running key. The sender shares a page or line location instead of the full key. If the book is unknown, the problem is as hard as any running-key cipher. If likely books are available, try every matching window as the key. The correct passage should produce readable plaintext. The bank search performs these comparisons in batches."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -45,7 +45,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Assemble a bank of plausible texts (public books, texts related to the setting, everything previously recovered) forward and reversed.
 2. Sweep all offsets under both orders and three relations by monogram correlation; re-score the top offsets by IC and quadgrams; also score the plaintext side by monograms alone in case a transposition sits underneath.
@@ -74,7 +74,7 @@ ck_book_report.txt records the shuffled-ciphertext null for each of the three te
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Key passage beginning `ITWASTHEBESTOFTIMES` (say, page 1, line 1 of an agreed book), plaintext `MEETATNOON`, Vigenère relation:
 

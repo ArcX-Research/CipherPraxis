@@ -1,13 +1,13 @@
 id = "estimator-standard-error"
 section = "statistics"
 title = "Estimator standard error"
-subtitle = "Every reading carries an error bar: exact where the formula exists, simulated or resampled otherwise"
+subtitle = "Give every measurement an error range, from a formula or matched simulations"
 status = "VERIFIED"
-status_note = "The exact standard deviation of the index-of-coincidence estimator is implemented and printed with every coset reading (0.0210 per 22-letter coset, 0.0079 for the mean of seven at 153 letters); simulated standard errors from planted references and held-out windows are used for statistics without a closed form, and an audit found that a widely repeated 'not monoalphabetic' claim had been a 1.5-sigma statement."
+status_note = "Every coset reading includes the exact standard deviation of the index of coincidence: 0.0210 for one 22-letter coset and 0.0079 for the mean of seven at 153 letters. Tests without a direct formula use planted simulations or held-out windows. One audit showed that a repeated “not monoalphabetic” claim was only 1.5 standard deviations from expectation."
 family = "Null distributions and calibration"
 tags = ["standard error", "variance", "error bars", "U-statistic", "simulation"]
 related = ["index-of-coincidence", "shuffled-null-z-score", "power-analysis", "english-gate-calibration", "chi-squared-fit", "planted-controls", "g-z-score", "g-held-out"]
-summary = "A statistic without a standard error cannot support a conclusion. Three sources of error bars are used: exact formulas (the coincidence estimator is a U-statistic whose variance includes the covariance of pairs that share a position), simulation on planted references (real English windows enciphered with random keys under the hypothesised construction), and held-out calibration (thousands of genuine text windows of the target length). The z-score of an observation against the appropriate error bar is what distinguishes a finding from a fluctuation."
+summary = "A measurement needs a standard error to show how much it may vary by chance. This site uses three sources. Exact formulas work when available. Planted simulations encrypt real English with random keys under the tested cipher. Held-out calibration measures thousands of separate text windows at the target length. Comparing an observation with the right error range gives its z-score and helps separate a real pattern from normal variation."
 updated = "2026-09-04"
 
 [[blocks]]

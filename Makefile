@@ -44,7 +44,7 @@ test:
 	$(CARGO) test --workspace --all-features
 
 content:
-	$(CARGO) run --quiet -p praxis-core --features authoring --bin praxis-check -- content
+	$(CARGO) run --quiet -p praxis-core --features authoring --bin praxis-check -- content --strict
 
 check:
 	./scripts/check.sh
@@ -56,10 +56,10 @@ build-dev:
 	./scripts/build.sh dev
 
 dev:
-	HOST=$(HOST) PORT=$(PORT) ./scripts/dev.sh
+	./scripts/dev.sh --host "$(HOST)" --port "$(PORT)"
 
 serve:
-	$(PYTHON) scripts/serve.py --host $(HOST) --port $(PORT) --no-build
+	$(PYTHON) scripts/serve.py --host "$(HOST)" --port "$(PORT)" --no-build
 
 clean:
 	$(CARGO) clean

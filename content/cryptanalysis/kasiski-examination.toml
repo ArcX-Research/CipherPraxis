@@ -1,0 +1,90 @@
+id = "kasiski-examination"
+section = "cryptanalysis"
+title = "Kasiski examination"
+subtitle = "Find a repeating key period from gaps between repeated ciphertext fragments"
+status = "VERIFIED"
+status_note = "The site's implementation passes a unit test on a Vigenère control with a five-letter key, where factor votes pick period 5. The project used the method once without a control on a 504-letter text, then replaced it with exact period alignment. That record is a measurement, not a solved result."
+family = "Period and structure recovery"
+tags = ["period", "repeats", "polyalphabetic", "classical"]
+related = ["vigenere", "exact-period-alignment", "coincidence-lag-profile", "index-of-coincidence", "lcm-of-periods", "coincidence-lab", "g-period"]
+summary = "If the same plaintext fragment appears at positions separated by a multiple of the key period, a repeating cipher may produce the same ciphertext fragment twice. Kasiski examination collects repeated n-grams and measures the gaps between them. Common factors of those gaps suggest the period. The method needs enough text to create repeats and can mistake chance repeats for signal, so newer methods attach statistical scores."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $c_0 c_1 \dots$ be a ciphertext produced with a key of period $m$. If the plaintext fragment $w$ occurs at positions $i$ and $j$ with $j - i \equiv 0 \pmod m$, then the ciphertext fragments at $i$ and $j$ are identical, because every letter of $w$ meets the same key element both times. Conversely, a repeated ciphertext $n$-gram at distance $d$ is evidence that $m \mid d$, unless the repeat is a coincidence.
+
+The examination lists every repeated $n$-gram (typically $n \ge 3$), the distances $d_1, d_2, \dots$ between consecutive occurrences, and for each candidate period $p$ the number of distances it divides:
+
+$$\operatorname{votes}(p) = \#\{k : p \mid d_k\}.$$
+
+The true period and its divisors receive the most votes; the largest well-supported candidate is the period, and its multiples show the same support diluted.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The key is strictly periodic and the same substitution rule applies at every position; a keyed alphabet on either side (Quagmire) leaves the argument intact because identical plaintext under identical key elements still gives identical ciphertext.
+- The plaintext repeats fragments: natural language does, from common words and affixes; a flat or random inner text does not.
+- The expected number of chance repeats of an $n$-gram in a text of length $N$ over 26 letters is about $\binom{N}{2} / 26^{n}$; below a few hundred letters trigram repeats are mostly chance, and the votes are dominated by noise.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to attack it"
+body = '''
+1. Extract all repeated $n$-grams for $n$ from 3 up to about 6, preferring longer repeats (they are far less likely to be chance).
+2. Tabulate the distances and the factor votes for periods $2 \dots p_{\max}$.
+3. Cross-check the leading candidate against the periodic index of coincidence and the coincidence lag profile; all three should agree.
+4. Continue with coset-wise shift recovery under the chosen period.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Collecting repeats with a hash map is $O(N \cdot n_{\max})$; the vote table is $O(R \cdot p_{\max})$ for $R$ distances. Negligible next to any subsequent solver.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Chance repeats.** On a 504-letter text the research program observed five repeated trigrams against about 7.2 expected for random text, and no repeated tetragram: the method had nothing to say, and the exact alignment objective was used instead.
+- **Short texts.** Below roughly 200 letters the vote table is dominated by divisors of a handful of distances; a period read from two distances is a guess.
+- **Non-periodic keys.** Autokey and running-key constructions produce no systematic repeats; the absence of Kasiski structure is itself a diagnostic.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The lab implementation is checked on a planted control: a passage of English encrypted with a five-letter Vigenère key must give period 5 more votes than any non-divisor period, and the periodic index of coincidence at 5 must exceed the neighbouring periods. The corpus measurement on the 504-letter text is recorded as an uncontrolled screen.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+Encrypt `THE CAT SAW THE DOG AND THE CAT RAN` with the key `KEY` ($m = 3$). The word THE occurs at positions 0, 9 and 21 of the letter-only plaintext. Under period 3, positions 0, 9 and 21 all use key element 0, so the three ciphertext trigrams are identical: distances 9 and 12, common factor 3. The [coincidence lab](/labs/coincidence-lab) reproduces the table and the votes for any text you paste.
+'''
+
+[[provenance]]
+path = "withmath/logs/109_misc_tests.log"
+kind = "log"
+note = "Kasiski screen on a 504-letter text: five repeated trigrams against about 7.2 expected for random text, no repeated tetragram or pentagram; the method was not pursued further."
+ref = "logs/109_misc_tests.log"
+
+[[provenance]]
+path = "withmath/wm_core.py"
+kind = "library"
+note = "The exact period alignment objective that replaced repeat counting in the research program."
+
+[[references]]
+title = "Die Geheimschriften und die Dechiffrir-Kunst"
+author = "Friedrich W. Kasiski"
+year = 1863
+
+[[references]]
+title = "The Codebreakers"
+author = "David Kahn"
+year = 1967

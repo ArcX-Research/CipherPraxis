@@ -6,5 +6,5 @@ status_note = "Standard term."
 family = "Algebra"
 tags = ["modular arithmetic"]
 related = ["modular-arithmetic-z26", "lcm-of-periods", "residue-class-graphs", "g-coset"]
-summary = "The set of integers congruent to a given value modulo n; the residue classes modulo n form the ring Z_n. In cipher analysis residue classes appear twice: letters are residues modulo 26, and positions are residues modulo a key period, so that the positions congruent to b modulo m share one key element. When two periods are coprime, a position determines a pair of residues and, over one full cycle of length equal to their product, every pair occurs exactly once."
+summary = "A residue class contains all integers with the same remainder modulo n. The classes modulo n form the ring Z_n. In cipher analysis, letters are residues modulo 26. Positions can also be residues modulo a key period, so positions congruent to b modulo m use one key element. If two periods are coprime, each position gives one pair of residues, and every pair appears once during a full cycle."
 updated = "2026-09-04"

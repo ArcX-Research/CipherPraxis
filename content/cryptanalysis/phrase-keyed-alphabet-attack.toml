@@ -1,13 +1,13 @@
 id = "phrase-keyed-alphabet-attack"
 section = "cryptanalysis"
 title = "Phrase-keyed alphabet attack"
-subtitle = "Enumerating mixed alphabets keyed by phrases from known texts and screening each as the alphabet of a periodic keyed substitution"
+subtitle = "Build alphabets from known phrases and check each one under a repeating substitution"
 status = "CLOSED"
-status_note = "Every 4- to 60-letter substring of the known texts of the series, in six keying styles (202,504 distinct alphabets), was tried as the mixed alphabet of a period-7 keyed substitution: the planted control reads at 100%, the two target texts stay at the noise level (-6.54 and -6.35), so phrase-keyed alphabets are excluded for them within that scope (logs/07); the larger structured tables (2.06M dictionary and columnar alphabets, 100k near-neighbour alphabets, 1.56M numeric-grid alphabets) are excluded on the zones the same way (logs/24, 38, 41)."
+status_note = "The search built 202,504 distinct alphabets from every 4- to 60-letter substring of known series texts in six styles, then tested each under a period-7 substitution. The planted control read at 100%; the two targets stayed at noise scores of -6.54 and -6.35. Larger zone searches also ruled out 2.06M dictionary and columnar alphabets, 100k nearby alphabets, and 1.56M numeric-grid alphabets in their stated scopes (logs/07, 24, 38, 41)."
 family = "Known-plaintext methods"
 tags = ["keyed alphabet", "phrase", "dictionary", "family sweep", "screen"]
 related = ["keyword-mixed-alphabet", "quagmire-i", "quagmire-ii", "quagmire-iii", "quagmire-iv", "dictionary-attack", "corpus-bank-screen", "coset-shift-recovery", "crib-driven-alphabet-recovery", "family-wise-null", "g-family-sweep"]
-summary = "A blind search over all 26! mixed alphabets is out of reach at 150 letters, but an alphabet keyed by a phrase is one of a few hundred thousand, and every one can be tested in milliseconds: fit the shifts of each coset, decrypt, score. The phrase-keyed attack enumerates every substring of every text the setter is known to have used, in every keying style, and screens the lot with a planted control that must read at 100%. It is the corpus's model of a scoped family sweep: cheap, controlled, and closing exactly what it enumerates."
+summary = "All 26! mixed alphabets are far too many to search from 150 letters. Phrase-keyed alphabets form a much smaller list. Build an alphabet from every substring of each known source text in every chosen style. For each one, fit the coset shifts, decrypt, and score. A planted control must recover at 100% before target results count. A negative result rules out only the exact phrase sources and keying styles that were listed."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -40,7 +40,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Build the alphabet table: all substrings of length 4 to 60 of every source text, six styles, deduplicated (202,504 alphabets from the known texts; a 2.06 million table adds dictionary words in six styles, columnar-keyed and multi-keyed alphabets).
 2. Plant a control: a known text under a keyed substitution whose alphabet is in the table; it must read at 100% and rank first.
@@ -73,7 +73,7 @@ body = '''
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Phrase `THE QUICK BROWN FOX`: distinct letters in order of appearance `THEQUICKBROWNFX` (15 letters). Styles:
 

@@ -1,13 +1,13 @@
 id = "crt-lab"
 section = "labs"
 title = "Chinese remainder & inverse lab"
-subtitle = "Solve simultaneous congruences, including non-coprime moduli, and compute modular inverses"
+subtitle = "Solve several modular equations together and find modular inverses"
 status = "VERIFIED"
-status_note = "Unit-tested: x ≡ 2 (3), 3 (5), 2 (7) → 23 (mod 105); the non-coprime system 1 (4), 3 (6) → 9 (mod 12); inconsistent systems are reported."
+status_note = "Tests give x ≡ 23 (mod 105) from x ≡ 2 (3), 3 (5), and 2 (7). The shared-factor system 1 (4), 3 (6) gives 9 (mod 12). The lab also reports systems with no solution."
 family = "Algebra labs"
 tags = ["crt", "number theory", "modular inverse"]
 related = ["modular-inverse-and-crt", "lcm-of-periods", "units-mod-26", "affine-lab"]
-summary = "The Chinese remainder theorem reassembles an integer from its residues modulo several moduli; the general form handles shared factors and detects inconsistency. The same extended Euclidean algorithm gives modular inverses. Both operations appear whenever key information is recovered modulo small factors and must be lifted to a full residue."
+summary = "The Chinese remainder theorem rebuilds a number from its remainders under several moduli. The general form can handle shared factors and report when the equations disagree. The extended Euclidean algorithm also finds modular inverses. Cipher solvers use both when they recover key information modulo small factors and need to join it into one value."
 updated = "2026-09-04"
 lab = "crt"
 

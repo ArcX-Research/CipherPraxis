@@ -1,13 +1,13 @@
 id = "caesar-shift"
 section = "ciphers"
 title = "Caesar shift"
-subtitle = "Single additive shift over Z26; the atom of every periodic substitution"
+subtitle = "Add one fixed value to every letter modulo 26"
 status = "VERIFIED"
-status_note = "Shift recovery is the coset step of every periodic solver in the program and is exercised by every planted control; the block-wide generalisation (one integer added to each base-26 block) was exhausted at width 3 with exact planted-control recovery."
+status_note = "Every periodic solver tests shift recovery inside each coset, and every planted control exercises it. A block version that adds one integer to each base-26 block was checked completely at width 3 and recovered the planted answer exactly."
 family = "Monoalphabetic substitution"
 tags = ["monoalphabetic", "additive", "shift", "block addition"]
 related = ["vigenere", "affine-cipher", "keyword-mixed-alphabet", "coset-shift-recovery", "frequency-analysis", "modular-arithmetic-z26", "g-coset"]
-summary = "A Caesar shift adds one constant to every letter modulo 26. It has 26 keys and is broken by a single histogram correlation, but it matters because every periodic additive cipher is a Caesar shift on each coset, so shift recovery is the inner loop of Vigenère, Beaufort and Quagmire solvers. The program also tested a non-periodic generalisation in which one integer is added to whole base-26 blocks with carries."
+summary = "A Caesar shift adds one fixed value to every letter modulo 26. It has only 26 keys, and comparing letter counts usually breaks it. The same step matters inside larger ciphers: each coset of Vigenère, Beaufort, or Quagmire has its own shift. Tests also covered a non-repeating version that treats a whole base-26 block as one number and adds with carries."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -55,7 +55,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Correlate the ciphertext histogram with the reference distribution over all 26 rotations (or all 26 rotations in each candidate order).
 2. Confirm with a language score of the decrypt; at 20 or more letters the correlation alone is decisive for English.
@@ -84,7 +84,7 @@ The block-addition lane ran target-profile planted controls for every width and 
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Plaintext `HELLO`, shift $k = 3$:
 

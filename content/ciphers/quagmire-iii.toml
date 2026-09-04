@@ -1,13 +1,13 @@
 id = "quagmire-iii"
 section = "ciphers"
 title = "Quagmire III"
-subtitle = "Periodic shifts within one mixed alphabet used on both sides"
+subtitle = "Repeat shifts within one mixed alphabet used for both plaintext and ciphertext"
 status = "POWER-LIMITED"
-status_note = "With an unknown alphabet the program's annealers recover 0/24 planted controls blind at 153 letters and 0/21 with cribs up to 25 letters; parallel tempering with 2,000 to 8,000 chains plateaus at 30-40% of the alphabet. With a structured (keyword or phrase) alphabet the bank search is verified at 100%."
+status_note = "With an unknown alphabet at 153 letters, annealing recovered 0/24 blind controls and 0/21 controls with cribs up to 25 letters. Parallel tempering with 2,000 to 8,000 chains stopped at 30–40% of the alphabet. When a keyword or phrase structures the alphabet, the bank search recovers controls at 100%."
 family = "Polyalphabetic substitution"
 tags = ["periodic", "keyed alphabet", "polyalphabetic", "quagmire", "power limit"]
 related = ["vigenere", "quagmire-i", "quagmire-ii", "quagmire-iv", "keyword-mixed-alphabet", "parallel-tempering", "simulated-annealing", "polish-basin-measurement", "power-measurement", "crib-driven-alphabet-recovery", "quagmire-lab", "g-mixed-alphabet"]
-summary = "Quagmire III uses the same mixed alphabet to index both plaintext and ciphertext and adds a periodic shift between them. The alphabet acts twice, so a single swap in a candidate alphabet corrupts about four of the 26 mapping entries in every coset at once. The program measured that this makes the quadgram landscape too rugged for annealing at 63 to 153 letters, with or without a crib, unless the alphabet is structured enough to enumerate."
+summary = "Quagmire III uses one mixed alphabet for both plaintext and ciphertext, with a repeating shift between them. The alphabet acts on both sides. One swap in a trial alphabet changes about four of the 26 mappings in every coset. At 63 to 153 letters, this makes the quadgram score too rough for annealing, even with a crib. Search works when a word or phrase narrows the alphabet to a list."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -47,7 +47,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Fix the period from coincidences and read the equal-shift classes from within-coset equalities.
 2. **Bank**: decrypt under every structured alphabet; the true one reads at once.
@@ -79,7 +79,7 @@ Blind calibration: 0 of 24 restarts across four schedules on planted 153-letter 
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Alphabet keyed by `ZEBRAS` ($A$ = `ZEBRASCDFGHIJKLMNOPQTUVWXY`) on both sides, shifts $(3, 7, 12)$. Plaintext `QUAGMIRE`:
 

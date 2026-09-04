@@ -1,13 +1,13 @@
 id = "throughput-fail"
 section = "validation"
 title = "Throughput fail"
-subtitle = "A control that cannot reach its planted truth within budget is a rate statement, not a negative"
+subtitle = "If a control cannot reach its known answer in time, report a speed limit, not a negative"
 status = "VERIFIED"
-status_note = "Recorded in the research program as a typed terminal (CONTROL_GATE FAIL by throughput, TARGET_REFUSED) with measured pairs per second, frontier size and truth depth; the affected live run was declared SCOPED_INCONCLUSIVE with its exact processed prefix, never a negative."
+status_note = "The run ends with CONTROL_GATE FAIL by throughput and TARGET_REFUSED. It records pairs per second, total search size, and the planted answer's depth. The related live run was marked SCOPED_INCONCLUSIVE with the exact processed prefix, never negative."
 family = "Compute and throughput"
 tags = ["throughput", "budget", "coverage", "exhaustive search"]
 related = ["drainability-and-throughput", "power-measurement", "control-first-policy", "state-checkpoints", "held-out-gates", "exhaustive-enumeration", "compiled-hot-cores"]
-summary = "An exhaustive search that is correct but too slow produces a special kind of failure: its control never reaches the planted truth, not because the pruning is wrong but because the truth's task is deep in the schedule. The program names this outcome, measures its cause in tasks per second and nodes per task, and forbids the live run from being read as a negative. The same measurement doubled as a diagnostic: the live text generated 500 times more search nodes per task than any random plant, which said something about the model, not the machine."
+summary = "An exact search can be correct but too slow to reach the planted answer. That is a throughput failure, not a failed cipher model. Measure tasks per second, nodes per task, total work, and the answer's place in the schedule. Do not treat a capped live run as negative. In one case, the live text created 500 times more search nodes per task than any random control. That difference described the model's fit, not computer speed."
 updated = "2026-09-04"
 
 [[blocks]]

@@ -42,7 +42,7 @@ pub fn VigenereLab() -> impl IntoView {
             <div class="lab-controls">
                 <TextField label="Plaintext" value=plain multiline=true/>
                 <div class="lab-row">
-                    <TextField label="Key" value=key mono=true hint="letters only"/>
+                    <TextField label="Key" value=key mono=true hint="Use letters only. The key repeats."/>
                     <div class="field">
                         <label class="field-label" for="variant">"Rule"</label>
                         <select id="variant" class="field-input" on:change=move |ev| variant.set(Variant::from_slug(&event_target_value(&ev)).unwrap_or(Variant::Vigenere))>
@@ -55,7 +55,7 @@ pub fn VigenereLab() -> impl IntoView {
             <Output label="Ciphertext" value=cipher_text/>
             <Output label="Decrypted with the same key" value=back/>
             <div class="lab-viz">
-                <div class="lab-viz-head mono">{move || format!("Coset histograms · period m = {} · IC per coset", m.get())}</div>
+                <div class="lab-viz-head mono">{move || format!("Letter counts for each coset · period m = {} · IC per coset", m.get())}</div>
                 <div class="coset-grid">
                     {move || {
                         let c = cipher_text.get();
@@ -73,9 +73,9 @@ pub fn VigenereLab() -> impl IntoView {
                 </div>
             </div>
             {move || recovered.get().map(|r| view! {
-                <Note>"Blind shift recovery by χ² against English on each coset returns the key "<code class="mono">{r}</code>" — the attack works whenever every coset holds enough language for its histogram to be a recognisable rotation."</Note>
+                <Note>"A blind χ² test compares each coset with English letter frequencies and returns the key "<code class="mono">{r}</code>". It works when every coset contains enough text for its shifted frequency pattern to be clear."</Note>
             })}
-            <Note>"Each coset is one Caesar shift of the plaintext letters at those positions; the tallest bar in each histogram is usually E shifted by that coset's key letter. Shorten the text or lengthen the key to watch the histograms flatten and the recovery fail."</Note>
+            <Note>"Each coset is a Caesar shift of the plaintext letters in those positions. Its tallest bar is often E shifted by the matching key letter. Shorten the text or lengthen the key to see the frequency patterns flatten and key recovery fail."</Note>
         </div>
     }
 }

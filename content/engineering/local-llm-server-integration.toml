@@ -1,13 +1,13 @@
 id = "local-llm-server-integration"
 section = "engineering"
 title = "Local LLM server integration"
-subtitle = "Using a locally served language model as a frozen scorer or a constrained proposal generator, and the capability audit that decides which"
+subtitle = "Use a local language model only for scoring or suggestions its API can support"
 status = "INCONCLUSIVE"
-status_note = "A read-only capability audit found that the deployed local server exposes log-probabilities only for generated tokens, so exact sequence likelihoods for a frozen reranker were unavailable and that lane was closed; a grammar-constrained proposal lane ran (3,500 calls, 1,128 s) and produced no complete proposal, which is a heuristic miss with no exclusion meaning."
+status_note = "A read-only audit found that the local server gives log-probabilities only for generated tokens. It cannot provide exact scores for supplied full sequences, so the fixed reranking plan was closed. A grammar-guided suggestion run made 3,500 calls over 1,128 s and produced no complete answer. That heuristic miss rules out nothing."
 family = "Tooling"
 tags = ["language model", "local server", "reranking", "constrained decoding"]
 related = ["local-language-model-prior", "semi-markov-word-model", "english-gate-calibration", "tautological-gate-rule", "reproducibility-receipts", "control-first-policy", "quadgram-log-likelihood"]
-summary = "A neural language model can enter a cryptanalytic pipeline in two ways: as a frozen scorer that assigns an exact log-likelihood to a fully specified candidate, or as a proposal generator whose outputs are then verified by exact algebra. The first requires an API that returns per-token log-probabilities for supplied text; the second requires only sampling under a grammar. The program audited a running local server before using it, found that it could do the second and not the first, and treated every proposal miss as uninformative."
+summary = "A language model can either score complete candidates or suggest candidates for exact checks. Reliable scoring needs an API that returns each supplied token's log-probability. Suggestions need only controlled sampling under a grammar. An audit of the local server showed that it supports suggestions but not exact full-text scoring. Exact algebra checks every suggestion, and a failure to suggest the truth does not rule anything out."
 updated = "2026-09-04"
 
 [[blocks]]

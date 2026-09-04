@@ -1,13 +1,13 @@
 id = "lcm-of-periods"
 section = "algebra"
 title = "Least common multiples of periods"
-subtitle = "Composition, decimation and coprime residue bijections of periodic keys"
+subtitle = "How repeating keys combine and change when positions are sampled"
 status = "VERIFIED"
-status_note = "Period composition by lcm, decimation by gcd and coprime residue bijections are exact and are used by the compound-key tests (controls z +51 and +27, target texts nothing for inner periods 2 to 13), by the residual-periodicity screen after exact alignment, and by the residue-graph solvers."
+status_note = "The lcm, gcd, and coprime-residue rules are exact. Compound-key controls reached z +51 and +27, while target tests found nothing for inner periods 2 to 13. The same rules support the remaining-period screen after alignment and the residue-graph solvers."
 family = "Number theory"
 tags = ["period", "lcm", "gcd", "decimation", "compound key", "coprime"]
 related = ["residue-class-graphs", "linear-recurrences-lcg", "matrix-invertibility-mod-26", "modular-inverse-and-crt", "compound-periodic-key", "vigenere", "exact-period-alignment", "kasiski-examination", "coincidence-lag-profile", "g-residue-class", "g-coset"]
-summary = "Two periodic keys added together repeat with the least common multiple of their periods, and a periodic stream read every n-th position repeats with the period divided by a gcd. When the periods are coprime the positions of one full cycle correspond one-to-one with pairs of residues, which is why a 63-position alignment of a period-7 and a period-9 key visits every combination exactly once. These facts size compound-key searches and shape the graphs used by exact solvers."
+summary = "Add two repeating keys and the result repeats after the least common multiple of their periods. Read every n-th value from a periodic stream and its new period is the old period divided by a gcd. If two periods are coprime, one full cycle visits every pair of remainders exactly once. A period-7 key and a period-9 key therefore cover all pairs in 63 positions. These rules set search sizes and define graphs for exact solvers."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -64,7 +64,7 @@ Compound solver controls: a period-70 key (outer 7 over inner 10, one alphabet) 
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 $k = (1, 2, 3, 4)$ of period 4 and $k' = (0, 5, 7, 2, 9, 4)$ of period 6, $\operatorname{lcm}(4, 6) = 12$. Their sum over $i = 0..11$: $1, 7, 10, 6, 10, 6, 3, 9, 8, 4, 12, 8$, and $i = 12$ gives $1 + 0 = 1$ again. No smaller period works: positions 0 and 4 differ ($1 \ne 10$), so not 4; positions 0 and 6 differ ($1 \ne 3$), so not 6.
 

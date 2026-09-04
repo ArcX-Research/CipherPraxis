@@ -1,13 +1,13 @@
 id = "k-best-lists"
 section = "search"
 title = "K-best lists and rank schedules"
-subtitle = "Keeping the K highest-scoring candidates of a cheap stage and finishing all of them exactly, with K calibrated by the truth's rank on planted controls"
+subtitle = "Keep the top K cheap candidates and finish each one with the exact method"
 status = "VERIFIED"
-status_note = "Used as the interface between cheap ranking and exact finishing in the periodic DP (eight best shifts per residue), the rank-sharded selector (cumulative ranks 1-512, five positives recovered at truth ranks 40, 47, 91, 155 and 443, a sentinel at rank 790 missed as predicted) and several exact k-best factorisations checked against brute force."
+status_note = "The periodic dynamic program passes its eight best shifts per residue to an exact finish. A rank-sharded selector recovered five positives whose true ranks were 40, 47, 91, 155, and 443 within ranks 1–512. It missed a sentinel at rank 790 as predicted. Several exact k-best splits also match brute force."
 family = "Enumeration strategies"
 tags = ["shortlist", "rank", "top-k", "two-stage", "calibration"]
 related = ["rank-sharding", "beam-search", "viterbi-decoding", "periodic-substitution-dp", "exact-dynamic-programming", "all-different-enumeration", "exhaustive-enumeration", "selection-overfit-diagnostic", "planted-controls", "power-measurement", "g-shard"]
-summary = "A k-best list replaces the argmax of a cheap score by its K highest candidates, each of which is then finished by the exact or expensive stage. The method is only as good as the rank the true key achieves under the cheap score, which is why every k-best stage in the corpus is calibrated by planting instances and recording that rank. Cumulative, non-adaptive rank schedules turn the same idea into a resumable enumeration with no early stopping."
+summary = "A k-best list keeps the K highest candidates from a cheap first score instead of only its winner. An exact or expensive stage then finishes each one. The method works only if the true key ranks inside K, so planted controls measure that rank. Fixed cumulative rank ranges turn the list into a search that can pause and resume without changing its stopping rule."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -48,7 +48,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 - **Periodic DP.** For each residue keep the eight best shifts by monogram likelihood; the exact cyclic quadgram DP runs inside the $8^p$ product and an unrestricted coordinate pass lets an omitted shift re-enter. Three blind controls (63 and 95 letters at period 7, 126 at period 26) recover 100% of their plaintext.
 - **Rank-sharded selector.** Stage one exhausts an exact family; stage two finishes monogram-ranked method classes in cumulative shards 1-32, 33-64, 65-128, 129-256, 257-512, every rank finished once, no early stop. Validation: five unseen positives at truth ranks 40, 47, 91, 155 and 443 recovered exactly (rates $-4.37$, $-4.30$, $-3.92$, $-4.19$, $-3.91$); the sentinel at rank 790 missed as declared. A sealed successor extends the schedule to rank 2,048 in seven shards with the rank-790 construction promoted to a required positive.
@@ -80,7 +80,7 @@ Rank-sharded validation: positives 5/5 at ranks 40/47/91/155/443, sentinel 1/1 a
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Two residues with three candidate shifts each and additive scores: residue 0 $\{a: -1,\ b: -2,\ c: -5\}$, residue 1 $\{x: -1.5,\ y: -1.7,\ z: -4\}$. Sums in order: $ax = -2.5$, $ay = -2.7$, $bx = -3.5$, $by = -3.7$, $az = -5.0$, $cx = -6.5$, $\dots$ With $K = 3$ the finisher sees $ax, ay, bx$; if the planted key is $by$ (rank 4) it is missed, with $K = 4$ it is recovered. Best-first merging produces this order without forming all nine sums: after $ax$, only its two successors $ay$ and $bx$ are candidates, and so on.
 '''

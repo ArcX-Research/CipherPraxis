@@ -1,13 +1,13 @@
 id = "group-actions-on-alphabets"
 section = "algebra"
 title = "Group actions on alphabets and keys"
-subtitle = "Orbits, stabilisers and canonical representatives for the parameters of keyed ciphers"
+subtitle = "Group equivalent cipher settings and keep one standard representative"
 status = "VERIFIED"
-status_note = "Orbit counting under the affine and unit groups is implemented exactly: 15,600 ordered shift triples collapse to 1,300 and 100 canonical cells, verified by enumeration; every enumerated cycle solution set was partitioned into complete 312-member affine orbits (checked in all 1,728 unit cells of the dihedral controls and in 300 matched-null selections)."
+status_note = "Exact enumeration reduces 15,600 ordered shift triples to 1,300 affine classes and then 100 unit classes. Every cycle solution set split into complete 312-member affine orbits. Checks covered all 1,728 unit cells in the dihedral controls and 300 matched-null selections."
 family = "Group theory"
 tags = ["group action", "orbit", "stabiliser", "canonical form", "symmetry"]
 related = ["conjugacy-and-gauge", "units-mod-26", "affine-maps-mod-26", "dihedral-group", "permutation-cycles", "keyword-mixed-alphabet", "quagmire-iii", "corpus-bank-screen", "g-affine-orbit", "g-gauge-freedom", "g-unit-group"]
-summary = "Several groups act on the parameter space of a keyed cipher: the symmetric group relabels letters, the affine group changes the coordinates of a cycle, the unit group rescales shifts, and dihedral groups re-read positions. When an action leaves the ciphertext invariant, the parameters are only defined up to an orbit, and solvers must enumerate orbit representatives, score gauge-invariantly, and compare recovered parameters modulo the orbit. Orbit counting also sizes the search."
+summary = "Several groups can change a keyed cipher's settings. One relabels letters, another changes cycle coordinates, another rescales shifts, and a dihedral group rereads positions. If such a change leaves the ciphertext unchanged, all settings in that orbit are equivalent. A solver should search one representative from each orbit, use a score that does not depend on the gauge, and compare answers by orbit. Counting orbits also shows how large the search is."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -66,7 +66,7 @@ Canonical cell enumeration proved by exhaustive KAT (15,600 triples to 1,300 and
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 $U(\mathbb{Z}_{26})$ acting on $\mathbb{Z}_{26}$ by multiplication has four orbits: $\{0\}$, $\{13\}$ (since $u \cdot 13 = 13$ for every odd $u$), the 12 units, and the 12 non-zero even residues ($2 \cdot \{1, 3, \dots, 25\} = \{2, 6, 10, 14, 18, 22, 4, 8, 12, 16, 20, 24\}$). Stabilisers have orders 12, 12, 1, 1, and $1 + 1 + 12 + 12 = 26$.
 

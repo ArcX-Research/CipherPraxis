@@ -1,13 +1,13 @@
 id = "dictionary-attack"
 section = "search"
 title = "Dictionary and structured-bank attacks"
-subtitle = "Exhaustive scoring of every key drawn from a stated finite bank: words, phrases, keyword-mixed alphabets in several styles, word pairs, transposition keys, object vocabularies"
+subtitle = "Check every key in a stated list of words, phrases, alphabets, routes, or other objects"
 status = "VERIFIED"
-status_note = "Bank sweeps are implemented for keyed alphabets (202,504 phrase-keyed alphabets; 2.06 million structured alphabets; 425,000 two-keyword alphabets), transposition keys (dictionary words of 10-20 letters, word pairs, 190,000 Myszkowski words), matrix keys (32,000 nine-letter Hill keywords) and finite object vocabularies; each sweep prints a planted control found at rank 1 before its target rows. Every recorded target sweep was negative at the bank's noise floor."
+status_note = "Bank searches cover 202,504 phrase-keyed alphabets, 2.06 million structured alphabets, 425,000 two-word alphabets, 10- to 20-letter transposition words, word pairs, 190,000 Myszkowski words, 32,000 nine-letter Hill keys, and other fixed lists. Before target rows, each search prints a planted control at rank 1. Every recorded target search stayed at its bank's noise floor."
 family = "Enumeration strategies"
 tags = ["dictionary", "keyword alphabet", "phrase key", "word bank", "finite bank", "scoped closure"]
 related = ["exhaustive-enumeration", "corpus-bank-screen", "k-best-lists", "keyword-mixed-alphabet", "phrase-keyed-alphabet-attack", "columnar-transposition", "myszkowski", "hill-cipher", "quagmire-iii", "multiple-rounds-analysis", "family-wise-null", "quadgram-log-likelihood", "planted-controls"]
-summary = "A dictionary attack replaces search by enumeration over a stated bank of keys a person would plausibly choose: dictionary words as transposition keys, keyword-mixed alphabets built from words or long phrases in several conventional styles, pairs and triples of words, or whole vocabularies of structured objects. Every bank element is decrypted and scored exactly, so a key inside the bank is found at rank 1 with certainty; the result is a scoped closure of the bank, and its main hazard is reading a multiple-comparison maximum as signal."
+summary = "A dictionary attack checks a fixed list of keys that a person might choose. The list may contain transposition words, mixed alphabets built from words or phrases, word pairs, or other structured objects. Every item is decrypted and scored. If the true key is in the bank and the score works, it should rank first. A miss rules out only that bank. The main risk is mistaking the lucky winner of a large list for real signal."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -44,7 +44,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 - **Phrase-keyed alphabets.** Every 4-60-letter substring of a set of source texts, six keying styles: 202,504 distinct alphabets under a period-7 keyed substitution of types I, II and III; control 100%; targets $-6.54$ and $-6.35$, the noise level.
 - **Structured alphabet library.** 2.06 million alphabets (words, phrases, styles, both bases) with per-coset shifts by monogram maximum likelihood, quadgram ranking and refinement of the top 40; control rank 1 / 100%; best target $-5.77$ against a shuffled maximum of $-5.9$.
@@ -77,7 +77,7 @@ Phrase alphabets: control 100%. Structured library: control rank 1 / 100%. Four-
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Ciphertext `LXFOPVEFRNHR` (the Vigenère exemplar: plaintext `ATTACKATDAWN`, key `LEMON`). Bank $\{$`APPLE`, `LEMON`, `MANGO`, `PEACH`$\}$ as Vigenère keys. Decrypting with `APPLE` position by position ($c - k \bmod 26$): L$-$A = L, X$-$P = I, F$-$P = Q, O$-$L = D, P$-$E = L, V$-$A = V, E$-$P = P, F$-$P = Q, R$-$L = G, N$-$E = J, H$-$A = H, R$-$P = C, giving `LIQDLVPQGJHC`, which scores like random text. `LEMON` returns `ATTACKATDAWN`, the only readable decrypt; a quadgram scorer ranks it first by several units per letter, and the control principle is exactly this: a bank key must come out on top when it is present.
 '''

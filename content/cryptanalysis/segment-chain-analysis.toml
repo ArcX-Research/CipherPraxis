@@ -1,23 +1,23 @@
 id = "segment-chain-analysis"
 section = "cryptanalysis"
 title = "Segment chain analysis"
-subtitle = "A key that changes regime along one text, chained into a second text as its running key: geometry, selector and controls"
+subtitle = "Test a key that changes within one text, whose plaintext then keys a second text"
 status = "VERIFIED"
-status_note = "The segment-aware chained selector (constant key before the measured breakpoint, period-7 key after it, the plaintext of one text cycled as the running key of the other) is implemented as a controls-only instrument: 16/16 hidden positives recovered exactly, 4/4 negatives rejected, 99 winner-independent nulls per fixture, independent audit; its search is exact only inside a width-8 shortlist, so a miss can never reject the family, and no target transaction has been run (logs/373, target design)."
+status_note = "This controls-only test uses a constant key before the measured break, a period-7 key after it, and the first plaintext repeated as the second text's running key. It recovered 16/16 hidden positives, rejected 4/4 negatives, used 99 winner-independent nulls per case, and passed an independent audit. The search is exact only within a width-8 shortlist, so a miss cannot reject the family. No target run has occurred (logs/373, target design)."
 family = "Relations between ciphertexts"
 tags = ["segmented key", "breakpoint", "chain", "running key", "controls-only", "incomplete search"]
 related = ["key-cancellation", "change-point-zone-detection", "running-key-relation-test", "periodic-substitution-dp", "exact-dynamic-programming", "held-out-gates", "seal-and-audit-protocol", "valid-model-nulls", "target-absent-controls", "reproducibility-receipts", "g-change-point", "g-key-cancellation", "g-zone", "g-successor-review"]
-summary = "Segment chain analysis combines two findings, a key boundary measured inside one text and a running-key link from that text into another, into one exactly specified family: before the boundary the first text's key is a constant, after it a period-7 key, and the first text's plaintext, cycled, keys the second. Cancelling the shared plaintext leaves the second text under a segmented key whose groups are known in advance. The corpus specified the geometry down to the group counts, built and audited a selector that passes hidden controls, and froze the rule that a miss of an incomplete selector is never a family rejection."
+summary = "This model joins two clues: a key boundary inside one text and a running-key link to another. Before the boundary, the first text uses a constant key. After it, the key has period 7. The first plaintext then repeats as the second text's running key. Cancelling that shared plaintext leaves the second text under known key groups. The selector passed hidden controls and an audit, but it searches only a shortlist. A miss cannot rule out the full family."
 updated = "2026-09-04"
 
 [[blocks]]
 kind = "definition"
 body = '''
-Text B (144 letters) is enciphered by $a(x_j) = e_9\,a(P_j) + \kappa(j)$ with
+Text B (144 letters) is enciphered by $a(x_j) = e_B\,a(P_j) + \kappa(j)$ with
 
 $$\kappa(j) = c \text{ for } j < t, \qquad \kappa(j) = h_{j \bmod 7} \text{ for } j \ge t,$$
 
-the period phase **not** restarted at the boundary. Text A (153 letters) uses $P$ cycled as running key: $a(y_i) = e_8\,a(Q_i) + a(P_{i \bmod 144})$. With the measured boundary $t = 53$ and forward cycling at offset zero, the cancelled stream $d_i = a(y_i) - e_9 a(x_{i \bmod 144})$ falls into exactly three physical segments:
+the period phase **not** restarted at the boundary. Text A (153 letters) uses $P$ cycled as running key: $a(y_i) = e_A\,a(Q_i) + a(P_{i \bmod 144})$. With the measured boundary $t = 53$ and forward cycling at offset zero, the cancelled stream $d_i = a(y_i) - e_B a(x_{i \bmod 144})$ falls into exactly three physical segments:
 
 ```
 [0, 53)      constant key  c            53 letters
@@ -45,7 +45,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Measure the boundary in text B and freeze it; compute the complete group vector and report the group counts before scoring.
 2. Freeze the selector, the integer language tables and the gates on disclosed development fixtures drawn from a corpus range disjoint from training, calibration and hidden ranges; seal source, parser, runner and model hashes; obtain an independent exact-byte audit.
@@ -78,7 +78,7 @@ Admitted controls-only run (logs/373): terminal "CONTROL_PASS_POWERED_INCOMPLETE
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 A toy with text B of 10 letters, boundary $t = 6$, period 2 after the boundary, and text A of 12 letters keyed by B's plaintext cycled forward from offset 0. The group vector of the cancelled stream is
 

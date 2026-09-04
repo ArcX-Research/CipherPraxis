@@ -1,13 +1,13 @@
 id = "mahalanobis-family-distance"
 section = "statistics"
 title = "Mahalanobis family distance"
-subtitle = "Likelihood-free identification of a cipher construction from a vector of key-invariant statistics"
+subtitle = "Identify a cipher by comparing several patterns that do not depend on its key"
 status = "POWER-LIMITED"
-status_note = "Implemented and calibrated by simulation (29 constructions, 120 simulations each on real English with random keys, 19 invariant features); at 153 letters it separates coarse classes (plain English 100%, transposed English 78-92% self-classification) but cannot split the cluster of fractionated, mixed-alphabet and sandwich constructions (self-classification 8-40%), so a negative inside that cluster is uninformative at this length."
+status_note = "Calibration used 29 cipher types, 120 real-English simulations per type with random keys, and 19 key-independent features. At 153 letters, the method identifies plain English at 100% and transposed English at 78–92%. It identifies similar fractionated, mixed-alphabet, and layered types at only 8–40%, so a negative within that group tells us little."
 family = "Bayesian evidence and model selection"
 tags = ["Mahalanobis", "family identification", "approximate Bayesian computation", "simulation", "features"]
 related = ["family-identification", "index-of-coincidence", "coincidence-lag-profile", "bayesian-evidence-model-selection", "power-analysis", "planted-controls", "bifid", "quagmire-iii", "sandwich-construction"]
-summary = "When no likelihood can be written for a whole construction, one can still simulate it: encipher many real English windows with random keys under each candidate construction, compute a fixed vector of statistics that do not depend on the key or on any transposition, and treat each construction as a Gaussian cloud in feature space. A target text is then scored by its Mahalanobis distance to every cloud. The instrument is honest about its own resolution because the same simulations give its self-classification accuracy."
+summary = "When a full cipher has no usable likelihood formula, simulate it. Encrypt many real English samples with random keys for each possible cipher. Measure the same fixed set of key- and transposition-independent features each time. These samples form a cloud for each family. Mahalanobis distance measures how far the target is from each cloud. The same simulations show how often the method classifies its own family correctly, so its limits are visible."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -39,7 +39,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. Simulate every candidate construction $N$ times on real English with random keys (plain and transposed English, periodic substitution, sandwiches at several widths and inner periods, double columnar, bifid with several periods, running key, autokey, compound keys, binary-perturbed keys, random-alphabet keyed substitution, seven independent alphabets, two alphabet orders in sequence, four rounds, segment-varied keys, 20% nulls, progressive key, Hill-then-periodic, and, for even lengths, Playfair-then-periodic).
 2. Compute the feature vector for the target and for each simulation; rank families by $d^2$; print the per-feature residuals above $|2|$.

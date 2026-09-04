@@ -1,13 +1,13 @@
 id = "running-key"
 section = "ciphers"
 title = "Running-key cipher"
-subtitle = "Vigenère with a long natural-language text as the key"
+subtitle = "Use a long piece of ordinary text as a Vigenère key"
 status = "POWER-LIMITED"
-status_note = "With the key text in a known bank the exact window test is verified (a planted window yields a consistent alphabet, wrong windows die in a few nodes) and the recipe-free cascade recovered a running-key link between two solved texts; with an unknown English key the joint beam decoder failed identifiability on all matched controls (41%, 50% and 26% at 63, 95 and 126 letters)."
+status_note = "When the key text came from a known bank, an exact window test found the planted passage and rejected wrong windows within a few nodes. The general cascade also found a running-key link between two earlier solved texts. With an unknown English key, a joint beam decoder recovered only 41%, 50%, and 26% on controls at 63, 95, and 126 letters. That case is not identifiable with this method."
 family = "Stream and machine ciphers"
 tags = ["running key", "aperiodic", "book key", "two-language-stream"]
 related = ["vigenere", "book-cipher", "autokey", "one-time-pad", "running-key-relation-test", "key-cancellation", "beam-search", "viterbi-decoding", "constraint-satisfaction-forward-checking", "word-prefix-csp"]
-summary = "A running-key cipher adds a long meaningful text to the plaintext letter by letter, so there is no period to exploit. Both the plaintext and the key are language, which is a weakness when the key text is available and a hard identifiability problem when it is not: a decoder that separates one ciphertext into two fluent streams can produce many convincing wrong pairs. The program verified the known-bank case and measured the unknown-key case as a power failure."
+summary = "A running-key cipher adds a long meaningful text to the plaintext one letter at a time. The key does not repeat, so there is no period to find. If the key passage is in a known bank, a solver can search for it. If it is unknown, both key and plaintext are language, and many wrong pairs can sound convincing. Tests solved the known-bank case but showed that the unknown-key decoder lacks power."
 updated = "2026-09-04"
 
 [[blocks]]
@@ -46,7 +46,7 @@ body = '''
 
 [[blocks]]
 kind = "attack"
-title = "Attack strategy"
+title = "How to attack it"
 body = '''
 1. **Bank sweep.** Slide every candidate key text past the ciphertext at every offset in every order and relation; score offsets by monogram likelihood (vectorised), re-score the top ones by index of coincidence and quadgrams, and compare with the same sweep on shuffled ciphertext.
 2. **Exact window test.** With a candidate text, solve the alphabet-position CSP for every window; keep windows that admit a consistent alphabet.
@@ -75,7 +75,7 @@ Known-text CSP (logs/60_knowntext.log, logs/63_knowntext2.log): the planted 63-l
 
 [[blocks]]
 kind = "example"
-title = "Reproducible example"
+title = "Worked example"
 body = '''
 Plaintext `SENDHELP`, key text beginning `THEQUICKBROWN`, Vigenère relation:
 
