@@ -92,15 +92,19 @@ img, svg { max-width: 100%; }
 .display em.serif { font-family: var(--font-serif); font-style: normal; font-weight: 400; letter-spacing: -0.02em; background: var(--spectral); -webkit-background-clip: text; background-clip: text; color: transparent; padding-right: 0.04em; }
 .serif { font-family: var(--font-serif); }
 .lede { font-size: clamp(17px, 1.5vw, 20px); line-height: 1.55; color: var(--ink-2); max-width: 64ch; margin: 0 0 20px; }
+.lede p, .entry-status-note p, .glossary-item dd div p { margin: 0 0 8px; }
+.lede p:last-child, .entry-status-note p:last-child, .glossary-item dd div p:last-child { margin-bottom: 0; }
+.lede code, .entry-status-note code, .glossary-item dd code { font-size: 0.88em; background: var(--paper-3); padding: 1px 5px; border-radius: 5px; }
 .lede-sm { font-size: 16px; color: var(--ink-2); max-width: 64ch; margin: 0; }
 .kbd { font-family: var(--font-mono); font-size: 11px; padding: 2px 6px; border: 1px solid var(--hair); border-bottom-width: 2px; border-radius: 6px; background: var(--paper-2); color: var(--ink-2); }
 .glass { background: var(--glass); backdrop-filter: saturate(160%) blur(14px); -webkit-backdrop-filter: saturate(160%) blur(14px); border: 1px solid var(--glass-border); }
 .btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border-radius: 999px; border: 1px solid var(--hair); background: var(--paper); font-weight: 500; letter-spacing: -0.01em; cursor: pointer; transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease), border-color 0.2s; }
 .btn:hover { text-decoration: none; transform: translateY(-1px); box-shadow: var(--shadow-1); border-color: var(--indigo); }
-.btn-primary { background: var(--ink); color: #fff; border-color: var(--ink); position: relative; overflow: hidden; }
-.btn-primary::after { content: ""; position: absolute; inset: 0; background: var(--spectral); opacity: 0; transition: opacity 0.25s; }
+.btn-primary { background: var(--ink); color: #fff; border-color: var(--ink); position: relative; overflow: hidden; isolation: isolate; }
+/* The hover gradient sits behind the label (negative z-index inside the button's own stacking context). */
+.btn-primary::after { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--spectral); opacity: 0; transition: opacity 0.25s; }
 .btn-primary:hover::after { opacity: 1; }
-.btn-primary > * { position: relative; z-index: 1; }
+.btn-primary:hover, .btn-primary:focus-visible { color: #fff; }
 .btn-ghost { background: transparent; }
 
 /* Header */
@@ -259,7 +263,9 @@ img, svg { max-width: 100%; }
 .filter-search input { border: 0; outline: 0; background: transparent; width: 100%; font: inherit; font-size: 14px; }
 .filter-icon { display: inline-flex; color: var(--ink-3); }
 .filter-select { display: inline-flex; align-items: center; gap: 8px; }
-.filter-select select, select.field-input { border: 1px solid var(--hair); border-radius: 999px; padding: 6px 12px; background: var(--paper); font: inherit; font-size: 14px; color: var(--ink); }
+.filter-select select, select.field-input { appearance: none; -webkit-appearance: none; border: 1px solid var(--hair); border-radius: 999px; padding: 6px 38px 6px 14px; font: inherit; font-size: 14px; color: var(--ink); cursor: pointer; background-color: var(--paper); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%23000020' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 15px center; background-size: 12px 12px; }
+select.field-input { padding-top: 9px; padding-bottom: 9px; border-radius: var(--r-s); }
+.filter-select select:focus-visible, select.field-input:focus-visible { outline: 0; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(4, 84, 255, 0.15); }
 .filter-toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-2); cursor: pointer; }
 .filter-toggle input { accent-color: var(--blue); width: 16px; height: 16px; }
 .chips { gap: 6px; }
@@ -408,6 +414,14 @@ math { font-size: 1.06em; }
 .math-display { overflow-x: auto; padding: 10px 14px; margin: 0 0 16px; border-radius: var(--r-s); background: linear-gradient(180deg, rgba(225, 224, 255, 0.25), rgba(243, 236, 248, 0.25)); border: 1px solid var(--hair-2); }
 .math-display math { font-size: 1.15em; }
 .math-error { color: #b22222; }
+
+/* Directory-tree listings (```tree fences): aligned path column, wrapping descriptions */
+.tree { display: grid; grid-template-columns: max-content minmax(0, 1fr); column-gap: 24px; row-gap: 5px; padding: 14px 16px; margin: 0 0 16px; border: 1px solid var(--hair); border-radius: var(--r-m); background: var(--paper-2); font-size: 13.5px; line-height: 1.5; }
+.tree-row { display: contents; }
+.tree-path, .prose .tree-path { font-family: var(--font-mono); font-size: 12.5px; color: var(--ink); background: none; border-radius: 0; padding: 0 0 0 calc(var(--depth, 0) * 1.8ch); white-space: nowrap; }
+.tree-head .tree-path, .prose .tree-head .tree-path { grid-column: 1 / -1; color: var(--blue-ink); font-weight: 500; }
+.tree-desc { color: var(--ink-2); min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 560px) { .tree { grid-template-columns: minmax(0, 1fr); row-gap: 2px; } .tree-desc { padding-left: calc(var(--depth, 0) * 1.6ch + 1.5ch); margin-bottom: 6px; } }
 
 /* Pseudocode: numbered lines that keep their indentation when they wrap */
 .pc { --pc-gutter: 3.8ch; border: 1px solid rgba(4, 84, 255, 0.18); border-radius: 12px; background: linear-gradient(180deg, rgba(225, 224, 255, 0.22), rgba(246, 245, 244, 0.92)); padding: 14px 16px 14px 0; margin: 0 0 16px; }

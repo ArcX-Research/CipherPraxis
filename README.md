@@ -69,3 +69,32 @@ The site is static, so the form's delivery channel is configured in `crates/web/
   mail link as a fallback.
 - With neither set the form copies a plain-text request to the clipboard and shows it, so nothing is
   silently dropped while the channel is unconfigured.
+
+## Deploying
+
+The build output is static (`dist/`), so any static host works. The app uses client-side routing,
+so the host must serve `index.html` for unknown paths (a "SPA rewrite"); `dist/404.html` is a copy
+of the shell for hosts that use that convention instead.
+
+### AWS Amplify Hosting
+
+The repository root carries `amplify.yml` (build spec) and `customHttp.yml` (cache headers), which
+the console picks up automatically. In the console wizard:
+
+| Setting | Value |
+| --- | --- |
+| App name | `cipher-praxis` |
+| Frontend build command | leave the auto-detected value, or `./scripts/build.sh release`; `amplify.yml` overrides it |
+| Build output directory | `dist` |
+| Build image | default (Amazon Linux 2023); Rust is installed by the `preBuild` phase |
+| Environment variables | none required |
+
+After the app exists, add one rewrite under *App settings → Rewrites and redirects* so deep links
+reach the WebAssembly router:
+
+| Source address | Target address | Type |
+| --- | --- | --- |
+| `</^[^.]+$\|\.(?!(css\|gif\|ico\|jpg\|js\|png\|txt\|svg\|woff\|woff2\|ttf\|map\|json\|wasm)$)([^.]+$)/>` | `/index.html` | `200 (Rewrite)` |
+
+The first build installs the Rust toolchain and compiles the workspace in release mode (several
+minutes); the cache paths in `amplify.yml` make later builds much faster.

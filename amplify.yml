@@ -1,0 +1,29 @@
+# AWS Amplify Hosting build spec for Cipher Praxis (Rust + Leptos compiled to WebAssembly).
+# The default Amplify image ships without Rust, so preBuild installs a pinned toolchain and the
+# wasm-bindgen CLI at the exact version locked in Cargo.lock; build runs the repository's own script.
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - export PATH="$HOME/.cargo/bin:$PATH"
+        - command -v rustup >/dev/null 2>&1 || curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable
+        - rustup target add wasm32-unknown-unknown
+        - WB_VERSION="$(sed -n '/^name = "wasm-bindgen"$/{n;s/^version = "\(.*\)"/\1/p;}' Cargo.lock | head -1)"
+        - if ! wasm-bindgen --version 2>/dev/null | grep -q "$WB_VERSION"; then curl -sSL "https://github.com/rustwasm/wasm-bindgen/releases/download/${WB_VERSION}/wasm-bindgen-${WB_VERSION}-x86_64-unknown-linux-musl.tar.gz" | tar xz -C /tmp && install -m 755 "/tmp/wasm-bindgen-${WB_VERSION}-x86_64-unknown-linux-musl/wasm-bindgen" "$HOME/.cargo/bin/wasm-bindgen"; fi
+        - rustc --version && cargo --version && wasm-bindgen --version
+    build:
+      commands:
+        - export PATH="$HOME/.cargo/bin:$PATH"
+        - ./scripts/build.sh release
+  artifacts:
+    baseDirectory: dist
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - $HOME/.cargo/registry/**/*
+      - $HOME/.cargo/git/**/*
+      - $HOME/.cargo/bin/**/*
+      - $HOME/.rustup/**/*
+      - target/**/*

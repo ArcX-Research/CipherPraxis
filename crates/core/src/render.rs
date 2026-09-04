@@ -44,34 +44,118 @@ pub fn latex_to_mathml(src: &str, display: bool) -> String {
     }
 }
 
-/// Renders Markdown (with math, tables, footnotes) to HTML.
+/// Renders a two-column listing (a directory tree: path, then two or more spaces, then a
+/// description) as a grid whose description column wraps. Continuation lines that start at
+/// the description column are appended to the previous description.
+pub fn tree_to_html(src: &str) -> String {
+    struct Row {
+        depth: usize,
+        path: String,
+        desc: String,
+    }
+    let mut rows: Vec<Row> = Vec::new();
+    let mut desc_col: Option<usize> = None;
+    for raw in src.lines() {
+        let line = raw.trim_end();
+        if line.trim().is_empty() {
+            continue;
+        }
+        let indent = line.len() - line.trim_start().len();
+        let content = line.trim_start();
+        // A continuation line begins at (or beyond) the description column of the block.
+        if let (Some(col), Some(last)) = (desc_col, rows.last_mut()) {
+            if indent >= col && !last.desc.is_empty() {
+                last.desc.push(' ');
+                last.desc.push_str(content.trim());
+                continue;
+            }
+        }
+        let (path, desc) = match content.find("  ") {
+            Some(i) => (content[..i].to_string(), content[i..].trim().to_string()),
+            None => (content.to_string(), String::new()),
+        };
+        if !desc.is_empty() {
+            let col = indent + content.len() - content[path.len()..].trim_start().len();
+            desc_col = Some(desc_col.map_or(col, |c| c.min(col)));
+        }
+        rows.push(Row {
+            depth: indent / 2,
+            path,
+            desc,
+        });
+    }
+    let mut out = String::from("<div class=\"tree\" role=\"table\">");
+    for r in rows {
+        if r.desc.is_empty() {
+            out.push_str(&format!(
+                "<div class=\"tree-row tree-head\" role=\"row\" style=\"--depth:{}\"><code class=\"tree-path\" role=\"cell\">{}</code></div>",
+                r.depth,
+                escape_html(&r.path)
+            ));
+        } else {
+            out.push_str(&format!(
+                "<div class=\"tree-row\" role=\"row\" style=\"--depth:{}\"><code class=\"tree-path\" role=\"cell\">{}</code><span class=\"tree-desc\" role=\"cell\">{}</span></div>",
+                r.depth,
+                escape_html(&r.path),
+                escape_html(&r.desc)
+            ));
+        }
+    }
+    out.push_str("</div>");
+    out
+}
+
+/// Renders Markdown (with math, tables, footnotes) to HTML. Fenced blocks tagged `tree` become
+/// wrapping path/description grids (see [`tree_to_html`]).
 pub fn markdown_to_html(md: &str) -> String {
+    use pulldown_cmark::CodeBlockKind;
     let mut opts = Options::empty();
     opts.insert(Options::ENABLE_TABLES);
     opts.insert(Options::ENABLE_MATH);
     opts.insert(Options::ENABLE_STRIKETHROUGH);
     opts.insert(Options::ENABLE_FOOTNOTES);
     opts.insert(Options::ENABLE_SMART_PUNCTUATION);
-    let events = Parser::new_ext(md, opts).flat_map(|ev| -> Vec<Event<'_>> {
+    let mut events: Vec<Event<'_>> = Vec::new();
+    let mut tree_buf: Option<String> = None;
+    for ev in Parser::new_ext(md, opts) {
+        if let Some(buf) = tree_buf.as_mut() {
+            match ev {
+                Event::Text(t) => buf.push_str(&t),
+                Event::End(TagEnd::CodeBlock) => {
+                    let html = tree_to_html(buf);
+                    tree_buf = None;
+                    events.push(Event::Html(CowStr::from(html)));
+                }
+                _ => {}
+            }
+            continue;
+        }
         match ev {
-            Event::InlineMath(s) => vec![Event::Html(CowStr::from(latex_to_mathml(&s, false)))],
-            Event::DisplayMath(s) => vec![Event::Html(CowStr::from(format!(
+            Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(ref info)))
+                if info.trim() == "tree" =>
+            {
+                tree_buf = Some(String::new());
+            }
+            Event::InlineMath(s) => {
+                events.push(Event::Html(CowStr::from(latex_to_mathml(&s, false))))
+            }
+            Event::DisplayMath(s) => events.push(Event::Html(CowStr::from(format!(
                 "<div class=\"math-display\">{}</div>",
                 latex_to_mathml(&s, true)
-            )))],
-            Event::Start(Tag::Table(al)) => vec![
-                Event::Html(CowStr::from("<div class=\"table-scroll\">")),
-                Event::Start(Tag::Table(al)),
-            ],
-            Event::End(TagEnd::Table) => vec![
-                Event::End(TagEnd::Table),
-                Event::Html(CowStr::from("</div>")),
-            ],
-            other => vec![other],
+            )))),
+            Event::Start(Tag::Table(al)) => {
+                events.push(Event::Html(CowStr::from("<div class=\"table-scroll\">")));
+                events.push(Event::Start(Tag::Table(al)));
+            }
+            Event::End(TagEnd::Table) => {
+                events.push(Event::End(TagEnd::Table));
+                events.push(Event::Html(CowStr::from("</div>")));
+            }
+            other => events.push(other),
         }
-    });
+    }
     let mut out = String::new();
-    html::push_html(&mut out, events);
+    html::push_html(&mut out, events.into_iter());
     out
 }
 
@@ -266,5 +350,21 @@ mod tests {
     #[test]
     fn pseudocode_without_fence_falls_back_to_markdown() {
         assert!(pseudocode_to_html("Just *text*").contains("<em>text</em>"));
+    }
+
+    #[test]
+    fn tree_fences_become_wrapping_grids() {
+        let md = "```tree\n<repo>/\n  a.py        first thing that is long\n              and continues here\n  dir/        second\n```";
+        let html = markdown_to_html(md);
+        assert!(html.contains("<div class=\"tree\""), "{html}");
+        assert!(html.contains("tree-head"), "{html}");
+        assert!(
+            html.contains("first thing that is long and continues here"),
+            "{html}"
+        );
+        assert!(html.contains("style=\"--depth:1\""), "{html}");
+        assert!(!html.contains("<pre>"), "{html}");
+        // Ordinary fences are untouched.
+        assert!(markdown_to_html("```text\nx\n```").contains("<pre>"));
     }
 }

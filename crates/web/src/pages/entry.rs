@@ -90,9 +90,9 @@ fn EntryView(entry: Entry) -> impl IntoView {
                         {subtitle.map(|s| view! { <p class="entry-subtitle serif">{s}</p> })}
                         <div class="entry-status glass">
                             <StatusBadge status=status large=true/>
-                            <p class="entry-status-note">{status_note.unwrap_or_else(|| status.description().to_string())}</p>
+                            <div class="entry-status-note" inner_html=praxis_core::render::markdown_to_html(&status_note.unwrap_or_else(|| status.description().to_string()))></div>
                         </div>
-                        <p class="lede">{summary}</p>
+                        <div class="lede" inner_html=praxis_core::render::markdown_to_html(&summary)></div>
                         {(!tags.is_empty()).then(|| view! { <div class="card-tags">{tags.iter().map(|t| view! { <span class="tag">{t.clone()}</span> }).collect_view()}</div> })}
                     </header>
                     {(!toc.is_empty()).then(|| view! {

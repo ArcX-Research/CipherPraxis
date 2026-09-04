@@ -222,7 +222,7 @@ fn GlossaryPage() -> impl IntoView {
                             <div class="glossary-item" id=id>
                                 <dt><a href=t.route()>{t.title.clone()}</a>{t.family.clone().map(|f| view! { <span class="mono meta">{f}</span> })}</dt>
                                 <dd>
-                                    <p>{t.summary.clone()}</p>
+                                    <div inner_html=praxis_core::render::markdown_to_html(&t.summary)></div>
                                     {(!related.is_empty()).then(|| view! {
                                         <p class="glossary-related">"See "{related.iter().enumerate().map(|(i, r)| view! { {(i > 0).then_some(", ")}<a href=r.route()>{r.title.clone()}</a> }).collect_view()}"."</p>
                                     })}
@@ -263,7 +263,7 @@ fn ReferencesPage() -> impl IntoView {
                         <article class="ref-group glass" id=e.id.clone()>
                             <div class="card-top"><span class="mono meta">{e.family_or_default().to_string()}</span><StatusBadge status=e.status/></div>
                             <h2 class="ref-group-title"><a href=e.route()>{e.title.clone()}</a></h2>
-                            <p class="card-summary">{e.summary.clone()}</p>
+                            <p class="card-summary">{praxis_core::render::markdown_to_text(&e.summary)}</p>
                             {(!list.is_empty()).then(|| view! {
                                 <ol class="ref-list">
                                     {list.into_iter().map(|r| {

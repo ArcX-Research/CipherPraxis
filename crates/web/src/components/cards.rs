@@ -17,7 +17,7 @@ pub fn EntryCard(entry: Entry, #[prop(optional)] compact: bool) -> impl IntoView
             </div>
             <h3 class="card-title">{entry.title.clone()}</h3>
             {entry.subtitle.clone().map(|s| view! { <p class="card-sub">{s}</p> })}
-            {(!compact).then(|| view! { <p class="card-summary">{entry.summary.clone()}</p> })}
+            {(!compact).then(|| view! { <p class="card-summary">{praxis_core::render::markdown_to_text(&entry.summary)}</p> })}
             {(!compact && !tags.is_empty()).then(|| view! {
                 <div class="card-tags">
                     {tags.iter().take(4).map(|t| view! { <span class="tag">{t.clone()}</span> }).collect_view()}

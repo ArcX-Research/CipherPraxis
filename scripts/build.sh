@@ -56,10 +56,14 @@ if [ "$PROFILE" = release ] && command -v wasm-opt >/dev/null 2>&1; then
 fi
 cp -R "$ROOT/static/." "$ROOT/dist/"
 # Cache-bust the module and stylesheet with a content hash.
-HASH="$(shasum -a 256 "$ROOT/dist/pkg/praxis_bg.wasm" | cut -c1-10)"
+if command -v shasum >/dev/null 2>&1; then
+  HASH="$(shasum -a 256 "$ROOT/dist/pkg/praxis_bg.wasm" | cut -c1-10)"
+else
+  HASH="$(sha256sum "$ROOT/dist/pkg/praxis_bg.wasm" | cut -c1-10)"
+fi
 sed -i.bak -e "s#/pkg/praxis.js#/pkg/praxis.js?v=$HASH#g" -e "s#/styles.css#/styles.css?v=$HASH#g" "$ROOT/dist/index.html"
 rm -f "$ROOT/dist/index.html.bak"
 # SPA fallback for static hosts that serve 404.html.
 cp "$ROOT/dist/index.html" "$ROOT/dist/404.html"
 echo "▸ dist/ ready ($PROFILE)"
-ls -la "$ROOT/dist/pkg" | awk 'NR>1 {printf "   %-22s %8.1f KB\n", $9, $5/1024}'
+ls -la "$ROOT/dist/pkg" | awk '$1 ~ /^-/ {printf "   %-22s %8.1f KB\n", $9, $5/1024}'

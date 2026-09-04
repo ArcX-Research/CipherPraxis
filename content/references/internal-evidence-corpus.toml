@@ -14,7 +14,18 @@ updated = "2026-09-04"
 kind = "definition"
 title = "Layout"
 body = '''
-```
+The evidence corpus keeps four kinds of material separate:
+
+- **Documentation** explains each method, result, and limit.
+- **Tools** contain the code used to run and check an analysis.
+- **Data** holds the inputs and saved models those tools read.
+- **Run records** preserve outputs, checkpoints, and audit decisions.
+
+This structure makes supporting material easier to find. It also helps readers distinguish an explanation from the code, input, and recorded result behind it.
+
+The directory layout, with counts from the 2026-09-04 listing:
+
+```tree
 <repository>/
   ck_*.py                 38 earlier key-search scripts (dictionary keys, squares, column orders scored by quadgrams)
   ck_logs/                their transcripts

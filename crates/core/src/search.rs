@@ -96,7 +96,7 @@ impl SearchIndex {
                 title: e.title.clone(),
                 subtitle: e.subtitle.clone(),
                 family: e.family_or_default().to_string(),
-                summary: e.summary.clone(),
+                summary: markdown_to_text(&e.summary),
                 body,
             });
         }
