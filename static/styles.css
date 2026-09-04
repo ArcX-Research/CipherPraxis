@@ -188,14 +188,15 @@ img, svg { max-width: 100%; }
 .footer-line { display: flex; justify-content: space-between; gap: 16px; padding: 16px 0 24px; border-top: 1px solid var(--hair); color: var(--ink-3); flex-wrap: wrap; }
 
 /* Hero */
-.hero { padding: clamp(40px, 7vw, 96px) 0 clamp(32px, 5vw, 64px); }
-.hero-grid { display: grid; grid-template-columns: fit-content(720px) minmax(420px, 1fr); gap: clamp(24px, 4vw, 64px); align-items: center; }
+/* Same top rhythm as .page (56px on desktop); the copy is top-aligned, the disc centred beside it. */
+.hero { padding: clamp(32px, 4vw, 56px) 0 clamp(32px, 5vw, 64px); }
+.hero-grid { display: grid; grid-template-columns: fit-content(720px) minmax(420px, 1fr); gap: clamp(24px, 4vw, 64px); align-items: start; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 28px 0 32px; }
 .hero-stats { display: grid; grid-template-columns: repeat(4, auto); gap: 20px 32px; margin: 0; padding: 0; width: fit-content; }
 .hero-stats div { display: flex; flex-direction: column; gap: 2px; }
 .hero-stats dt { color: var(--ink-3); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
 .hero-stats dd { margin: 0; font-size: 20px; color: var(--ink); }
-.hero-visual { position: relative; display: flex; justify-content: center; align-items: center; }
+.hero-visual { position: relative; display: flex; justify-content: center; align-items: center; align-self: center; }
 .cipher-disc-wrap { position: relative; z-index: 1; width: 100%; max-width: 520px; margin: 0 auto; }
 .cipher-disc { display: block; }
 .disc-inner { animation: disc-turn 104s linear infinite; transform-box: view-box; transform-origin: 200px 200px; }
