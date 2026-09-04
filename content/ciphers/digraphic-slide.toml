@@ -125,7 +125,7 @@ title = "Worked example"
 body = '''
 Slidefair, Vigenère rule, key shift $k = 3$, digraph `HI` ($a = 7$, $b = 8$):
 
-```
+```trace
 top row     A B C D E F G H I ...   (j)
 bottom row  D E F G H I J K L ...   (j + 3)
 ```

@@ -24,7 +24,7 @@ If $A_1 = A_2$ the composite is one additive key of period $\operatorname{lcm}(m
 kind = "equations"
 title = "Class fit and null"
 body = '''
-Every letter sits in one of $mq$ classes with plaintext index $\operatorname{pos}_{A_1}\big(A_2[\operatorname{pos}_{A_2}(c_i) - u_b]\big) - v_j$. The $m + q$ shifts are found by alternating exact monogram maximisation: fix $v$, maximise each $u_b$ over 26 values; fix $u$, maximise each $v_j$; repeat from many random starts, because the coset alignment used for single-layer ciphers is useless here (the inner layer flattens each coset). The best few starts are polished by quadgram coordinate descent, and the same fit on shuffled ciphertexts gives the null. A "period-7 key plus one constant per block of $m$" is the special case $q = $ block length with $v$ constant within blocks.
+Every letter sits in one of $mq$ classes with plaintext index $\operatorname{pos}_{A_1}\big(A_2[\operatorname{pos}_{A_2}(c_i) - u_b]\big) - v_j$. The $m + q$ shifts are found by alternating exact monogram maximisation: fix $v$, maximise each $u_b$ over 26 values; fix $u$, maximise each $v_j$; repeat from many random starts, because the coset alignment used for single-layer ciphers is useless here (the inner layer flattens each coset). The best few starts are polished by quadgram coordinate descent, and the same fit on shuffled ciphertexts gives the null. A "period-7 key plus one constant per block of $m$" is the special case $q$ = block length with $v$ constant within blocks.
 '''
 
 [[blocks]]
@@ -120,7 +120,7 @@ title = "Worked example"
 body = '''
 Same alphabet, inner shifts $(3, 10)$ of period 2, outer shifts $(1, 5, 7)$ of period 3. The composite key has period $\operatorname{lcm}(2, 3) = 6$: $(3+1, 10+5, 3+7, 10+1, 3+5, 10+7) = (4, 15, 10, 11, 8, 17)$. Plaintext `COMPOUNDKEYS`:
 
-```
+```trace
 plain   C  O  M  P  O  U  N  D  K  E  Y  S
 inner   F  Y  P  Z  R  E  Q  N  N  O  B  C
 outer   G  D  W  A  W  L  R  S  U  P  G  J

@@ -124,7 +124,7 @@ title = "Worked example"
 body = '''
 Inner shifts $(3, 10)$ of period 2, columnar of width 4 with key `CADB` (read order 1, 3, 0, 2), outer shifts $(1, 5, 7)$ of period 3, plaintext `SANDWICHLAYER`:
 
-```
+```trace
 inner       V K Q N Z S F R O K B O U
 grid        VKQN / ZSFR / OKBO / U
 columns     0: VZOU  1: KSK  2: QFB  3: NRO

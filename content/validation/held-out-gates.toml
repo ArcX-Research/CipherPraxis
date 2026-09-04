@@ -6,7 +6,7 @@ status = "VERIFIED"
 status_note = "A frozen no-argument gate tested 24 fresh cases against a pass mark of 18/24 set in advance, and met it exactly. An interval registry keeps training, calibration, development, gap, and hidden text ranges separate. An independent audit checked those ranges."
 family = "Power and calibration"
 tags = ["held-out", "corpus ranges", "leakage", "gates"]
-related = ["blind-controls", "power-measurement", "planted-controls", "control-first-policy", "seed-determinism", "run-script-log-convention", "english-gate-calibration"]
+related = ["blind-controls", "power-measurement", "planted-controls", "control-first-policy", "seed-determinism", "english-gate-calibration"]
 summary = "A selector may do well on the same examples used to tune it. The real test is fresh material that neither the selector nor its language model used for training or calibration. A held-out gate reserves separate text ranges, makes new cases with new seeds, and sets the pass mark in advance, such as 18 exact recoveries out of 24. The live version cannot run until the gate's record says PASS."
 updated = "2026-09-04"
 

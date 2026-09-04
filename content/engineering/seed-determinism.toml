@@ -6,7 +6,7 @@ status = "VERIFIED"
 status_note = "Sealed designs derive all random values from labeled SHA-256 streams with rejection sampling. An independent auditor rebuilt a 68-seed, 34-case bank from the design text alone. A fresh rerun of a sealed job reproduced every meaningful record."
 family = "Reproducibility"
 tags = ["seeds", "determinism", "randomness", "replay"]
-related = ["blind-controls", "reproducibility-receipts", "hash-chained-transcripts", "valid-model-nulls", "compiled-hot-cores", "state-checkpoints"]
+related = ["blind-controls", "reproducibility-receipts", "valid-model-nulls", "compiled-hot-cores"]
 summary = "A randomized experiment is repeatable only when its random values are repeatable. Start from one fixed root value. Derive every case, shuffle, and search seed from a labeled hash stream with its own counter. Do not reroll or switch streams. Use the same selector seed for the observation and each null so a heuristic search becomes a fixed function of its input. Language, scores, timing, and hidden random-generator state never affect the seed."
 updated = "2026-09-04"
 

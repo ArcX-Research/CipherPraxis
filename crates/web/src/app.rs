@@ -8,6 +8,7 @@ use crate::pages::{
 use crate::state::{use_palette, AppState, Palette};
 use leptos::prelude::*;
 use leptos_router::components::{Route, Router, Routes};
+use leptos_router::hooks::use_location;
 use leptos_router::path;
 use praxis_core::content::Section;
 
@@ -48,6 +49,7 @@ pub fn App() -> impl IntoView {
                 </div>
             </div>
             <SearchPalette/>
+            <HashScroller/>
         </Router>
     }
 }
@@ -142,4 +144,34 @@ fn Footer() -> impl IntoView {
             </div>
         </footer>
     }
+}
+
+/// Scrolls to the element named by the URL fragment after every navigation, retrying briefly
+/// while the routed page is still rendering. Client-side rendering needs this because the
+/// browser only scrolls to fragments on full page loads.
+#[component]
+fn HashScroller() -> impl IntoView {
+    let location = use_location();
+    let hash = location.hash;
+    let pathname = location.pathname;
+    Effect::new(move |_| {
+        pathname.track();
+        let h = hash.get();
+        let id = h.trim_start_matches('#').to_string();
+        if id.is_empty() {
+            return;
+        }
+        fn attempt(id: String, tries_left: u32) {
+            match document().get_element_by_id(&id) {
+                Some(el) => el.scroll_into_view(),
+                None if tries_left > 0 => set_timeout(
+                    move || attempt(id, tries_left - 1),
+                    std::time::Duration::from_millis(80),
+                ),
+                None => {}
+            }
+        }
+        attempt(id, 12);
+    });
+    view! { <></> }
 }

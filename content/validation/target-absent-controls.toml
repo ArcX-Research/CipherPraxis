@@ -6,7 +6,7 @@ status = "VERIFIED"
 status_note = "Every sealed control job records target=ABSENT in its manifest and transcript. It also checks allowed imports, scans for forbidden strings, and rejects any target mode. Independent auditors followed the full import chain to verify this isolation."
 family = "Control design"
 tags = ["controls", "isolation", "leakage", "sealing"]
-related = ["planted-controls", "blind-controls", "seal-and-audit-protocol", "build-manifests-and-release-json", "kat-harness", "held-out-gates", "assumption-review-protocol", "g-target-absent"]
+related = ["planted-controls", "blind-controls", "seal-and-audit-protocol", "kat-harness", "held-out-gates", "assumption-review-protocol", "g-target-absent"]
 summary = "A target-absent tool is built, tested, frozen, and independently audited while it has no way to load the live ciphertext. It has no loader import, ciphertext constant, or target command. Its controls cannot be tuned by looking at the target, and its power can be published before the target is read. A later one-shot run then uses a tested selector that was not shaped by peeking."
 updated = "2026-09-04"
 

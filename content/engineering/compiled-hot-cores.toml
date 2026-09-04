@@ -6,7 +6,7 @@ status = "VERIFIED"
 status_note = "The project has fifty single-file cores. Each launcher compiles its core, requires --self-kat to pass, and controls it through pipes. Recorded examples include a complete search of 248,405 pairs in 307.5 s and a 209 ms benchmark using at most 96 MB."
 family = "Compute and throughput"
 tags = ["c++", "cores", "protocol", "threads", "integer scores"]
-related = ["numpy-instrument-pattern", "kat-harness", "seed-determinism", "run-script-log-convention", "drainability-and-throughput", "state-checkpoints", "exhaustive-enumeration", "simulated-annealing"]
+related = ["numpy-instrument-pattern", "kat-harness", "seed-determinism", "drainability-and-throughput", "exhaustive-enumeration", "simulated-annealing"]
 summary = "When one loop makes a search slow and array code cannot express it well, move that loop into one C++ file. A single compiler command builds it, a self-test checks it, and a text protocol lets Python control the experiment, controls, and transcript. Fixed-scale integer scores make ties, ranks, and replays exact across machines. Reuse a validated core by keeping its exact bytes and hash, not by copying pieces into new code."
 updated = "2026-09-04"
 

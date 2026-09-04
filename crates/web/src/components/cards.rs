@@ -3,16 +3,33 @@ use crate::components::badges::StatusBadge;
 use leptos::prelude::*;
 use praxis_core::content::Entry;
 
+/// `show_section` adds the section name to the meta line (for cross-section lists such as the
+/// overview and search results); `show_family` adds the family (off when the surrounding list is
+/// already grouped by family, so the card never repeats its heading).
 #[component]
-pub fn EntryCard(entry: Entry, #[prop(optional)] compact: bool) -> impl IntoView {
+pub fn EntryCard(
+    entry: Entry,
+    #[prop(optional)] compact: bool,
+    #[prop(default = true)] show_section: bool,
+    #[prop(default = true)] show_family: bool,
+) -> impl IntoView {
     let route = entry.route();
     let family = entry.family_or_default().to_string();
     let section = entry.section;
     let tags = entry.tags.clone();
+    let meta: Vec<&str> = [
+        show_section.then(|| section.short()),
+        show_family.then_some(family.as_str()),
+    ]
+    .into_iter()
+    .flatten()
+    .collect();
+    let meta = meta.join(" · ");
+    let has_meta = !meta.is_empty();
     view! {
         <a class="card" class:card-compact=compact href=route>
-            <div class="card-top">
-                <span class="mono meta">{format!("{:02} · {}", section.ordinal(), family)}</span>
+            <div class="card-top" class:card-top-end=!has_meta>
+                {has_meta.then(|| view! { <span class="mono meta">{meta.clone()}</span> })}
                 <StatusBadge status=entry.status/>
             </div>
             <h3 class="card-title">{entry.title.clone()}</h3>

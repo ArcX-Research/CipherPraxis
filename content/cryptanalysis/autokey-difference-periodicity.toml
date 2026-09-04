@@ -126,7 +126,7 @@ title = "Worked example"
 body = '''
 Ciphertext autokey with primer `K` ($m = 1$) on `ATTACKATDAWN`: $c_0 = A + K = K$, then each letter adds the previous ciphertext letter:
 
-```
+```trace
 plain   A T T A C K A T D A W N
 cipher  K D W W Y I I B E E A N
 ```

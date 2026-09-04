@@ -6,7 +6,7 @@ status = "VERIFIED"
 status_note = "Complete runs print full counters, such as 248,405 of 248,405 pairs in 307.5 s with complete=1. Runs that cannot finish report measured rates and estimated thread-days. Only a naturally finished search may claim an exact zero; any capped result is inconclusive within its scope."
 family = "Compute and throughput"
 tags = ["throughput", "exhaustive search", "budget", "memory"]
-related = ["throughput-fail", "state-checkpoints", "compiled-hot-cores", "power-measurement", "exhaustive-enumeration", "rank-sharding", "bound-benchmarks-and-certificates", "g-throughput"]
+related = ["throughput-fail", "compiled-hot-cores", "power-measurement", "exhaustive-enumeration", "rank-sharding", "bound-benchmarks-and-certificates", "g-throughput"]
 summary = "A complete-search negative is valid only if the search really finished. A search is drainable when every task completes naturally and all counters reach their totals. Throughput is the measured work rate used to predict whether that will happen within budget. Every final record reports both. A capped run is not negative. Memory estimates also reject designs that cannot fit before they are built."
 updated = "2026-09-04"
 

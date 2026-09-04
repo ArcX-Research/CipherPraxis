@@ -6,7 +6,7 @@ status = "VERIFIED"
 status_note = "The shared math library and analysis tools use this pattern and pass their planted controls. Recorded profiles guided the tuning of batch annealing across thousands of chains and tests of whether integer matrices are possible."
 family = "Numerical engineering"
 tags = ["numpy", "vectorisation", "instruments", "batch search"]
-related = ["compiled-hot-cores", "seed-determinism", "kat-harness", "run-script-log-convention", "estimator-standard-error", "shuffled-null-z-score", "simulated-annealing", "exact-period-alignment", "index-of-coincidence"]
+related = ["compiled-hot-cores", "seed-determinism", "kat-harness", "estimator-standard-error", "shuffled-null-z-score", "simulated-annealing", "exact-period-alignment", "index-of-coincidence"]
 summary = "An analysis tool should print its statistic, the matching result range when no signal is present, and the resulting z-score or evidence. NumPy array operations can score thousands of candidates, shuffles, or search chains in one call. Exact formulas or batched resampling provide error ranges, while the code stays short enough to review. Small compiled cores handle only the deepest loops that arrays cannot express well."
 updated = "2026-09-04"
 

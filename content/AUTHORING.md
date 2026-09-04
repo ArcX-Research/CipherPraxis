@@ -36,6 +36,15 @@ corpus. Read `../ARCHITECTURE.md` §1 and §4 first, then the exemplar `ciphers/
    standard subset: fractions, subscripts, superscripts, sums, `\bmod`, `\pmod`, `\equiv`,
    `\mathbb{Z}`, `\operatorname{}`, Greek letters, `\le`, `\ge`, `\ne`, `\cdot`, `\times`).
    Internal links use site routes: `[Beaufort](/ciphers/beaufort)`.
+   Two fence languages get special rendering. ```` ```trace ```` is for worked-example
+   walkthroughs: one row per line, a label (a word followed by two spaces, or a short `A:` prefix),
+   then the tokens. Columns are separated by two or more spaces; a bracketed expression such as
+   `13+(23 mod 13)=23` stays one cell, and a run of eight or more capitals is split per letter.
+   Rows of equal length share one aligned grid; shorter or longer rows that carry separators
+   (`+`, `=`, `/`, `|`, `...`) or long tokens flow inline. Rows labelled `cipher`, `outer`,
+   `output`, `c_i` or `sigma` are highlighted. ```` ```tree ```` is for directory listings: a
+   path, two spaces, a description.
+
 8. Provenance `kind`: `solver`, `library`, `audit`, `design`, `note`, `log`, `script`, `data`,
    `ledger`. Provenance `note` may use internal file names but should still avoid quoting
    ciphertext or hints.
@@ -87,10 +96,8 @@ validation: `planted-controls`, `control-first-policy`, `target-absent-controls`
 `correction-and-retraction`, `selection-overfit-check`, `throughput-fail`, `held-out-gates`,
 `gauge-defect-invalidation`.
 
-engineering: `numpy-instrument-pattern`, `compiled-hot-cores`, `run-script-log-convention`,
-`state-checkpoints`, `build-manifests-and-release-json`, `kat-harness`, `seed-determinism`,
-`drainability-and-throughput`, `hash-chained-transcripts`, `local-llm-server-integration`,
-`wasm-site-engineering`.
+engineering: `numpy-instrument-pattern`, `compiled-hot-cores`, `kat-harness`, `seed-determinism`,
+`drainability-and-throughput`.
 
 labs (owned by the app author): `vigenere-lab`, `quagmire-lab`, `coincidence-lab`,
 `affine-lab`, `columnar-lab`, `hill-lab`, `bifid-lab`, `crt-lab`, `dihedral-lab`, `null-lab`.

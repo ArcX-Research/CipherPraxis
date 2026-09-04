@@ -110,7 +110,7 @@ title = "Worked example"
 body = '''
 Key passage beginning `ITWASTHEBESTOFTIMES` (say, page 1, line 1 of an agreed book), plaintext `MEETATNOON`, Vigenère relation:
 
-```
+```trace
 plain   M  E  E  T  A  T  N  O  O  N
 key     I  T  W  A  S  T  H  E  B  E
 cipher  U  X  A  T  S  M  U  S  P  R

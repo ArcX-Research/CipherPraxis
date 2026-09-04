@@ -113,7 +113,7 @@ title = "Worked example"
 body = '''
 A small prefix-free code that never creates `333`: `E=1, T=2, A=31, O=32, N=331, S=332`. Plaintext `NOTES` encodes as `331 32 2 1 332` $=$ `3313221332` (10 digits); pad with `11` to 12 digits and split: `331 322 133 211`.
 
-```
+```trace
 trigraph  331  322  133  211
 rank      24   22    8    9
 ```

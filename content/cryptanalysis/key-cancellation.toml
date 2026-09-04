@@ -121,7 +121,7 @@ body = '''
 kind = "example"
 title = "Worked example"
 body = '''
-Text B plaintext `ATTACKATDAWN` under a segmented key (constant 3 on positions 0 to 5, then $(5, 20)$ repeating): $x = $ `DWWDFNFNIUBH`. Text A plaintext `HOLDTHEGATES` with B's plaintext as running key at offset 0 (both additive): $y = $ `HHEDVREZDTAF`. Subtracting letter by letter,
+Text B plaintext `ATTACKATDAWN` under a segmented key (constant 3 on positions 0 to 5, then $(5, 20)$ repeating): $x$ = `DWWDFNFNIUBH`. Text A plaintext `HOLDTHEGATES` with B's plaintext as running key at offset 0 (both additive): $y$ = `HHEDVREZDTAF`. Subtracting letter by letter,
 
 ```
 y   H H E D V R E Z D T A F

@@ -26,14 +26,14 @@ cryptography research:
 | Route | Section id | What it holds |
 | --- | --- | --- |
 | `/` | — | Overview: what the knowledge base is, how to read statuses, entry points |
-| `/ciphers` | `ciphers` | Cipher Taxonomy: families and individual cipher models |
-| `/algebra` | `algebra` | Algebra & Number Theory used by the models and solvers |
-| `/cryptanalysis` | `cryptanalysis` | Cryptanalysis Techniques (attack strategies) |
-| `/statistics` | `statistics` | Statistical Instruments (estimators, nulls, evidence) |
-| `/search` | `search` | Search / Optimization Algorithms (heuristic) |
+| `/ciphers` | `ciphers` | Cipher Systems: families and individual cipher models |
+| `/algebra` | `algebra` | Mathematical Foundations: the algebra and number theory used by the models and solvers |
+| `/cryptanalysis` | `cryptanalysis` | Cryptanalysis (attack strategies) |
+| `/statistics` | `statistics` | Statistical Analysis (estimators, nulls, evidence) |
+| `/search` | `search` | Search Methods: heuristic search and optimization |
 | `/exact` | `exact` | Exact Solvers: CSP, CP-SAT/SMT, DP, exhaustive enumeration |
-| `/validation` | `validation` | Validation & Controls (planted controls, power, audits, receipts) |
-| `/engineering` | `engineering` | Implementation Engineering (cores, harnesses, reproducibility) |
+| `/validation` | `validation` | Validation (planted controls, power, audits, receipts) |
+| `/engineering` | `engineering` | Solver Engineering (cores, harnesses, reproducibility) |
 | `/labs` | `labs` | Interactive WASM Labs (cipher/analysis code running in the browser) |
 | `/glossary` | `glossary` | Terms |
 | `/references` | `references` | Sources: literature and the internal evidence corpus |

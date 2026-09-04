@@ -6,7 +6,7 @@ status = "VERIFIED"
 status_note = "Three split methods are checked. Fixed rank ranges recovered 5/5 positives and missed a sentinel outside the range as predicted. Lexicographic index ranges matched the one-piece exact solver for W=3 and W=4, including a near-tie trap. Hash-ordered pair segments recovered 20/20 planted answers when their segment was scheduled."
 family = "Enumeration strategies"
 tags = ["sharding", "partition", "resumable", "exact merge", "ties", "coverage"]
-related = ["k-best-lists", "exhaustive-enumeration", "bound-benchmarks-and-certificates", "compiled-hot-cores", "drainability-and-throughput", "state-checkpoints", "reproducibility-receipts", "throughput-fail", "g-shard", "g-drainability", "g-certificate"]
+related = ["k-best-lists", "exhaustive-enumeration", "bound-benchmarks-and-certificates", "compiled-hot-cores", "drainability-and-throughput", "reproducibility-receipts", "throughput-fail", "g-shard", "g-drainability", "g-certificate"]
 summary = "Rank sharding divides an exact search into separate, neighboring ranges declared in advance. Each range runs to completion on its own. A final step merges every range winner and near tie exactly. This makes long searches resumable and easy to audit. A time limit becomes a stated coverage fraction instead of a hidden cutoff. An unfinished shard supports no conclusion, and under a fixed order the chance of recovery before the cap equals the fraction covered."
 updated = "2026-09-04"
 

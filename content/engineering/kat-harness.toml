@@ -6,7 +6,7 @@ status = "VERIFIED"
 status_note = "Recorded checks include self-tests, static fixed answers, parser mutations, one-time write failures, comparisons between implementations, and segment tests. Examples include 420 rejected parser mutations, 18 classified interruption points, and every fast swap-score change checked against a full rescore."
 family = "Tooling"
 tags = ["kat", "testing", "self-test", "mutation"]
-related = ["compiled-hot-cores", "hash-chained-transcripts", "state-checkpoints", "control-first-policy", "tautological-gate-rule", "gauge-defect-invalidation", "known-answer-tests", "g-kat"]
+related = ["compiled-hot-cores", "control-first-policy", "tautological-gate-rule", "gauge-defect-invalidation", "known-answer-tests", "g-kat"]
 summary = "A known-answer test requires a fixed result from a fixed input. Several layers use them. The core checks its algebra and fast score updates. The Python wrapper compares results with published examples and rejects damaged transcripts. File-write tests interrupt every failure point and require a safe closed state. Control filters must keep planted truths. No mode runs until all these checks pass."
 updated = "2026-09-04"
 

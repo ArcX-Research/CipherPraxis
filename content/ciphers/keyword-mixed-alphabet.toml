@@ -115,7 +115,7 @@ title = "Worked example"
 body = '''
 Keyword `ZEBRAS`, straight remainder:
 
-```
+```trace
 plain  ABCDEFGHIJKLMNOPQRSTUVWXYZ
 keyed  ZEBRASCDFGHIJKLMNOPQTUVWXY
 ```

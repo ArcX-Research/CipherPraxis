@@ -6,7 +6,7 @@ status = "VERIFIED"
 status_note = "One control run was stopped and marked invalid because it scored and compared the second plaintext in one fixed gauge. Its replacement checks all 26 equivalent translations and compares keys by orbit. Sealed control designs must now state how they handle equivalent forms."
 family = "Control design"
 tags = ["gauge", "orbit", "invalidation", "controls"]
-related = ["conjugacy-and-gauge", "permutation-cycles", "planted-controls", "correction-and-retraction", "run-script-log-convention", "exact-period-alignment", "shared-cycle-attack"]
+related = ["conjugacy-and-gauge", "permutation-cycles", "planted-controls", "correction-and-retraction", "exact-period-alignment", "shared-cycle-attack"]
 summary = "Many ciphers have several key descriptions that act exactly the same. For example, one layer's shifts can all gain a constant while another layer loses it. A solver may choose any one of these gauges. A control that compares raw keys letter for letter will then reject 25 of 26 correct equivalents. Finding this defect makes the whole run invalid. The transcript moves to failed logs with the defect named and cannot be used as a gate."
 updated = "2026-09-04"
 

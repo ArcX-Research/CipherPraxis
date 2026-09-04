@@ -64,14 +64,14 @@ impl Section {
     /// Navigation title.
     pub fn title(self) -> &'static str {
         match self {
-            Section::Ciphers => "Cipher Taxonomy",
-            Section::Algebra => "Algebra & Number Theory",
-            Section::Cryptanalysis => "Cryptanalysis Techniques",
-            Section::Statistics => "Statistical Instruments",
-            Section::Search => "Search & Optimization",
+            Section::Ciphers => "Cipher Systems",
+            Section::Algebra => "Mathematical Foundations",
+            Section::Cryptanalysis => "Cryptanalysis",
+            Section::Statistics => "Statistical Analysis",
+            Section::Search => "Search Methods",
             Section::Exact => "Exact Solvers",
-            Section::Validation => "Validation & Controls",
-            Section::Engineering => "Implementation Engineering",
+            Section::Validation => "Validation",
+            Section::Engineering => "Solver Engineering",
             Section::Labs => "Interactive Labs",
             Section::Glossary => "Glossary",
             Section::References => "References",
@@ -81,15 +81,15 @@ impl Section {
     /// Short label for compact navigation.
     pub fn short(self) -> &'static str {
         match self {
-            Section::Ciphers => "Ciphers",
-            Section::Algebra => "Algebra",
+            Section::Ciphers => "Cipher Systems",
+            Section::Algebra => "Mathematical Foundations",
             Section::Cryptanalysis => "Cryptanalysis",
-            Section::Statistics => "Statistics",
-            Section::Search => "Search",
-            Section::Exact => "Exact",
+            Section::Statistics => "Statistical Analysis",
+            Section::Search => "Search Methods",
+            Section::Exact => "Exact Solvers",
             Section::Validation => "Validation",
-            Section::Engineering => "Engineering",
-            Section::Labs => "Labs",
+            Section::Engineering => "Solver Engineering",
+            Section::Labs => "Interactive Labs",
             Section::Glossary => "Glossary",
             Section::References => "References",
         }

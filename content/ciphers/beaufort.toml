@@ -109,7 +109,7 @@ title = "Worked example"
 body = '''
 Plaintext `ATTACK`, key `CIPHER` ($m = 6$):
 
-```
+```trace
 plain    A  T  T  A  C  K
 key      C  I  P  H  E  R
 k - p    2 -11 -4  7  2  7

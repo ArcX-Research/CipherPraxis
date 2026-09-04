@@ -113,7 +113,7 @@ title = "Worked example"
 body = '''
 Plaintext `SENDHELP`, key text beginning `THEQUICKBROWN`, Vigenère relation:
 
-```
+```trace
 plain   S  E  N  D  H  E  L  P
 key     T  H  E  Q  U  I  C  K
 cipher  L  L  R  T  B  M  N  Z

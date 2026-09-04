@@ -6,7 +6,7 @@ status = "VERIFIED"
 status_note = "A branch-and-bound core proved global maxima over 26^7 keys, including tie counts. It passed 6/6 planted cases with one tie each in about 50 ms. A compiled whole-cell bound passed all algebra and parity gates and used 2.506529 and 5.837933 CPU-hours against limits of 4.0 and 12.0. A useless always-zero bound was rejected. Three invalid benchmarks remain recorded with their defects. Read-only certificate replay reproduced a no-candidate result and rejected 8/8 and 4/4 mutations."
 family = "Exactness guarantees"
 tags = ["branch and bound", "admissible bound", "majorant", "benchmark", "certificate", "replay"]
-related = ["rank-sharding", "exhaustive-enumeration", "known-answer-tests", "exact-dynamic-programming", "cp-sat-and-smt-solvers", "reproducibility-receipts", "seal-and-audit-protocol", "hash-chained-transcripts", "throughput-fail", "correction-and-retraction", "g-certificate", "g-drainability"]
+related = ["rank-sharding", "exhaustive-enumeration", "known-answer-tests", "exact-dynamic-programming", "cp-sat-and-smt-solvers", "reproducibility-receipts", "seal-and-audit-protocol", "throughput-fail", "correction-and-retraction", "g-certificate", "g-drainability"]
 summary = "A large exact search needs three safeguards. A pruning bound must never skip a possible winner and must actually remove work. A benchmark must show that the full run fits its stated time and memory budget using the right measurements. A certificate must let someone replay the result from fixed inputs. Failed attempts stay recorded. An always-zero bound, wall time mistaken for CPU time, and a memory setting that was not a true limit each made a run invalid."
 updated = "2026-09-04"
 

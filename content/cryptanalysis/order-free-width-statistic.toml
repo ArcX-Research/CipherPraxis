@@ -125,7 +125,7 @@ title = "Worked example"
 body = '''
 Continue the width-4 example of [Transposition width recovery](/cryptanalysis/transposition-width-recovery): output `TAWACDATNTKA` from `ATTACKATDAWN` with $\sigma = (2,0,3,1)$. With a period-2 inner, position $j$ has class $\tau(j) \bmod 2 = \sigma(s) \bmod 2$, so the twelve output positions carry the classes
 
-```
+```trace
 output   T A W | A C D | A T N | T K A
 class    0 0 0 | 0 0 0 | 1 1 1 | 1 1 1
 ```

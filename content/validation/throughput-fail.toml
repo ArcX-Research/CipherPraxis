@@ -6,7 +6,7 @@ status = "VERIFIED"
 status_note = "The run ends with CONTROL_GATE FAIL by throughput and TARGET_REFUSED. It records pairs per second, total search size, and the planted answer's depth. The related live run was marked SCOPED_INCONCLUSIVE with the exact processed prefix, never negative."
 family = "Compute and throughput"
 tags = ["throughput", "budget", "coverage", "exhaustive search"]
-related = ["drainability-and-throughput", "power-measurement", "control-first-policy", "state-checkpoints", "held-out-gates", "exhaustive-enumeration", "compiled-hot-cores"]
+related = ["drainability-and-throughput", "power-measurement", "control-first-policy", "held-out-gates", "exhaustive-enumeration", "compiled-hot-cores"]
 summary = "An exact search can be correct but too slow to reach the planted answer. That is a throughput failure, not a failed cipher model. Measure tasks per second, nodes per task, total work, and the answer's place in the schedule. Do not treat a capped live run as negative. In one case, the live text created 500 times more search nodes per task than any random control. That difference described the model's fit, not computer speed."
 updated = "2026-09-04"
 

@@ -6,7 +6,7 @@ status = "VERIFIED"
 status_note = "The project ledger has 240 headed entries across 13,552 lines: 82 reservations, 8 seals, 25 final entries, and 12 corrections. When two jobs claimed the same number, the later claim was voided and renumbered instead of editing old records."
 family = "Audit and release governance"
 tags = ["ledger", "coordination", "reservations", "append-only"]
-related = ["seal-and-audit-protocol", "correction-and-retraction", "reproducibility-receipts", "run-script-log-convention", "g-ledger"]
+related = ["seal-and-audit-protocol", "correction-and-retraction", "reproducibility-receipts", "g-ledger"]
 summary = "When several people test the same texts, a shared ledger prevents duplicate work, silent overwrites, and claims added after the fact. Each task reserves a log number and the new file names it will create. It later records file hashes, the final outcome, or a correction. Old entries are never rewritten. A wrong claim gets a dated correction, and a number collision voids and renumbers the later task. Auditors use this history to decide which negative results are valid."
 updated = "2026-09-04"
 

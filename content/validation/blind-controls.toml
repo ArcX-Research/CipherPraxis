@@ -6,7 +6,7 @@ status = "VERIFIED"
 status_note = "The project ran one-shot hidden control banks from seeds fixed in advance. One bank of 34 cases returned POWER_BLOCKED at case four even though a visible development bank had passed 34/34. Blind controls exist to expose that gap."
 family = "Control design"
 tags = ["controls", "hidden bank", "one-shot", "seed commitment"]
-related = ["planted-controls", "target-absent-controls", "held-out-gates", "power-measurement", "seal-and-audit-protocol", "seed-determinism", "hash-chained-transcripts", "g-planted-control"]
+related = ["planted-controls", "target-absent-controls", "held-out-gates", "power-measurement", "seal-and-audit-protocol", "seed-determinism", "g-planted-control"]
 summary = "A blind control has a known answer, but the solver's author cannot see its plaintext, key, or source position until the run ends. One form builds a hidden bank from a seed held only by the release authority and allows one recorded attempt. Another hides the answer in the full search space and gives the solver no shortcut. Visible controls help develop a tool. Blind controls measure how well the finished tool really works."
 updated = "2026-09-04"
 

@@ -118,7 +118,7 @@ title = "Worked example"
 body = '''
 Plaintext alphabet keyed by `ZEBRAS` ($P$ = `ZEBRASCDFGHIJKLMNOPQTUVWXY`), ciphertext alphabet straight, shifts $(3, 7, 12)$. Plaintext `QUAGMIRE`:
 
-```
+```trace
 plain    Q   U   A   G   M   I   R   E
 pos_P   19  21   4   9  15  11   3   1
 shift    3   7  12   3   7  12   3   7

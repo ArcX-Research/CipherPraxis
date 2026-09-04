@@ -144,11 +144,11 @@ fn MethodIndex(section: Section) -> impl IntoView {
                     groups.into_iter().map(|(family, items)| view! {
                         <div class="family-group">
                             <h2 class="family-h"><span>{family}</span><span class="mono meta">{format!("{} {}", items.len(), if items.len() == 1 { "entry" } else { "entries" })}</span></h2>
-                            <div class="card-grid">{items.into_iter().map(|e| view! { <EntryCard entry=e/> }).collect_view()}</div>
+                            <div class="card-grid">{items.into_iter().map(|e| view! { <EntryCard entry=e show_section=false show_family=false/> }).collect_view()}</div>
                         </div>
                     }).collect_view().into_any()
                 } else {
-                    view! { <div class="card-grid">{list.into_iter().map(|e| view! { <EntryCard entry=e/> }).collect_view()}</div> }.into_any()
+                    view! { <div class="card-grid">{list.into_iter().map(|e| view! { <EntryCard entry=e show_section=false/> }).collect_view()}</div> }.into_any()
                 }
             }}
         </section>

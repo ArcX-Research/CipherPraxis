@@ -6,7 +6,7 @@ status = "VERIFIED"
 status_note = "Every launcher uses the same fixed order and prints an explicit CONTROL_GATE PASS, CONTROL_GATE FAIL, or TARGET_REFUSED result. A failed control stops the run, and the no-repeat checklist forbids trying the target afterward."
 family = "Control design"
 tags = ["controls", "gating", "launchers", "policy"]
-related = ["planted-controls", "target-absent-controls", "blind-controls", "throughput-fail", "run-script-log-convention", "kat-harness", "seal-and-audit-protocol", "g-planted-control"]
+related = ["planted-controls", "target-absent-controls", "blind-controls", "throughput-fail", "kat-harness", "seal-and-audit-protocol", "g-planted-control"]
 summary = "Every run follows one order: self-tests, planted controls, and only then the live text if all controls pass. A failed control means the tool is not ready. The launcher stops and records that failure instead of loading the target. Enforcing this order in code prevents a weak test from creating a misleading negative result."
 updated = "2026-09-04"
 

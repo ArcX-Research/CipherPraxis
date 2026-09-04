@@ -123,7 +123,7 @@ title = "Worked example"
 body = '''
 Key $a = 5$, $b = 8$ ($a^{-1} = 21$ since $5 \times 21 = 105 = 4 \times 26 + 1$). Plaintext `AFFINE`:
 
-```
+```trace
 plain    A   F   F   I   N   E
 x        0   5   5   8  13   4
 5x+8     8  33  33  48  73  28

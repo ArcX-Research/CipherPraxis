@@ -143,7 +143,7 @@ Exact solver with the keyword known (logs/42): 13 letters 1/3 (2,148 assignments
 kind = "example"
 title = "Worked example"
 body = '''
-Mixed plaintext alphabet $A$ = `ZEBRASCDFGHIJKLMNOPQTUVWXY` (keyword-mixed), straight ciphertext alphabet, period 2 with shifts $(3, 10)$. Encrypting `ATTACKATDAWN` by $\operatorname{idx}_B(c) = \operatorname{idx}_A(p) + k_{i \bmod 2}$ gives `HEXOJXHEKOAA` (A is at position 4 in $A$, so $c_0 = 4 + 3 = 7 = $ H; T is at 20, so $c_1 = 20 + 10 \equiv 4 = $ E).
+Mixed plaintext alphabet $A$ = `ZEBRASCDFGHIJKLMNOPQTUVWXY` (keyword-mixed), straight ciphertext alphabet, period 2 with shifts $(3, 10)$. Encrypting `ATTACKATDAWN` by $\operatorname{idx}_B(c) = \operatorname{idx}_A(p) + k_{i \bmod 2}$ gives `HEXOJXHEKOAA` (A is at position 4 in $A$, so $c_0 = 4 + 3 = 7$ = H; T is at 20, so $c_1 = 20 + 10 \equiv 4$ = E).
 
 Now suppose $A$ is unknown and the crib `ATTACK` is placed at offset 0. The six equations $\operatorname{idx}_A(p_j) + k_{j \bmod 2} = \operatorname{idx}_B(c_j)$ give, after eliminating the two shifts, the relative positions
 

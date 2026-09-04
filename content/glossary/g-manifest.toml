@@ -5,6 +5,6 @@ status = "VERIFIED"
 status_note = "Term as used in the engineering and governance entries."
 family = "Engineering vocabulary"
 tags = ["provenance", "release"]
-related = ["build-manifests-and-release-json", "seal-and-audit-protocol", "g-receipt"]
+related = ["seal-and-audit-protocol", "g-receipt"]
 summary = "A build manifest is a separate, standard one-line JSON record. It is written after the code is frozen and before the audit. It lists every input by path and SHA-256 hash, every fixed value the run uses, and every path the run may create. It cannot include hashes of later outputs. After the audits, a release record links the manifest, audit records, and approval token."
 updated = "2026-09-04"

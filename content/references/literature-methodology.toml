@@ -6,7 +6,7 @@ status = "VERIFIED"
 status_note = "These sources motivate the site's validation and engineering practices. This bibliography makes no experimental claim."
 family = "Literature"
 tags = ["bibliography", "methodology", "reproducibility", "preregistration"]
-related = ["tautological-gate-rule", "seal-and-audit-protocol", "reproducibility-receipts", "hash-chained-transcripts", "kat-harness", "correction-and-retraction", "selection-overfit-check", "internal-evidence-corpus"]
+related = ["tautological-gate-rule", "seal-and-audit-protocol", "reproducibility-receipts", "kat-harness", "correction-and-retraction", "selection-overfit-check", "internal-evidence-corpus"]
 summary = "These works explain the site's research rules. Feynman argues for reporting facts that could undermine a result. Gelman and Loken, and Simmons, Nelson, and Simonsohn, explain how flexible choices create false positives. Nosek covers preregistration. Peng and Sandve cover reproducible computation. NIST documents known-answer tests. Haber and Stornetta provide the basis for hash-chained records."
 updated = "2026-09-04"
 

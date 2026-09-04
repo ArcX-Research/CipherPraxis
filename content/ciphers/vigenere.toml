@@ -117,7 +117,7 @@ title = "Worked example"
 body = '''
 Plaintext `ATTACKATDAWN`, key `LEMON` ($m = 5$):
 
-```
+```trace
 plain   A T T A C K A T D A W N
 key     L E M O N L E M O N L E
 cipher  L X F O P V E F R N H R

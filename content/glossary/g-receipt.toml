@@ -5,6 +5,6 @@ status = "VERIFIED"
 status_note = "Term as used throughout this atlas's provenance panels."
 family = "Validation vocabulary"
 tags = ["provenance", "hashes"]
-related = ["reproducibility-receipts", "hash-chained-transcripts", "g-manifest"]
+related = ["reproducibility-receipts", "g-manifest"]
 summary = "A receipt records the minimum needed for someone else to reproduce a claimed number. It gives hashes for the source, runner, parser, corpus, and model tables; the seeds and command; and the exact transcript hash and line. A number without this record is removed from public text rather than guessed or rounded."
 updated = "2026-09-04"

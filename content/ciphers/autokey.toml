@@ -119,7 +119,7 @@ title = "Worked example"
 body = '''
 Plaintext autokey, Vigenère relation, primer `QUEEN`, plaintext `ATTACKATDAWN`:
 
-```
+```trace
 plain   A T T A C K A T D A W N
 key     Q U E E N A T T A C K A
 cipher  Q N X E P K T M D C G N

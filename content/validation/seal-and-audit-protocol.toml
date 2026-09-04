@@ -6,7 +6,7 @@ status = "VERIFIED"
 status_note = "Two tool lineages completed the full process. Independent audits first returned BLOCK, repaired successors received PASS from different auditors, and a release authority ran the final transactions. SHA-256 fixed every file, and the ledger recorded every decision."
 family = "Audit and release governance"
 tags = ["audit", "seal", "release", "chain of custody", "independent review"]
-related = ["reproducibility-receipts", "ledger-reservations", "correction-and-retraction", "build-manifests-and-release-json", "hash-chained-transcripts", "blind-controls", "target-absent-controls", "kat-harness", "g-seal", "g-independent-audit"]
+related = ["reproducibility-receipts", "ledger-reservations", "correction-and-retraction", "blind-controls", "target-absent-controls", "kat-harness", "g-seal", "g-independent-audit"]
 summary = "Before a tool may use a one-shot resource, such as a hidden control bank or one allowed read of live text, freeze its exact files. A different person audits them against the design and reports PASS or BLOCK with hashes. A BLOCK requires a new version instead of changing the sealed one. Only the release authority can approve and run the final job. Audits caught a null that could not fail, a one-shot lock stored only in memory, and an unfixed runner before any hidden bank was used."
 updated = "2026-09-04"
 

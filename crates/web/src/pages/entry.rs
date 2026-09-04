@@ -92,6 +92,19 @@ fn EntryView(entry: Entry) -> impl IntoView {
                             <StatusBadge status=status large=true/>
                             <div class="entry-status-note" inner_html=praxis_core::render::markdown_to_html(&status_note.unwrap_or_else(|| status.description().to_string()))></div>
                         </div>
+                        {(section.is_method_section() && !is_lab).then(|| view! {
+                            <details class="entry-context">
+                                <summary>"What do these figures mean?"</summary>
+                                <p><b>{status.label()}</b>" means: "{status.description()}" "<a href="/#status-h">"See all statuses."</a></p>
+                                <p>
+                                    "The numbers come from a research program that tested each method on its own ciphertexts. "
+                                    <a href="/validation/planted-controls">"Planted controls"</a>
+                                    " are test cases with a known answer, run through the same pipeline before any real text; a "
+                                    <a href="/statistics/shuffled-null-z-score">"z-score"</a>
+                                    " compares a reading with the same measurement on shuffled text; and phrases such as “the two texts” or “the 153-letter text” refer to that program's target ciphertexts, which this site does not reproduce. Every figure is backed by the files listed under Evidence."
+                                </p>
+                            </details>
+                        })}
                         <div class="lede" inner_html=praxis_core::render::markdown_to_html(&summary)></div>
                         {(!tags.is_empty()).then(|| view! { <div class="card-tags">{tags.iter().map(|t| view! { <span class="tag">{t.clone()}</span> }).collect_view()}</div> })}
                     </header>

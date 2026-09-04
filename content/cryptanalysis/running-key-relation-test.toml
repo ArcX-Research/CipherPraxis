@@ -118,7 +118,7 @@ c'  S S X R G S I S O G P W
 c-c'  T F I X J D W N D H S V   =  p - p'
 ```
 
-The key has cancelled: `TFIXJDWNDHSV` is exactly the letter-wise difference of the two plaintexts (A$-$H $= -7 \equiv 19 = $ T, and so on). Reading it requires guessing pairs of words whose difference matches, a search whose power at 150 letters the corpus measured as insufficient. Had the key text been known, each position would instead give a linear equation on the alphabet, and a wrong key window would be contradicted after a handful of letters.
+The key has cancelled: `TFIXJDWNDHSV` is exactly the letter-wise difference of the two plaintexts (A$-$H $= -7 \equiv 19$ = T, and so on). Reading it requires guessing pairs of words whose difference matches, a search whose power at 150 letters the corpus measured as insufficient. Had the key text been known, each position would instead give a linear equation on the alphabet, and a wrong key window would be contradicted after a handful of letters.
 '''
 
 [[provenance]]

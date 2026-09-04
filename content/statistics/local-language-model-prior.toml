@@ -6,7 +6,7 @@ status = "POWER-LIMITED"
 status_note = "Three local models were tested with fixed development gates, and none passed. A character GRU put at least one true cell below rank 8 in all 20 clean controls, with worst true ranks 9–23. A small transformer ranked 24 of 34 planted orders first, below the required 40/40, and once ranked the truth 689. A local server exposed only 37 of 72 directed-edge scores and hid half the planted path. The exact back ends remain valid."
 family = "Language priors"
 tags = ["neural prior", "language model", "reranking", "proposal", "contamination"]
-related = ["semi-markov-word-model", "quadgram-log-likelihood", "local-llm-server-integration", "beam-search", "shared-cycle-attack", "exact-chain-oracle", "held-out-gates", "power-analysis", "g-held-out"]
+related = ["semi-markov-word-model", "quadgram-log-likelihood", "beam-search", "shared-cycle-attack", "exact-chain-oracle", "held-out-gates", "power-analysis", "g-held-out"]
 summary = "A local language model can help in two ways. It can suggest likely plaintext letters before an exact solver takes over, or rerank complete answers such as the 9! orders of nine recovered chunks. In both cases, the model only suggests candidates. Exact algebra and scores against null data make the decision. The model must pass separate, uncontaminated controls, provide repeatable full-sequence scores, and meet the same power standard as any other selector."
 updated = "2026-09-04"
 

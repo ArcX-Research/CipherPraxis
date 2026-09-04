@@ -6,7 +6,7 @@ status = "VERIFIED"
 status_note = "Launchers print transcript paths, ledger entries store SHA-256 hashes for sources and transcripts, and audits recompute hashes before writing. A fresh rerun of one sealed control job reproduced every meaningful record; only timing fields changed."
 family = "Reproducibility"
 tags = ["receipts", "hashes", "transcripts", "provenance"]
-related = ["seal-and-audit-protocol", "ledger-reservations", "hash-chained-transcripts", "build-manifests-and-release-json", "seed-determinism", "run-script-log-convention", "g-receipt"]
+related = ["seal-and-audit-protocol", "ledger-reservations", "seed-determinism", "g-receipt"]
 summary = "A receipt stores the minimum needed to reproduce a number: hashes of the source, runner, parser, corpus, and model tables; the seeds and exact command; and the transcript hash. This site reports no measured figure without one. An audit of 200 logs found four empty files and twelve failed or partial runs that could otherwise have been cited. Receipts make those mistakes easier to catch."
 updated = "2026-09-04"
 
@@ -17,7 +17,7 @@ A **receipt** for a claim $x$ is the tuple
 
 $$\big(h(\text{source}),\ h(\text{runner}),\ h(\text{parser}),\ h(\text{corpus}),\ h(\text{model tables}),\ \text{seeds},\ \text{argv},\ h(\text{transcript}),\ \text{line or record id}\big)$$
 
-with $h = $ SHA-256, such that re-running the pinned bytes with the pinned inputs regenerates the transcript's semantic records and $x$ can be read from them. Receipts are recorded in three places: the transcript itself (a `PINS` or `LINEAGE` record), the ledger entry that announces the result, and the audit that verifies it.
+with $h$ = SHA-256, such that re-running the pinned bytes with the pinned inputs regenerates the transcript's semantic records and $x$ can be read from them. Receipts are recorded in three places: the transcript itself (a `PINS` or `LINEAGE` record), the ledger entry that announces the result, and the audit that verifies it.
 '''
 
 [[blocks]]

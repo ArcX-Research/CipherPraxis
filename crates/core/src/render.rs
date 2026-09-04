@@ -105,6 +105,129 @@ pub fn tree_to_html(src: &str) -> String {
     out
 }
 
+/// Renders a cipher walkthrough (rows of `label  tok tok tok …`) as a shared grid so that the
+/// tokens of every row line up by position. Separators such as `/`, `|`, `+`, `=` and `->` are
+/// shown unboxed; a row labelled as the cipher/output row is highlighted.
+pub fn trace_to_html(src: &str) -> String {
+    struct Row {
+        label: String,
+        tokens: Vec<String>,
+    }
+    fn split_label(line: &str) -> (String, String) {
+        // A short `name:` prefix labels the row; otherwise the first run of two spaces ends the label.
+        let mut parts = line.splitn(2, ' ');
+        let first = parts.next().unwrap_or("");
+        let rest = parts.next().unwrap_or("").trim();
+        if first.ends_with(':') && first.len() <= 8 && !rest.is_empty() {
+            return (first.to_string(), rest.to_string());
+        }
+        let bytes = line.as_bytes();
+        let mut i = 0;
+        while i + 1 < bytes.len() {
+            if bytes[i] == b' ' && bytes[i + 1] == b' ' && !line[..i].trim().is_empty() {
+                return (line[..i].trim().to_string(), line[i..].trim().to_string());
+            }
+            i += 1;
+        }
+        (String::new(), line.trim().to_string())
+    }
+    let is_sep = |t: &str| {
+        matches!(
+            t,
+            "/" | "|" | "+" | "=" | "-" | "->" | "→" | "…" | "..." | "×" | "*"
+        )
+    };
+    let mut rows: Vec<Row> = Vec::new();
+    for line in src.lines() {
+        if line.trim().is_empty() {
+            continue;
+        }
+        let (label, rest) = split_label(line.trim_end());
+        // Columns are separated by two or more spaces. A column holding brackets is one
+        // expression (`13+(23 mod 13)=23`); any other column splits on single spaces.
+        let mut tokens: Vec<String> = Vec::new();
+        for chunk in rest.split("  ").map(str::trim).filter(|c| !c.is_empty()) {
+            if chunk.contains(['(', ')', '[', ']']) {
+                tokens.push(chunk.to_string());
+            } else {
+                tokens.extend(chunk.split_whitespace().map(str::to_string));
+            }
+        }
+        if tokens.len() == 1
+            && tokens[0].len() >= 8
+            && tokens[0].chars().all(|c| c.is_ascii_uppercase())
+        {
+            tokens = tokens[0].chars().map(|c| c.to_string()).collect();
+        }
+        rows.push(Row { label, tokens });
+    }
+    // Rows of unequal length that carry separators, `name:` items or long tokens are not
+    // positional (stream sums, grids, column listings): they flow inline across the grid so
+    // the letter rows keep uniform shared columns.
+    let same_count = rows
+        .windows(2)
+        .all(|w| w[0].tokens.len() == w[1].tokens.len());
+    let free: Vec<bool> = rows
+        .iter()
+        .map(|r| {
+            !same_count
+                && r.tokens
+                    .iter()
+                    .any(|t| is_sep(t) || t.ends_with(':') || t.chars().count() >= 3)
+        })
+        .collect();
+    let n = rows
+        .iter()
+        .zip(&free)
+        .filter(|(_, f)| !**f)
+        .map(|(r, _)| r.tokens.len())
+        .max()
+        .unwrap_or(0)
+        .max(1);
+    let cell = |t: &str, hot: bool| -> String {
+        if is_sep(t) {
+            format!("<i class=\"trace-sep\">{}</i>", escape_html(t))
+        } else {
+            format!(
+                "<i class=\"trace-cell{}\">{}</i>",
+                if hot { " trace-hot" } else { "" },
+                escape_html(t)
+            )
+        }
+    };
+    let mut out = format!(
+        "<div class=\"table-scroll\"><div class=\"trace\" style=\"--n:{n}\" role=\"table\">"
+    );
+    for (r, free) in rows.iter().zip(&free) {
+        let lower = r.label.trim_end_matches(':').to_lowercase();
+        let hot = lower.starts_with("cipher")
+            || lower == "outer"
+            || lower.starts_with("output")
+            || lower == "c_i"
+            || lower == "sigma";
+        out.push_str(&format!(
+            "<span class=\"trace-label\">{}</span>",
+            escape_html(&r.label)
+        ));
+        if *free {
+            out.push_str("<span class=\"trace-free\">");
+            for t in &r.tokens {
+                out.push_str(&cell(t, hot));
+            }
+            out.push_str("</span>");
+            continue;
+        }
+        for i in 0..n {
+            match r.tokens.get(i) {
+                Some(t) => out.push_str(&cell(t, hot)),
+                None => out.push_str("<i class=\"trace-cell trace-empty\"></i>"),
+            }
+        }
+    }
+    out.push_str("</div></div>");
+    out
+}
+
 /// Renders Markdown (with math, tables, footnotes) to HTML. Fenced blocks tagged `tree` become
 /// wrapping path/description grids (see [`tree_to_html`]).
 pub fn markdown_to_html(md: &str) -> String {
@@ -116,14 +239,18 @@ pub fn markdown_to_html(md: &str) -> String {
     opts.insert(Options::ENABLE_FOOTNOTES);
     opts.insert(Options::ENABLE_SMART_PUNCTUATION);
     let mut events: Vec<Event<'_>> = Vec::new();
-    let mut tree_buf: Option<String> = None;
+    let mut special: Option<(&'static str, String)> = None;
     for ev in Parser::new_ext(md, opts) {
-        if let Some(buf) = tree_buf.as_mut() {
+        if let Some((kind, buf)) = special.as_mut() {
             match ev {
                 Event::Text(t) => buf.push_str(&t),
                 Event::End(TagEnd::CodeBlock) => {
-                    let html = tree_to_html(buf);
-                    tree_buf = None;
+                    let html = if *kind == "trace" {
+                        trace_to_html(buf)
+                    } else {
+                        tree_to_html(buf)
+                    };
+                    special = None;
                     events.push(Event::Html(CowStr::from(html)));
                 }
                 _ => {}
@@ -134,7 +261,12 @@ pub fn markdown_to_html(md: &str) -> String {
             Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(ref info)))
                 if info.trim() == "tree" =>
             {
-                tree_buf = Some(String::new());
+                special = Some(("tree", String::new()));
+            }
+            Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(ref info)))
+                if info.trim() == "trace" =>
+            {
+                special = Some(("trace", String::new()));
             }
             Event::InlineMath(s) => {
                 events.push(Event::Html(CowStr::from(latex_to_mathml(&s, false))))
@@ -366,5 +498,42 @@ mod tests {
         assert!(!html.contains("<pre>"), "{html}");
         // Ordinary fences are untouched.
         assert!(markdown_to_html("```text\nx\n```").contains("<pre>"));
+    }
+
+    #[test]
+    fn trace_prefix_labels_and_unequal_separator_rows_flow_inline() {
+        let html = trace_to_html("A: I T R  + K E Y  = S X P\nB: N E  + A X  = N B");
+        assert!(html.contains("<span class=\"trace-label\">A:</span>"));
+        assert!(html.contains("<span class=\"trace-label\">B:</span>"));
+        assert_eq!(html.matches("<span class=\"trace-free\">").count(), 2);
+        assert!(html.contains("<i class=\"trace-cell\">I</i>"));
+        assert!(html.contains("<i class=\"trace-sep\">+</i>"));
+        assert!(!html.contains("trace-empty"));
+        // Bracketed expressions separated by two spaces stay whole and keep the row positional.
+        let porta =
+            trace_to_html("plain   H   E\nresult  1+(2 mod 3)=0  (4-1) mod 3=0\ncipher  Z   T");
+        assert!(porta.contains("<i class=\"trace-cell\">1+(2 mod 3)=0</i>"));
+        assert!(porta.contains("--n:2"));
+        assert!(!porta.contains("trace-free"));
+        // Equal-length rows stay positional even when they contain separators.
+        let grid = trace_to_html("text  T A W | A C D\nres   0 0 0 | 1 1 1");
+        assert!(!grid.contains("trace-free"));
+        assert!(grid.contains("--n:7"));
+    }
+
+    #[test]
+    fn trace_fences_align_tokens_on_a_grid() {
+        let md = "```trace\nplain   A T T\nkey     L E\ncipher  L X F\ngrid    VK / ZS\n```";
+        let html = markdown_to_html(md);
+        assert!(html.contains("class=\"trace\" style=\"--n:3\""), "{html}");
+        assert!(
+            html.contains("<span class=\"trace-label\">plain</span><i class=\"trace-cell\">A</i>"),
+            "{html}"
+        );
+        assert!(html.contains("trace-cell trace-hot\">L</i>"), "{html}");
+        assert!(html.contains("<i class=\"trace-sep\">/</i>"), "{html}");
+        assert!(html.contains("trace-empty"), "{html}");
+        let alpha = markdown_to_html("```trace\nplain  ABCDEFGHIJ\n```");
+        assert!(alpha.contains("--n:10"), "{alpha}");
     }
 }

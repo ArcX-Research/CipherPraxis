@@ -112,7 +112,7 @@ title = "Worked example"
 body = '''
 Alphabet $\sigma$ keyed by `ZEBRAS` (`ZEBRASCDFGHIJKLMNOPQTUVWXY`), starter $s = 3$, plaintext `HELLO`. Ranks $u = r(H), r(E), r(L), r(L), r(O) = 10, 1, 14, 14, 17$.
 
-```
+```trace
 i     0        1          2          3          4
 v_i   10+3=13  1+10+1=12  14+1+1=16  14+14+1=29->3  17+14+1=32->6
 c_i   K        J          N          R          C

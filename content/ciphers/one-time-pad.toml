@@ -106,7 +106,7 @@ title = "Worked example"
 body = '''
 Plaintext `HELLO`, key `XMCKL` (used once):
 
-```
+```trace
 plain   H  E  L  L  O
 key     X  M  C  K  L
 sum     30 16 13 21 25

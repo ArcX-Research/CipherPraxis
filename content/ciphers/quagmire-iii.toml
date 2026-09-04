@@ -121,7 +121,7 @@ title = "Worked example"
 body = '''
 Alphabet keyed by `ZEBRAS` ($A$ = `ZEBRASCDFGHIJKLMNOPQTUVWXY`) on both sides, shifts $(3, 7, 12)$. Plaintext `QUAGMIRE`:
 
-```
+```trace
 plain    Q   U   A   G   M   I   R   E
 pos_A   19  21   4   9  15  11   3   1
 +shift  22  28  16  12  22  23   6   8

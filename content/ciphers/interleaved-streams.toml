@@ -111,7 +111,7 @@ title = "Worked example"
 body = '''
 Plaintext `INTERLEAVED` split into even positions `ITREVD` and odd positions `NELAE`. Stream A is Vigenère with key `KEY`, stream B with key `AXE`:
 
-```
+```trace
 A: I T R E V D  + K E Y K E Y  = S X P O Z B
 B: N E L A E    + A X E A X    = N B P A B
 ```
