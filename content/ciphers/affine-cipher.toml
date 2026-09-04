@@ -1,0 +1,125 @@
+id = "affine-cipher"
+section = "ciphers"
+title = "Affine cipher"
+subtitle = "Multiply-and-add substitution over Z26, alone or one map per coset"
+status = "VERIFIED"
+status_note = "The periodic-affine solver (one of the 312 affine maps per coset, exact cyclic quadgram DP) passed both period-7 planted controls at 63 and 95 letters exactly; a period-26 control at 126 letters failed because four to five letters per coset cannot identify a map of that family."
+family = "Monoalphabetic substitution"
+tags = ["monoalphabetic", "affine", "units mod 26", "periodic"]
+related = ["caesar-shift", "vigenere", "affine-maps-mod-26", "units-mod-26", "periodic-substitution-dp", "exact-dynamic-programming", "within-coset-null", "affine-lab"]
+summary = "The affine cipher maps each letter x to ax + b modulo 26 with a a unit. There are 12 x 26 = 312 such maps, so a single affine substitution is a small exhaustive search. The program used the family as the tractable middle ground between additive periodic keys and seven unrelated substitutions: one affine map per coset of a periodic cipher, solved exactly by dynamic programming and gated by planted controls."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $a \in \mathbb{Z}_{26}^{\times}$ (so $\gcd(a, 26) = 1$, twelve choices) and $b \in \mathbb{Z}_{26}$. Then
+
+$$c \equiv a\,p + b \pmod{26}, \qquad p \equiv a^{-1}(c - b) \pmod{26}.$$
+
+With $a = 1$ this is a Caesar shift; with $b = 0$ it is a pure decimation. Because $a$ must be a unit, only $12 \times 26 = 312$ maps exist.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Periodic affine layer"
+body = '''
+In an index order $A$ (straight or keyword-mixed), the program's periodic version gives coset $b = i \bmod p$ its own map:
+
+$$\operatorname{pos}_A(p_i) \equiv m_b \operatorname{pos}_A(c_i) + d_b \pmod{26}, \qquad \gcd(m_b, 26) = 1,$$
+
+and the forward form is $\operatorname{pos}_A(c_i) \equiv m_b^{-1}(\operatorname{pos}_A(p_i) - d_b)$. The Vigenère and Beaufort layers are the sub-cases $m_b = 1$ and $m_b = -1$. Configuration equality is judged on the letters actually observed in each coset, because two affine actions can agree on every observed symbol and differ elsewhere.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Single affine map**: 312 keys; the frequency correlation over all keys is immediate.
+- **Periodic affine (one map per coset)**: $312^p$ raw keys, searched by a monogram shortlist of the best eight maps per coset followed by an exact cyclic order-three quadgram DP, then an unrestricted 312-way coordinate polish.
+- **Affine position routes** are a different object: an affine permutation of *positions*, treated under [Route transposition](/ciphers/route-transposition).
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Natural-language plaintext; each coset must hold enough letters to distinguish 312 candidate maps.
+- Invariant: an affine map is a bijection, so within-coset coincidences $c_i = c_j \Leftrightarrow p_i = p_j$ are preserved, exactly as for a shift.
+- The index order is part of the model; the program tried the straight order and one keyword-mixed order.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. For each coset rank all 312 maps by monogram likelihood of the decrypted coset; keep the best eight.
+2. Run the exact cyclic order-three dynamic programme over the shortlisted product with a quadgram objective, which is exact inside the shortlist (see [Periodic substitution DP](/exact/periodic-substitution-dp)).
+3. Let every one of the 312 maps enter through unrestricted coordinate polish and adjacent-pair polish.
+4. Any English-looking endpoint receives a within-coset shuffled null that repeats the full selection.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Single map: 312 decrypts. Periodic: $8^p$ shortlisted states are exact in the DP with an order-three chain ($8^3$ states per step); the polish visits $312\,p$ single moves per sweep plus shortlisted pairs. Both period-7 controls completed inside the audit's standard budget (logs/205_periodic_affine.log).
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Identifiability at four to five letters per coset.** The period-26 control on 126 letters produced an attractive false state: its selected text scored $-4.28$ per letter (inside the English band) and round-tripped, yet neither the plaintext nor the observable maps matched the plant. A wider family manufactures false language on short cosets; the target of that length was therefore kept locked.
+- **Round-trip is tautological.** Any invertible fitted map reproduces the ciphertext.
+- **Language-model overfit.** The period-7 endpoints on the two live zones reached only $-5.26$ and $-5.77$ (partial), which the audit classified as quadgram overfit rather than plaintext.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Two target-length period-7 controls passed exactly: 63/63 and 95/95 plaintext letters, the exact observed affine maps and order, and independent forward reconstruction. The separate 126-letter period-26 control failed as described above, so the periodic-affine reading was closed only for the two period-7 zones and left undecided for the period-26 zone (PERIODIC_AFFINE_DP_AUDIT.md; logs/205_periodic_affine.log).
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Key $a = 5$, $b = 8$ ($a^{-1} = 21$ since $5 \times 21 = 105 = 4 \times 26 + 1$). Plaintext `AFFINE`:
+
+```
+plain    A   F   F   I   N   E
+x        0   5   5   8  13   4
+5x+8     8  33  33  48  73  28
+mod 26   8   7   7  22  21   2
+cipher   I   H   H   W   V   C
+```
+
+Decrypt `W`: $21 \times (22 - 8) = 294 = 11 \times 26 + 8 \to I$. The [affine lab](/labs/affine-lab) enumerates all 312 maps.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The periodic-affine family was chosen because it is the largest structured subset between "one shift per coset" and "one arbitrary substitution per coset" that an exact DP can still search; the seven-free-substitution family itself is not identifiable at 63 letters (its control gate failed), so the affine subset is where exactness ends.
+'''
+
+[[provenance]]
+path = "withmath/wm_periodic_affine_dp.py"
+kind = "solver"
+note = "Periodic affine substitutions: 312 maps per residue, monogram top-8, exact cyclic order-three Q4 DP, coordinate and adjacent-pair polish, within-coset nulls."
+ref = "logs/205_periodic_affine.log"
+
+[[provenance]]
+path = "withmath/PERIODIC_AFFINE_DP_AUDIT.md"
+kind = "audit"
+note = "Log 205: p7 controls 63/63 and 95/95 PASS; n126/p26 control FAIL with a false ENGLISH state at -4.2767."
+ref = "LOG205"
+
+[[provenance]]
+path = "withmath/wm_patternbeam.py"
+kind = "solver"
+note = "Seven independent substitutions: held-out 63-letter controls recovered only 19.0% and 9.5% of plaintext, so that wider family is not identifiable."
+ref = "logs/150_patternbeam.log"
+
+[[references]]
+title = "Cryptography: Theory and Practice"
+author = "Douglas R. Stinson"
+year = 1995

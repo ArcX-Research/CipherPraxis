@@ -1,0 +1,127 @@
+id = "within-coset-null"
+section = "statistics"
+title = "Within-coset null"
+subtitle = "Permuting positions inside each residue class: the valid-model null for language scores under a periodic key"
+status = "VERIFIED"
+status_note = "Implemented and audited: 99 within-residue transformations preserved every per-coset histogram and the exact key-space geometry across 700 full selections (algebra KAT with 6,489,600 key-geometry clauses and 54,600 histogram clauses), four planted English positives ranked 1 of 100 and three valid-model random negatives ranked 84, 55 and 6; a live bank search was correctly rejected when eight of nine such nulls beat it."
+family = "Null distributions and calibration"
+tags = ["null distribution", "permutation", "coset", "valid-model null", "matched null"]
+related = ["permutation-test", "shuffled-null-z-score", "family-wise-null", "selection-overfit-diagnostic", "valid-model-nulls", "vigenere", "quagmire-iii", "exact-period-alignment", "g-coset", "g-null-distribution"]
+summary = "For a hypothesis of the form 'a periodic substitution of period p over a language-like plaintext', a whole-text shuffle is too destructive: it changes the coset histograms that the hypothesis itself predicts. The within-coset null permutes positions only inside each residue class i mod p. It keeps every coset histogram, the coset IC, the letter multiset and, for any tested progressive slope, the de-progressed monogram multiset, while destroying the language order inside and across cosets. Every key still decrypts the null to a permutation of what it would decrypt on the original, so the key-space geometry is unchanged and any excess score on the original is attributable to order alone."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For period $p$ let $J_r = \{j : j \equiv r \pmod p\}$ and $G = \prod_r S(J_r)$, the group of permutations that never move a position out of its residue class. A within-coset null draws $g \in G$ uniformly and applies $A_g(c)[j] = c[g(j)]$. Under any per-coset bijection $F_r$ (additive shift, keyed alphabet, or independent substitution),
+
+$$\text{decrypt}\big(A_g(c)\big) = A_g\big(\text{decrypt}(c)\big),$$
+
+so for every one of the $26^p$ keys the null decrypt is the original decrypt with its letters permuted within cosets. Any statistic that depends only on per-coset histograms is invariant; any statistic that reads letter order (quadgrams, word models, cross-coset equality patterns at fixed positions) is randomised.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "What is preserved"
+body = '''
+- Per-coset letter histograms $F_r(x)$ and hence the coset IC, the union IC of any alignment, and every shift-marginalised [evidence](/statistics/bayesian-evidence-model-selection).
+- For a progressive key $k_j = k_{j \bmod p} + d \cdot \lfloor j/p \rfloor$ the term $d \cdot j \bmod 26$ is *not* constant within a residue class of $p$; but for a period-26 coset structure with slope $d$, $d \cdot j \bmod 26$ is constant inside $j \bmod 26 = r$, so the de-progressed monogram multiset of every tested slope is preserved by the period-26 within-coset null.
+- Same-residue equality partitions: the multiset of pair indicators $[c_i = c_j]$ over pairs in one coset is preserved as a multiset but re-based to different positions, which re-orders (without changing) the row space of exact key-cancellation equations.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The alternative hypothesis is exchangeable within residue classes under the null: a language-like plaintext has no order structure that the periodic key model claims, so if the observed score is only the coset histograms' doing, the null reproduces it.
+- The period is fixed before the null is drawn; if the period is itself selected, the family-wise version must re-select it on every null.
+- Transformations are sampled without replacement and never accepted or rejected on the basis of their score.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Use in an attack pipeline"
+body = '''
+1. Fix $p$ and draw $N$ distinct non-identity elements of $G$ (the toolkit draws 100 and stores $h_i = g_0^{-1} g_i$ so that $h_0$ is the identity).
+2. Re-run the *entire* selection on each null: cycle enumeration, sign partition, key fit, language polish, forward check. Never reuse the observed cycle, sign or key.
+3. Admit a candidate only at strict rank 1 of $N + 1$ (ties reject); with $N = 99$ this is $\hat p = 0.01$.
+4. Use 9 nulls for a controls-only power gate, 99 for a live one-shot decision; nine nulls cannot certify below $\hat p = 0.10$.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Drawing a null is $O(n)$; the cost is $N$ complete solver runs. In the audited exact lane the largest core search per replicate was 5,268 nodes and 700 replicates completed; in a bank search of 66,628 cycles each null took the full 12-minute pipeline, which is why only nine were run.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Reusing the observed selection.** Scoring the observed key on shuffled texts (instead of re-fitting) measures a different, smaller null and inflates significance.
+- **Wrong period.** A within-coset null at the wrong $p$ neither preserves the true cosets nor randomises them fully; the resulting $\hat p$ is uninterpretable.
+- **Exchangeability across a union of hypotheses.** If the hypothesis family includes a re-indexing of the text (dihedral or affine re-orderings), one shuffle group is exchangeable for one indexing only; the null must either be proved exchangeable for the whole union or be run as separate matched tests with the worst-case $p$.
+- **Too few nulls.** One null gives $\hat p \le 1/2$ and proves nothing about a 1% rate; nine give $\hat p \ge 0.10$.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Seven fixtures (four held-out English plaintexts under a shared-cycle period-7 model with different sign patterns, three independently seeded uniform-random plaintexts under the same model) times 100 replicates = 700 full selections. Every replicate's exact core reported COMPLETE with a unique optimum and its own forward check, and an independent forward reproduced all three ciphertext rows. Positives: observed scores $-4{,}401{,}911$ to $-3{,}858{,}973$ (scaled integer log-likelihoods) against null maxima of $-5{,}093{,}946$ to $-5{,}475{,}940$, rank 1 of 100 each. Negatives: ranks 84, 55 and 6 of 100; rank 6 is recorded as the boundary case that the strict rank-1 rule still rejects. In a separate bank search the target's best $-4.869$ was beaten by 8 of 9 complete-pipeline within-coset nulls (mean $-4.836$, maximum $-4.795$), $\hat p \le 0.90$; in a derived-alphabet lane the live best $-5.9546$ ranked 100 of 100 against 99 nulls whose maximum was $-5.5630$.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+Text `ATTACKATDAWN` with $p = 3$. The cosets are positions $\{0,3,6,9\} = $ `A A A A`, $\{1,4,7,10\} = $ `T C T W`, $\{2,5,8,11\} = $ `T K D N`. Permute inside the second and third cosets (`C T W T` and `N D T K`) and leave the first alone:
+
+```
+position   0 1 2 3 4 5 6 7 8 9 10 11
+original   A T T A C K A T D A W  N
+null       A C N A T D A W T A T  K
+```
+
+Every coset histogram is unchanged, the whole-text histogram is unchanged, and any Caesar shift applied per coset decrypts the null to a within-coset permutation of the original decrypt. The null text no longer reads, so a quadgram score that is high on the original and low on such nulls is measuring word order, which is exactly what a periodic-substitution hypothesis on a language plaintext predicts and what its histograms alone cannot fake.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The within-coset null is the general pattern "permute within the fibres of what the model conditions on"; the same idea gives within-segment nulls for change-point statistics and within-key-group pairing nulls for shared-cycle banks.
+'''
+
+[[provenance]]
+path = "withmath/wm_core.py"
+kind = "library"
+note = "perm_within_cosets(u, p, rng): shuffle positions within each residue class mod p (keeps the coset histograms, kills block structure)."
+
+[[provenance]]
+path = "withmath/PK9_THIRDS_ENDPOINT_NULL_CONTROL_AUDIT.md"
+kind = "audit"
+note = "99 matched within-residue transformations, invariance proofs (histograms, Stage-A row spaces, key-space geometry), algebra KAT clause counts, 700 selections, positives rank 1/100, negatives 84/55/6, strict rank-1 rule."
+
+[[provenance]]
+path = "withmath/logs/152_crosscycle_full.log"
+kind = "log"
+note = "Nine complete-pipeline within-coset nulls; 8 of 9 beat the target's -4.869 (null mean -4.836, max -4.795), p <= 0.90."
+ref = "logs/152_crosscycle_full.log"
+
+[[provenance]]
+path = "withmath/logs/403_pk8_derived_alphabet_live.log"
+kind = "log"
+note = "99 within-coset nulls; live best -5.9546 vs null max -5.5630, rank 100/100, p_perm >= 0.01."
+ref = "LOG403"
+
+[[provenance]]
+path = "withmath/PK10_LOCALIZED_ALBERTI_SPAN_CONTROL_POWER_AUDIT.md"
+kind = "audit"
+note = "Minimal matched permutation for a period-26 span: permute positions with equal j mod 26; preserves every coset histogram, the coset IC, the symbol multiset and the de-progressed monogram multiset for every tested slope."
+
+[[provenance]]
+path = "withmath/LOG_AUDIT.md"
+kind = "audit"
+note = "Family ledger: 'PK8 p7, PK9 p7 and PK10 p26 are at/below within-coset familywise nulls'; no promotion of a string unless the full selected-family null is lower."
+
+[[references]]
+title = "Permutation Tests: A Practical Guide to Resampling Methods for Testing Hypotheses"
+author = "Phillip Good"
+year = 2000

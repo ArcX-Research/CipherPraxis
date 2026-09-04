@@ -1,0 +1,10 @@
+id = "g-residue-pattern"
+section = "glossary"
+title = "Residue pattern"
+status = "VERIFIED"
+status_note = "Corpus term from the residue-pattern reduction; counts are computed in the technique entries."
+family = "Cryptanalysis technique"
+tags = ["transposition", "columnar", "reduction"]
+related = ["order-free-width-statistic", "transposition-width-recovery", "sandwich-construction", "columnar-transposition", "g-order-free-statistic"]
+summary = "For a columnar transposition of exact width w over an inner substitution of period k, the inner class of an output position depends on the column order only through the residues of the column indices modulo k. The residue pattern is that sequence of residues over the read-out columns; there are w!/prod(mult!) of them (126 for width 9 with period 2, 1,680 for period 3, 24,310 for width 17 with period 2) against w! orders, so the expensive shift fit runs over patterns and the surviving orders are resolved afterwards with language scores. The reduction makes widths exhaustive where an annealer had to guess."
+updated = "2026-09-04"

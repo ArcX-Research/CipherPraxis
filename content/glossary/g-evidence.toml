@@ -1,0 +1,10 @@
+id = "g-evidence"
+section = "glossary"
+title = "Evidence (Bayesian)"
+status = "VERIFIED"
+status_note = "Standard term; the toolkit's model comparisons are evidence-based."
+family = "Bayesian inference"
+tags = ["marginal likelihood", "model comparison"]
+related = ["bayesian-evidence-model-selection", "g-marginal-likelihood", "g-nats-per-letter", "selection-overfit-diagnostic"]
+summary = "The probability of the data under a model with all of the model's free parameters integrated out against their prior, also called the marginal likelihood. Two models are compared by the ratio of their evidences (the Bayes factor), whose logarithm is reported in nats or nats per letter. Unlike a maximised likelihood, the evidence charges a model for every parameter it is allowed to tune: on a 153-letter text, maximising seven key shifts instead of averaging over them buys about 0.15 nats per letter of spurious fit, enough for wrong models to win. 'Evidence, not likelihood' is the design rule behind the model-selection instruments."
+updated = "2026-09-04"

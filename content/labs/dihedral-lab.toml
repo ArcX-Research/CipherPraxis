@@ -1,0 +1,21 @@
+id = "dihedral-lab"
+section = "labs"
+title = "Dihedral group lab"
+subtitle = "Compose rotations and reflections of a ring of positions and read off the resulting permutation"
+status = "VERIFIED"
+status_note = "The group law is unit-tested by comparing composition in affine form (x ↦ ±x + k) with composition of the induced permutations for every pair of elements of D₈."
+family = "Algebra labs"
+tags = ["dihedral", "group theory", "permutation", "cycles"]
+related = ["dihedral-group", "permutation-cycles", "group-actions-on-alphabets", "conjugacy-and-gauge"]
+summary = "The dihedral group D_n contains the n rotations and n reflections of a ring of n positions. Its elements act on text positions as permutations, so a cipher that reads a text around a circle or in reverse lives inside D_n. The lab composes two elements in either order and shows the cycle structure of the result."
+updated = "2026-09-04"
+lab = "dihedral"
+
+[[blocks]]
+kind = "notes"
+title = "What to try"
+body = '''
+- Two rotations commute: a ∘ b and b ∘ a agree. A rotation and a reflection do not.
+- Every reflection has order 2; a rotation by k has order n / gcd(n, k). Set n = 48 and k = 12 to obtain an element of order 4.
+- The cycle notation of a reflection shows its fixed points: for even n either two positions or none stay put.
+'''

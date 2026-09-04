@@ -1,0 +1,10 @@
+id = "g-power"
+section = "glossary"
+title = "Power (of an instrument or selector)"
+status = "VERIFIED"
+status_note = "Standard term; measured on planted fixtures for every lane that cites a negative."
+family = "Statistics"
+tags = ["false negative", "planted controls", "gate"]
+related = ["power-analysis", "power-measurement", "planted-controls", "permutation-test", "g-held-out"]
+summary = "The probability that a pipeline recovers the planted truth exactly when the hypothesised construction is true, estimated as the fraction of planted fixtures recovered by the frozen pipeline (with an independent forward check) and reported with a confidence interval. A live miss excludes a family only at the measured power: at 0.92 power an 8% chance remains that the truth was simply not found. Power is a property of the whole pipeline on the exact hypothesis grid and text length; a coverage fraction or a single step's success rate is not power, in either direction."
+updated = "2026-09-04"

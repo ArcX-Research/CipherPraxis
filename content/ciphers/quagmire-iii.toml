@@ -1,0 +1,130 @@
+id = "quagmire-iii"
+section = "ciphers"
+title = "Quagmire III"
+subtitle = "Periodic shifts within one mixed alphabet used on both sides"
+status = "POWER-LIMITED"
+status_note = "With an unknown alphabet the program's annealers recover 0/24 planted controls blind at 153 letters and 0/21 with cribs up to 25 letters; parallel tempering with 2,000 to 8,000 chains plateaus at 30-40% of the alphabet. With a structured (keyword or phrase) alphabet the bank search is verified at 100%."
+family = "Polyalphabetic substitution"
+tags = ["periodic", "keyed alphabet", "polyalphabetic", "quagmire", "power limit"]
+related = ["vigenere", "quagmire-i", "quagmire-ii", "quagmire-iv", "keyword-mixed-alphabet", "parallel-tempering", "simulated-annealing", "polish-basin-measurement", "power-measurement", "crib-driven-alphabet-recovery", "quagmire-lab", "g-mixed-alphabet"]
+summary = "Quagmire III uses the same mixed alphabet to index both plaintext and ciphertext and adds a periodic shift between them. The alphabet acts twice, so a single swap in a candidate alphabet corrupts about four of the 26 mapping entries in every coset at once. The program measured that this makes the quadgram landscape too rugged for annealing at 63 to 153 letters, with or without a crib, unless the alphabet is structured enough to enumerate."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+With one mixed alphabet $A$ and shifts $k$,
+
+$$\operatorname{pos}_A(c_i) \equiv \operatorname{pos}_A(p_i) + k_{i \bmod m} \pmod{26}, \qquad p_i = A\big[\operatorname{pos}_A(c_i) - k_{i \bmod m}\big].$$
+
+The Beaufort orientation replaces the sum by $k_b - \operatorname{pos}_A(p_i)$. Equivalently the cipher is a Vigenère conjugated by the permutation $A$.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Why the alphabet acts twice"
+body = '''
+Write $\sigma$ for the permutation $A$. The coset-$b$ substitution is $\sigma \circ \rho_{k_b} \circ \sigma^{-1}$ with $\rho$ the rotation. Swapping two letters of $\sigma$ changes both the domain and the range of every coset map, so the number of corrupted plaintext-to-ciphertext entries per coset is about four rather than the two of a simple substitution. Measured on planted cases: starting two swaps from the planted alphabet, steepest ascent and cold annealing already read $-6.1$ per letter and cannot return; the polish basin is at most three swaps wide with a 13-letter crib and six with a 25-letter crib. Rotations of $A$ are absorbed by the shifts, so the alphabet is identified only up to that gauge.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Structured alphabet**: keyword, phrase, text-keyed, two-keyword; enumerable and solved by bank search.
+- **Shared alphabet across two texts**: one alphabet, two period-7 keys, 63 + 96 letters of joint evidence; tested with parallel tempering.
+- **Key-word-derived shifts**: $k_b = \operatorname{pos}_A(\text{key}_b)$, which removes about 33 bits from the state; measured worse, not better.
+- **Quagmire IV**: two alphabets; see [Quagmire IV](/ciphers/quagmire-iv).
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Periodic shifts; one alphabet for the whole text.
+- Invariant: within-coset equality structure is alphabet-free, so the equal-substitution classes among cosets (which cosets share a shift) can be read without the alphabet.
+- Additivity is untestable alphabet-free: every same-coset statistic is identical for "rotations of one alphabet" and "seven unrelated substitutions".
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Fix the period from coincidences and read the equal-shift classes from within-coset equalities.
+2. **Bank**: decrypt under every structured alphabet; the true one reads at once.
+3. **Blind**: a shift-marginalised monogram-evidence climb over the alphabet, then quadgram annealing over (alphabet, shifts) with periodic shift refits; or batched parallel tempering with 8 temperature levels.
+4. **Crib**: derive the shifts from the crib and anneal the alphabet; also an exact linear system when the shifts are tied to a key word, which pins the alphabet only for cribs of roughly 17 to 20 letters.
+5. Treat every blind endpoint as unqualified unless a matched planted control was recovered at the same length.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Bank search is linear in the bank. Blind annealing: 24 restarts of 60,000 steps per text in about six minutes; parallel tempering: 2,000 chains times 60,000 to 100,000 steps on a GPU. The exact crib-plus-key-word CSP rejects wrong placements in at most about 700 nodes, so a sweep of 14,336 placements is cheap even though the blind problem is not.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Rugged landscape, not budget.** Best-of-$N$ does not improve with $N$: 500 chains reached 29% of the alphabet, 2,000 chains 27-35%, 8,000 chains 29-33% on the same planted 96-letter instance.
+- **Polish basin.** Restarted $d$ swaps from the truth with shifts refitted at every move, recovery was 3/4 at $d = 3$ and 0/4 at $d \ge 5$; the annealer's best states sit about ten swaps away.
+- **Higher evidence than the truth.** The shift-marginalised monogram climb and the Quagmire IV relaxation overfit to alphabets with higher evidence than the planted one.
+- **Cribs do not rescue it.** Even a 25-letter crib with 200,000 steps and 32 restarts gave 0/3 seeds; the crib widens the basin only to six swaps.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Blind calibration: 0 of 24 restarts across four schedules on planted 153-letter cases (logs/08_q3.log); Quagmire IV annealing on the same cases: success 0%, best rates $-5.48$ to $-5.73$ with 1-18% match. Crib calibration: q3 solved 0/3 seeds at every crib length from 7 to 25, with 22-36% match (logs/22_crib_smoke.log). Parallel tempering on a planted 63+96-letter shared-alphabet instance: $-5.60$ and 3-6% match; 96 letters alone: $-5.11$ and 16% (logs/32_q3joint_ctrl.log); scaling law in logs/36_scaling.log. Structured-alphabet sweeps recovered their planted controls at 100% (logs/07_phrase.log).
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Alphabet keyed by `ZEBRAS` ($A$ = `ZEBRASCDFGHIJKLMNOPQTUVWXY`) on both sides, shifts $(3, 7, 12)$. Plaintext `QUAGMIRE`:
+
+```
+plain    Q   U   A   G   M   I   R   E
+pos_A   19  21   4   9  15  11   3   1
++shift  22  28  16  12  22  23   6   8
+mod 26  22   2  16  12  22  23   6   8
+A[...]   V   B   N   J   V   W   C   F
+```
+
+Check position 0: Q is letter 19 of $A$, $19 + 3 = 22$, and letter 22 of $A$ is `V`. Ciphertext `VBNJVWCF`; note that the same plaintext under Quagmire I gives `WCQMWXGI`, because only the output alphabet differs.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The power limit is the central negative result of the program's alphabet work: whatever sits under a period-7 layer in the two short texts is not readable in any Quagmire III alphabet that a crib or a structured keyword can reach, and an unstructured alphabet at 63 to 96 letters is beyond every tested search, so a negative there is uninformative. A pattern-constrained beam over seven free substitutions at 63 letters likewise recovered only 19.0% and 9.5% of its held-out controls.
+'''
+
+[[provenance]]
+path = "withmath/wm_q3.py"
+kind = "solver"
+note = "Calibration: blind unknown-alphabet Quagmire III/IV at 153 letters; evidence climb, annealing, Q-IV relaxation; 0/24 restarts."
+ref = "logs/08_q3.log"
+
+[[provenance]]
+path = "withmath/wm_crib.py"
+kind = "solver"
+note = "q3 crib calibration: 0/3 seeds at every crib length 7-25."
+ref = "logs/22_crib_smoke.log"
+
+[[provenance]]
+path = "withmath/wm_q3joint.py"
+kind = "solver"
+note = "Batch parallel tempering over (alphabet, two period-7 keys) on planted 63+96-letter controls; plateau at 30-40% of the alphabet."
+ref = "logs/32_q3joint_ctrl.log"
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Scaling law (logs/36), polish-basin measurement, crib-CSP calibration (logs/42-43), pattern-beam control failure (logs/150)."
+ref = "logs/36_scaling.log"
+
+[[references]]
+title = "The ACA and You"
+author = "American Cryptogram Association"
+year = 2005

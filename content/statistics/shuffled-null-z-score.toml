@@ -1,0 +1,119 @@
+id = "shuffled-null-z-score"
+section = "statistics"
+title = "Shuffled-null z-score"
+subtitle = "Standardising a statistic against its distribution on position-shuffled copies of the same text"
+status = "VERIFIED"
+status_note = "Every instrument in the toolkit prints its reading with a shuffle null; on planted references the exact period-7 alignment reads z +9.6 for a plain periodic substitution of English and z +4.0 for the same key over a fractionated inner text (200 shuffles), which fixes the scale on which target readings of +2.9 to +4.2 are interpreted."
+family = "Null distributions and calibration"
+tags = ["null distribution", "z-score", "shuffle", "permutation", "calibration"]
+related = ["permutation-test", "within-coset-null", "family-wise-null", "estimator-standard-error", "index-of-coincidence", "exact-period-alignment", "g-null-distribution", "g-z-score", "g-empirical-p-value", "null-lab"]
+summary = "A shuffle null answers the question 'how large would this statistic be on a text with the same letters in random order?'. The statistic is recomputed on N random permutations of the ciphertext positions, and the observed value is reported as z = (observed - null mean)/null sd together with the empirical p-value, the fraction of shuffles at or above the observed value. Because the null keeps the letter multiset, it is the right reference for anything that claims structure in the order of the letters, including coset structure, periodicity and alignment."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $T$ be a statistic of a text $c$ and $\pi_1, \dots, \pi_N$ independent uniformly random permutations of its positions. The shuffle null is the empirical distribution of $T(\pi_j c)$, and
+
+$$z = \frac{T(c) - \overline{T(\pi c)}}{\operatorname{sd}\,T(\pi c)}, \qquad \hat p = \frac{\#\{j : T(\pi_j c) \ge T(c)\}}{N}.$$
+
+With $N = 200$ the empirical $p$ resolves to $0.005$; a reported $\hat p = 0.000$ means "above every shuffle", not a probability of zero. When $T$ is itself a maximum over a search (the best shift vector, the best width, the best period) the *same* maximisation is run on each shuffle, so that the null already contains the selection.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Whole-text shuffle.** Destroys coset structure, periodicity and order; keeps the histogram. Reference for alignment, periodic IC, lag profiles, evidence gains.
+- **Within-coset shuffle.** Keeps every coset histogram and destroys only order; the valid-model null for language-model scores under a periodic key. See [within-coset null](/statistics/within-coset-null).
+- **Within-segment shuffle.** Shuffles inside declared segments; reference for per-segment lag profiles and change-point statistics.
+- **Complete-pipeline null.** The whole solver (fit, candidate selection, EM, width scan, polish) is re-run on each shuffle; the reported $z$ of a width or a key is then honest about every adaptive step.
+- **Planted-reference scale.** Alongside the null, the same statistic is computed on planted constructions of the same length so that a $z$ can be read as "at the level of construction X" rather than only "above random".
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The hypothesis being tested is one of *order*; a shuffle cannot test a claim about the histogram itself (for that, simulate the alternative or use the exact [standard error](/statistics/estimator-standard-error)).
+- The null distribution is roughly symmetric where $z$ is quoted; maxima over many candidates are right-skewed and should be reported with the empirical $p$ and the null maximum, not only $z$.
+- $N$ is large enough for the tail in question: 60 draws cannot certify a $z$ of $+3$ on a skewed maximum.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Use in an attack pipeline"
+body = '''
+1. Print every instrument reading as `observed; null mean +- sd; null max; z; empirical p`.
+2. Put the planted references through the identical code so the reader has a scale: alignment $z$ of $+9.6$ for a plain periodic substitution, $+4.0$ for a flat inner text at 153 letters.
+3. Hand a candidate to the next stage only if it clears the null *maximum* of its own search, not merely the mean.
+4. For any statistic that was maximised over a family, prefer the [family-wise null](/statistics/family-wise-null); for one-shot decisions use the strict-rank [permutation test](/statistics/permutation-test).
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+$N$ evaluations of $T$. For the exact period-7 alignment (all $26^6$ relative shift vectors, vectorised) 200 shuffled alignments took about 90 s per text; for cheap statistics thousands of shuffles are free. Complete-pipeline nulls cost $N$ solver runs (60 pipelines in 17–28 s for the mixture solver at 153 letters).
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Maxima are not Gaussian.** The maximum of $4 \times 10^4$ to $4 \times 10^5$ permutation draws sits 4–4.5 null standard deviations above the mean *by construction*; a "$z = +4$" for the best of many draws is not a test. Report the empirical rank.
+- **Wrong null for the claim.** A whole-text shuffle also destroys plaintext repeats, so in a change-point scan a repeated word can look like a key change; a within-coset null keeps the repeats where the hypothesis does not concern them.
+- **Per-trial versus family-wise.** A $+5.7$ against a single-trial null became chance after accounting for the 648–1,296 trials searched (see [family-wise null](/statistics/family-wise-null)).
+- **Invariant statistics.** If the statistic is invariant under the shuffle group in use (coset IC at a width that is a multiple of the period; IC under any shuffle), the null has zero variance and the "z" is 0/0.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Reference panel at 153 letters, 200 exact-alignment shuffles: plain periodic substitution, union IC $0.0713$ against null $0.0535 \pm 0.0025$, $z = +9.6$, $\hat p = 0.000$; fractionated inner, $z = +4.0$, $\hat p = 0.000$. Target readings of $+4.2/+3.3$ (153 letters, two alphabet orders) and $+2.9/+3.4$ (144 letters) with $\hat p = 0.000$–$0.005$ were thereby placed "at the flat-inner reference level", a statement about scale that the $z$ alone cannot make.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+An alignment statistic reads $0.0610$ on a text. On $200$ shuffles the same maximisation gives mean $0.0520$, standard deviation $0.0025$ and maximum $0.0585$. Then
+
+$$z = \frac{0.0610 - 0.0520}{0.0025} = +3.6, \qquad \hat p = 0/200 < 0.005.$$
+
+The observed value also exceeds the null maximum by $0.0025$, one null standard deviation; that margin, not the $z$, is what the next stage should quote. If instead the observed value were $0.0580$, $z$ would still be $+2.4$ but the empirical $p$ would be a few in 200 and the candidate would not clear the null maximum.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+A shuffle null is a permutation test with the full symmetric group; the [permutation test](/statistics/permutation-test) entry covers the exact rank rule and subgroups that preserve more of the hypothesis. The [null lab](/labs/null-lab) draws shuffle distributions interactively.
+'''
+
+[[provenance]]
+path = "withmath/wm_core.py"
+kind = "library"
+note = "zscore(x, null) = (x - mean)/(sd + 1e-12); perm_within_cosets; the shuffle loops in wm_audit and wm_mix call the same statistic on rng.permutation(n)."
+
+[[provenance]]
+path = "withmath/logs/01_audit.log"
+kind = "log"
+note = "Exact-alignment nulls (200 shuffles): plain periodic 0.0535 +- 0.0025 max 0.0629, z +9.6, p 0.000; fractionated inner z +4.0; targets z +4.2/+3.3 and +2.9/+3.4 with p 0.000-0.005."
+ref = "logs/01_audit.log"
+
+[[provenance]]
+path = "withmath/wm_mix.py"
+kind = "solver"
+note = "Complete-pipeline nulls: shuffled ciphertexts pushed through fit, delta candidates, EM and width DP; width z as the max of MAP and class-EM statistics against those nulls."
+
+[[provenance]]
+path = "withmath/REVIEW_A.md"
+kind = "audit"
+note = "Section 2.4: (max - mean)/sd over 4e4-4e5 permutation draws is not a test (the maximum sits 4-4.5 sd above the mean by construction); section 2.9a: a shuffle null destroys plaintext repeats; appendix: max-over-35/877 statistics have right-skewed nulls."
+
+[[provenance]]
+path = "withmath/logs/11_misc.log"
+kind = "log"
+note = "Per-trial null 0.0387 +- 0.0019 against a best of 0.0495 over 648 trials: 'a max near +3 sd is chance'."
+ref = "logs/11_misc.log"
+
+[[references]]
+title = "Permutation Tests: A Practical Guide to Resampling Methods for Testing Hypotheses"
+author = "Phillip Good"
+year = 2000

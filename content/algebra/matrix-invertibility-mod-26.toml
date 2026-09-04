@@ -1,0 +1,106 @@
+id = "matrix-invertibility-mod-26"
+section = "algebra"
+title = "Matrix invertibility modulo 26"
+subtitle = "Determinants as units, invertible rows, and the Hill matrices they admit"
+status = "CLOSED"
+status_note = "Invertibility over Z26 (determinant odd and not divisible by 13) is implemented exactly with primitive-row enumeration (504 rows for 2 by 2, 15,372 for 3 by 3) and passing planted controls. The arbitrary Hill-2 and Hill-3 composite families were tested on the measured zones of the three texts and gave no language endpoint; these are scoped negatives for the declared shortlists and zones."
+family = "Linear algebra over finite rings and fields"
+tags = ["matrix", "determinant", "Hill", "GL(n, Z26)", "adjugate"]
+related = ["modular-inverse-and-crt", "units-mod-26", "finite-field-linear-algebra", "lcm-of-periods", "hill-cipher", "periodic-substitution-dp", "shuffled-null-z-score", "hill-lab", "g-unit-group"]
+summary = "A square matrix over Z26 is invertible exactly when its determinant is a unit, equivalently when the matrix is invertible both modulo 2 and modulo 13. This decides which Hill matrices exist, which rows can belong to one, and how many there are. Attacks enumerate candidate decryption rows, score each row's output stream on its own, and join rows only when their determinant is a unit."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+$M \in \mathbb{Z}_{26}^{n \times n}$ is invertible iff $\det M \in U(\mathbb{Z}_{26})$, i.e. $\det M$ is odd and not divisible by 13; then $M^{-1} = (\det M)^{-1} \operatorname{adj}(M)$. By the CRT this is the same as $M$ being invertible over $\mathbb{F}_2$ and over $\mathbb{F}_{13}$, and $|\mathrm{GL}_n(\mathbb{Z}_{26})| = |\mathrm{GL}_n(\mathbb{F}_2)| \cdot |\mathrm{GL}_n(\mathbb{F}_{13})|$. A row can be a row of an invertible matrix iff it is non-zero modulo 2 and non-zero modulo 13: there are $(2^n - 1)(13^n - 1)$ such rows.
+'''
+
+[[blocks]]
+kind = "equations"
+body = '''
+- Hill encryption of blocks: $c_j = E\, p_j$, decryption $p_j = D\, c_j$ with $D = E^{-1} \pmod{26}$.
+- Row streams: for a candidate decryption row $r$, $y_{r,j} = r \cdot c_j \pmod{26}$ is one coordinate of the plaintext block if $r$ is a row of $D$.
+- Counts: $n = 2$: $3 \cdot 168 = 504$ primitive rows; $n = 3$: $7 \cdot 2196 = 15{,}372$; $|\mathrm{GL}_2(\mathbb{Z}_{26})| = 6 \cdot 26{,}208 = 157{,}248$.
+- Composite with an inner additive layer of period $p$: a row stream is a decimation by $n$, so it has period $q = p / \gcd(p, n)$.
+- Shift marginalisation per residue $b$ of the decimated period: $Z_b(r) = 26^{-1} \sum_s \prod_x E[x - s]^{F_{b,x}(r)}$ with $F_{b,x}(r)$ the count of value $x$ in the stream at residue $b$.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The block length divides the text length (or a padding rule is declared); a 153-letter text cannot be partitioned into digraphs and was excluded from unpadded Hill-2.
+- The map is linear over $\mathbb{Z}_{26}$ with no layer other than the tested inner periodic one.
+- English monograms (or the inner model) are known so that row streams can be scored before rows are joined.
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+1. Enumerate every primitive row; score its stream with the shifts marginalised under generic monograms for each decimated period, alphabet pair and relation.
+2. Join $n$ rows only when they share the same period/model/orientation and their determinant is a unit; reconstruct every row order ($2$ for $n = 2$, $6$ for $n = 3$).
+3. Rescore the full stream, finish the inner key with the exact cyclic periodic dynamic programme, and check the forward equations $h_j = D c_j$, $c_j = E h_j$.
+4. Compare the endpoint with block-shuffled or letter-shuffled nulls of the same selected family.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Hill-2 composite: all 504 rows scored, top 192 rows and 400 valid unordered pairs per cell, both orders, 6,400 matrices per case; a width-4 cyclic quadgram DP screens all 6,400, the top 64 plus per-cell leaders reach width 8 and 26-way polishing. Hill-3: 15,372 rows; the 144-letter control's true row triple ranked 13th before ordering, so the production matrix budget is 24.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Round trip proves nothing**: any invertible guessed matrix round-trips; readability, controls and family-wise nulls are separate gates.
+- **Too narrow a row shortlist**: an early gate keeping only eight row pairs per cell failed because the planted pairs ranked 256 and 319 although the correct matrices decode exactly; the repaired selector retains 400 pairs.
+- **Selection overfit**: the 126-letter period-26 zone produced a language-like endpoint at $-4.8689$, but the block-shuffled null panel $[-4.7396, -4.9329, -4.9579, -4.8972, -4.9598]$ contains a better value, so it is ordinary period-26 overfit, not a candidate.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Hill-2: n96/p7 control recovered 96/96 letters, hidden $D = \begin{pmatrix} 15 & 14 \\ 4 & 7 \end{pmatrix}$ (determinant $49 \equiv 23$, a unit), hidden period-7 key, order, relation, inverse and independent forward; n126/p26 control recovered 126/126 with $D = \begin{pmatrix} 9 & 4 \\ 25 & 25 \end{pmatrix}$ (determinant $125 \equiv 21$). Hill-3: controls matched to 153, 144 and 504 letters (direct, over period 9, over period 33) recovered their texts within the budget. Targets: the 96-letter zone's best endpoint $-6.0558$ (no); the 126-letter zone as above (no candidate); Hill-3 best completions $-5.72$, $-5.29$, $-6.52$ at decimated periods 18, 24, 33, none English.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+$M = \begin{pmatrix} 3 & 3 \\ 2 & 5 \end{pmatrix}$: $\det M = 15 - 6 = 9$, a unit with $9^{-1} = 3$ ($27 \equiv 1$). $\operatorname{adj} M = \begin{pmatrix} 5 & -3 \\ -2 & 3 \end{pmatrix} \equiv \begin{pmatrix} 5 & 23 \\ 24 & 3 \end{pmatrix}$, so $M^{-1} = 3 \operatorname{adj} M \equiv \begin{pmatrix} 15 & 17 \\ 20 & 9 \end{pmatrix}$. Check: $M M^{-1} = \begin{pmatrix} 45 + 60 & 51 + 27 \\ 30 + 100 & 34 + 45 \end{pmatrix} = \begin{pmatrix} 105 & 78 \\ 130 & 79 \end{pmatrix} \equiv \begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix}$.
+
+$\begin{pmatrix} 2 & 3 \\ 4 & 5 \end{pmatrix}$ has determinant $10 - 12 = -2 \equiv 24$, even, hence not invertible modulo 26 (it is singular modulo 2).
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The row-count formula is the CRT applied to matrices: a row is primitive iff its reductions modulo 2 and modulo 13 are both non-zero. The decimation rule $q = p/\gcd(p,n)$ is the [lcm-of-periods](/algebra/lcm-of-periods) principle applied to row streams.
+'''
+
+[[provenance]]
+path = "withmath/HILL2_PERIODIC_AUDIT.md"
+kind = "audit"
+note = "Every row extending to an invertible matrix (504), determinant-unit join, decimated period p/gcd(p,2), repaired selector (192 rows, 400 pairs, 6,400 matrices), controls with hidden D matrices, target results and null panel."
+ref = "logs/206_hill2_periodic.log"
+
+[[provenance]]
+path = "withmath/PK8_PK10_HINTFREE.md"
+kind = "note"
+note = "Arbitrary Hill-3: 15,372 primitive rows, shift-marginalised row statistic Z_b(r), decimated period p/gcd(p,3), unit-determinant join, matrix budget 24 from the 144-letter control (true triple rank 13), target completions -5.72/-5.29/-6.52."
+ref = "logs/149_hillfree.log"
+
+[[provenance]]
+path = "withmath/wm_core.py"
+kind = "library"
+note = "hill3_encrypt planted-cipher generator used by the family-identification controls."
+
+[[references]]
+title = "Cryptography in an Algebraic Alphabet"
+author = "Lester S. Hill"
+year = 1929
+
+[[references]]
+title = "Cryptography: Theory and Practice"
+author = "Douglas R. Stinson"
+year = 2005

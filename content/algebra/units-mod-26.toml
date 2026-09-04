@@ -1,0 +1,142 @@
+id = "units-mod-26"
+section = "algebra"
+title = "Units modulo 26"
+subtitle = "The multiplicative group U(Z26) of order φ(26) = 12, as gauge and as model coefficient"
+status = "VERIFIED"
+status_note = "The unit group, its 144 ordered pairs as model coefficients and its role as a gauge are implemented exactly; independent controls recovered three hidden multiplier tuples and passed matched nulls at rank 1/100. The aligned unit-ratio family built on it was later rejected on the target texts by an exact structural zero across all 144 cells, a scoped closure of that family only."
+family = "Number theory"
+tags = ["units", "totient", "multiplicative group", "gauge", "unit ratio"]
+related = ["modular-arithmetic-z26", "modular-inverse-and-crt", "affine-maps-mod-26", "group-actions-on-alphabets", "conjugacy-and-gauge", "finite-field-linear-algebra", "affine-cipher", "g-unit-group", "g-affine-orbit"]
+summary = "The twelve residues coprime to 26 form a cyclic group under multiplication. They matter twice in cryptanalysis: multiplying every coordinate of a cipher alphabet by a unit is a symmetry that must be quotiented, and a unit can be an unknown coefficient relating the coordinates of two ciphertext streams derived from one latent text. Because every unit is odd, unit hypotheses are invisible modulo 2 and live entirely in the arithmetic modulo 13."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+$$U(\mathbb{Z}_{26}) = \{u : \gcd(u, 26) = 1\} = \{1, 3, 5, 7, 9, 11, 15, 17, 19, 21, 23, 25\},$$
+of order $\varphi(26) = \varphi(2)\,\varphi(13) = 1 \cdot 12 = 12$. The group is cyclic, generated for instance by 7. Every unit is odd, so it reduces to $1$ in $\mathbb{Z}_2$; reduction modulo 13 is a bijection onto $\mathbb{F}_{13}^{\times}$. Non-units are not invertible: $x \mapsto 2x$ is two-to-one and $x \mapsto 13x$ takes only the values 0 and 13.
+'''
+
+[[blocks]]
+kind = "equations"
+body = '''
+Inverse pairs: $1 \cdot 1$, $3 \cdot 9 = 27$, $5 \cdot 21 = 105$, $7 \cdot 15 = 105$, $11 \cdot 19 = 209$, $17 \cdot 23 = 391$, $25 \cdot 25 = 625$, each $\equiv 1 \pmod{26}$.
+
+**Unit multiplication as a symmetry.** For a shared cycle $z$ and additive keys $\kappa$, the map $(z, \kappa) \mapsto (u z, u \kappa)$ produces literally identical ciphertexts; solutions come in orbits of 12 (or 312 together with translation).
+
+**Units as model coefficients (ratio chart).** Three ciphertext rows derived from one latent stream $L$ under per-row multipliers:
+$$z(C_t[j]) \equiv a_t\, z(L[j]) + k_t[j \bmod 7] \pmod{26}, \qquad a_0 = 1,\; a_1, a_2 \in U(\mathbb{Z}_{26}),$$
+giving $12^2 = 144$ ordered pairs $(a_1, a_2)$. Within one residue class the keys cancel, $\Delta_t = a_t \Delta_L$, so the anchored equation
+$$a_u\,\Delta_t - a_t\,\Delta_u \equiv 0 \pmod{26}$$
+uses no inverse and is valid over the composite ring. Its reduction modulo 2 is the same for all 144 cells; the multiplier hypothesis is decided entirely modulo 13.
+
+**Absolute orientation.** Relabelling the latent as $L' = z^{-1}(b\,z(L) + c)$ changes absolute coefficients by $\sigma_t' = \sigma_t b^{-1}$, so a chart with $a_0 = 1$ identifies only the ratios $\sigma_1/\sigma_0$ and $\sigma_2/\sigma_0$. Under the affine gauge $z' = \alpha z + \beta$ the keys transform as $k_t'[r] = \alpha k_t[r] + (1 - a_t)\beta$.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- Coefficients must be units: a non-unit multiplier is not a bijection and cannot be a cipher relation.
+- The multiplier acts on the coordinates of one shared cycle; different cycles per row are outside the family.
+- The ratio chart is a valid necessary structural family, but language scoring of a decrypt is not invariant under $L \mapsto z^{-1}(b\,z(L) + c)$: a selector for an absolute model must score all twelve orientations $b$.
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+1. Treat each ordered unit pair as a structural cell; build the within-residue difference equations, in which the periodic keys cancel.
+2. Row-reduce once over $\mathrm{GF}(2)$ (shared by all cells) and per cell over $\mathrm{GF}(13)$; lift by CRT; keep only permutations of $0..25$.
+3. Partition the solutions into complete affine orbits of $12 \cdot 26 = 312$ members; score one representative per orbit at all 12 absolute orientations.
+4. Matched nulls rerun the complete union (cells, orbits, orientations) and the strict rule is observed score above every null maximum.
+
+As a gauge in any cycle solver: canonicalise a recovered cycle as $\min_u u\,(z - z(A))$ over the twelve units after fixing the translation.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+144 unit cells; 123 anchored equations per cell for three 48-letter rows; 312-element affine orbits; 12 orientations per orbit representative. The small-composite analogue $\mathbb{Z}_6$ has $U(\mathbb{Z}_6) = \{1, 5\}$, four multiplier pairs, orbit size 12 and only $6! = 720$ cycles, which allows exhaustive parity checks of the enumeration.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- Treating $a_0 = 1$ as a harmless normalisation for a language-scored claim: one draft searched 1 of 12 absolute orientations, and its positive controls could not expose this because every plant fixed the hidden $a_0 = 1$. The draft was blocked before any target use.
+- Canonicalising the first cycle of a group instead of proving that each orbit contains all 312 members, lies inside the solution set and that the orbits partition it.
+- Degenerate fixtures: when every within-residue latent difference equals 3, both units of $U(\mathbb{Z}_6)$ act identically on those differences, and all four multiplier pairs reproduce the same latent (cycle/orbit censuses 72/6, 48/4, 48/4, 48/4). A selector must report such parameter aliases, not claim that the first pair is identified.
+- Nulls that are unrelated random plants compared with the weakest English score are power profiles, not matched permutations of the observed profile.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+- $\mathbb{Z}_6$ exhaustive parity: CRT/null-space enumeration equals direct evaluation of all 720 cycles, 16/16; canonical mod-2 row spaces identical, 16/16; key lifts and independent three-row forwards 15,552/15,552.
+- Three cold held-out plants with multiplier tuples $(1,3,17)$, $(1,5,21)$, $(1,11,19)$: exactly one surviving hypothesis and orbit each, exact plaintext, multiplier pair and cycle gauge.
+- Matched 99-null union controls: English $(1,3,17)$ observed $-191{,}080{,}453$ against the best null maximum $-223{,}811{,}728$, rank 1/100; random latents with $(1,7,23)$ and $(1,9,15)$ ranked 25/100 and 8/100 and were correctly rejected.
+- Target measurement of the aligned three-row family: all 144 cells visited with no early exit, zero permutation cycles and zero orbits in every cell; terminal structural zero. This rejects only the aligned shared-latent, independent-unit, independent period-7 family.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Powers of 7 modulo 26: $7, 23, 5, 9, 11, 25, 19, 3, 21, 17, 15, 1$ — twelve distinct values, so 7 generates the whole group. Inverse of 7: $7 \cdot 15 = 105 = 4 \cdot 26 + 1$. Reduction modulo 13 of the units in order $1,3,5,7,9,11,15,17,19,21,23,25$ gives $1,3,5,7,9,11,2,4,6,8,10,12$, every non-zero residue exactly once.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Unit multiplication appears as a gauge in every cycle solver of the corpus ("canonicalise over the 12 units"). When the class maps of a keyed cipher do not generate the full rotation group (all shifts even, for instance), the equivalence group of the alphabet is larger than the affine group: a normaliser of order 4,056 was measured, and the cycle is then identifiable only up to that group.
+'''
+
+[[provenance]]
+path = "withmath/PK9_UNITMULT_INDEPENDENT_AUDIT.md"
+kind = "audit"
+note = "Ratio-chart model, anchored equation without inverses, mod-2 invisibility, affine gauge and key transform, Z6 parity 16/16 and 15,552 forwards, three hidden plants, matched 99-null ranks 1/100, 25/100, 8/100."
+
+[[provenance]]
+path = "withmath/PK9_UNITMULT_ALLORBIT_CLAUDE_BLOCKED.md"
+kind = "note"
+note = "Blocked draft: selector covered 1 of 12 absolute orientations; relabelling algebra sigma' = sigma a^-1."
+
+[[provenance]]
+path = "withmath/PK9_UNITRATIO_NECESSARY_TARGET308_AUDIT.md"
+kind = "audit"
+note = "144 ordered unit cells, 123 anchored equations per cell, identical F2 RREF across cells, CRT lift, 312-member orbits, structural terminals."
+
+[[provenance]]
+path = "withmath/logs/308_pk9_unitratio_necessary_target.log"
+kind = "log"
+note = "One-shot target measurement: all 144 cells visited, zero cycles and orbits, terminal STRUCTURAL_ZERO."
+ref = "LOG308"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Production completion entry for the unit-ratio necessary family: rejected in its declared scope."
+ref = "LOG308"
+
+[[provenance]]
+path = "withmath/PK89_SHARED_CYCLE_BANK380_AUDIT.md"
+kind = "audit"
+note = "Unit gauge (u z, u kappa) gives literally identical ciphertexts, 48/48."
+
+[[provenance]]
+path = "withmath/PK9_BLINDEXPONENT443_NOTE.md"
+kind = "note"
+note = "Normaliser of order 4,056 in the all-even or all-odd shift regimes; affine orbits of 312 otherwise."
+
+[[provenance]]
+path = "withmath/wm_algebra.py"
+kind = "solver"
+note = "UNITS = residues a with a odd and a not divisible by 13; used as multipliers of the affine-lag filters."
+
+[[references]]
+title = "An Introduction to the Theory of Numbers"
+author = "G. H. Hardy and E. M. Wright"
+year = 2008
+
+[[references]]
+title = "A Course in Number Theory and Cryptography"
+author = "Neal Koblitz"
+year = 1994

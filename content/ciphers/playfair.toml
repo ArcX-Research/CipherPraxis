@@ -1,0 +1,128 @@
+id = "playfair"
+section = "ciphers"
+title = "Playfair cipher"
+subtitle = "Digraphic substitution on a 5 x 5 keyed square"
+status = "VERIFIED"
+status_note = "An independently verified external annealer recovered a 504-letter arbitrary-square Playfair control at 504/504 with exact forward reconstruction; the seriated variant failed its controls at 144-153 letters (3.9%, 3.5%) and at 504 letters (8.1%), so seriated Playfair is power-limited."
+family = "Polygraphic substitution"
+tags = ["polygraphic", "digraphic", "polybius square", "5x5"]
+related = ["two-square-four-square", "bifid", "hill-cipher", "polybius-square", "simulated-annealing", "known-answer-tests", "g-polygraphic", "g-transposition-grid"]
+summary = "Playfair encrypts letter pairs on a 5 x 5 square built from a keyword, with I and J merged. Pairs in the same row or column shift along it; other pairs swap columns across the rectangle they define. It is a digraphic substitution with a 25-letter key and a well-known set of weaknesses (reversed pairs encrypt to reversed pairs, no letter maps to itself). The program used it mainly as a control family for its square annealers and as an inner layer under periodic keys."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $S$ be a $5 \times 5$ square over 25 letters (J merged into I) and let $(r_1, c_1)$, $(r_2, c_2)$ be the cells of a digraph $(a, b)$ with $a \ne b$ (a repeated letter is split by an inserted `X`). Then
+
+$$(a, b) \mapsto \begin{cases} \big(S[r_1, c_1 + 1],\ S[r_2, c_2 + 1]\big) & r_1 = r_2 \\ \big(S[r_1 + 1, c_1],\ S[r_2 + 1, c_2]\big) & c_1 = c_2 \\ \big(S[r_1, c_2],\ S[r_2, c_1]\big) & \text{otherwise,} \end{cases}$$
+
+with indices modulo 5. Decryption shifts left or up in the first two cases and swaps columns back in the third.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Invariants"
+body = '''
+No letter encrypts to itself; the digraph $(b, a)$ encrypts to the reverse of the encryption of $(a, b)$; and the same-row and same-column rules make about a quarter of digraphs "linear". The key is identified only up to the symmetries of the square's cyclic row and column structure that leave all three rules unchanged (rotations of rows and of columns), so a solver must compare squares modulo that gauge. A seriated Playfair writes the text in rows of a period $w$ and applies the rules to vertical pairs, which removes the digraph alignment and couples the square with $w$.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Seriated Playfair**: pairs formed down the columns of a $w$-row layout.
+- **Two-square and four-square**: two or four squares; see [Two-square and four-square](/ciphers/two-square-four-square).
+- **Playfair under a periodic layer**: the outer shifts allow all 26 letters to appear in the ciphertext, which a direct 25-letter cipher cannot.
+- **Custom 26-symbol squares**: not covered by the standard implementation.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The text uses at most 25 symbols; a ciphertext containing all 26 letters cannot be a direct standard Playfair. This is a decisive structural check, and the program's three unsolved texts all fail it.
+- Digraph boundaries are aligned with the text start; padding conventions are part of the model.
+- A fitted square always round-trips.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Check the 25-symbol constraint and digraph invariants.
+2. Anneal the square under a quadgram objective with row/column swaps, cell swaps and full-square moves; the program's external engine used 1,000,000 iterations with 8 restarts for arbitrary squares at 504 letters.
+3. Verify the recovered square with an independent forward implementation; a control must reach exact plaintext, not merely a readable one (a one-letter language-model overfit is a failure).
+4. With a keyword square, sweep a dictionary and the setter's vocabulary instead.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Key space $25!/\text{gauge} \approx 10^{25}$; annealing at 504 letters converged inside the declared budget for direct Playfair. Seriated Playfair adds the period and the vertical pairing, and the same budget reached only 8.1% at 504 letters.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Length.** At 144-153 letters generic quadgram annealing cannot identify an arbitrary square: 3.9% and 3.5% plaintext on the seriated controls, with false states that still round-trip.
+- **Seriation.** Even at 504 letters the seriated variant is locked (8.1%).
+- **One-letter overfits.** A neighbouring family's control stopped at 503/504 with a fluent but wrong letter; the audit refused to relax the exact gate for it.
+- **Alphabet mismatch.** An engine that treats the merged letter as a rejected sentinel cannot accept a 26-letter ciphertext at all; this is an implementation boundary, not evidence.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+External engine, independently forward-verified (log 184): direct Playfair, 504-letter held-out passage, arbitrary shuffled square, 504/504 plaintext with exact ciphertext reconstruction. Word-keyed and seriated Playfair under a period-7 layer at 144-153 letters (log 165): seriated controls 3.9% and 3.5%, gate FAIL, no live text run. Arbitrary-square power follow-up at 504 letters (log 181): seriated Playfair 8.1%, locked. A Playfair decrypt is also part of the program's shared toolkit (ck_lib.py) and of the word-keyed square sweeps.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Keyword `PLAYFAIREXAMPLE` gives the square
+
+```
+P L A Y F
+I R E X M
+B C D G H
+K N O Q S
+T U V W Z
+```
+
+Plaintext `HIDETHEGOLDINTHETREESTUMP` splits into `HI DE TH EG OL DI NT HE TR EX ES TU MP` (the double `EE` is split by an `X`). `HI`: H (2,4) and I (1,0) form a rectangle, so H takes column 0 of row 2 (`B`) and I takes column 4 of row 1 (`M`). The full ciphertext is `BMODZBXDNABEKUDMUIXMMOUVIF`.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+For the corpus texts the operative fact is structural: every one of them contains all 26 letters, so a direct standard Playfair (and Bifid, two-square, four-square) is impossible without a 26-symbol convention or an outer layer; the layered forms are treated under the square-under-periodic-key lanes.
+'''
+
+[[provenance]]
+path = "withmath/COLOSSUS_AUDIT.md"
+kind = "audit"
+note = "Log 184: Playfair n=504 control 504/504 with exact forward; direct 5x5 convention inapplicable to 26-letter targets."
+ref = "logs/184_colossus_audit.log"
+
+[[provenance]]
+path = "withmath/wm_twosquare_q7.py"
+kind = "solver"
+note = "Log 165: seriated Playfair (standard/reverse, widths 2..20) with seven free shifts; controls 3.9%/3.5%; gate FAIL."
+ref = "logs/165_twosquare_q7.log"
+
+[[provenance]]
+path = "withmath/wm_pk10_squares.py"
+kind = "solver"
+note = "Log 181: 504-letter arbitrary-square power check; seriated Playfair 8.1%."
+ref = "logs/181_pk10_squares.log"
+
+[[provenance]]
+path = "ck_lib.py"
+kind = "library"
+note = "playfair_decrypt and anneal_square: shared square toolkit."
+
+[[references]]
+title = "The Codebreakers"
+author = "David Kahn"
+year = 1967

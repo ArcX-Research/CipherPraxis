@@ -1,0 +1,124 @@
+id = "segment-chain-analysis"
+section = "cryptanalysis"
+title = "Segment chain analysis"
+subtitle = "A key that changes regime along one text, chained into a second text as its running key: geometry, selector and controls"
+status = "VERIFIED"
+status_note = "The segment-aware chained selector (constant key before the measured breakpoint, period-7 key after it, the plaintext of one text cycled as the running key of the other) is implemented as a controls-only instrument: 16/16 hidden positives recovered exactly, 4/4 negatives rejected, 99 winner-independent nulls per fixture, independent audit; its search is exact only inside a width-8 shortlist, so a miss can never reject the family, and no target transaction has been run (logs/373, target design)."
+family = "Relations between ciphertexts"
+tags = ["segmented key", "breakpoint", "chain", "running key", "controls-only", "incomplete search"]
+related = ["key-cancellation", "change-point-zone-detection", "running-key-relation-test", "periodic-substitution-dp", "exact-dynamic-programming", "held-out-gates", "seal-and-audit-protocol", "valid-model-nulls", "target-absent-controls", "reproducibility-receipts", "g-change-point", "g-key-cancellation", "g-zone", "g-successor-review"]
+summary = "Segment chain analysis combines two findings, a key boundary measured inside one text and a running-key link from that text into another, into one exactly specified family: before the boundary the first text's key is a constant, after it a period-7 key, and the first text's plaintext, cycled, keys the second. Cancelling the shared plaintext leaves the second text under a segmented key whose groups are known in advance. The corpus specified the geometry down to the group counts, built and audited a selector that passes hidden controls, and froze the rule that a miss of an incomplete selector is never a family rejection."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Text B (144 letters) is enciphered by $a(x_j) = e_9\,a(P_j) + \kappa(j)$ with
+
+$$\kappa(j) = c \text{ for } j < t, \qquad \kappa(j) = h_{j \bmod 7} \text{ for } j \ge t,$$
+
+the period phase **not** restarted at the boundary. Text A (153 letters) uses $P$ cycled as running key: $a(y_i) = e_8\,a(Q_i) + a(P_{i \bmod 144})$. With the measured boundary $t = 53$ and forward cycling at offset zero, the cancelled stream $d_i = a(y_i) - e_9 a(x_{i \bmod 144})$ falls into exactly three physical segments:
+
+```
+[0, 53)      constant key  c            53 letters
+[53, 144)    period-7 key  h            91 letters = 13 per residue
+[144, 153)   constant key  c again      9 letters (the cycled key wraps to P[0..8])
+```
+
+so the derived stream has 8 key groups with counts $[62, 13, 13, 13, 13, 13, 13, 13]$. For a general alignment $\phi_{\delta,\rho}(i) = (\delta + \rho\, i) \bmod 144$ the group vector is $g(i) = 0$ if $\phi(i) < t$ and $1 + (\phi(i) \bmod 7)$ otherwise; it may contain several constant and periodic intervals and must be computed, not assumed.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Selector and null"
+body = '''
+For each of 16 cells (two index orders for each text, two signs each): on the 91-letter periodic segment build the 26 monogram scores of each residue, keep the top 8, maximise the exact order-3 cyclic quadgram factor graph over the $8^7 = 2{,}097{,}152$ product with all ties retained, polish deterministically, then enumerate the constant $c$ (26 values) and, for same-order cells, the 26 gauge states $h' = h + \delta$, $c' = c + \delta$ (a physical orbit, not a representation artefact); $8 \times 676 + 8 \times 26 = 5{,}616$ finish states. The statistic is the maximum integer quadgram score of the full 153-letter $Q$ over the implemented union; $P$'s language is not used for selection. Gates: an English threshold ($-4.8324$ per letter, calibrated on a disjoint corpus range) and a distinct-pair gap gate ($30{,}592{,}997{,}516$ integer units, the largest identity gap among the admitted negatives; the smallest positive gap was $159{,}924{,}989{,}002$). Null: permute the letters of both sources independently within every (zone $\times$ absolute residue) stratum, 99 replicates, the whole selector rerun each time; advancement requires strict rank one ($p = 1/100$).
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- Same index order for the running-key conversion in both texts (no affine map exists between the two candidate orders, so mixed cells test a numeric latent, not a literal plaintext key).
+- Breakpoint $t$, offset 0 and forward cycling are substantive premises fixed from the independently measured change point and from the precedent in the solved part of the series; sweeping them multiplies the family and needs its own nulls.
+- The family must be consistent with the texts' invariants before a hidden bank is spent (see failure modes).
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Measure the boundary in text B and freeze it; compute the complete group vector and report the group counts before scoring.
+2. Freeze the selector, the integer language tables and the gates on disclosed development fixtures drawn from a corpus range disjoint from training, calibration and hidden ranges; seal source, parser, runner and model hashes; obtain an independent exact-byte audit.
+3. Only then let an independent creator draw a hidden bank: 16 positives (one per cell, random $c$ and shifts, two with a structured rather than prose $P$), 2 valid-family negatives with independent-monogram $Q$, 2 no-chain negatives; each with its own 99-null bank. Run once; a failure burns the bank.
+4. A target wrapper, if ever authorised, may end only in candidate-pending-adjudication, non-English selector-scoped, ambiguous selector-scoped, or incomplete; never in a family rejection or a decipherment claim.
+5. Sequence the cheap complete families first: a finite, exactly enumerable structured-plaintext family must be resolved before the heuristic chain is spent.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Per cell about $7 \times 8^7 \approx 1.5 \times 10^7$ max-add operations; per fixture with 99 nulls 1,600 cell solves and 561,600 full-candidate evaluations; the 20-fixture suite 32,000 cell solves, budgeted at 12 CPU-hours, 3 wall-hours, 1.5 GiB per worker.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Variable-length bias.** Maximising a raw sum over streams of different length made an earlier design's score grow deterministically with $t$; fixing $t$ makes every cell's periodic segment 91 letters and removes the bias.
+- **Incomplete search read as absence.** The $8^7$ product is exact only inside the monogram shortlist; the full $26^7$ family is not enumerated (8,031,810,176 states per cell), so a miss terminates as incomplete, never as a structural zero.
+- **Degenerate nulls.** Shuffles within the derived cosets leave histogram statistics unchanged; the stratified source-level permutation destroys adjacency and the cross-text pairing while preserving every stratum histogram.
+- **Inconsistent premise.** Simulated chains predict for text A a period-7 alignment of $z \approx +0.1$ and a zone coset IC of $0.040$; measured $+4.2$ and $0.066$ (coupling note, section 5). A hidden pass validates the instrument, not the family's presence.
+- **Leakage.** Language tables trained on ranges that contain later control windows invalidate the controls; the design fixes disjoint ranges and a dead gap.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Admitted controls-only run (logs/373): terminal "CONTROL_PASS_POWERED_INCOMPLETE_SELECTOR", exact 16/16, negatives 4/4, generator ties 0, target absent, mode FULL; every positive recovered all 153 letters of $Q$, all 144 letters of $P$ up to the declared gauge, the constant and the seven phase values, the planted cell and orbit, with two independent forwards and strict rank one against its 99 nulls. Replaying all 5,616 states of the four negatives gave identity gaps of 30,592,997,516; 8,298,729,871; 16,310,891,486; 2,169,186,315, from which the gap gate was frozen. A two-regime variant recovered 10/10 synthetic pairs in a separate derivation.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+A toy with text B of 10 letters, boundary $t = 6$, period 2 after the boundary, and text A of 12 letters keyed by B's plaintext cycled forward from offset 0. The group vector of the cancelled stream is
+
+```
+i        0 1 2 3 4 5 6 7 8 9 10 11
+phi(i)   0 1 2 3 4 5 6 7 8 9  0  1
+g(i)     0 0 0 0 0 0 1 2 1 2  0  0
+```
+
+positions 10 and 11 wrap onto B's first two letters and fall back into the constant group, exactly as the last 9 letters of the 153-letter text fall back into the 62-letter constant group at $t = 53$. The worked cancellation of [Key cancellation](/cryptanalysis/key-cancellation) uses the same construction with $t = 6$ and no wrap; solving the derived stream means a 26-way search on the constant group and a per-residue search on the periodic group, followed by the reconstruction of both plaintexts and two independent forward encryptions.
+'''
+
+[[provenance]]
+path = "withmath/wm_pk98_segchain_a1s0_control373.py"
+kind = "solver"
+note = "Controls-only segment-chain selector: 16 cells, width-8 shortlist cyclic DP, 5,616 finish states, gauge orbit, stratified 99-null replay, strict typed transcript."
+ref = "logs/373_pk98_segchain_a1s0_controls.log"
+
+[[provenance]]
+path = "withmath/PK98_SEGCHAIN_SUCCESSOR_DESIGN.md"
+kind = "design"
+note = "Frozen scope (16 cells, fixed t = 53), honest exactness flags, gauge accounting, finish-aware permutation null, leakage firewall, terminals."
+
+[[provenance]]
+path = "withmath/PK98_SEGCHAIN_TARGET384_DESIGN.md"
+kind = "design"
+note = "Admitted controls terminal, exact algebra and geometry, gap-gate calibration values, stratified null, claim grammar and sequencing rule for a future one-shot target."
+
+[[provenance]]
+path = "withmath/PK89_SEGMENT_CANCELLATION_REVIEW.md"
+kind = "audit"
+note = "Breakpoint and wrap geometry, group counts at t = 45/53/60, the 288-alignment count, minimum target-absent controls and nulls."
+
+[[provenance]]
+path = "withmath/PK89_SHARED_STREAM_COUPLING375_DESIGN.md"
+kind = "design"
+note = "Family-consistency invariant: chain models predict no periodic alignment for text A; two-regime chain recovered 10/10."
+
+[[provenance]]
+path = "withmath/wm_segments.py"
+kind = "solver"
+note = "The change-point measurement that fixes t = 53."
+ref = "logs/56_segments.log"

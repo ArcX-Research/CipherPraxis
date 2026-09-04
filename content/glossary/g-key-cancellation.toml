@@ -1,0 +1,10 @@
+id = "g-key-cancellation"
+section = "glossary"
+title = "Key cancellation"
+status = "VERIFIED"
+status_note = "Standard term; the corpus's usage and its conditions are documented in the technique entry."
+family = "Cryptanalysis technique"
+tags = ["two ciphertexts", "difference"]
+related = ["key-cancellation", "segment-chain-analysis", "running-key-relation-test", "difference-operators", "conjugacy-and-gauge"]
+summary = "Key cancellation is the subtraction of one ciphertext from another, or of a ciphertext from a lagged copy of itself, so that a stream common to both disappears: two texts under one running key leave the difference of their plaintexts, a text keyed by another text's plaintext leaves that text's own key, and a ciphertext autokey leaves the plaintext. It is exact only in a common index space (a straight and a keyword-mixed order admit no affine conversion), it leaves an additive gauge of 26 states, and the cipher it exposes still has to be solved and validated against nulls that destroy the cross-text pairing."
+updated = "2026-09-04"

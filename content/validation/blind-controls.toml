@@ -1,0 +1,122 @@
+id = "blind-controls"
+section = "validation"
+title = "Blind controls"
+subtitle = "Planted instances whose truth is hidden from the solver and from its author"
+status = "VERIFIED"
+status_note = "One-shot hidden control banks with committed seeds were executed and admitted in the research program; one bank of 34 hidden cases returned POWER_BLOCKED at its fourth case although the disclosed bank had passed 34/34, which is the effect blind controls exist to detect."
+family = "Control design"
+tags = ["controls", "hidden bank", "one-shot", "seed commitment"]
+related = ["planted-controls", "target-absent-controls", "held-out-gates", "power-measurement", "seal-and-audit-protocol", "seed-determinism", "hash-chained-transcripts", "g-planted-control"]
+summary = "A blind control is a planted control whose plaintext, key and even corpus position are unknown to the person who wrote the solver until the run is over. The program implements two forms: a hidden bank derived from a seed that only the release authority holds and that is consumed by a single durable attempt, and blind full-root searches in which the solver must reach the planted truth by its own schedule with no oracle. Disclosed controls tune a tool; blind controls measure it."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Two kinds of blindness are distinguished:
+
+- **Hidden bank.** Fixtures are derived deterministically from a seed $s$ supplied by the release authority after the code is frozen and audited. The attempt record stores only $\operatorname{SHA256}(s)$; the seed is revealed in the final transcript so that admission can regenerate the bank. Because the attempt path is occupied durably before any fixture is derived, a second try is impossible: the bank is **burned** by any attempt, successful or not.
+- **Blind search (no oracle).** The solver is given the planted ciphertext and no hint about where the truth lies in its task order (`oracle=False`). It passes only if it reaches the planted truth under the same ordering, budget and pruning the live run will use.
+
+A *disclosed* control, by contrast, is one whose seed and truth the author may inspect. It is admissible for development and for robustness diagnostics, and it never authorises a target run.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Seed commitment"
+body = '''
+Before derivation the attempt marker records
+
+$$h = \operatorname{SHA256}(s), \qquad \text{argv}, \qquad \{\operatorname{SHA256}(a_i)\}_{i}$$
+
+for every frozen artefact $a_i$. After the run, admission checks $\operatorname{SHA256}(s_{\text{revealed}}) = h$ and regenerates every fixture from $s_{\text{revealed}}$ with domain-separated labels (see [Seed determinism](/engineering/seed-determinism)). The bank's identity is thus fixed before any score exists.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The fixture generator is a deterministic function of the seed and pinned corpus. An independent auditor reproduced one lane's public bank (34 cases, 68 seeds, 19 permutations) from the design text alone before the hidden run was released.
+- "Blind" refers to the truth's identity, not to its difficulty distribution. A fixture chosen so that its truth sits at the front of the task order is blind in name only.
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+Disclosed controls are where a solver is developed, and development is selection: schedules and thresholds drift toward whatever makes the disclosed plants pass. A hidden bank asks the frozen bytes the only question that matters, whether they recover plants they were not tuned on. In the program's alpha-13 progressive-key lane the disclosed bank passed every case, positives 6/6, sentinels 6/6, independent-letter negatives 3/3 and shuffled nulls 19/19, while the hidden bank's fourth case failed and the transaction terminated `POWER_BLOCKED` with the bank burned and no retry. That outcome was admitted as a valid measurement of a power failure and no target successor was authorised from it.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+A hidden bank is run once. Everything it will need, including a second selector pass for determinism, three in-memory parses of the transcript and the admission replay, must fit the declared wall and memory caps; the program budgeted 1,200 s wall and 1 GiB for two sequential 34-case passes, with a measured margin of about three times.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Front-loaded fixtures.** Two blind controls recovered their truth at pair 150 and pair 17 of a 1.6-million-pair frontier; an auditor pointed out that the fixture had been chosen for that reason, and the ledger reclassified the results from `POWER_PASS` to `PIPELINE_CORRECTNESS_PASS / WIRING_KAT`.
+- **Process-local one-shot property.** A first seal kept the read-once counter in memory, so a crash after the read left no evidence and a rerun would read again; the replacement wrote a durable `O_EXCL` marker before the sole read.
+- **Burned by an environmental accident.** A hard kill between hard-link publication and temporary unlink leaves a state that admission refuses; it is fail-closed, but the fixtures are gone.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+A hidden bank is accompanied by a disclosed bank of the same shape run on the same frozen bytes; agreement between the two is the expected case, and the interesting case is the one recorded above. Robustness diagnostics (plants that deliberately violate a boundary assumption) stay in the disclosed schedule and are labelled `ROBUSTNESS_DIAGNOSTIC`, excluded from the pass predicate.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Hidden-bank protocol"
+body = '''
+```
+1. freeze source/parser/runner; creator audit; independent audit PASS
+2. release authority: export RELEASE_TOKEN, HIDDEN_SEED (never shown to the author)
+3. runner: refuse if canonical or attempt path exists
+4. create attempt marker O_EXCL 0600: {sha256(seed), argv, artefact hashes}; fsync; dir fsync
+5. derive fixtures from seed (domain-separated labels); run identity + 99 nulls per fixture
+6. write transcript; COMMIT = sha256(prefix); reveal seed in transcript
+7. admit: regenerate bank from revealed seed, replay selector, require canonical equality
+```
+'''
+
+[[provenance]]
+path = "withmath/PK98_SEGCHAIN_A1S0_CONTROL366_DESIGN.md"
+kind = "design"
+note = "Sections 7 and 8: hidden fixtures use a fresh authority-supplied seed generated after freeze and audit; attempt record holds SHA256(hidden_seed); any attempt-file creation consumes the bank."
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Root transaction: hidden bank POWER_BLOCKED at the fourth case, bank burned, no retry; admitted as a valid power-failure measurement, not a pass."
+ref = "LOG381"
+
+[[provenance]]
+path = "withmath/PK10_ALBERTI_ACCEL13_VALIDATION381_CREATOR_AUDIT.md"
+kind = "audit"
+note = "Disclosed public bank decision PASS: positives 6/6, sentinels 6/6, iid negatives 3/3, shuffled nulls 19/19; measured resource margin about three times under the caps."
+ref = "LOG381"
+
+[[provenance]]
+path = "withmath/PK10_ALBERTI_ACCEL13_VALIDATION381_DESIGN_INDEPENDENT_AUDIT.md"
+kind = "audit"
+note = "Independent reveal-to-bank replay of the complete 34-row public vector from the design text, without importing the implementation."
+ref = "LOG381"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Ledger amendment reclassifying two front-loaded blind controls from POWER_PASS to PIPELINE_CORRECTNESS_PASS / WIRING_KAT."
+ref = "LOG503"
+
+[[provenance]]
+path = "withmath/CLAUDE_LOG363_INDEPENDENT_AUDIT.md"
+kind = "audit"
+note = "Blocker B1: the one-shot property was process-local; required repair is a durable O_EXCL attempt marker written before the sole target read."
+ref = "LOG363"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Blind full-root controls with oracle=False drained 149,572/149,572 and 18,346/18,346 tasks and returned exactly the planted truth with zero false-valid candidates before the live cell was released."
+ref = "LOG475"

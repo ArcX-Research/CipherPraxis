@@ -1,0 +1,118 @@
+id = "key-cancellation"
+section = "cryptanalysis"
+title = "Key cancellation"
+subtitle = "Subtracting one ciphertext from another so that a shared latent stream disappears"
+status = "VERIFIED"
+status_note = "The cancellation algebra passed an exhaustive synthetic known-answer test (144 offset, orientation and sign combinations with both inverses and both forward reconstructions), and a segment-aware selector built on it recovered 16/16 hidden positive pairs and rejected 4/4 negatives with 99 full-pipeline nulls each; the two corpus texts were never run through it because a family-consistency check disfavoured the chain premise beforehand (segment-cancellation review, logs/373, coupling note)."
+family = "Relations between ciphertexts"
+tags = ["two ciphertexts", "running key", "difference", "gauge", "cancellation", "index map"]
+related = ["running-key", "vigenere", "beaufort", "one-time-pad", "segment-chain-analysis", "running-key-relation-test", "shared-cycle-attack", "affine-maps-mod-26", "conjugacy-and-gauge", "difference-operators", "valid-model-nulls", "target-absent-controls", "known-answer-tests", "g-key-cancellation", "g-selection-freedom"]
+summary = "If two ciphertexts share a latent stream additively, one plaintext used as the other's running key, or one running key used twice, a signed subtraction in a common index space cancels the shared stream and leaves a simpler cipher of what remains. Key cancellation is exact algebra, but it is only valid when the two texts are represented in the same alphabet order (or orders related by an affine map), it leaves a 26-fold gauge, and the cipher it exposes still has to be solved and validated. The corpus worked the algebra through with known-answer tests, built a control-validated selector on it, and recorded why the premise must be checked against the texts' own invariants before any target run."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+All arithmetic is in $\mathbb{Z}_{26}$ with one letter-to-index map $z$. Text B is enciphered as $x_j = \epsilon_9 z(P_j) + K_j$ ($\epsilon = +1$ additive, $-1$ reciprocal) and text A uses B's plaintext, read at position $\phi(i)$, as a running key: $y_i = \epsilon_8 z(Q_i) + z(P_{\phi(i)})$. Since $\epsilon_9^2 = 1$, $z(P_j) = \epsilon_9 (x_j - K_j)$, and
+
+$$d_i := y_i - \epsilon_9 x_{\phi(i)} = \epsilon_8 z(Q_i) - \epsilon_9 K_{\phi(i)}.$$
+
+The unknown plaintext $P$ has cancelled; $d$ is $Q$ under the (signed) key of text B. Once $K$ is recovered from $d$, both plaintexts follow: $z(Q_i) = \epsilon_8(d_i + \epsilon_9 K_{\phi(i)})$, $z(P_j) = \epsilon_9(x_j - K_j)$. The same identity with the roles of key and plaintext swapped gives the classical two-ciphertext difference under one running key: $c_i - c'_i = p_i - p'_i$.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Conditions, counts and gauge"
+body = '''
+- **Common index space.** If B's plaintext is indexed by $z_9$ and A converts the running-key letters by $z_8$, cancellation requires the physical-letter conversion $F(u) = z_8(z_9^{-1}(u))$ to be affine, $F(u) = au + b$ with $\gcd(a, 26) = 1$: then $a\epsilon_9 x$ cancels the plaintext and $b$ is absorbed into the key. The straight order and the keyword-mixed order of the corpus admit **no** affine map between them (checked over all 12 units and 26 translations), so only matched-order cells cancel literally; mixed-order subtraction tests a shared numeric stream, not a shared plaintext.
+- **Signs.** With the plaintext sign convention, four sign cells $(\epsilon_9, \epsilon_8)$ give two observably different streams ($y - x$ and $y + x$) with two endpoint relations each; a convention that puts the sign on the key instead has only two effective cells. A production source must declare one convention and prove it with known-answer tests.
+- **Alignment.** For a cycled 144-letter key the offsets live in $\mathbb{Z}/144$; with two orientations there are 288 raw alignments (not 592, which counts non-wrapped edge overlaps of a different model).
+- **Gauge.** For any $b$, $K'_j = K_j + b$, $z(P'_j) = z(P_j) - \epsilon_9 b$, $z(Q'_i) = z(Q_i) + \epsilon_8\epsilon_9 b$ leave both ciphertexts unchanged: "recover the key exactly" is meaningful only after a gauge is fixed or a unique physical plaintext is selected.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The shared stream enters both texts additively in the same index order, at a known or enumerable alignment.
+- The residual key $K$ has enough structure to be solved from $d$ (periodic, segmented periodic, or constant).
+- The family is consistent with the texts' invariants: adding a high-entropy running key destroys the coset structure of $y$, so a text that shows a strong periodic alignment cannot be the output of such a chain (see failure modes).
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Fix the convention, the alignment $\phi$ and the common order; enumerate the sign cells (16 cells for two orders and two signs per text).
+2. Form $d$ for each cell and solve it as the cipher the residual key implies (a constant Caesar segment, a periodic segment, or both when the key changes regime, see [Segment chain analysis](/cryptanalysis/segment-chain-analysis)).
+3. Reconstruct both plaintexts and re-encrypt both texts independently; both forwards must reproduce the inputs exactly, which validates the implementation but is never evidence of language or uniqueness.
+4. Select by a language statistic of the recovered $Q$ only (P may be structured rather than prose); expand every same-order key through its 26 gauge states before selection; retain ties.
+5. Null: permute positions within the key groups of the derived stream (destroying adjacency and cross-text pairing, preserving group histograms), rerun the entire selector 99 times, and require the observed maximum to beat every replicate.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Cancellation is $O(n)$ per cell. The cost is in the residual solve and its nulls: 16 cells $\times$ (a width-8 shortlist cyclic DP of $8^7$ states plus 5,616 finish states), 1,600 cell solves and 561,600 full-candidate evaluations per fixture with 99 nulls; a 20-fixture hidden suite is 32,000 cell solves.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Wrong index space.** Subtracting a straight-order ciphertext from a keyed-order one cancels nothing; a selector must include a mismatched-index negative to prove it does not treat that as cancellation.
+- **Degenerate nulls.** Histogram-only gates (marginalised monogram evidence, exact coset alignment) are invariant under shuffles within the derived cosets, so such a null cannot calibrate them; a structural null must destroy the cross-source pairing while preserving each source's coset histograms.
+- **Variable-length scores.** A raw sum of log-probabilities over segments of different length grows deterministically with the breakpoint; an earlier design was blocked for exactly this bias.
+- **Premise inconsistent with the data.** Simulated chains of this kind predict for the 153-letter text a period-7 alignment of $z +0.13$ (range $-1.1$ to $+2.0$) and a zone coset IC of about $0.040$, against the measured $+4.2$ and $0.066$; the chain premise is disfavoured at roughly 3 to 4$\sigma$ before any run, and a hidden-bank pass would validate an instrument for a family the text does not resemble.
+- **Reading too much.** A readable $Q$ determines $P$ only algebraically; a claim about $P$ needs its own predeclared criterion.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+- Algebra known-answer tests (segment-cancellation review): random numeric fixtures over breakpoints $\{45, 53, 60\}$, orientations $\pm 1$, offsets $\{0, 1, 52, 53, 71, 143\}$ and all four sign pairs, 144 combinations, all passing the cancellation identity, both inverses and both source forwards; the exact key-group counts at the three breakpoints; the non-existence of an affine map between the two orders.
+- Segment-aware selector (logs/373): 16/16 hidden positives (every order pair and sign pair at breakpoint 53) recovered exactly with strict rank one against 99 nulls; 4/4 negatives (two valid-family random-latent with independent-monogram $Q$, two no-chain with an independent running stream) rejected; zero generator ties; target absent.
+- Two-regime derivation (coupling note, section 6): exact per-regime $8^7$ products with a 14-shift joint polish recovered $Q$ and, through the closure invariant, $P$ in 10/10 synthetic pairs in under a second per cell.
+- Broad cross-derived scan (logs/155): every ordered pair, both orders, both signs, both orientations, every eligible offset, periods 7 and 26, with a null that shuffles each complete source and repeats the whole selection; a planted cross-running-key control at period 7 precedes the targets.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Text B plaintext `ATTACKATDAWN` under a segmented key (constant 3 on positions 0 to 5, then $(5, 20)$ repeating): $x = $ `DWWDFNFNIUBH`. Text A plaintext `HOLDTHEGATES` with B's plaintext as running key at offset 0 (both additive): $y = $ `HHEDVREZDTAF`. Subtracting letter by letter,
+
+```
+y   H H E D V R E Z D T A F
+x   D W W D F N F N I U B H
+d   E L I A Q E Z M V Z Z Y
+```
+
+and indeed $d = Q - K$: `HOLDTH` shifted back by 3 is `ELIAQE`, and `EGATES` under $-(5, 20)$ is `ZMVZZY`. Solving $d$ needs only a 26-way search on the first segment and a $26^2$ search on the second; once $K$ is known, $P = x - K$ returns `ATTACKATDAWN`. The gauge: adding 1 to every key element, subtracting 1 from every letter of $P$ and adding 1 to every letter of $Q$ reproduces the same $x$ and $y$, so the recovered key and plaintexts are determined only up to that common rotation until language fixes it.
+'''
+
+[[provenance]]
+path = "withmath/PK89_SEGMENT_CANCELLATION_REVIEW.md"
+kind = "audit"
+note = "Exact algebra (equations 1-2), alphabet compatibility (no affine map between the two orders), breakpoint and wrap geometry, gauge, degenerate-null warning, synthetic KAT of 144 combinations."
+
+[[provenance]]
+path = "withmath/wm_pk98_segchain_a1s0_control373.py"
+kind = "solver"
+note = "Segment-aware cancellation selector, controls-only: 16 cells, width-8 cyclic DP, 5,616 finish states, stratified 99-null replay."
+ref = "logs/373_pk98_segchain_a1s0_controls.log"
+
+[[provenance]]
+path = "withmath/PK89_SHARED_STREAM_COUPLING375_DESIGN.md"
+kind = "design"
+note = "Section 5: chain models predict alignment z about +0.13 versus the measured +4.2; section 6: two-regime chain recovered 10/10 synthetic pairs."
+
+[[provenance]]
+path = "withmath/wm_crossderive.py"
+kind = "solver"
+note = "Cross-derived streams over every ordered pair, order, sign, orientation and offset with a complete-selection shuffle null."
+ref = "logs/155_crossderive.log"
+
+[[provenance]]
+path = "withmath/wm_algebra.py"
+kind = "solver"
+note = "Test D: shared-outer-key and running-key relations between the two texts with family-wise nulls."
+ref = "logs/03_algebra.log"

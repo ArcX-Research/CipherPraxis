@@ -1,0 +1,110 @@
+id = "mixture-inference-under-transposition"
+section = "cryptanalysis"
+title = "Mixture inference under transposition"
+subtitle = "Reading an inner short-period substitution through an unknown transposition and an outer periodic layer, by evidence rather than key search"
+status = "VERIFIED"
+status_note = "Bayesian inference of the inner mixture with the outer shifts marginalised solves four planted sandwiches from cold (true width on top at z 4 to 13, 100% match) and shows the expected negative signatures on a fractionated, a plain and a double-columnar control; the same pipeline finds no mixture and no width in the two unsolved corpus texts in any combination of alphabet orders (logs/05)."
+family = "Layered-construction inference"
+tags = ["mixture", "Bayesian evidence", "sandwich", "transposition-invariant", "class posterior", "EM"]
+related = ["sandwich-construction", "vigenere", "quagmire-iii", "columnar-transposition", "bayesian-evidence-model-selection", "expectation-maximisation", "order-free-width-statistic", "transposition-width-recovery", "exact-period-alignment", "family-identification", "g-inner-and-outer-layer", "g-selection-freedom", "g-coset"]
+summary = "If a short-period substitution is applied, then any transposition, then a longer-period additive layer, the transposition cannot change the multiset of inner letters. Each outer coset is therefore a rotation of a mixture of rotated language distributions, and the mixture can be inferred from coset histograms alone, with the outer shifts integrated out. The class posteriors that fall out of the fit then expose the transposition through the block structure they must show at the right width. The corpus built this as an attack that needs no key search and validated it on planted sandwiches."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Consider $C = Q_m\big(T(Q_k(P))\big)$: an inner additive substitution of period $k$ with shifts $g_0, \dots, g_{k-1}$, a transposition $T$, an outer additive layer of period $m$ with shifts $u_0, \dots, u_{m-1}$. Since $T$ only permutes positions, the multiset of inner letters $Q_k(P)$ is untouched, and for a period-$k$ inner over language with distribution $E$ that multiset is the balanced mixture
+
+$$f(x) = \frac{1}{k} \sum_{j=0}^{k-1} E(x - g_j).$$
+
+Every outer coset $b$ then has expected histogram $f(x - u_b)$. Three inner models are compared: $M_1$, plain language (a transposed or plain substitution of language); $M_2$, a two-component mixture $wE(x-g_1) + (1-w)E(x-g_2)$; $M_3$, three components. Only the inner **spacing** $\delta = g_2 - g_1$ is identifiable at this stage (the common rotation is absorbed by the outer shifts).
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Evidence with nuisance shifts integrated out"
+body = '''
+For a model $f$ and coset histograms $F_b$,
+
+$$\log Z(f) = \sum_{b=0}^{m-1} \log \frac{1}{26} \sum_{u=0}^{25} \prod_x f(x-u)^{F_b(x)}.$$
+
+A family's evidence is the mean of $Z(f)$ over its bank of members (uniform prior), which penalises bank size automatically; the $\delta$-marginal evidence groups the $M_2$ bank by spacing. Profiling $u$ instead of marginalising overfits by about $0.15$ nats per letter at $n = 153$ and lets wrong models win on shuffled texts. Under the winning model each letter gets a class posterior
+
+$$P_i(\gamma) \propto w_\gamma E\big(y_i - g_\gamma\big), \qquad y_i = c_i - u_{i \bmod m},$$
+
+which feeds the order-free width statistic; class-EM re-estimates each $u_b$ from the class-conditional likelihood once a width lays out the classes.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The outer layer is additive in a known order and the inner is additive in a known (possibly different) order; both orders are tried.
+- The inner period is short ($k = 2$ or $3$): the mixture of many rotated distributions is nearly flat and carries no spacing information.
+- The inner plaintext is language with a peaked distribution; a fractionated or random inner gives $M_2$ and $M_3$ evidence at the null.
+- The text is homogeneous along its length; a zoned text mimics a mixture (see failure modes).
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Coset histograms in the outer order; evidence of $M_1$, $M_2$, $M_3$ with shifts and banks marginalised; $z$ of each evidence against shuffled texts.
+2. Read the top spacings $\delta$ from the $\delta$-marginal (correct on 7/8 planted seeds; the top three are carried).
+3. Class posteriors, order-free width scan with class-EM refinement, nulls through the identical pipeline.
+4. For widths at $z \ge 3$: fix residue classes from the block phases, order the rest by quadgrams, polish shifts against order; a solve reads at the language rate.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Bank sizes: $26$ ($M_1$), $325$ ($M_2$ at one weight), $2{,}600$ ($M_3$); each member costs one $m \times 26$ log-likelihood table, so the fits are seconds. The width scan with sixty null pipelines dominates, about 30 to 40 minutes per text over all order combinations.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Zone artefact.** A text made of a 63-letter zone with monoalphabetic cosets and 90 flat letters pools to a coset index of coincidence of about $0.055$ and a pair-coincidence deficit, exactly the "mixed inner" signature; the corpus's whole-text mixture verdicts on the 153-letter text were of this kind and were superseded once the zones were found.
+- **Mixture without a single width.** A double columnar shows $M_2$ at $z +5.8$ but no width; the mixture evidence alone does not identify one transposition.
+- **Flat inner.** Fractionation gives weak $M_2/M_3$ and no width, the correct negative but also the end of the road for this instrument.
+- **Selection.** Profiled shifts, uncentred posteriors and per-width maxima without a full-pipeline null all inflate $z$; the corpus's nulls repeat fit, $\delta$ candidates, EM and DP on every shuffle.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Four planted sandwiches at 153 letters, all solved from cold with the true width on top (logs/05): outer/inner in one order, width 9 exact grid, $z +12.8$; width 8 ragged, $+11.3$; outer in one order and inner in the other, width 12 with nine long columns, $+4.3$; width 9 with a period-3 inner, $+5.1$; each read at 100% match and rate $-4.34$. Printed alongside: a fractionated inner under the outer layer (weak $M_2/M_3$, no width), a plain periodic substitution ($M_1$ wins, no width), a double columnar ($M_2$ present, no single width). On the two unsolved corpus texts: no preferred spacing for the 153-letter text and no width at $z \ge 3$ for either text in any order combination.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Inner period 2 with spacing $\delta = 13$: the inner distribution is $f(x) = \tfrac12\big(E(x) + E(x-13)\big)$, so E and R (13 apart) both have inner frequency $\tfrac12(0.127 + 0.060) = 0.0935$, and every letter is paired with its antipode. The index of coincidence of $f$ is about $0.054$, well below the language value $0.066$ and above uniform $0.0385$; a transposition of any kind leaves that distribution untouched, and an outer period-7 layer shows it rotated in each of its seven cosets. The $\delta$-marginal evidence then peaks at $\delta = 13$ regardless of the transposition, and in plaintext order the classes read `0101...`; a columnar transposition of even width turns that into constant-class columns, of odd width into alternating ones.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The likelihood-free family classifier places the mixed-inner families (sandwich, fractionation, unknown-alphabet substitution, several independent alphabets) in one cluster that invariant statistics cannot split at 153 letters; the mixture instrument is the one that decides *within* that cluster whether a single transposition of short-period language is present, and it decided negatively for the corpus texts (see [Family identification](/cryptanalysis/family-identification)).
+'''
+
+[[provenance]]
+path = "withmath/wm_mix.py"
+kind = "solver"
+note = "Evidence fits M1/M2/M3, delta-marginal, class posteriors, class-EM, order-free width scan, column solver; planted sandwich controls and negative-signature controls."
+ref = "logs/05_mix.log"
+
+[[provenance]]
+path = "withmath/wm_core.py"
+kind = "library"
+note = "fit_inner (shifts marginalised), model banks, delta_marginal, membership (class posteriors), planted-cipher generators."
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "The mathematics in wm_mix (items 1-5), first-run results, and the round-1 exclusion of a period-2/3 inner under any transposition for the 153-letter text."
+
+[[provenance]]
+path = "withmath/STEP3_REVIEW.md"
+kind = "note"
+note = "Section 0: the whole-text mixed-inner verdict as a zone artefact."

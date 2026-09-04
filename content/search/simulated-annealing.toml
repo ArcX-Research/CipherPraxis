@@ -1,0 +1,165 @@
+id = "simulated-annealing"
+section = "search"
+title = "Simulated annealing"
+subtitle = "Metropolis local search with a cooling schedule, run as thousands of vectorised chains"
+status = "VERIFIED"
+status_note = "Implemented as a scalar routine and as a batch numpy routine; planted 5x5-square, one-sided keyed-alphabet and transposition-order controls are recovered at 100% with logged receipts. On a two-sided unknown alphabet (Quagmire III) at 63-96 letters the same machinery plateaus at 30-40% of the alphabet, which is documented under failure modes and in the parallel-tempering and polish-basin entries."
+family = "Stochastic local search"
+tags = ["metropolis", "cooling schedule", "swap moves", "batch chains", "quadgram objective"]
+related = ["parallel-tempering", "hill-climbing", "polish-basin-measurement", "coordinate-descent", "quadgram-log-likelihood", "bifid", "playfair", "quagmire-i", "quagmire-iii", "columnar-transposition", "planted-controls", "shuffled-null-z-score", "numpy-instrument-pattern", "g-move-set", "g-temperature-schedule", "g-objective-function"]
+summary = "Simulated annealing walks a discrete key space (an alphabet permutation, a 5x5 square, a column order) by proposing a random local move and accepting it with the Metropolis probability at a temperature that decays geometrically. Its objective is a language-model score of the trial decrypt. It reliably solves squares over a fixed inner text and keyed alphabets whose shifts are pinned by a crib, and it is the workhorse behind many transposition-order searches; its recorded limit is the two-sided unknown alphabet, where the landscape rather than the budget stops it."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $S$ be a finite state space (for example the $26!$ orderings of an alphabet) with an objective $E(s)$ to be **maximised** and a move operator $m(s)$ that returns a random neighbour. With a schedule $T_0 > T_1$ over $N$ steps:
+
+```
+s <- random state; best <- s
+for t in 0 .. N-1:
+    T    <- T0 * (T1/T0)^(t/N)          # geometric cooling
+    s'   <- m(s)
+    d    <- E(s') - E(s)
+    if d > 0 or U(0,1) < exp(d / T):    # Metropolis acceptance
+        s <- s'
+        if E(s) > E(best): best <- s
+return best
+```
+
+The **batch form** keeps $N_c$ chains as rows of an array; each step proposes one move per row, scores all rows in one vectorised decrypt, and accepts per row. Every (crib, offset, relation, restart) combination becomes one chain, so the whole placement sweep is one array computation.
+'''
+
+[[blocks]]
+kind = "equations"
+body = '''
+Acceptance probability of a move with score change $\Delta = E(s') - E(s)$ at temperature $T$:
+
+$$\Pr[\text{accept}] = \min\!\left(1,\; e^{\Delta / T}\right).$$
+
+Geometric schedule: $T_t = T_0 (T_1/T_0)^{t/N}$, so $\log T$ falls linearly in $t$.
+
+Objective used throughout the corpus: the quadgram log-likelihood rate of the decrypt $p_0 \dots p_{n-1}$,
+
+$$\operatorname{rate}(p) = \frac{1}{n-3}\sum_{i=0}^{n-4} \log_{10} q_4(p_i p_{i+1} p_{i+2} p_{i+3}),$$
+
+with $q_4$ an add-$0.01$ smoothed quadgram table from a generic corpus. English scores near $-4.3$ per letter, a random-key decrypt near $-6.5$; a verdict threshold sits $0.7$ below the English reference.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The objective separates the truth from wrong keys by a margin larger than the noise of the move set, and improving moves form a connected path to the optimum (a "funnel"). Where a single swap corrupts many positions at once (an alphabet that acts on both sides of a substitution) this fails.
+- Every accepted state is a legal key: the move set preserves the permutation property by construction (swap, insertion, row/column swap of a square).
+- Free parameters that are refit at every step (per-coset shifts derived from crib votes, or re-estimated by monogram maximisation) add selection freedom; shuffled-text nulls through the identical annealer calibrate what score a wrong state can reach.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+- **Squares over a fixed inner text.** A 5x5 square (Bifid, Playfair) is annealed with the outer periodic layer held fixed: moves are letter swaps (85%), row swaps (5%), column swaps (5%) and a transpose or flip (5%); schedule $T_0 = 12 \to T_1 = 0.08$ over $10^6$ steps, six restarts, best-of-restarts reported.
+- **One-sided unknown alphabet with a crib.** A contiguous crib of at least the period pins every shift, so only the alphabet is annealed (swap or insertion moves); the best chain per placement is finished by an exhaustive 925-neighbour polish and the top placements are re-annealed with more restarts.
+- **Transposition orders under a class solver.** Column orders of widths 10-20 are annealed with a mixed move set (swap 35%, insertion 30%, segment reversal 15%, rotation 10%, relabelling 10%), six restarts of 1,500 steps, then 40 rounds of iterated local search (a three-move kick, a 300-step anneal, a full-neighbourhood finish); the energy is the class solver's quadgram score after refitting all shifts.
+- **Nulls.** The identical pipeline is run on shuffled ciphertexts; wrong-placement medians of $-6.0$ to $-6.2$ and maxima of $-5.5$ to $-5.9$ are the reference against which a target row is read.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+One step costs one decrypt and one score, $O(n)$ in the text length. Recorded budgets: $6$ restarts $\times$ $10^6$ steps per square problem on 12 workers; crib sweeps of 6,701 placements per text and family with a refine of the top 40 placements at 64 restarts $\times$ 80,000 steps (6.1 hours on 12 cores for four families and two texts); transposition anneals of $6 \times 1{,}500 + 40 \times 300$ steps per width. The batch routine evaluates thousands of chains per vectorised step, which is what made the 2000-chain tempering runs affordable.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Rugged landscape (two-sided alphabet).** When the same alphabet indexes both plaintext and ciphertext sides, a swap is simultaneously a cryptogram move and a re-slotting of two ciphertext letters, corrupting about four of 26 mapping entries in every coset. On a planted 96-letter instance the polished best reaches only 29-40% of the alphabet, and best-of-$N$ does not improve with $N$: 500 chains $\to -5.045$, 2,000 $\to -4.829$, 8,000 $\to -4.916$ (same instance, two further seeds $-4.971$ and $-4.876$). The polish basin is at most three swaps wide, so the annealer's best states (about ten swaps away) never fall into it.
+- **Identifiable but unreachable.** On a chained construction the true state scored $-10.01$ per letter against $-12.71$ one swap away and $-16.57$ for random states, yet swap annealing plateaued at a total of $-2101$ against the truth's $-1477$ over 12 restarts of 40,000 iterations. Separation of the optimum does not imply a reachable optimum.
+- **Partial solves.** A 144-letter Playfair square annealed to a $-5.20$ "partial" state with 60% of the plaintext right while the 153-letter Bifid and the 297-letter joint problem solved at 100%.
+- **Selection freedom.** Refitting free shifts on every move buys score on short texts; without shuffled nulls a wrong-placement score of $-5.5$ looks like signal.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+- Squares, no outer layer: planted 153-letter Bifid (period 7) solved at rate $-4.34$, 100% match; planted 297-letter joint Bifid+Playfair sharing one random square solved at $-4.43$, 100%/100%; planted 144-letter Playfair only 60% ($-5.20$).
+- Crib-pinned one-sided alphabets: Quagmire I with a known ciphertext alphabet solved 3/3 seeds at every crib length $\ge 7$ (9-16 of 16 restarts converge); Quagmire II solved 12/21 seed-by-length cases (0-7 of 16 restarts); Quagmire III 0/21 even with a 25-letter crib, 200,000 steps and 32 restarts.
+- Transposition orders: planted width-8 and width-12 sandwiches read at $-4.34$ with 100% match; word-pair, triple-columnar and rail-fence planted constructions likewise at $-4.34$, 100%.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Schedule $T_0 = 12$, $T_1 = 0.08$, $N = 10^6$. At the midpoint $t = N/2$:
+
+$$T = 12 \cdot (0.08/12)^{1/2} = \sqrt{12 \cdot 0.08} = \sqrt{0.96} \approx 0.98.$$
+
+A move that lowers the score by $\Delta = -1.0$ is accepted with probability $e^{-1/0.98} \approx 0.36$ at that point, with $e^{-1/12} \approx 0.92$ at the start, and with $e^{-1/0.08} \approx 3.7 \times 10^{-6}$ at the end. A swap move on the alphabet state `ZYXWVUTSRQPONMLKJIHGFEDCBA` at positions 0 and 25 yields `AYXWVUTSRQPONMLKJIHGFEDCBZ`; an insertion of position 0 after position 2 yields `YXZWVUTSRQPONMLKJIHGFEDCBA`. Both are permutations, so the state stays legal.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The scalar routine is generic (state, energy, move, iterations, schedule); every solver passes its own move set. Batch annealing is followed by a deterministic polish and, on targets, by shuffled-text nulls: the polished score of the best null chain is the noise floor. The two-sided-alphabet limit motivated the exact methods in the constraint-programming section.
+'''
+
+[[provenance]]
+path = "ck_lib.py"
+kind = "library"
+note = "Generic scalar annealer (geometric schedule, Metropolis acceptance on a maximised energy) and the quadgram objective (log10 quadgram table, add-0.01 smoothing, rate per quadgram, English threshold = reference rate - 0.7)."
+
+[[provenance]]
+path = "ck_pfanneal.py"
+kind = "solver"
+note = "Square annealer with the outer layer fixed: move mix 85/5/5/5, T 12 -> 0.08, 1,000,000 iterations, 6 restarts, 12 workers."
+
+[[provenance]]
+path = "ck_pfanneal_report.txt"
+kind = "log"
+note = "Stage-0 results: Bifid-153 -4.34 ENGLISH match 100%; Playfair-144 -5.20 partial match 60%; joint-297 -4.43 match 100%/100%."
+
+[[provenance]]
+path = "withmath/wm_crib.py"
+kind = "solver"
+note = "Batch numpy annealing over one unknown alphabet with crib-derived shifts; swap/insertion moves; 925-neighbour polish; refine of top placements."
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Round 4 calibration and results: q1K 3/3 seeds at crib length >= 7, q2K 12/21, q3 0/21; 6,701 placements per family; refine 64 restarts x 80k steps; wrong-placement null medians -6.0..-6.2 and maxima -5.5..-5.9; 6.1 h on 12 cores. Step-2 scaling: 500/2000/8000 chains reach 29-40% of the alphabet."
+ref = "logs/22_crib_smoke.log"
+
+[[provenance]]
+path = "withmath/logs/23_crib_pk8_pk9.log"
+kind = "log"
+note = "Full crib sweep record for the four validated one-sided families."
+ref = "logs/23_crib_pk8_pk9.log"
+
+[[provenance]]
+path = "withmath/logs/36_scaling.log"
+kind = "log"
+note = "Same planted 96-letter instance, bigram weight 1, 50k steps: polished best -5.045 (500 chains), -4.829 (2000), -4.916 (8000), -4.971 and -4.876 (2000 chains, other seeds)."
+ref = "logs/36_scaling.log"
+
+[[provenance]]
+path = "ck_sandwich.py"
+kind = "solver"
+note = "Restarted anneal plus iterated local search over columnar orders: move mix 35/30/15/10/10, 6 restarts x 1,500 steps, 40 ILS rounds x 300 steps, kick of 3 moves, full-neighbourhood finish."
+
+[[provenance]]
+path = "ck_sandwich_report.txt"
+kind = "log"
+note = "Planted width-8 and width-12 sandwich controls read at -4.34 with match 100%."
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Chained-construction annealing: true rate -10.01 vs one swap -12.71 vs random -16.57, yet swap annealing plateaued at -2101 against the truth's -1477 over 12 restarts x 40,000 iterations."
+ref = "LOG409b"
+
+[[references]]
+title = "Optimization by Simulated Annealing"
+author = "S. Kirkpatrick, C. D. Gelatt, M. P. Vecchi"
+year = 1983

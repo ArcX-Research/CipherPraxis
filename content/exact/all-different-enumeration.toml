@@ -1,0 +1,125 @@
+id = "all-different-enumeration"
+section = "exact"
+title = "All-different enumeration over CRT null spaces"
+subtitle = "Solving homogeneous linear systems in letter positions modulo 26 by splitting into GF(2) and GF(13), enumerating the null space, and keeping only injective (all-different) assignments"
+status = "VERIFIED"
+status_note = "The factorised feasibility test (a partial assignment is injective iff every GF(13) residue is used at most twice with opposite GF(2) parities) is verified against brute force over 240 systems and 538,656 solutions with zero mismatches; planted cycles are recovered inside the enumerated solution sets (144 all-different solutions containing the truth; 312 = one gauge orbit) and 8,851 tail systems were exhausted at 13^7 with zero reads."
+family = "Constraint programming"
+tags = ["null space", "CRT", "GF(2)", "GF(13)", "all-different", "gauge", "nullity"]
+related = ["all-different-constraints", "modular-inverse-and-crt", "conjugacy-and-gauge", "units-mod-26", "permutation-cycles", "exact-chain-oracle", "word-prefix-csp", "constraint-satisfaction-forward-checking", "cp-sat-and-smt-solvers", "k-best-lists", "shared-cycle-attack", "gauge-defect-invalidation", "g-certificate"]
+summary = "When a crib or a proposed plaintext is placed under a keyed substitution with an unknown alphabet, every letter yields a homogeneous linear equation over Z26 in the positions of the letters involved. Ranks alone never reject such a system (the zero vector always solves it); the decision comes from enumerating the null space and demanding that the 26 positions be all different. Splitting Z26 into GF(2) x GF(13) makes both null spaces exact and turns the injectivity test into a residue-count rule, so feasibility costs 2^d2 + 13^d13 rather than their product."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Unknowns: $z(L) \in \mathbb{Z}_{26}$ for each letter $L$ that occurs (in the crib, in the ciphertext at the crib positions, in the key word), plus free key constants. Each crib letter gives one row; with a gauge row $z(X_0) = 0$ the system is homogeneous.
+
+```
+build rows over Z26 for the observed letters only (unobserved letters stay free)
+split: A2 = A mod 2 over GF(2), A13 = A mod 13 over GF(13)
+N2 <- null space of A2 (dimension d2);  N13 <- null space of A13 (dimension d13)
+for each v13 in span(N13) (13^d13 vectors):            # residues mod 13 per observed letter
+    reject if any residue is used by three or more letters
+    for each v2 in span(N2) (2^d2 vectors):
+        reject if two letters share a residue mod 13 and also share the parity mod 2
+        recombine by CRT: z = CRT(v2, v13); record the all-different read
+assign unused positions to unobserved letters; canonicalise the 312 affine images (12 units x 26 translations)
+```
+
+Every distinct all-different read is retained (not only the best-scoring one), because on a known-answer test the true read ranked second of six.
+'''
+
+[[blocks]]
+kind = "equations"
+body = '''
+Chain elimination (one shared cycle $z$, signs $e_8, e_9 \in \{\pm 1\}$, key class $\kappa$):
+
+$$z(P_i) - e_8\, z(C_i) + e_8 e_9\, z(C'_i) - e_8 e_9\, \kappa = 0 \pmod{26};$$
+
+differencing two positions in the same class removes $\kappa$. Gauges: translation $z \mapsto z + b$ is a symmetry with $\kappa \mapsto \kappa + b(1 + e_8 e_9 - e_9)$, fixed validly by one row $z(X_0) = 0$ (fixing $\kappa$ instead is invalid); unit multiplication $(z, \kappa) \mapsto (uz, u\kappa)$ for the 12 units is a symmetry of the homogeneous system and cannot be fixed by a linear row, so solutions are canonicalised after enumeration.
+
+Injectivity rule: with $z \equiv (z \bmod 2,\ z \bmod 13)$, two letters collide iff they share both residues; hence at most two letters per GF(13) residue and, when two share one, opposite parities. Cost: $2^{d_2} + 13^{d_{13}}$ instead of $2^{d_2} \cdot 13^{d_{13}}$.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The system is homogeneous once gauged, hence always consistent: **rank never rejects**. On a target-absent plant, one 10-letter word gives nullities $(24, 24)$ for the true crib versus $(23, 23)$ for a wrong one, one 18-letter word $(15, 15)$ for both, and two words of 15 + 18 letters $(3, 3)$ versus $(2, 2)$, with 0 of 40 wrong pairs linearly inconsistent.
+- Enumeration is affordable only when $d_{13}$ is small: measured costs of 0.4-10 ms for $d_{13} \le 4$ and about 94 ms at $d_{13} = 5$ (later 44 ms with cached digit matrices); the probability that a pair reaches $d_{13} \le 5$ rises from 0.14 at 14 letters to 0.74 at 18 and 0.99 at 20.
+- Unobserved letters must be left free: keeping them as columns inflates the null space (an 18-letter pair showed nullity 8 before projection and 5 after).
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+- **Two-crib systems.** Pairs of candidate phrases placed anywhere in a zone; after the first 240 high-dimension pairs per bank, the remaining systems were processed at a $13^7$ budget: 8,851 systems (941 from the semantic bank, 7,910 from nine matched decoy banks), zero all-different reads, so zero completions; the earlier stage had found all 245,766 candidate pairs linearly consistent, which is the rank-never-rejects fact in production.
+- **Word-pair chain CSP.** Two words of at least 18 letters combined in one constant-key class: 3,860 placements and 299,563 candidate pairs on a plant; nullity histogram over 600 random pairs $0{:}4,\ 1{:}23,\ 2{:}102,\ 3{:}198,\ 4{:}194,\ 5{:}55,\ 6{:}24$; 12.4 ms per pair on average; a planted pair returned 144 all-different solutions containing the planted cycle up to the unit gauge.
+- **Anchored residue systems.** For three related texts sharing one cycle, eliminating the latent and the per-text offsets gives exact null spaces of dimension $(2, 2)$ over the two fields on every plant: 676 raw combinations of which exactly 312 are all-different, one gauge orbit of order $12 \times 26 = 312$.
+- **Direct letter-guess systems.** Without a free constant each guessed letter is one row; 32/32 exact recoveries at crib length 26 with typical dimensions 2-4 and 12-24 solutions per crib.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Null spaces by Gaussian elimination over each field: $O(m \cdot r^2)$ for $m$ rows and $r$ unknowns. Enumeration $13^{d_{13}}$ residue vectors with early rejection, then $2^{d_2}$ parities for survivors; production caps at $d_{13} \le 5$ (word pairs) or $13^7$ (tail systems). Measured: 0.4-10 ms ($d_{13} \le 4$), 44-94 ms ($d_{13} = 5$).
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Fixed gauge on the wrong object.** A selector fixed $z(C_0) = 0$ and then scored a second text whose decrypt is not translation-invariant: the true cycle failed the "exact second text" check in about 25 of 26 plants because that decrypt was a rotation of the physical one; the run was invalidated and the successor maximises the second text's score over the 26 translations.
+- **Single-orbit, first-match selection.** A certified core solved only the canonical form of the first returned cycle and returned on the first sign partition whose forward reproduced; with a tautological forward (every key reproduces, 200/200 wrong keys did) the pipeline could not select and was blocked for global use.
+- **Keeping one read per system.** The best-partial-read rule lost a planted pair whose true read ranked second; every distinct read must be kept.
+- **Large nullity.** A single word of any length up to about 20 leaves $13^{15}$ or more solutions; nothing can be enumerated, and nothing is rejected.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Factorised feasibility versus brute force: 240 systems, 538,656 solutions, 0 mismatches. Chain equation verified numerically on 50/50 random plants across all four sign cells, including the cycled tail; translation symmetry checked for $b = 1, 5, 13$ and unit symmetry for $u = 3, 5, 25$. Tail continuation KAT: a planted $d_{13} = 5$ pair recovered at index 1,459 of 3,482 large systems (rate $-4.429$, forced and roundtrip PASS). Word-pair KAT: 144 all-different solutions containing the planted cycle; pre-filter 0/27,544 violations. Anchored systems: 6/6 plants give one 312-element orbit equal to the planted cycle's orbit.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Three letters with gauge $z(A) = 0$ and rows $z(B) - z(A) \equiv 13$, $z(C) - z(A) \equiv 13 \pmod{26}$. Modulo 13 both rows read $z(B) \equiv z(C) \equiv 0$; modulo 2 both read $z(B) \equiv z(C) \equiv 1$. The null spaces are trivial ($d_2 = d_{13} = 0$), the unique solution is $z(B) = z(C) = 13$, and the injectivity rule rejects it: B and C share the GF(13) residue $0$ and also share parity $1$. The system is linearly consistent and infeasible, which is the whole point: only the all-different check can say no.
+
+Change the second row to $z(C) - z(A) \equiv 14$: now $z(C) \equiv 1 \pmod{13}$ and $\equiv 0 \pmod 2$, so $z(C) = 14$, distinct from $z(B) = 13$; feasible, positions $\{0, 13, 14\}$.
+'''
+
+[[provenance]]
+path = "withmath/SHARED_CYCLE_CHAIN_EQUATION_AUDIT_CLAUDE.md"
+kind = "audit"
+note = "Chain elimination, gauge analysis (translation with kappa shift; unit canonicalisation), nullity table (10-letter (24,24) vs (23,23); 18-letter (15,15); 15+18 (3,3) vs (2,2); 0/40 wrong pairs inconsistent), 50/50 plants, 245,766 linearly consistent pairs."
+
+[[provenance]]
+path = "withmath/PK89_CHAIN_WORDPAIR406_AUDIT.md"
+kind = "audit"
+note = "GF(2) x GF(13) enumeration with at most two letters per residue and opposite parities; cap 13^5 x 2^5; nullity histogram over 600 pairs; 0.4-10 ms (f13<=4), ~94 ms (f13=5), 12.4 ms average; 3,860 placements / 299,563 pairs; KAT 144 solutions containing the planted cycle; projection lesson (nullity 8 -> 5); gauge defect and the 406b repair (142 -> 44 ms); P(f13<=5) 0.14/0.74/0.99 at 14/18/20 letters."
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Tail continuation: 8,851 f13=5 systems at 13^7 (941 semantic, 7,910 decoy), zero all-different reads; KAT planted pair recovered at index 1,459 (rate -4.429); true read ranked second under the old rule."
+ref = "LOG390"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Factorised injectivity checked against brute force over 240 systems / 538,656 solutions with 0 mismatches; 32/32 exact recoveries at crib length 26; typical d2/d13 2-4 and 12-24 solutions per crib."
+ref = "LOG409b"
+
+[[provenance]]
+path = "withmath/PK9_STAGEB_EXACT_CERTIFIED_CLAUDE_AUDIT.md"
+kind = "audit"
+note = "Anchored residue systems: dim2 = 2, dim13 = 2, raw 676, 312 all-different = one gauge orbit of order 312 on 6/6 plants; correction note: first-match sign selection, single orbit, tautological forward (200/200 wrong keys reproduce)."
+ref = "logs/353_pk9_stageb_exact_certified_claude.log"
+
+[[provenance]]
+path = "withmath/PK89_CHAIN_WORDCSP405_AUDIT.md"
+kind = "audit"
+note = "Projection onto observed letters; 2^d2 + 13^d13 feasibility; 312 affine copies canonicalised; missing letters receive unused coordinates."

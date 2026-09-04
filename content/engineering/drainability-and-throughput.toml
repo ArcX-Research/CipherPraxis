@@ -1,0 +1,110 @@
+id = "drainability-and-throughput"
+section = "engineering"
+title = "Drainability and throughput"
+subtitle = "Whether an exhaustive search can run to natural completion within its budget, measured rather than assumed"
+status = "VERIFIED"
+status_note = "The research program records natural drains with full counters (for example 248,405 of 248,405 pairs in 307.5 s, complete=1) and non-drainable cells with measured rates and projected thread-days; an exact zero is claimed only on natural drain, otherwise the terminal is scoped inconclusive."
+family = "Compute and throughput"
+tags = ["throughput", "exhaustive search", "budget", "memory"]
+related = ["throughput-fail", "state-checkpoints", "compiled-hot-cores", "power-measurement", "exhaustive-enumeration", "rank-sharding", "bound-benchmarks-and-certificates", "g-throughput"]
+summary = "An exhaustive negative is only as good as the proof that the search finished. Drainability is the property that the frontier of tasks empties naturally, with every counter at its total and no capped endpoints; throughput is the measured rate that says whether it will within the declared budget. The program reports both in every terminal, refuses to call a capped run a negative, and uses capacity arithmetic to reject designs whose memory would exceed a gate before writing them."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+A search **drains naturally** when it reports `complete=1`, `queued=0`, `active=0`, `tasks_complete=1`, `endpoint_overcap=0` and every `done/total` counter equal, so that the terminal `EXACT_ZERO` (no solution in the family) is a statement about the whole family. Any run stopped by a wall cap, a node budget or a resource ceiling reports `SCOPED_INCONCLUSIVE` with its exact processed prefix.
+
+**Throughput** is measured per work unit in the live task order: pairs per second, nodes per pair, and the fraction of the frontier covered at the cap.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Capacity arithmetic"
+body = '''
+Before implementing a persistent-lineage beam, the program computed its state capacity exactly. With $G$ retained roots, $R$ descendants per root, packed states of 248 bytes and $B(f, n)$ live bins for a first-word length $f$ and text length $n$,
+
+$$\text{bytes} = B(f, n) \cdot G \cdot R \cdot 248, \qquad B(f,n) = \max_s \sum_{d = s}^{\min(n, s+11)} \Big(d - f - \big\lceil \tfrac{d - f}{12} \big\rceil + 1\Big).$$
+
+For $f = 8, n = 61, G = 4{,}096$: 2.0 GiB at $R = 4$, 49 GiB at $R = 98$ and 17 TiB at the measured requirement $R = 35{,}639$, so the declared 2 GiB gate was infeasible and the lane was closed as a control/power feasibility blocker without running a target.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- Rates are measured in the live cell, not in an easier sibling; a three-shift cell at about 800 pairs/s said nothing about the two-extra-shift cell at 0.5 pairs/s.
+- Memory ceilings are enforced by the launcher (`ulimit`, an RSS guard between fixtures, a hard process stop) and a ceiling hit is a resource terminal, never a null win or a rejection.
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+Throughput measurement decided three lanes. A shared-cycle full-spelling cell drained in 307.5 s and produced a genuine exhaustive negative for exactly that cell (one of 456,976 shift vectors, one relation). Its two-extra-shift sibling measured 740,000 nodes per pair against 80, a 6.9-times larger frontier and about 40 thread-days per relation, and was run only as a declared 24-hour scoped job. A seven-free-shift cell was identifiable ($\approx 2^{-291}$ spurious rate) but had weaker prunes still, and was declared computationally non-viable, not run and not a negative. The remaining option, an inhomogeneous-row core restoring the pruning strength at an estimated 2.4 days on 12 threads, was recorded as a decision for the release authority.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Time to drain is frontier size over rate; the program's frontiers ranged from 55,497 to 1,825,380 pairs across random plants at 0.17 to 16.1 pairs/s on two threads (median 1.21), so drain times spanned minutes to weeks for the same code on different inputs.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Memory ceilings mid-run.** A general-cell lane was stopped by an RSS ceiling and filed as `RESOURCE_BLOCKED-rss-ceiling`; a superseding slice design followed.
+- **Wall measured as CPU.** A bound benchmark that reported wall time as CPU time was filed as invalid.
+- **Partial results read as exclusions.** Runs stopped after 2,000 of 489,600 or 160,000 of 1,958,400 placements are exploratory only in the ledger.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Blind controls must drain and find exactly the planted truth with zero false-valid candidates before a live cell is released; the recorded controls drained 149,572/149,572 and 18,346/18,346 tasks. Segment KATs prove that partial drains compose exactly.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Drain report"
+body = '''
+```
+DRAIN relation=A cell=three-shift threads=12 wall=307.522s
+  pairs=248405/248405 triples=494577/494577 queued=0 active=0 tasks_complete=1 complete=1
+  endpoint_overcap=0 endpoints=0 solutions=0
+TERMINAL EXACT_ZERO (this cell only: 1/456,976 shift vectors, one relation)
+```
+'''
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Natural drain: pairs 248,405/248,405, triples 494,577/494,577, queued 0, active 0, complete 1, endpoint_overcap 0 in 307.522 s; scope statement (1/456,976 shift vectors, one relation); blind controls drained 149,572 and 18,346 tasks."
+ref = "LOG475"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Two-extra-shift cell: 0.5 pair/s, 740,000 nodes per pair versus 80, frontier 6.9 times larger, about 40 thread-days per relation; seven-free-shift cell declared non-viable; inhomogeneous-row core option estimated at 2.4 days on 12 threads; EXACT_ZERO only on natural drain."
+ref = "LOG503"
+
+[[provenance]]
+path = "withmath/logs/503_panel_20260904T094538Z.log"
+kind = "log"
+note = "Frontiers 55,497 to 1,825,380 pairs; throughput 0.17 to 16.1 pairs/s on two threads, median 1.21."
+ref = "logs/503_panel_20260904T094538Z.log"
+
+[[provenance]]
+path = "withmath/ROOT_LINEAGE_FEASIBILITY_AUDIT.md"
+kind = "audit"
+note = "Exact capacity geometry: B(f,n) bins times roots times quota times 248 bytes; 2.0 GiB at R=4, 49 GiB at R=98, 17 TiB at the measured R=35,639; lane closed as a feasibility blocker."
+ref = "LOG221"
+
+[[provenance]]
+path = "withmath/logs/failed/426_generalcell_20260902T162054Z_33940.RESOURCE_BLOCKED-rss-ceiling.log"
+kind = "log"
+note = "A run stopped by the RSS ceiling and filed under failed logs."
+ref = "logs/failed"
+
+[[provenance]]
+path = "withmath/LOG_AUDIT.md"
+kind = "audit"
+note = "Runs stopped after 2,000 of 489,600 and 160,000 of 1,958,400 placements are exploratory only."

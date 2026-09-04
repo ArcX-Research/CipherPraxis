@@ -1,0 +1,136 @@
+id = "lcm-of-periods"
+section = "algebra"
+title = "Least common multiples of periods"
+subtitle = "Composition, decimation and coprime residue bijections of periodic keys"
+status = "VERIFIED"
+status_note = "Period composition by lcm, decimation by gcd and coprime residue bijections are exact and are used by the compound-key tests (controls z +51 and +27, target texts nothing for inner periods 2 to 13), by the residual-periodicity screen after exact alignment, and by the residue-graph solvers."
+family = "Number theory"
+tags = ["period", "lcm", "gcd", "decimation", "compound key", "coprime"]
+related = ["residue-class-graphs", "linear-recurrences-lcg", "matrix-invertibility-mod-26", "modular-inverse-and-crt", "compound-periodic-key", "vigenere", "exact-period-alignment", "kasiski-examination", "coincidence-lag-profile", "g-residue-class", "g-coset"]
+summary = "Two periodic keys added together repeat with the least common multiple of their periods, and a periodic stream read every n-th position repeats with the period divided by a gcd. When the periods are coprime the positions of one full cycle correspond one-to-one with pairs of residues, which is why a 63-position alignment of a period-7 and a period-9 key visits every combination exactly once. These facts size compound-key searches and shape the graphs used by exact solvers."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+A sequence has period $m$ if $k_{i+m} = k_i$ for all $i$. If $k$ has period $m$ and $k'$ has period $q$, then $k + k'$ has period dividing $\operatorname{lcm}(m, q) = mq/\gcd(m, q)$. **Decimation**: the subsequence $k_{nj}$ of a period-$p$ sequence has period $p/\gcd(p, n)$. **Coprime residues**: for $\gcd(m, q) = 1$ the map $i \mapsto (i \bmod m, i \bmod q)$ is a bijection from $\{0, \dots, mq - 1\}$ onto $\mathbb{Z}_m \times \mathbb{Z}_q$ (the CRT on positions).
+'''
+
+[[blocks]]
+kind = "equations"
+body = '''
+- **Compound periodic key.** An outer period-7 layer over an inner period-$q$ layer (one or two alphabets) is one key of period $\operatorname{lcm}(7, q)$; for $q = 10$ that is 70. A short text may show both periods as separate coincidence peaks.
+- **Rank-two modulation.** $u[i \bmod 7] + v[(i + \phi) \bmod 9]$ has period 63 and 16 parameters for 63 values; on positions $i \equiv j \pmod 9$ the shared part cancels between two texts.
+- **Coprime bijection.** For period-7 and period-9 keys aligned over 63 positions, $i \mapsto (i \bmod 7, (\phi + \tau i) \bmod 9)$ is a bijection for every phase $\phi$ and both orientations $\tau = \pm 1$; the residue graph is the complete bipartite $K_{7,9}$ with 63 edges. For periods 26 and 7 the graph on $26 + 7 = 33$ vertices is connected for every $n \ge 63$ and has cycle rank $n - 32$.
+- **Decimation in block ciphers.** Row streams of an $n \times n$ Hill matrix over an inner additive layer of period $p$ have period $p / \gcd(p, n)$.
+- **Divisors of text lengths.** Widths that tile a text exactly: 153: 3, 9, 17; 144: 2, 3, 4, 6, 8, 9, 12, 16, 18, 24; 504: 2, 3, 4, 6, 7, 8, 9, 12, 14, 18, 21, 24, 28 (widths 2 to 29).
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- Components are strictly periodic over the region analysed; a change point splits the analysis into zones.
+- Alignment origins are known up to phase; a phase is a key-label nuisance absorbed by relabelling residues.
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+1. **Residual periodicity.** After the exact period-7 alignment removes the outer shifts, test the aligned text at every $q = 2..30$ for a second additive period by aligned coincidence against shuffles.
+2. **Compound solver.** Fit the outer period-7 key and an inner period-$q$ key jointly (start-free alternating class fit, quadgram polish, shuffled nulls) for $q = 2..13$ in one or two alphabets.
+3. **Residue graphs.** Use the coprime bijection to build the complete edge set and its cycle basis (48 rectangles for $K_{7,9}$; one winding equation plus $n - 33$ four-term relations for periods 26 and 7).
+4. **Grid widths.** Restrict transposition widths to exact divisors when the construction requires a full rectangle.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Parameters versus values: a compound $7 \times q$ key has $7 + q$ shifts but $\operatorname{lcm}(7, q)$ distinct key values; a period-63 modulation has 16 parameters. The compound search covers $q = 2..13$ in four alphabet pairings. A heuristic information count for the shared-modulation coupling of two texts gave about 25 bits of evidence over 2,448 cross pairs against 61 bits of free shifts; it was later marked heuristic, not a theorem, with the supported statement being the empirical 0/6 recovery of the potentials.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- A maximum over $q = 2..30$ inflates residual peaks; one text's residual peaks at $q = 10$ ($z = +3.7$ and $+4.3$ in the two alphabet orders after alignment) were followed up by the compound solver and closed, not reported as structure.
+- Wrong-period graphs: a common-plaintext solver run with periods 26 and 9 on data generated at 26 and 7 stays connected and exactly recoverable, so a false hit would not be hidden by topology; the control returned zero classes over 704 geometries.
+- Treating the bit-count identifiability argument as formal; coincidences are not independent and the KL of the full 26-ary difference is larger than the coincidence-only value.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Compound solver controls: a period-70 key (outer 7 over inner 10, one alphabet) and a two-alphabet 7-over-10 key recovered at $z = +51.1$ and $+26.7$ with 100 % match; target texts nothing for $q = 2..13$ in any alphabet pairing. Residual periodicity screen: recorded per text and order for $q = 2..30$. Mixed-period graph controls: four positives (153, 63, 144, 96 letters) recovered exact cycle, both keys and plaintext with one exact affine class each; the wrong-period negative and a within-residue shuffle negative gave zero classes over 704 and 884 geometries.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+$k = (1, 2, 3, 4)$ of period 4 and $k' = (0, 5, 7, 2, 9, 4)$ of period 6, $\operatorname{lcm}(4, 6) = 12$. Their sum over $i = 0..11$: $1, 7, 10, 6, 10, 6, 3, 9, 8, 4, 12, 8$, and $i = 12$ gives $1 + 0 = 1$ again. No smaller period works: positions 0 and 4 differ ($1 \ne 10$), so not 4; positions 0 and 6 differ ($1 \ne 3$), so not 6.
+
+Coprime bijection: with $m = 7$, $q = 9$, position $i = 20$ maps to $(6, 2)$ and $i = 41$ to $(6, 5)$; the 63 positions $0..62$ hit each of the $7 \cdot 9 = 63$ residue pairs exactly once. Decimation: a period-12 sequence read every third position has period $12/\gcd(12, 3) = 4$.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The coprime bijection is the same theorem as the Chinese remainder theorem for positions rather than letters; see [Modular inverses and CRT](/algebra/modular-inverse-and-crt). Cipher models built on composed periods are described under [Compound periodic key](/ciphers/compound-periodic-key).
+'''
+
+[[provenance]]
+path = "withmath/wm_algebra.py"
+kind = "solver"
+note = "Test C: residual periodicity q = 2..30 after the exact period-7 alignment; test E: exact-grid divisors of the three text lengths."
+
+[[provenance]]
+path = "withmath/logs/03_algebra.log"
+kind = "log"
+note = "Residual periodicity rows per text and order; period-10 residual z +3.7 (order K) and +4.3 (order S) reading in the README; grid divisors 153: 3, 9, 17; 144: 2..24; 504: 2..28."
+ref = "logs/03_algebra.log"
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Compound solver: controls 100 % (period-70 key and the two-alphabet 7 over 10, z +51/+27); both short texts nothing for q = 2..13; the period-10 residual lead closed."
+
+[[provenance]]
+path = "withmath/logs/06_compound.log"
+kind = "log"
+note = "Control rows: q10 rate -4.34 with z +51.1 match 100 % (one alphabet) and z +26.7 match 100 % (two alphabets)."
+ref = "logs/06_compound.log"
+
+[[provenance]]
+path = "withmath/PK89_MIXED_P7_P9_RESIDUE_GRAPH_REVIEW.md"
+kind = "design"
+note = "lcm(7,9) = 63; CRT bijection for all 18 phase/orientation maps; K_(7,9) with 63 edges, 16 vertices, cycle rank 48; 48 rectangle basis."
+
+[[provenance]]
+path = "withmath/MIXEDPERIOD_GRAPH282_CONTROL_AUDIT.md"
+kind = "audit"
+note = "Periods 26 and 7 coprime: 33-vertex connected graph, cycle rank n - 32, closed-form basis; four positive controls; wrong-period p26/p9 negative zero over 704 geometries; shuffle negative zero over 884."
+ref = "logs/282_mixedperiod_graph_controls.log"
+
+[[provenance]]
+path = "withmath/PK89_SHARED_STREAM_COUPLING375_DESIGN.md"
+kind = "design"
+note = "Rank-two period-63 modulation (16 parameters), 2,448 cross pairs, heuristic 25 bits vs 61 bits, 0/6 potential recovery."
+
+[[provenance]]
+path = "withmath/PK89_CHAIN_CONSISTENCY_INVARIANT377_DESIGN.md"
+kind = "design"
+note = "Correction: the bit-count statement is heuristic, not a formal identifiability theorem."
+
+[[provenance]]
+path = "withmath/HILL2_PERIODIC_AUDIT.md"
+kind = "audit"
+note = "Row-stream decimation q = p/gcd(p,2)."
+
+[[references]]
+title = "Military Cryptanalysis, Part II"
+author = "William F. Friedman"
+year = 1938
+
+[[references]]
+title = "The Codebreakers"
+author = "David Kahn"
+year = 1967

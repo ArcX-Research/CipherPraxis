@@ -1,0 +1,22 @@
+id = "quagmire-lab"
+section = "labs"
+title = "Quagmire I–IV lab"
+subtitle = "Keyed alphabets on either side of a periodic substitution, with the tableau rows in use"
+status = "VERIFIED"
+status_note = "The implementation reduces to plain Vigenère when both keywords are empty (checked against the LEMON vector) and round-trips for all four types; the indicator convention follows the American Cryptogram Association."
+family = "Substitution labs"
+tags = ["quagmire", "keyed alphabet", "periodic", "tableau"]
+related = ["quagmire-i", "quagmire-ii", "quagmire-iii", "quagmire-iv", "keyword-mixed-alphabet", "crib-driven-alphabet-recovery", "vigenere-lab"]
+summary = "The Quagmire family keeps the coset structure of the Vigenère cipher but replaces the straight alphabet on the plaintext side, the ciphertext side, or both with keyword-mixed alphabets. This lab builds the alphabets from keywords, aligns the key letters under an indicator, and displays the tableau row that each coset actually uses."
+updated = "2026-09-04"
+lab = "quagmire"
+
+[[blocks]]
+kind = "notes"
+title = "What to try"
+body = '''
+- Empty both keywords: every type collapses to Vigenère and the top row of the tableau becomes the straight alphabet.
+- Compare **type I** and **type II** with the same keyword: the coset shifts differ because the key letters are looked up in different alphabets.
+- In **type III** set the key to a single letter equal to the indicator: the shift is zero and the cipher is the identity, which is the alignment convention made visible.
+- In **type IV** change only the ciphertext keyword and watch the rows permute while the plaintext header stays fixed.
+'''

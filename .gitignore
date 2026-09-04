@@ -1,0 +1,92 @@
+# Rust / Cargo
+/target/
+**/*.rs.bk
+*.pdb
+
+# Generated WebAssembly and site output
+/dist/
+/crates/web/dist/
+/pkg/
+*.wasm.map
+
+# Local development and runtime artifacts
+*.log
+*.pid
+*.pid.lock
+*.prof
+*.profraw
+*.profdata
+/.cache/
+/coverage/
+/tmp/
+/temp/
+lcov.info
+
+# Python helper artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# JavaScript tooling, if introduced
+node_modules/
+.npm/
+.pnpm-store/
+.yarn/cache/
+.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Local environment and secret material
+.env
+.env.*
+!.env.example
+!.env.template
+.direnv/
+.envrc.local
+/secrets/
+/.secrets/
+
+# Local agent and workspace state
+.nit/
+.codex/
+.gemini/
+.claude/settings.local.json
+.claude/worktrees/
+.claude/cache/
+
+# Editors and IDEs
+.idea/
+.vscode/
+.fleet/
+.zed/
+*.code-workspace
+*.swp
+*.swo
+*.swn
+*~
+Session.vim
+.netrwhist
+tags
+TAGS
+
+# Operating-system metadata
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+Thumbs.db
+Desktop.ini
+
+# Temporary patch and backup files
+*.tmp
+*.temp
+*.bak
+*.orig
+*.rej

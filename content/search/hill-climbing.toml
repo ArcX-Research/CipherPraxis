@@ -1,0 +1,130 @@
+id = "hill-climbing"
+section = "search"
+title = "Hill climbing and iterated local search"
+subtitle = "First-improvement and steepest-ascent neighbourhood descent, used as the deterministic finisher after stochastic search"
+status = "VERIFIED"
+status_note = "Exhaustive-neighbourhood polish (925 alphabet neighbours; all swaps, insertions and relabellings of a column order) and iterated local search are implemented and are part of every passing planted control in the sandwich, permutation and crib pipelines. The measured basin radius of at most three swaps on a two-sided alphabet is recorded as the technique's limit."
+family = "Deterministic heuristics"
+tags = ["local search", "neighbourhood", "first improvement", "steepest ascent", "iterated local search", "polish"]
+related = ["simulated-annealing", "coordinate-descent", "polish-basin-measurement", "parallel-tempering", "columnar-transposition", "sandwich-construction", "quadgram-log-likelihood", "index-of-coincidence", "planted-controls", "g-move-set", "g-search-basin"]
+summary = "Hill climbing repeatedly replaces the current key by a better neighbour until none exists. In the corpus it appears as the exhaustive 925-neighbour polish of an alphabet (first improvement over all swaps and insertions, batch-scored), as the steepest-ascent finish over all swaps, insertions and relabellings of a column order, and as iterated local search that kicks a local optimum with three random moves and re-descends. It converts near-solutions into solutions; its basin on a two-sided alphabet is only about three swaps wide, which is why it cannot replace global search there."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Given a state $s$, an objective $E$ and a neighbourhood $N(s)$:
+
+```
+first-improvement:   repeat: for s' in N(s): if E(s') > E(s): s <- s'; break   until no improvement
+steepest ascent:     repeat: s' <- argmax_{N(s)} E; if E(s') > E(s): s <- s' else stop
+iterated local search (ILS):
+    best <- local_search(random start)
+    for r in 1 .. rounds:
+        s <- best perturbed by k random moves      # the "kick", k = 3 in the corpus
+        s <- short anneal, then steepest-ascent finish
+        if E(s) > E(best): best <- s
+```
+
+For an alphabet permutation the corpus neighbourhood is the 325 transpositions plus the 600 insertions of one letter into a non-adjacent slot, 925 neighbours in all, generated as source-index maps so that all 925 candidates are decrypted and scored in one vectorised call.
+'''
+
+[[blocks]]
+kind = "equations"
+body = '''
+Neighbourhood sizes. Alphabet of 26 letters: $\binom{26}{2} = 325$ swaps and $26 \cdot 25 - 2 \cdot 25 = 600$ insertions (all ordered pairs $(i, j)$ with $|i - j| > 1$), total $925$. Column order of width $w$: $w(w-1)/2$ swaps, $w(w-1)$ insertions and $w-1$ cyclic relabellings $o \mapsto (o + d) \bmod w$; for $w = 8$ that is $28 + 56 + 7 = 91$ neighbours.
+
+Alphabet polish alternates two exact sub-steps until neither improves: for each text and coset, the shift $k_b \leftarrow \arg\max_{s \in \mathbb{Z}_{26}} E(A, k \text{ with } k_b = s)$ (26 candidates), then $A \leftarrow \arg\max_{A' \in N(A)} E(A', k)$ over the 925 neighbours.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The objective is a language score of the full decrypt; a state within the basin of the truth climbs to it, a state outside climbs to a spurious local optimum with a lower score.
+- The finish is deterministic given its start, so a polished score is reproducible from the (seed, chain) that produced the start.
+- Shift refits inside the polish are exact per coordinate; they add no randomness but do add selection freedom on short texts.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+- **Finisher for annealed alphabets.** The best chain of every crib placement is polished by first-improvement over the 925 neighbours (up to 80 iterations); the best tempering chains by the alternating shift/alphabet climb (up to 60 iterations).
+- **Column orders.** After each anneal restart, a steepest-ascent finish over all swaps, insertions and relabellings of every order in the state, with the energy recomputed by the class solver (all outer and inner shifts refit per candidate). Iterated local search then runs 40 rounds of kick-anneal-finish from the incumbent.
+- **Evidence climb.** A stage-one climb over the alphabet maximising shift-marginalised monogram evidence was tried as a start for the two-sided problem; it converges to alphabets with higher evidence than the truth and was abandoned.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+One polish iteration costs one batch of 925 decrypt-and-scores plus $7 \times 26$ shift candidates per text, all vectorised; a full-neighbourhood finish over two column orders of width $w$ costs about $2(1.5\,w^2 + w)$ energies per round, each an exact shift refit. The corpus caps the alphabet polish at 60-80 iterations.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Narrow basin.** On a planted two-sided alphabet, starting two swaps from the truth, steepest ascent and cold annealing already read $-6.1$ and cannot get back; from random alphabets 0 of 24 restarts across four schedules reached the basin. With a 13-letter crib the basin widens only to three swaps, with a 25-letter crib to six.
+- **Degenerate objectives.** A climb that maximises the decrypt's coincidence rate over ring and shifts collapses letters: on a planted control it found 594-601 coincidences against the truth's 383. The objective, not the climber, was wrong.
+- **Overfit climbs.** The monogram-evidence climb over alphabets prefers alphabets with higher evidence than the planted one at 153 letters.
+- **Plateaus.** First-improvement stops at the first local optimum; steepest ascent stops at the same optimum a little later. Neither samples alternatives; iterated local search does, but only within the kick radius.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Planted sandwiches (period-7 keyed layer over a columnar transposition over a short-period inner) of width 8 and 12 read at $-4.34$ with 100% match after anneal plus full-neighbourhood finish; planted word-pair, triple-columnar and rail-fence constructions likewise $-4.34$, 100%. Crib-pinned one-sided alphabets polish to 100% match in 3/3 seeds. The two-sided calibration above (0/24) is the recorded negative.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+State: an order of four symbols, objective $f$ = number of adjacent pairs in alphabetical order, neighbourhood = swaps of two positions, first improvement in index order.
+
+- `BADC`: pairs (B,A) no, (A,D) yes, (D,C) no, so $f = 1$. First improving swap is positions 0,1: `ABDC`, $f = 2$ (A,B yes; B,D yes; D,C no). Accept.
+- From `ABDC`, swap 2,3: `ABCD`, $f = 3$. Accept. No swap improves further: local and global optimum.
+
+The same climber from `DCBA` ($f = 0$), scanning swaps in index order (0,1), (0,2), (0,3), (1,2), (1,3), (2,3) and restarting the scan after each acceptance, accepts swap 0,1 (`CDBA`, $f = 1$), then swap 0,3 (`ADBC`, $f = 2$: A,D yes; D,B no; B,C yes), and then finds no strictly improving swap: `DABC`, `BDAC`, `ABDC` and `ACBD` all score 2, `CDBA` and `ADCB` score less. It stops at `ADBC`, a local optimum two swaps from `ABCD`. That is the basin phenomenon in miniature.
+'''
+
+[[provenance]]
+path = "withmath/wm_q3joint.py"
+kind = "solver"
+note = "neighbour_table (325 swaps + 600 insertions = 925 source-index maps) and polish (alternating exact per-coset shift descent and 925-neighbour climb, max 60 iterations)."
+
+[[provenance]]
+path = "withmath/wm_crib.py"
+kind = "solver"
+note = "Exhaustive first-improvement polish over the 925 swap/insertion neighbours, batch-scored, up to 80 iterations."
+
+[[provenance]]
+path = "ck_sandwich.py"
+kind = "solver"
+note = "local_finish: steepest ascent over all swaps, insertions and relabellings of every column order; anneal_orders: restarts, 3-move kick, short anneal, full-neighbourhood finish (40 ILS rounds)."
+
+[[provenance]]
+path = "ck_sandwich_report.txt"
+kind = "log"
+note = "Width-8 and width-12 planted sandwich controls at -4.34, match 100%."
+
+[[provenance]]
+path = "ck_perm_report.txt"
+kind = "log"
+note = "Word-pair, triple-columnar and rail-fence planted controls at -4.34, match 100%."
+
+[[provenance]]
+path = "withmath/wm_q3.py"
+kind = "solver"
+note = "Two-sided alphabet calibration: from two swaps away steepest ascent and cold annealing read -6.1 and cannot return; 0 of 24 restarts across four schedules; evidence climb overfits."
+ref = "logs/08_q3.log"
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Crib widens the polish basin only to 3 swaps (13-letter crib) or 6 swaps (25-letter crib); IC-maximising climb degenerate (594-601 coincidences vs truth 383, logs/81); q1K controls 3/3 seeds."
+
+[[references]]
+title = "Iterated Local Search"
+author = "H. R. Lourenco, O. Martin, T. Stuetzle"
+year = 2003

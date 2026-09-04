@@ -1,0 +1,141 @@
+id = "difference-operators"
+section = "algebra"
+title = "Difference operators"
+subtitle = "Lag differences, cross-text differences and the exact cancellation of shared unknowns"
+status = "VERIFIED"
+status_note = "Lag differences and cross-text differences are exact cancellations, verified by known-answer tests (derived stream 32/32, chain plants 50/50, 256/256 implication-violating mutations rejected), and are the first step of every plaintext- or key-elimination attack in the corpus. The ciphertext-difference and running-key screens on the target texts recorded no lead."
+family = "Modular arithmetic"
+tags = ["difference", "lag", "cancellation", "derived stream", "autokey"]
+related = ["modular-arithmetic-z26", "linear-recurrences-lcg", "residue-class-graphs", "conjugacy-and-gauge", "key-cancellation", "autokey-difference-periodicity", "running-key-relation-test", "segment-chain-analysis", "autokey", "running-key", "vigenere", "index-of-coincidence", "g-invariant"]
+summary = "Subtracting a ciphertext from a lagged copy of itself, or from another ciphertext aligned with it, removes whatever the two share: a periodic key at a lag equal to its period, a running key common to two texts, or a common plaintext under two independent keys. What remains is a derived stream whose structure is exactly predictable, so differences turn two unknowns into one and give key-free necessary conditions."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For a sequence $c$ over $\mathbb{Z}_{26}$ and lag $L$ the **lag difference** is $(\Delta_L c)_i = c_i - c_{i-L}$; the lag sum $c_i + c_{i-L}$ is its Beaufort-type twin. For two aligned sequences and a sign $\varepsilon \in \{\pm 1\}$ the **cross difference** is $c^A_i - \varepsilon\, c^B_{\psi(i)}$ with an index map $\psi$ (identity, offset, reversal, or cycling modulo the shorter length). Difference operators are linear, so they commute with the additive structure of the cipher and act on each additive term separately.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "What cancels"
+body = '''
+- **Periodic key at its own period.** If $c_i = p_i + k_{i \bmod m}$ then $\Delta_m c = \Delta_m p$: the key vanishes and the difference text is a self-difference of the plaintext.
+- **Affine recurrence key.** If $k_i = a\,k_{i-L} + b$ then $c_i - a\,c_{i-L} = (p_i - a\,p_{i-L}) + b$ (see [Linear recurrences](/algebra/linear-recurrences-lcg)).
+- **Shared running key, one cycle.** If text B's plaintext keys text A, $z(C^A_i) = e_A z(P^A_i) + z(P^B_j)$ and $z(C^B_j) = e_B z(P^B_j) + \kappa_j$, then the derived stream
+$$D_i(z) = z(C^A_i) - e_B\, z(C^B_j) = e_A\, z(P^A_i) - e_B\, \kappa_j$$
+contains no letter of $P^B$: it is text A's plaintext under a key that is constant on each key class of text B.
+- **Common plaintext, two keys.** If $z(L_i) = s_L z(P_i) + k^L_{i \bmod 7}$ and $z(R_i) = s_R z(P_i) + k^R_{i \bmod 7}$ then with $\varepsilon = s_L s_R$
+$$z(L_i) - \varepsilon\, z(R_i) \equiv h_{i \bmod 7} \pmod{26},$$
+the plaintext vanishes and the difference is periodic. With unequal periods $m, q$ the difference is $A_{i \bmod m} - \varepsilon B_{i \bmod q}$, an edge value on a residue graph.
+- **Key-free collision implications** (chain with a constant class): if both $C^A_i = C^A_r$ and $C^B_j = C^B_s$ then $P^A_i = P^A_r$ for every $z$ and every sign; if exactly one component collides then $P^A_i \ne P^A_r$.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- Additive layers over a common coordinate system; a transposition between the layers destroys index alignment.
+- Known or enumerable index map $\psi$; offsets, reversal and cycling are family axes, not aliases.
+- Signs $e \in \{\pm 1\}$; other unit multipliers require the unit-ratio form.
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+1. **Ciphertext-difference screen.** Form $c_i \mp c_{i-L}$ for $L = 1..20$ and test each for period-7 additive structure by the aligned index of coincidence against shuffles (a ciphertext-autokey with a periodic component leaves such structure).
+2. **Running-key relation test.** Form $c^A \mp c^B$ at every offset in $[-40, 40]$, reversed or not, and compare the best IC with the same maximum under shuffled pairings.
+3. **Exact elimination.** In chain and common-plaintext families, difference away the shared unknown and hand the derived stream to an exact periodic solver or a residue-graph solver.
+4. **Free pre-filters.** Use the collision implications to reject candidate plaintext windows before any algebra: on one constant-class pair they reduced 2,344,345 corpus windows to 40,331 candidates.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+$O(n)$ per lag and sign; the running-key screen evaluates 324 offset/sign/orientation trials per alphabet order. The derived stream of the chain is a same-order two-class cell solved exactly in about $0.5$ s ($8^7$ product plus polish) or 16 ms in the bank solver's compiled inner product.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- A maximum over many lags and signs inflates the apparent significance; the running-key screen's own log notes that with 324 trials a maximum near $+3$ sd is expected by chance. Best running-key ICs of $0.0455$ to $0.0468$ against random pairing $0.0383 \pm 0.0017$ were therefore read as noise.
+- The difference of two independent language streams is flatter than language (coincidence $0.066$ falls toward $0.0385$), so weak signals need matched nulls.
+- **Typicality is not necessity.** A high-entropy running key usually erases periodic structure in the keyed text, but a key text that is itself periodic restores it (a repeated seven-letter key text made the keyed text an ordinary period-7 cipher with alignment $z = +6.927$). A statistic that the family does not fix cannot be a gate.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Derived stream, inverses and two scalar forwards 32/32 over random cycles and sign cells; chain elimination 50/50 random plants; collision-implication filter validated on 256 synthetic arbitrary-permutation chains over all four sign pairs with 256/256 implication-violating mutations rejected and independent scalar/vector agreement over 4,096 windows. Screen results on the target texts: lag-difference maxima reached period-7 aligned-IC $z$ between $+2.5$ and $+3.9$ as maxima over 40 lag/sign texts per text and order, recorded without a lead; the running-key relation test was at noise.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Vigenère with key `KEY` ($m = 3$) on `ATTACK`: $A{+}K = 10 = K$, $T{+}E = 23 = X$, $T{+}Y = 43 \equiv 17 = R$, $A{+}K = K$, $C{+}E = 6 = G$, $K{+}Y = 34 \equiv 8 = I$; ciphertext `KXRKGI`.
+
+$\Delta_3$ of the ciphertext: $c_3 - c_0 = 0$, $c_4 - c_1 = 6 - 23 \equiv 9$, $c_5 - c_2 = 8 - 17 \equiv 17$. $\Delta_3$ of the plaintext: $A - A = 0$, $C - T = 2 - 19 \equiv 9$, $K - T = 10 - 19 \equiv 17$. The two agree at every position: the key has cancelled.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Differences are also the source of the "residue graph" formulation, in which each difference is an edge and the existence of keys is a cycle condition; see [Residue-class graphs](/algebra/residue-class-graphs). For the statistical side of difference texts see [Autokey difference periodicity](/cryptanalysis/autokey-difference-periodicity) and [Running-key relation test](/cryptanalysis/running-key-relation-test).
+'''
+
+[[provenance]]
+path = "withmath/wm_algebra.py"
+kind = "solver"
+note = "Test B: lag difference/sum texts L = 1..20 scored by period-7 aligned IC vs shuffles; test D: running-key relations c8 -/+ c9 at offsets -40..40, reversed, with a family-wise shuffled maximum."
+
+[[provenance]]
+path = "withmath/logs/03_algebra.log"
+kind = "log"
+note = "Lag-difference maxima z +2.5 to +3.9 over 40 lag/sign texts per cell; running-key best IC 0.0455-0.0468 vs random pairing 0.0383 +- 0.0017 over 324 trials, max ~ +3 sd expected by chance."
+ref = "logs/03_algebra.log"
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Algebra-screen reading: no running-key relation; no lead recorded from the difference-text screen."
+
+[[provenance]]
+path = "withmath/PK89_SHARED_CYCLE_BANK380_AUDIT.md"
+kind = "audit"
+note = "Derived stream D_i(z) = z(C8_i) - e9 z(C9_j) = e8 z(P8_i) - e9 kappa_j; KAT 32/32; 16 ms per cell compiled inner product."
+
+[[provenance]]
+path = "withmath/SHARED_CYCLE_CHAIN_EQUATION_AUDIT_CLAUDE.md"
+kind = "audit"
+note = "Chain elimination verified on 50/50 plants."
+
+[[provenance]]
+path = "withmath/PK89_COMMONPLAIN_INVARIANT_CONTROL_AUDIT.md"
+kind = "audit"
+note = "Common-plaintext cancellation z(L) - epsilon z(R) = h(i mod 7); equality-partition gate."
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Collision implications validated on 256 synthetic chains, 256/256 mutations rejected, 4,096-window scalar/vector agreement; 2,344,345 windows reduced to 40,331."
+ref = "LOG407"
+
+[[provenance]]
+path = "withmath/PK89_CHAIN_CONSISTENCY_INVARIANT377_DESIGN.md"
+kind = "design"
+note = "Counterexample: a repeated seven-letter key text restores period-7 structure (alignment z +6.927); typicality versus necessity."
+
+[[provenance]]
+path = "withmath/PK89_SHARED_CYCLE_CHAIN380_DESIGN.md"
+kind = "design"
+note = "Exact same-order cell solve of the derived stream in about 0.5 s."
+
+[[references]]
+title = "Military Cryptanalysis, Part III"
+author = "William F. Friedman"
+year = 1939
+
+[[references]]
+title = "The Codebreakers"
+author = "David Kahn"
+year = 1967

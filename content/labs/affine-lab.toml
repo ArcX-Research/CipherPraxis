@@ -1,0 +1,21 @@
+id = "affine-lab"
+section = "labs"
+title = "Affine cipher & units lab"
+subtitle = "c = a·p + b (mod 26), the twelve invertible multipliers and their inverses"
+status = "VERIFIED"
+status_note = "Unit-tested against the standard AFFINECIPHER → IHHWVCSWFRCP vector (a = 5, b = 8); non-unit multipliers are rejected with an explanation."
+family = "Algebra labs"
+tags = ["affine", "modular arithmetic", "unit group"]
+related = ["affine-cipher", "caesar-shift", "units-mod-26", "modular-inverse-and-crt", "crt-lab"]
+summary = "An affine substitution multiplies each letter index by a and adds b modulo 26. Decryption needs the inverse of a, which exists only for the twelve residues coprime to 26. The lab shows the unit group, each unit's inverse, and what happens when a non-unit is chosen."
+updated = "2026-09-04"
+lab = "affine"
+
+[[blocks]]
+kind = "notes"
+title = "What to try"
+body = '''
+- Set a = 1 to obtain a Caesar shift by b.
+- Set a = 25: since 25 ≡ −1, the cipher is a reflection of the alphabet followed by a shift (a = 25, b = 25 is Atbash).
+- Set a = 13 or any even value to see the invertibility error: two plaintext letters would collide on the same ciphertext letter.
+'''

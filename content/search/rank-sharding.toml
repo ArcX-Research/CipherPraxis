@@ -1,0 +1,117 @@
+id = "rank-sharding"
+section = "search"
+title = "Rank sharding of large enumerations"
+subtitle = "Partitioning a ranked or lexicographically indexed search space into predeclared shards whose local results merge exactly, with no early stopping"
+status = "VERIFIED"
+status_note = "Three sharding schemes are implemented and checked: cumulative rank shards of a k-best schedule (validation 5/5 positives plus a predicted sentinel miss), lexicographic index ranges of an exact bound-pruned core (parity with the monolithic core on W=3 and W=4 universes and an explicit tolerance-tie trap), and hash-ordered pair segments (20/20 planted truths recovered when their segment is scheduled)."
+family = "Enumeration strategies"
+tags = ["sharding", "partition", "resumable", "exact merge", "ties", "coverage"]
+related = ["k-best-lists", "exhaustive-enumeration", "bound-benchmarks-and-certificates", "compiled-hot-cores", "drainability-and-throughput", "state-checkpoints", "reproducibility-receipts", "throughput-fail", "g-shard", "g-drainability", "g-certificate"]
+summary = "Rank sharding splits an enumeration into disjoint, adjacent, predeclared intervals of a ranking or of a lexicographic index, runs each interval to completion as an independent process, and merges the interval winners and tolerance ties exactly. It makes multi-hour exact searches resumable and auditable and converts a time cap into a measured coverage fraction rather than a silent truncation. Its two rules are that an incomplete shard has no evidentiary value and that recovery probability under a cap equals coverage."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Index the state universe as $i = \text{key\_index} \cdot P + \text{perm\_index}$ (or by rank under a cheap score, or by a deterministic hash order of tasks). Declare shards $[s_0, e_0), [s_1, e_1), \dots$ with $e_j = s_{j+1}$, $s_0 = 0$ and the last $e$ equal to the universe size, before any outcome is seen.
+
+```
+for each shard h (sequentially or in parallel):
+    run the exact core on [s_h, e_h); require COMPLETE and SCANNED == e_h - s_h
+    emit L_h = local maximum and every TIE_ROW x with |F(x) - L_h| <= TOL (with its literal representative)
+reduce: G <- max_h L_h; keep rows with |F(x) - G| <= TOL; sum their tie counts;
+        choose the minimum (key_index, perm_index, literal) as the representative
+```
+
+Cumulative rank shards are the same idea over a k-best schedule: ranks 1-32, 33-64, 65-128, 129-256, 257-512, each finished completely; a hit never terminates a shard or the remaining schedule.
+'''
+
+[[blocks]]
+kind = "equations"
+body = '''
+Exactness of local pruning: if admissible bounds satisfy $F(i) \le U(i)$ for every state and $s_h \le L_h$ is any feasible score found inside shard $h$, then a state in the shard's tolerance band obeys $F(i) \ge L_h - \text{TOL} \ge s_h - \text{TOL}$, so it passes the local gate $U(i) \ge s_h - \text{TOL}$; anything rejected by the gate cannot be the shard winner. Local seeds and survivor counts may differ from the monolithic run; the closed local result cannot.
+
+Exact tie merge: a globally tied $x$ with $G - \text{TOL} \le F(x) \le L_h \le G$ satisfies $0 \le L_h - F(x) \le \text{TOL}$, so its own shard must have emitted it. Merging only per-shard aggregate tie counts is not exact.
+
+Coverage under a cap: with tasks in a deterministic order and a truth uniformly placed, $\Pr[\text{recover}] = \text{pairs done}/\text{frontier}$.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Per-state values ($U(i)$, $F(i)$, literal representative, inner tie count) depend only on the immutable input and the state, never on an incumbent, another state or traversal order; this is what makes shard results identical to the monolithic ones.
+- Shards are adjacent and disjoint at runtime (checked), every emitted endpoint is unique, and a shard that times out, breaches memory, truncates or exits non-zero permanently fails the run; there is no retry or widening.
+- The order is frozen before outcomes: rank schedules are nonadaptive and cumulative; hash order is deterministic so a processed prefix is a resumable segment.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+- **Rank shards of a two-stage selector.** Stage one exhausts an exact family (128 forward classes, 26,624 provenance rows); stage two finishes monogram-ranked method classes in five cumulative shards to rank 512 (a sealed successor: seven shards to 2,048). Each shard record binds its rank range, cumulative seed/class/tie counts, digests and the running winner; the whole selector is replayed in a separate supervised process before the transcript is committed.
+- **Index ranges of an exact core.** A universe of $64 \times 9! = 23{,}224{,}320$ states (64 retained keys times all permutations of nine columns) is cut into eight half-open ranges of $2{,}903{,}040$ states, each eight complete key blocks; the core also supports ranges that split a key by seeding each intersected fragment.
+- **Hash-ordered segments.** A pair frontier of about $1.7$ million tasks is processed in deterministic hash order with a declared time cap; a segment option runs any $[a, b)$ of the same order, so idle time can accumulate exact coverage.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Recorded: the 512-rank validation first pass took 265.004 s with peak resident memory 577,585,152 bytes for six fixtures; the eight-shard engineering plan projects about 81.4 s per shard from a monolithic light attempt that scanned 10,694,688 bound-pruned states in 300.011 s (a projection, not evidence); hash-order segments ran at 0.17-16.1 pairs per second per fixture on two threads (median 1.21), and a live frontier of 1,706,348 pairs at 0.148 pairs per second on six threads gives 0.75% coverage in 24 hours and about 134 days for a natural drain.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Incomplete shard.** A killed or capped shard proves nothing about its interval; the reducer refuses it.
+- **Naive tie aggregation.** On a synthetic tie trap, exhaustive enumeration and the row-level reducer both report 3 ties while per-shard aggregation reports 7.
+- **Schedule too shallow.** A truth at rank 790 is missed by a top-512 schedule (by design of the sentinel); the remedy is a new sealed schedule, never widening after the fact.
+- **Undrainable frontier.** When throughput is limited, coverage at the cap is the power: a family whose frontier would need 40 thread-days per relation was declared not drainable with that core, and every capped non-hit is recorded as scoped-inconclusive, not negative.
+- **Serialization defects.** A validation attempt completed its full 512-rank pass and was then rejected at replay because a tuple-of-tuples emitted through JSON compared unequal to the in-memory record; the empty failed transcript is retained and the corrected wrapper re-ran the whole pass.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Rank shards: six frozen fixtures (positives at truth ranks 40, 47, 91, 155, 443; sentinel at 790), all 512 ranks finished, positives 5/5 exact unique recovery, sentinel 1/1 expected miss, target absent, transcript replayed before commit. Index ranges: W=3 (30 states) and W=4 (96 states) universes give identical best, ties and winner for the monolithic closure and four partition families including singletons and non-aligned cuts. Hash segments: 20 uniformly random 144-letter fixtures searched on the ten-pair segment around each truth's located index, recovered 20/20 with all segments drained and zero invalid candidates.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Twelve states with scores $F = (3, 9, 1, 9,\ 4, 8, 2, 9,\ 7, 6, 9, 0)$ and $\text{TOL} = 0$, cut into three shards of four.
+
+- Shard 0: $L_0 = 9$, tie rows at indices 1 and 3.
+- Shard 1: $L_1 = 9$, tie row at index 7.
+- Shard 2: $L_2 = 9$, tie row at index 10.
+
+Reducer: $G = 9$; rows with $F = G$: indices $\{1, 3, 7, 10\}$, tie count 4, representative index 1. Had shard 2's maximum been $8$ with a second $8$ at index 11, its rows would be emitted (they are within TOL of $L_2$) but filtered out by $|F - G| \le \text{TOL}$: exactly the case where aggregate counts would be wrong.
+'''
+
+[[provenance]]
+path = "withmath/CROSSCHAIN_M13_RANKSHARD_VALIDATION288_AUDIT.md"
+kind = "audit"
+note = "Cumulative rank shards 1-32 ... 257-512, no early stopping; six frozen fixtures with truth ranks 40/47/91/155/443/790; 128 classes / 26,624 provenance rows."
+
+[[provenance]]
+path = "withmath/CROSSCHAIN_M13_RANKSHARD_VALIDATION291_AUDIT.md"
+kind = "audit"
+note = "Serialization defect of the 288 attempt (tuple vs list after JSON), retained empty transcript; corrected pass: positives 5/5, sentinel 1/1, 265.004 s, peak RSS 577,585,152 bytes."
+ref = "logs/291_crosschain_m13_rankshard_validation.log"
+
+[[provenance]]
+path = "withmath/CROSSCHAIN_M13_RANK2048_VALIDATION296_AUDIT.md"
+kind = "audit"
+note = "Seven-shard extension to rank 2,048 (sealed)."
+
+[[provenance]]
+path = "withmath/QTT_RANGE_SHARD_ENGINEERING_AUDIT.md"
+kind = "audit"
+note = "Lexicographic index i = key_index * 9! + O2_index over 23,224,320 states; eight ranges of 2,903,040; exactness proof for local bound pruning; row-level tie reducer (trap: exhaustive 3, reducer 3, naive 7); W=3/W=4 parity; 10,694,688 states in 300.011 s light attempt; 81.4 s per-shard projection."
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Hash-ordered segments: 20/20 planted truths recovered when scheduled; frontiers 55,497-1,825,380 pairs; throughput 0.17-16.1 pairs/s (median 1.21) on two threads; live 1,706,348 pairs at 0.148 pairs/s on six threads, 0.75% coverage per 24 h, ~134 days to drain; ~40 thread-days per relation declared not drainable."
+ref = "LOG503"

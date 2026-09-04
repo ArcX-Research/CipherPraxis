@@ -1,0 +1,10 @@
+id = "g-marginal-likelihood"
+section = "glossary"
+title = "Marginal likelihood"
+status = "VERIFIED"
+status_note = "Standard term."
+family = "Bayesian inference"
+tags = ["integration", "prior", "model comparison"]
+related = ["bayesian-evidence-model-selection", "g-evidence", "coset-shift-recovery"]
+summary = "The likelihood of the data averaged over a parameter with respect to its prior: for a coset with counts F and an unknown shift s under a uniform prior, Z = (1/26) sum over s of the product over letters of f(x - s)^F(x). Marginalising the shift, rather than picking the best one, makes the score depend only on the shape of the coset histogram and not on the rotation gauge, which is what makes it order-free and comparable across model families of different size. The family-level marginal likelihood is the average of member evidences, so a bank of M members is charged ln M nats for the choice it is allowed to make."
+updated = "2026-09-04"

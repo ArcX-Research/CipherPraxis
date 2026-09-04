@@ -1,0 +1,10 @@
+id = "g-crib"
+section = "glossary"
+title = "Crib"
+status = "VERIFIED"
+status_note = "Standard term."
+family = "Cryptanalysis technique"
+tags = ["known plaintext"]
+related = ["crib-dragging", "crib-driven-alphabet-recovery", "running-key-relation-test", "g-selection-freedom"]
+summary = "A crib is a fragment of plaintext believed to occur somewhere in a message: a stock phrase, a name, an opening formula. Placed at a candidate offset it implies key material (one key element per letter under a periodic additive cipher, one linear equation over Z26 per letter when an alphabet is unknown), and placements whose implied key is inconsistent or unreadable are discarded. A crib sweep is only as honest as its null: with thousands of placements the maximum score of the wrong placements is the bar a true placement must clear, and a crib that is not actually in the plaintext produces negatives that carry no weight."
+updated = "2026-09-04"

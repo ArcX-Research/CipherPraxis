@@ -1,0 +1,10 @@
+id = "g-successor-review"
+section = "glossary"
+title = "Successor review"
+status = "VERIFIED"
+status_note = "Corpus governance term; the method is described in the assumption-review entry."
+family = "Method governance"
+tags = ["governance", "design review"]
+related = ["assumption-review-protocol", "segment-chain-analysis", "seal-and-audit-protocol", "control-first-policy", "g-family-sweep"]
+summary = "A successor review is the static document written after a controlled negative before any new family is built. It contains a duplicate audit (what every prior lane covered exactly, and why it does not cover the proposal), the exact algebra of the proposed family with its reduction to a validated solver interface, an alias census that groups raw cells into identifiable classes before any language score is computed, a ranked decision table with raw-cell counts and resource cost, a controls-first build plan with boundary sentinels drawn from outside the family, and a stop rule. Its terminals cannot overclaim: a failed control is a power blocker, a miss of an incomplete selector is INCOMPLETE, and only a fresh, independently audited artefact may touch a target."
+updated = "2026-09-04"

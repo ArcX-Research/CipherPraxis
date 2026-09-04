@@ -1,0 +1,10 @@
+id = "g-independent-audit"
+section = "glossary"
+title = "Independent audit"
+status = "VERIFIED"
+status_note = "Term as used in the research program's ledger."
+family = "Validation vocabulary"
+tags = ["audit"]
+related = ["seal-and-audit-protocol", "correction-and-retraction", "g-seal"]
+summary = "An exact-byte review by an agent who wrote none of the sealed bytes: hashes are recomputed from the files, public modes are re-run, the parser is mutated, tamper and refusal probes are executed on copies, and the verdict is PASS or BLOCK with named blockers. A PASS certifies the wrapper's gates and transaction on the exact bytes; it authorises nothing by itself and says nothing about any target."
+updated = "2026-09-04"

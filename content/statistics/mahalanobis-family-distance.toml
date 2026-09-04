@@ -1,0 +1,112 @@
+id = "mahalanobis-family-distance"
+section = "statistics"
+title = "Mahalanobis family distance"
+subtitle = "Likelihood-free identification of a cipher construction from a vector of key-invariant statistics"
+status = "POWER-LIMITED"
+status_note = "Implemented and calibrated by simulation (29 constructions, 120 simulations each on real English with random keys, 19 invariant features); at 153 letters it separates coarse classes (plain English 100%, transposed English 78-92% self-classification) but cannot split the cluster of fractionated, mixed-alphabet and sandwich constructions (self-classification 8-40%), so a negative inside that cluster is uninformative at this length."
+family = "Bayesian evidence and model selection"
+tags = ["Mahalanobis", "family identification", "approximate Bayesian computation", "simulation", "features"]
+related = ["family-identification", "index-of-coincidence", "coincidence-lag-profile", "bayesian-evidence-model-selection", "power-analysis", "planted-controls", "bifid", "quagmire-iii", "sandwich-construction"]
+summary = "When no likelihood can be written for a whole construction, one can still simulate it: encipher many real English windows with random keys under each candidate construction, compute a fixed vector of statistics that do not depend on the key or on any transposition, and treat each construction as a Gaussian cloud in feature space. A target text is then scored by its Mahalanobis distance to every cloud. The instrument is honest about its own resolution because the same simulations give its self-classification accuracy."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For a feature vector $x \in \mathbb{R}^k$ and a family $F$ with simulated mean $\mu_F$ and covariance $\Sigma_F$,
+
+$$d^2_F(x) = (x - \mu_F)^{\top} \Sigma_F^{-1} (x - \mu_F), \qquad \log \mathcal{L}_F(x) = -\tfrac{1}{2}\big(d^2_F(x) + \ln \det \Sigma_F\big) + \text{const}.$$
+
+Features are standardised by the pooled standard deviation over all families before the covariance is estimated, and the covariance is shrunk towards its diagonal, $\Sigma_F \leftarrow 0.7\,\Sigma_F + 0.3\,\operatorname{diag}(\Sigma_F) + 10^{-6} I$, so that 120 simulations can support a $19 \times 19$ matrix. The per-feature standardised residual $(x_j - \mu_{F,j})/\sigma_{F,j}$ says *which* statistic disagrees with a family.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "The 19 invariant features"
+body = '''
+Raw IC; number of distinct symbols; union IC after heuristic period-7 alignment; mean within-coset IC; digram IC of the aligned text; the largest residual periodic IC of the aligned text over periods $2 \dots 30$ not divisible by 7; periodic IC at 7, 14 and 28; the smallest per-coset alignment margin; the M1, M2 and M3 [family evidences](/statistics/bayesian-evidence-model-selection) with shifts marginalised; the differences M2$-$M1 and M3$-$M2; the M2 MAP gain; the mean maximum shift posterior under M2; and the lag-1 and lag-2 autocorrelations of the M2 class posterior along the text.
+
+None of these depends on the key values, and all but the last two are unchanged by any transposition below the periodic layer.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- Each family's feature cloud is approximately Gaussian at the simulated length; with 120 draws the tails are not resolved.
+- The simulated plaintexts (random windows of a large English corpus) are representative of the target plaintext; a peaked or non-prose plaintext belongs to no simulated family.
+- The target is homogeneous. A text whose key changes part-way, or whose periodic layer covers only a zone, lies between clouds and its distances are not interpretable as family membership.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Simulate every candidate construction $N$ times on real English with random keys (plain and transposed English, periodic substitution, sandwiches at several widths and inner periods, double columnar, bifid with several periods, running key, autokey, compound keys, binary-perturbed keys, random-alphabet keyed substitution, seven independent alphabets, two alphabet orders in sequence, four rounds, segment-varied keys, 20% nulls, progressive key, Hill-then-periodic, and, for even lengths, Playfair-then-periodic).
+2. Compute the feature vector for the target and for each simulation; rank families by $d^2$; print the per-feature residuals above $|2|$.
+3. Read the self-classification table: a family that the instrument cannot recognise in its own simulations cannot be excluded for the target.
+4. Use the ranking to *choose solvers*, not to close families: the excluded families are those with many features at $|z| > 3$.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+$29 \times 120 = 3{,}480$ simulations, each requiring an alignment and three evidence fits; about 85 seconds per (text, alphabet order) in a vectorised implementation. The classification itself is negligible.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Plug-in optimism.** Self-classification is measured on the same simulations that estimated the clouds, so the quoted accuracies are upper bounds.
+- **Cluster degeneracy at short length.** At 153 letters bifid, keyed random alphabet, seven independent alphabets, four rounds, sandwiches and 7+3 compounds all sit within $d^2$ $10.7$–$17.1$ of the same target and classify themselves correctly only 8–40% of the time; the instrument places the target in the cluster and stops.
+- **Feature saturation.** Several features are maxima over scans (residual periodicity, alignment margin), which are right-skewed; the Gaussian model underestimates their tails.
+- **Heterogeneous targets.** A zoned text is not any single simulated family; the per-feature residuals then flag the zone-sensitive statistics (lag-based) rather than the construction.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Self-classification at 153 letters in one alphabet order: plain English 100%, transposed English 78%, seven independent alphabets 82%, progressive key 57%, plain periodic substitution 52%, sandwiches 18–40%, bifid 8–22%. For the 153-letter target the clouds ranked by $d^2$ were bifid-7 (10.7), four rounds (13.2), random-alphabet keyed substitution (13.3), sandwiches (14.7) and, far away, random letters (30.3, with alignment and coset IC at $z > +2.8$), plain English (102.2), transposed English (109.8) and plain periodic substitution (159.2, M1 at $z = -8.3$). The last three exclusions are the useful part of the reading.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example with two features"
+body = '''
+Suppose a family's simulations give means $\mu = (0.070, 0.070)$ and standard deviations $\sigma = (0.004, 0.008)$ for (aligned IC, coset IC), with negligible correlation. A target at $x = (0.062, 0.054)$ has
+
+$$d^2 = \Big(\frac{0.062 - 0.070}{0.004}\Big)^2 + \Big(\frac{0.054 - 0.070}{0.008}\Big)^2 = 4 + 4 = 8.$$
+
+For two independent features $d^2$ is chi-squared with 2 degrees of freedom, so $\Pr(d^2 \ge 8) = e^{-4} \approx 0.018$: the target is unlikely to come from that family, and both features disagree at $z = -2$. With 19 correlated features the same logic uses $\Sigma_F^{-1}$ and 19 degrees of freedom.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+This is approximate Bayesian computation with a Gaussian synthetic likelihood. Its value is less in the ranking than in the self-classification table, which states the instrument's resolution at the text length in hand and thereby prevents a negative from being over-read.
+'''
+
+[[provenance]]
+path = "withmath/wm_abc.py"
+kind = "solver"
+note = "Feature vector (19 statistics), 29 constructions (30 for even lengths), 120 simulations each, pooled standardisation, shrunk covariance, Mahalanobis d2 and Gaussian log-likelihood, plug-in self-classification."
+
+[[provenance]]
+path = "withmath/logs/04_abc.log"
+kind = "log"
+note = "153-letter target: d2 10.7 (bifid-7) to 19.3 inside the cluster; random letters 30.3; plain English 102.2; transposed English 109.8; plain periodic 159.2 (M1 z -8.3). Self-classification: English 100%, transposed English 78-92%, seven independent alphabets 82%, sandwiches 18-40%, bifid 8-22%."
+ref = "logs/04_abc.log"
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Results of the first full run: both texts sit in one cluster that the invariant statistics cannot split at n = 153 (self-classification 8-40%); excluded families and their z."
+
+[[references]]
+title = "On the generalised distance in statistics"
+author = "P. C. Mahalanobis"
+year = 1936
+
+[[references]]
+title = "Approximate Bayesian computational methods"
+author = "J.-M. Marin, P. Pudlo, C. P. Robert, R. J. Ryder"
+year = 2012

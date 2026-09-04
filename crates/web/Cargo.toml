@@ -1,0 +1,28 @@
+[package]
+name = "praxis-web"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Cipher Praxis web application (Leptos, client-side rendered WebAssembly)"
+
+[dependencies]
+praxis-core = { path = "../core" }
+leptos = { version = "0.8", features = ["csr"] }
+leptos_router = { version = "0.8" }
+leptos_meta = { version = "0.8" }
+# Pinned to the installed wasm-bindgen CLI (scripts/build.sh checks the match).
+wasm-bindgen = "=0.2.127"
+js-sys = "0.3"
+web-sys = { version = "0.3", features = [
+  "Window", "Document", "Element", "HtmlElement", "HtmlInputElement", "HtmlTextAreaElement",
+  "HtmlSelectElement", "KeyboardEvent", "Location", "History", "ScrollToOptions", "ScrollBehavior",
+  "MediaQueryList", "Storage", "CssStyleDeclaration", "DomTokenList", "NodeList", "Node",
+] }
+console_error_panic_hook = "0.1"
+serde.workspace = true
+serde_json.workspace = true
+
+[build-dependencies]
+praxis-core = { path = "../core", features = ["authoring"] }

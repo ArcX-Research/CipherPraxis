@@ -1,0 +1,10 @@
+id = "g-tabula-recta"
+section = "glossary"
+title = "Tabula recta"
+status = "VERIFIED"
+status_note = "Standard term."
+family = "Cipher structure"
+tags = ["periodic", "additive"]
+related = ["vigenere", "beaufort", "variant-beaufort", "porta", "g-reciprocal-cipher"]
+summary = "The 26 x 26 table whose row k is the alphabet rotated by k. Reading row k at column p gives p + k (Vigenère); reading the column of p in row k backwards gives k - p (Beaufort); reading p - k is the Variant. Every additive periodic cipher is a walk through this table, one row per coset, and a keyed order replaces the straight alphabet on both axes."
+updated = "2026-09-04"

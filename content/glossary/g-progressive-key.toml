@@ -1,0 +1,10 @@
+id = "g-progressive-key"
+section = "glossary"
+title = "Progressive key"
+status = "VERIFIED"
+status_note = "Standard term."
+family = "Cipher structure"
+tags = ["schedule", "disc"]
+related = ["alberti-progressive", "vigenere", "chaocipher", "g-gauge-class"]
+summary = "A key that changes by a fixed rule as the message proceeds rather than repeating: a shift that grows by a constant d per letter (Alberti's turning disc), or by a constant acceleration. Because the schedule is a known function of position, subtracting it from the ciphertext index leaves one fixed substitution, so a progressive-key cipher reduces to a substitution problem per candidate schedule."
+updated = "2026-09-04"

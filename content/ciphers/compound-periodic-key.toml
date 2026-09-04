@@ -1,0 +1,120 @@
+id = "compound-periodic-key"
+section = "ciphers"
+title = "Compound periodic key"
+subtitle = "Two periodic additive layers, in one or two alphabets, composing to period lcm(m, q)"
+status = "VERIFIED"
+status_note = "The start-free alternating class fit recovered both planted controls at 100% (a same-alphabet period-70 composite at z +51 and a two-alphabet 7-over-10 composite at z +27) and the recipe-free cascade recovered a two-period composite in one of the corpus's solved texts; the family was then excluded for the two short texts at inner periods 2 to 13."
+family = "Composite constructions"
+tags = ["periodic", "composite", "lcm", "two alphabets", "polyalphabetic"]
+related = ["vigenere", "quagmire-iii", "sandwich-construction", "lcm-of-periods", "exact-period-alignment", "coincidence-lag-profile", "expectation-maximisation", "coordinate-descent", "g-period"]
+summary = "Encrypting with one periodic key and then another gives a single key of period lcm(m, q) when both use the same alphabet, but a genuinely new cipher when the two layers use different mixed alphabets. A short text often shows both periods as separate coincidence peaks. The program fitted the 7 + q shifts of such a composite by alternating exact monogram maximisation from many starts and confirmed the reading with quadgram polish and shuffled nulls."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+With an inner key $v$ of period $q$ in alphabet $A_1$ and an outer key $u$ of period $m$ in alphabet $A_2$,
+
+$$y_i = A_1\big[\operatorname{pos}_{A_1}(p_i) + v_{i \bmod q}\big], \qquad c_i = A_2\big[\operatorname{pos}_{A_2}(y_i) + u_{i \bmod m}\big].$$
+
+If $A_1 = A_2$ the composite is one additive key of period $\operatorname{lcm}(m, q)$ with elements $u_{i \bmod m} + v_{i \bmod q}$. If the alphabets differ, each position belongs to a class $(b, j) = (i \bmod m, i \bmod q)$ whose substitution is $A_2 \circ \rho_{u_b} \circ A_2^{-1} \circ A_1 \circ \rho_{v_j} \circ A_1^{-1}$, which is not a rotation in either alphabet.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Class fit and null"
+body = '''
+Every letter sits in one of $mq$ classes with plaintext index $\operatorname{pos}_{A_1}\big(A_2[\operatorname{pos}_{A_2}(c_i) - u_b]\big) - v_j$. The $m + q$ shifts are found by alternating exact monogram maximisation: fix $v$, maximise each $u_b$ over 26 values; fix $u$, maximise each $v_j$; repeat from many random starts, because the coset alignment used for single-layer ciphers is useless here (the inner layer flattens each coset). The best few starts are polished by quadgram coordinate descent, and the same fit on shuffled ciphertexts gives the null. A "period-7 key plus one constant per block of $m$" is the special case $q = $ block length with $v$ constant within blocks.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Same alphabet**: a single key of period $\operatorname{lcm}(m, q)$; already covered by a periodic solver up to that period.
+- **Two alphabets**: the new family; the program used the straight order and one keyword-mixed order in all four pairings.
+- **Block drift**: an outer period-7 key plus one constant per block ($m = 2, 3, 4$ blocks).
+- **Sandwich**: a transposition between the two layers; see [Sandwich construction](/ciphers/sandwich-construction).
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Both layers strictly periodic; alphabets from a small fixed set.
+- Invariant: the same-alphabet case leaves a residual periodicity at $q$ after the period-$m$ layer is removed; a residual period-10 signal after alignment was exactly what motivated the lane.
+- Invariant: in the two-alphabet case the $mq$ class substitutions are all different, so class-level statistics rather than coset statistics carry the information.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Look for two coincidence peaks or for residual periodicity after removing the dominant period.
+2. For each $q$ in 2 to 13 and each alphabet pairing, run the start-free alternating class fit from 1,500 random starts (300 in smoke mode), keep the top 12, polish with quadgrams.
+3. Compare the best rate against the same procedure on 10 shuffled ciphertexts; report z and plaintext match on the controls.
+4. In the recipe-free cascade, escalate to a two-period composite (decision D2b) only when the single-period evidence gate fires but the decrypt does not read.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Per $(q, \text{alphabet pair})$: $O(\text{starts} \times \text{sweeps} \times (m + q) \times 26 \times n)$ monogram evaluations; the full sweep over $q = 2 \dots 13$ and four alphabet pairs with nulls took about 30 minutes for two texts.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Selection over many $(q, \text{pair})$ cells.** The live best rates around $-6.0$ to $-6.5$ carried per-cell z up to +3.5 with 5-22% match; against the family of 48 cells that is noise. The controls sit at z +51 and +27.
+- **Same-alphabet degeneracy.** When $A_1 = A_2$ the fit has a large gauge (any constant moved between $u$ and $v$); the solver fixes it by convention.
+- **Short cosets at large lcm.** A period-70 composite on 153 letters has two letters per class; only the factorised fit, not a direct period-70 solve, can recover it.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Two planted controls at 153 letters (logs/06_compound.log): a same-alphabet composite with periods 7 and 10 recovered at $q = 10$ with 100% match and z +51.1; a two-alphabet composite (keyword-mixed outer over straight inner, periods 7 and 10) recovered at $q = 10$ with 100% match and z +26.7. Both live texts: no cell above noise for $q = 2 \dots 13$ in any of the four alphabet pairings. Block-drift model: the control recovered its planted constants; live texts at noise for $m = 2, 3, 4$ (logs/10_blocks_model.log). Cascade: the two-period composite in a solved corpus text was recovered through decision D2b at 100% published match (logs/145_infer.log).
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Same alphabet, inner shifts $(3, 10)$ of period 2, outer shifts $(1, 5, 7)$ of period 3. The composite key has period $\operatorname{lcm}(2, 3) = 6$: $(3+1, 10+5, 3+7, 10+1, 3+5, 10+7) = (4, 15, 10, 11, 8, 17)$. Plaintext `COMPOUNDKEYS`:
+
+```
+plain   C  O  M  P  O  U  N  D  K  E  Y  S
+inner   F  Y  P  Z  R  E  Q  N  N  O  B  C
+outer   G  D  W  A  W  L  R  S  U  P  G  J
+```
+
+Check position 3: $P + 10 = 25 = Z$, then $Z + 1 = 26 \equiv 0 = A$; equivalently $P + 11 = 26 \equiv 0$. Ciphertext `GDWAWLRSUPGJ`.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The two-alphabet composite is the construction the program's solved prefix exhibits in more than one place (a period-40 composite and a period-5-over-9 composite under a transposition), which is why it was a principled hypothesis for the unsolved texts and why its exclusion there is stated with the control power above.
+'''
+
+[[provenance]]
+path = "withmath/wm_compound.py"
+kind = "solver"
+note = "Period-7 key over a period-q key (q = 2..13) in one or two alphabets; start-free alternating class fit, quadgram polish, shuffled nulls; --blocks mode for per-block constants."
+ref = "logs/06_compound.log"
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Round 2: controls 100% (period-70 key z +51, two-alphabet 7 over 10 z +27); live texts nothing for q = 2..13; block model negative."
+ref = "logs/10_blocks_model.log"
+
+[[provenance]]
+path = "withmath/wm_infer.py"
+kind = "solver"
+note = "Decision D2b: two-period composite escalation; solved-prefix validation with roundtrip."
+ref = "logs/145_infer.log"
+
+[[references]]
+title = "Military Cryptanalysis, Part II"
+author = "William F. Friedman"
+year = 1938

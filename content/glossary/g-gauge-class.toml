@@ -1,0 +1,10 @@
+id = "g-gauge-class"
+section = "glossary"
+title = "Gauge (key equivalence class)"
+status = "VERIFIED"
+status_note = "Term used throughout the program's audits."
+family = "Cipher structure"
+tags = ["equivalence", "identifiability"]
+related = ["conjugacy-and-gauge", "quagmire-iv", "alberti-progressive", "condi", "trifid", "gauge-defect-invalidation"]
+summary = "A transformation of the key that leaves every plaintext-ciphertext pair unchanged, so that the raw key is identifiable only up to it: rotating a Quagmire alphabet while adjusting the shifts, the 12 unit multiples of a Condi alphabet and starter, the six coordinate relabellings of a Trifid cube, the rotation and reflection of an Alberti inner disc, or the cyclic cut of a route whose period divides the length. A control must compare recovered and planted keys modulo the gauge; requiring literal equality fails correct answers."
+updated = "2026-09-04"

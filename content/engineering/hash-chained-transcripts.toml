@@ -1,0 +1,118 @@
+id = "hash-chained-transcripts"
+section = "engineering"
+title = "Hash-chained transcripts"
+subtitle = "Canonical typed records, a commit digest over the exact prefix, a strict parser, and a durable one-shot write"
+status = "VERIFIED"
+status_note = "Implemented and audited in the research program: canonical JSONL transcripts with COMMIT digests, parsers that reject hundreds of mutations, retained-descriptor publication with fsync and inode checks, and admission by full semantic replay; one 4 MB canonical transcript was admitted this way."
+family = "Reproducibility"
+tags = ["transcripts", "hash chain", "parser", "durability", "admission"]
+related = ["reproducibility-receipts", "build-manifests-and-release-json", "seed-determinism", "kat-harness", "seal-and-audit-protocol", "blind-controls", "run-script-log-convention"]
+summary = "A transcript that will be cited as evidence is written so that it cannot be partially true. Records are typed JSON lines in a fixed order; a COMMIT record carries the SHA-256 of every byte before it and the record count; the terminal line is implied by the summary and recomputed by the parser; and the file is created once, written through a retained descriptor, fsynced, read back through the same descriptor and parsed before its name is published. Admission then regenerates everything from the pinned inputs and requires canonical equality."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+**Grammar.** `HEADER, LINEAGE/PINS, RELEASE, GATES, METHOD, MODEL, REGISTRY, BANK, CASE×n (or FIXTURE×n), SUMMARY, COMMIT, terminal`, each record one canonical JSON line (sorted keys, no whitespace, exact key sets, typed leaves) with a fixed ASCII prefix. Operational failures use separate typed prefixes (`PREBANK`, `BANK_READY`, `CASES_DONE INCOMPLETE`) and never a fabricated `CASE`.
+
+**Commit.** $\text{COMMIT.evidence\_sha256} = \operatorname{SHA256}(\text{prefix})$ where the prefix is every byte from `HEADER` through the LF ending `SUMMARY`; `evidence_record_count` is the number of records in it; `final_bytes = prefix || COMMIT || terminal || LF`.
+
+**Strict parser.** Rejects duplicate keys, `NaN`/`Infinity`, non-canonical serialisation, bool-for-int, unknown or missing keys, out-of-order records, wrong counts, hashes or censuses, ties inconsistent with the top set, and any terminal not forced by the records; requires whole-byte equality `data == render(rows)`.
+
+**Durable write.** Open with `O_CREAT|O_EXCL|O_NOFOLLOW`, mode 0600; `fstat` (regular, one link); write all; `fsync`; seek and read back through the same descriptor; parse; hard-link publish; unlink temporary; directory `fsync`; final no-follow pathname `(dev, ino, mode, nlink)` check. Any failure after the attempt marker appends `INCOMPLETE` and never unlinks.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Snapshots and admission"
+body = '''
+Integrity barriers $S_0 \dots S_5$ hash the path-sorted tuple set $\{(\text{path}, \text{dev}, \text{ino}, \text{mode}, \text{nlink}, \text{size}, \operatorname{SHA256}(\text{bytes}))\}$ of every protected artefact; `SUMMARY` carries $S_2, S_3, S_4$ and the post-publication $S_5$ is deliberately outside the committed bytes so that publication is not circular. Admission reads the reveal only from the committed `HEADER`, regenerates the bank, runs the selector twice, rebuilds the sole $S_4$-bearing prefix and requires
+
+$$\operatorname{render}(\text{regenerated}) = \text{bytes on disk}$$
+
+exactly, including the COMMIT and the terminal.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- Semantic fields are deterministic (integer scores, pinned seeds, one thread or a scheduling-independent pool); elapsed time and memory are either kept out of the committed prefix or accepted as the only fields that may differ between runs.
+- The parser and the generator are separately pinned; a parser inside the generating source is a recorded deviation.
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+The design answers specific attacks found by audits: a fabricated transcript with plausible values passes structure, so admission replays the selector (seven "plausible-value" mutations were admitted by structure alone and rejected by replay); a permissive grammar admitted `1.00`, `-1E1`, key reorder and unicode escapes, so canonical re-serialisation is required; a post-write failure could leave success-shaped bytes, so nine exception paths were shown to leave the canonical path absent; and `str.splitlines()` admitted CRLF and a missing final newline, so whole-byte render equality was added.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+A 34-case transcript with full maps and permutations was 4,051,007 bytes (cap 32 MiB) and was parsed three times in memory and once from the retained descriptor within a 1,200 s wall budget; a 24-fixture controls transcript was 178,969 bytes with 30 records.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Bool/float laxity in regenerated constant fields** (`true` for `1`, `504.0` for `504`) admitted by dictionary equality; fix by comparing canonical serialisations.
+- **Environmental residue.** A hard kill between hard-link publication and temporary unlink leaves an nlink-2 canonical plus a dot-prefixed temporary; admission refuses it (fail-closed) but recovery is manual and the fixtures are burned.
+- **Post-commit stdout errors.** A closed stdout turned a valid committed transcript into exit code 2; integrity unaffected.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Parser mutation panels (31, 38, 40 and 420 mutations in different lanes, each with a no-op guard) and transaction fail-once KATs (18 interruption failpoints, 4 filesystem rejections) are run before every mode; auditors additionally recompute the COMMIT digest by hand over the stated prefix length.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Record sequence"
+body = '''
+```
+PFX HEADER  {"artifact_log":381,"case_count":34,"length":504,"mode":"PRODUCTION","reveal_hex":"…","schema":"…"}
+PFX LINEAGE {"manifest_sha256":"…","runner_sha256":"…","source_sha256":"…"}
+PFX MODEL   {"q4_sha256":"…","train_range":[0,1100000]}
+PFX CASE    {"index":0,"label":"HP01","rate":-9.740118,"gap":4.009164,"forward":true,"plaintext_sha256":"…"}
+…
+PFX SUMMARY {"decision":"PASS","snapshot_S2_sha256":"…","snapshot_S3_sha256":"…","snapshot_S4_sha256":"…"}
+PFX COMMIT  {"evidence_record_count":43,"evidence_sha256":"<sha256 of every byte above>"}
+RESULT LANE VALIDATION PASS target=ABSENT
+```
+'''
+
+[[provenance]]
+path = "withmath/PK10_ALBERTI_ACCEL13_VALIDATION381_DESIGN.md"
+kind = "design"
+note = "Section 5: causal S3, second replay, S4, sole precommit prefix, COMMIT over the exact prefix bytes, retained-descriptor replacement, S5 outside the committed bytes; grammar of the PASS/POWER transcript."
+
+[[provenance]]
+path = "withmath/CLAUDE_LOG361_REAUDIT.md"
+kind = "audit"
+note = "Repairs verified: replay-bound admission (plausible-value mutations admitted by structure, rejected by replay), strict JSON grammar, nine post-write failure paths leaving the canonical absent; residual on splitlines and CRLF."
+ref = "LOG361"
+
+[[provenance]]
+path = "withmath/CLAUDE_LOG363_REPLACEMENT_AUDIT.md"
+kind = "audit"
+note = "Whole-byte render equality, 1,053 leaf mutations rejected, retained-descriptor publication with post-fsync parse and final no-follow pathname check; residuals on bool/float laxity and the nlink-2 kill window."
+ref = "LOG363"
+
+[[provenance]]
+path = "withmath/PK98_SEGCHAIN_A1S0_CONTROL366_AUDIT.md"
+kind = "audit"
+note = "Section 2, items 8 and 9: attempt marker and placeholder created O_EXCL|O_NOFOLLOW 0600 before the corpus is loaded; canonical JSONL with fixed record order and COMMIT appended after a retained-FD readback."
+ref = "LOG366"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Canonical transcript 4,051,548 bytes, 45 lines, mode 0600, one link, admitted with grammar POWER_BLOCKED."
+ref = "LOG381"
+
+[[provenance]]
+path = "withmath/PK9_STRUCTURED_P7_CHAIN383_INDEPENDENT_AUDIT391.md"
+kind = "audit"
+note = "COMMIT prefix recomputed over 178,821 bytes and matched; 30 records."
+ref = "LOG391"

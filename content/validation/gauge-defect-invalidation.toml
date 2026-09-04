@@ -1,0 +1,116 @@
+id = "gauge-defect-invalidation"
+section = "validation"
+title = "Gauge-defect invalidation"
+subtitle = "Comparing a recovered key in one fixed gauge instead of modulo its orbit produces false control failures, and the run is void"
+status = "VERIFIED"
+status_note = "A controls run in the research program was killed and its transcript filed as invalid when the selector was found to score and compare the secondary plaintext in a fixed gauge; the successor maximises over the 26 translation gauges and compares modulo the orbit. Orbit handling is now an explicit clause of sealed control designs."
+family = "Control design"
+tags = ["gauge", "orbit", "invalidation", "controls"]
+related = ["conjugacy-and-gauge", "permutation-cycles", "planted-controls", "correction-and-retraction", "run-script-log-convention", "exact-period-alignment", "shared-cycle-attack"]
+summary = "Many cipher models have a gauge: a change of key representation that leaves the ciphertext-plaintext relation unchanged, such as adding a constant to every shift of one layer and subtracting it from the other, or translating a cycle. A solver that fixes the gauge arbitrarily is fine until a control compares its recovered key with the planted one letter for letter; then the true key 'misses' in 25 of 26 plants. The program treats the discovery of such a defect as invalidating the run outright: killed, filed under failed logs with a defect suffix, never a gate."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let a construction map plaintext to ciphertext through parameters $\theta$, and let a group $G$ act on parameters so that $\operatorname{Enc}_{g\theta} = \operatorname{Enc}_\theta$ for all $g \in G$. The $G$-orbit of $\theta$ is its **gauge orbit**; only the orbit is identifiable from data. A control is **gauge-correct** when it compares the recovered $\hat\theta$ with the planted $\theta$ modulo $G$, i.e. requires $\hat\theta \in G\theta$, and reports which $g$ relates them.
+
+Examples in the program:
+
+- two additive layers with shift vectors $k$ and $c$: $(k + \delta, c - \delta)$ is the same cipher for every $\delta \in \mathbb{Z}_{26}$, a 26-state orbit;
+- a shared cycle $z$ with a running-key chain: under $z' = u z + b$ the primary decrypt is invariant while the secondary plaintext appears rotated by a $z$-space Caesar shift, so a fixed-gauge comparison of the secondary plaintext fails with probability $25/26$;
+- an alphabet whose two additive layers collapse algebraically into one stream, so the factorisation into two word keys is not identifiable at all.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "The defect, algebraically"
+body = '''
+For the chain case with signs $e_8, e_9$, the recorded relations under $z' = u\,z + b$ are
+
+$$z(P') = z(P) - u^{-1} b\, e_8, \qquad c' = u\,c + b\,(1 + e_8 e_9 - e_9),$$
+
+so fixing $z(C_0) = 0$ and demanding the planted secondary plaintext exactly rejects the true cycle whenever $b \ne 0$. The repaired selector uses the invariant primary-class rate plus the secondary rate **maximised over the 26 translation gauges**, compares the primary exactly and the secondary modulo the translation orbit, and reports the recovered shift. The plant proof recorded primary match $1.0$ and secondary match $0.0$ in all four sign cells with translations $[19, 5, 10, 16]$ recovering the secondary uniquely.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The gauge group is known and enumerable; for translation and affine gauges of $\mathbb{Z}_{26}$ it has 26 or 312 elements and the orbit can be expanded explicitly.
+- Mixed-order constructions (different alphabet orders on the two layers) may have **no** affine gauge; the program's designs state that such cells receive only the literal base key and "no false orbit".
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+Gauge handling appears at three points of an attack pipeline:
+
+1. **Search.** Fix the gauge to shrink the space (one shift by convention), which is correct.
+2. **Scoring.** If a second statistic is not gauge-invariant (the secondary plaintext's language rate), maximise it over the orbit or restrict to invariant statistics.
+3. **Control comparison.** Expand the planted key's orbit and require membership; require all orbit members to satisfy the algebraic relations by direct reconstruction.
+
+Sealed designs in the program make step 3 a requirement: "there exists a single $\delta$ for which all seven gauge-shifted key symbols are members of the width-8 lists; the returned base key is in the planted 26-state orbit; all 26 orbit members were expanded and satisfy the delta relations". A related defect of orbit handling, an orbit filter that rejected valid identity and half-turn rotations, was found by the same kind of audit and shown to discard about 21% of planted truths for one relation.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Orbit expansion multiplies the finish by $|G|$ (26 for translations); the program's complete finish enumerates $8 \times 26 \times 26 + 8 \times 26 = 5{,}616$ states per replicate rather than pruning any gauge state by score.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Fixed-gauge secondary comparison** (the case above): run killed after producing only a header; transcript kept under the failed-logs directory with the suffix `INVALID-gauge-defect`; "never a gate"; the source bytes left unchanged and a successor reserved.
+- **Displayed representatives mistaken for the author's key.** Two shift vectors with a shared-constant freedom were recovered exactly as a cipher but the displayed vectors need not be the intended word representatives; the replay note says so rather than claiming key labels are identifiable.
+- **Orbit filter with wrong closure rule.** A rotation mask rejected any partial map containing a fixed point at length 3 or a complete 2-cycle at length 4, i.e. the identity and half-turn, because it tested "returns at length $\ell$" instead of "first return at $\ell$".
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Gauge KATs: for every planted control, assert that the orbit predicate accepts the true parameters before any search runs, and that a genuinely non-orbit element (a 3-cycle where only rotations are allowed) is still rejected. Plant keys uniformly over the whole key space, including the identity and half-turn, or stratify over those cases.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Invalidation record"
+body = '''
+```
+## LOG NNN CONTROLS RUN INVALIDATED — translation-gauge defect: secondary plaintext scored in one gauge
+Defect: selector fixes z(C_0)=0, scores the decrypted secondary in that gauge, and controls demand the planted
+  secondary exactly; under z'=uz+b the primary decrypt is invariant but the secondary is rotated.
+Proof on plants: four sign cells, primary match 1.0, secondary match 0.0, translations [19,5,10,16] recover it.
+Disposition: process killed; transcript logs/failed/NNN_…INVALID-gauge-defect.<stamp>.log (492 bytes); NEVER a gate.
+Successor LOG NNNb: score = invariant primary rate + secondary rate maximised over 26 gauges;
+  controls compare primary exactly and secondary modulo the orbit; report the recovered shift.
+```
+'''
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Controls run invalidated for a translation-gauge defect; run killed, transcript kept under logs/failed, never a gate; successor scores over 26 gauges and compares modulo the orbit; plant proof with translations [19, 5, 10, 16]."
+ref = "LOG406"
+
+[[provenance]]
+path = "withmath/logs/failed/406_pk89_chain_wordpair_controls.INVALID-gauge-defect.20260902T124500Z.log"
+kind = "log"
+note = "The preserved 492-byte header of the invalidated run."
+ref = "logs/failed/406_pk89_chain_wordpair_controls.INVALID-gauge-defect.20260902T124500Z.log"
+
+[[provenance]]
+path = "withmath/PK98_SEGCHAIN_A1S0_CONTROL366_DESIGN.md"
+kind = "design"
+note = "Sections 3 and 4: coupled gauge states (k + delta, c0 + delta), 26-state orbits, truth-orbit completeness required for every positive; mixed orders get no false orbit; 5,616-state complete finish."
+
+[[provenance]]
+path = "withmath/SEGCHAIN_CONTROL_MISMATCH399_AUDIT.md"
+kind = "audit"
+note = "Addendum: orbit filter rejecting identity and half-turn rotations; 30.2% of true complete maps and 21.2% on observed edges rejected for one relation; KAT recommendations."
+ref = "LOG399"
+
+[[provenance]]
+path = "withmath/INSTRUMENT_REPLAY.md"
+kind = "note"
+note = "Two additive layers collapse into one stream and are not uniquely factored; two shift vectors carry a shared-constant gauge freedom, so displayed vectors need not be the intended representatives."

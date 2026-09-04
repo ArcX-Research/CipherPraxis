@@ -1,0 +1,135 @@
+id = "columnar-transposition"
+section = "ciphers"
+title = "Columnar transposition"
+subtitle = "Write in rows of width w, read the columns in a keyed order"
+status = "VERIFIED"
+status_note = "Column-order recovery is verified in several forms: exhaustive 9! orders with an exact inner-order DP (23/24 development controls), an order-free width statistic that solved 4/4 planted sandwiches from cold, two 504-letter width-9 controls over a periodic layer recovered exactly, and the recipe-free cascade re-solving the transpositions of the corpus's solved texts."
+family = "Transposition"
+tags = ["transposition", "columnar", "keyword order", "width"]
+related = ["route-transposition", "myszkowski", "rail-fence", "sandwich-construction", "transposition-width-recovery", "order-free-width-statistic", "mixture-inference-under-transposition", "exact-dynamic-programming", "all-different-constraints", "columnar-lab", "g-transposition-grid"]
+summary = "A columnar transposition writes the message into rows of a chosen width and reads the columns out in the order given by a key word. Letters keep their identities, so frequencies are untouched and the whole attack is about recovering the width and the column order. The program solved it exhaustively at width 9, by annealing at larger widths, and, when it sat between two substitution layers, by an order-free statistic that finds the width without knowing the order."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For width $w$ and a permutation $O$ of the columns, write $p$ row by row into a $\lceil n/w \rceil \times w$ grid (the last row possibly short) and output the columns in the order $O$:
+
+$$T_O(p) = p[O_0 :: w] \,\|\, p[O_1 :: w] \,\|\, \dots \,\|\, p[O_{w-1} :: w].$$
+
+A key word gives $O$ by the alphabetical ranks of its letters. With $n$ not a multiple of $w$ the first $n \bmod w$ columns are one letter longer (irregular columnar); a padded version fills the last row.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Interaction with a periodic layer"
+body = '''
+If a period-$m$ additive layer is applied after the transposition, ciphertext position $j$ in column chunk $q$ and row $r$ came from plaintext position $wr + c$ with $c = O_q$, and its outer key residue is $(wr + c) \bmod m$. For $w = 9$ and $m = 7$ this is $(2r + c) \bmod 7$, so a column order is characterised by a phase assignment with multiset $\{0, 0, 1, 1, 2, 3, 4, 5, 6\}$: exactly $9!/(2!\,2!) = 90{,}720$ phase classes, with columns 0/7 and 1/8 interchangeable at the profile level. The program's cross-derived lanes score all 90,720 phases exactly under a monogram model and then complete the order exactly by a subset DP over quadgram factors that straddle row ends.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Single columnar**, regular or irregular, width 3 to about 30.
+- **Double columnar**: two keyed columnars in sequence (the corpus's solved texts contain one such pair).
+- **Myszkowski**: key words with repeated letters; see [Myszkowski transposition](/ciphers/myszkowski).
+- **Columnar inside a sandwich**: between two substitution layers; see [Sandwich construction](/ciphers/sandwich-construction).
+- **Column-read of a periodic cipher** and its inverse row-read: the two 504-letter width-9 models of the corpus.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Letter identities are preserved: the ciphertext has the plaintext's histogram and index of coincidence.
+- Invariant: the multiset of letters in each column is fixed once the width is fixed; only their order is unknown.
+- Invariant: under a periodic layer applied *before* the transposition, the coset multisets are transposition-invariant; under one applied *after*, the column order fixes the residue pattern above.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. **Width.** Scan widths; for plain columnar, score adjacency of candidate column pairs by digram likelihood; under an outer periodic layer use the order-free width statistic (a DP over the long and short columns of the unpadded grid that measures the block pattern of coset classes without knowing the order).
+2. **Order.** Exhaustive for $w \le 9$ (or 10), dictionary words for 10 to 20 letters, restarted annealing with a full-neighbourhood finish beyond; or the exact 90,720-phase profile plus subset DP when a period-7 layer sits on top.
+3. **Joint refit.** A near-exact substitution peel and a nearly right column order polish each other; neither alone reads English, so re-solve the transposition inside every polish round.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+$w!$ orders: $9! = 362{,}880$, exhausted per configuration cell in compiled code (a 1,024-cell benchmark took 4.1 seconds; 185,088 cells took 963 seconds). Phase classes: 90,720 with exact 26-way key profiling per coordinate. Subset DP over the inner order: $2^9$ masks times last-three-label states per row, globally exact for one order given the other.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Handoff under-power.** One development control (D8 of 24) was lost only because a single monogram-argmax key for its true phase initialised the exact inner DP in the wrong basin; with the true key supplied post hoc the DP returned the exact order at once. The remedy is a top-16 key completion per phase, not a bigger search.
+- **Family-level ties.** When a base cell can be described two ways (simultaneous source reversal), the exact global best has tie multiplicity 2 and a strict unique-rank gate fails even though the recovered order is right.
+- **Width scan misranks.** In the recipe-free cascade the true width of one solved text ranked 4th at $-6.37$ before the joint refit took it to $-4.23$.
+- **Selection.** Undoing every column order of widths 6-9 (409,000 orders) on a 504-letter text never restored a period-7 structure; the maximum coincidence rate of 0.045 versus 0.066 expected is the noise maximum, not evidence.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Order-free width statistic (logs/05_mix.log): four planted sandwiches (width 9 exact grid, width 8 ragged, width 12 with nine long columns and mixed alphabets, width 9 with a period-3 inner) all solved 100% from cold with the true width on top at z from +4.3 to +12.8. Width-9 columnar over a period-7 layer at 504 letters (log 192): the column-read control recovered its order, key and both layers exactly; the inverse row-read control likewise; the live text scored $-7.33$, not English. Cross-derived sandwich (log 237): 23/24 development controls recovered the exact outer order, inner order, key and plaintext at rank 1, all 24 truth phases ranked 1 of 90,720. Untranspose-one-source lane (log 236): 24/24 exact recoveries conditioned on the base cell.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Key `ZEBRAS` (alphabetical ranks: A=1, B=2, E=3, R=4, S=5, Z=6, so the read order is columns 4, 2, 1, 3, 5, 0), plaintext `WEAREDISCOVEREDFLEEATONCE` (25 letters, irregular):
+
+```
+W E A R E D
+I S C O V E
+R E D F L E
+E A T O N C
+E
+```
+
+Columns in read order: `EVLN`, `ACDT`, `ESEA`, `ROFO`, `DEEC`, `WIREE`. Ciphertext `EVLNACDTESEAROFODEECWIREE`. The [columnar lab](/labs/columnar-lab) animates the read-out.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The corpus's solved texts include a width-7 columnar, a width-8 columnar under two periodic keys, a double width-9 columnar and a columnar over a running key, all recovered by the same width-scan and joint-refit machinery; the unsolved texts show no width at which any order restores a periodic structure, and the sandwich reading was excluded for them by the transposition-invariant mixture argument.
+'''
+
+[[provenance]]
+path = "withmath/wm_mix.py"
+kind = "solver"
+note = "Bayesian inner-mixture inference, order-free columnar-width DP over long/short columns, class-EM, column solver; four planted sandwich controls."
+ref = "logs/05_mix.log"
+
+[[provenance]]
+path = "withmath/CROSS_SANDWICH9_AUDIT.md"
+kind = "audit"
+note = "Log 237: 90,720 phase classes, exact subset DP for the inner order, 23/24 development controls, D8 postmortem."
+ref = "LOG237"
+
+[[provenance]]
+path = "withmath/CROSS_PRETRANSPOSE_AUDIT.md"
+kind = "audit"
+note = "Log 236: exhaustive 9! orders per cell in a compiled 4+5 meet enumerator; 24/24 conditioned controls; provable assignment upper bounds."
+ref = "logs/236_cross_pretranspose.log"
+
+[[provenance]]
+path = "withmath/wm_pk10_t9q7.py"
+kind = "solver"
+note = "Log 192: single width-9 columnar over a free period-7 layer at 504 letters; two exact controls; live -7.3262."
+ref = "logs/192_pk10_t9q7.log"
+
+[[provenance]]
+path = "ck_sandwich.py"
+kind = "solver"
+note = "Exhaustive orders to width 9-10, dictionary words 10-20, word pairs, restarted anneal with full-neighbourhood finish."
+ref = "ck_logs/121_sandwich.log"
+
+[[references]]
+title = "Military Cryptanalysis, Part IV"
+author = "William F. Friedman"
+year = 1941

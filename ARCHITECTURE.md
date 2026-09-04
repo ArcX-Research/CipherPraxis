@@ -1,0 +1,151 @@
+# Cipher Praxis — A Dilate Cryptography Knowledge Base
+
+Architecture and content-schema note. Read this before adding content or code.
+
+## 1. Purpose and scope
+
+Cipher Praxis is a public, general-cryptography knowledge base. It preserves and explains the
+classical-cipher models, algebra, cryptanalysis techniques, statistical instruments, search and
+exact solvers, validation protocols, and engineering practice developed during a long
+cryptanalytic research program in this repository (the sibling `../poemanalysis/` repository, especially its `withmath/` directory).
+
+The repository is the **evidence corpus**, not the subject. Public content is written as general
+cryptography research:
+
+- No puzzle names, puzzle numbering, contest names, ciphertexts, plaintexts, hints, or operational
+  puzzle detail appear in any public field. A build-time lint (`build.rs`) rejects forbidden
+  tokens in public fields.
+- Internal provenance (`[[provenance]]`) may cite project files, log ids, and audit notes so that
+  every claim is traceable. Provenance is rendered in a clearly labelled "Evidence" panel and is
+  exempt from the public-text lint (file names may contain internal identifiers).
+- Results are reported as they were recorded: planted-control pass rates, power numbers, null
+  distributions, throughput. Nothing is invented; missing evidence is `UNTESTED`.
+
+## 2. Information architecture (public)
+
+| Route | Section id | What it holds |
+| --- | --- | --- |
+| `/` | — | Overview: what the knowledge base is, how to read statuses, entry points |
+| `/ciphers` | `ciphers` | Cipher Taxonomy: families and individual cipher models |
+| `/algebra` | `algebra` | Algebra & Number Theory used by the models and solvers |
+| `/cryptanalysis` | `cryptanalysis` | Cryptanalysis Techniques (attack strategies) |
+| `/statistics` | `statistics` | Statistical Instruments (estimators, nulls, evidence) |
+| `/search` | `search` | Search / Optimization Algorithms (heuristic) |
+| `/exact` | `exact` | Exact Solvers: CSP, CP-SAT/SMT, DP, exhaustive enumeration |
+| `/validation` | `validation` | Validation & Controls (planted controls, power, audits, receipts) |
+| `/engineering` | `engineering` | Implementation Engineering (cores, harnesses, reproducibility) |
+| `/labs` | `labs` | Interactive WASM Labs (cipher/analysis code running in the browser) |
+| `/glossary` | `glossary` | Terms |
+| `/references` | `references` | Sources: literature and the internal evidence corpus |
+| `/<section>/<id>` | — | Entry page for any record |
+
+Every method page follows the same block order where applicable: definition, equations, variants,
+assumptions & invariants, attack strategy, complexity, failure modes, controls, reproducible generic
+example, notes. Blocks are optional but the *kind* vocabulary is fixed (see §4).
+
+## 3. Stack decision
+
+Checked tools: `rustc`/`cargo` 1.95 with the `wasm32-unknown-unknown` target installed,
+`wasm-bindgen` CLI 0.2.127, `wasm-pack` 0.13.1, Node 22, Bun; `trunk` and `wasm-opt` are not
+installed and crates.io is reachable.
+
+Decision: **Rust + Leptos 0.8 (client-side rendering) compiled to WebAssembly**, built with
+`cargo build --target wasm32-unknown-unknown` and the installed `wasm-bindgen` CLI (pinned to the
+same version in `Cargo.toml`). No Trunk dependency: one shell script builds, one serves. Rationale:
+
+- Everything needed is installed and versions are pinned, so the build is reproducible.
+- Leptos gives fine-grained reactivity, a typed router, and small binaries; the whole UI, the
+  search index, the Markdown+math renderer and the cipher labs run in WASM.
+- The cipher and statistics code lives in a plain Rust module tree (`src/crypto`) with unit tests
+  that run natively (`cargo test`), independent of the web layer.
+
+Rendering pipeline: content TOML → `build.rs` (validate, lint, bundle to JSON) → `include_str!` →
+`serde_json` at startup → in-memory indexes → Leptos views. Markdown is rendered with
+`pulldown-cmark` (math extension enabled); `$…$`/`$$…$$` spans are converted to MathML with
+`pulldown-latex` and rendered natively by the browser (no external JS, no KaTeX).
+
+## 4. Content schema (`content/<section>/<id>.toml`)
+
+One TOML file per entry. Fields:
+
+```toml
+id = "vigenere"                 # slug, unique across ALL sections; the URL is /<section>/<id>
+section = "ciphers"             # ciphers | algebra | cryptanalysis | statistics | search | exact
+                                # | validation | engineering | labs | glossary | references
+title = "Vigenère cipher"
+subtitle = "Periodic additive substitution over Z26"       # optional, one line
+status = "VERIFIED"             # VERIFIED | PROMISING | CLOSED | POWER-LIMITED | INCONCLUSIVE | UNTESTED
+status_note = "One or two sentences saying what the status rests on."
+family = "Polyalphabetic substitution"   # taxonomy / topic group used for filtering and grouping
+tags = ["periodic", "additive"]
+related = ["beaufort", "index-of-coincidence"]   # ids of other entries (validated at build time)
+summary = "One plain-language paragraph. Searchable."
+updated = "2026-09-04"
+lab = "vigenere"                # labs only: the Rust lab component key
+
+[[blocks]]                      # ordered page blocks
+kind = "definition"             # definition | equations | variants | assumptions | attack
+                                # | complexity | failure_modes | controls | example | notes | history
+title = "Definition"            # optional; defaults to the kind's display name
+body = '''Markdown with $inline$ and $$display$$ LaTeX.'''
+
+[[provenance]]                  # internal evidence (rendered in the Evidence panel)
+path = "withmath/wm_core.py"    # repository-relative path
+kind = "solver"                 # solver | library | audit | design | note | log | script | data | ledger
+note = "Exact period alignment over all shift vectors"
+ref = "LOG01"                   # optional ledger/log identifier
+
+[[references]]                  # external literature
+title = "The Codebreakers"
+author = "David Kahn"
+year = 1967
+url = "https://…"               # optional
+```
+
+Status vocabulary (rendered as badges; the Overview explains them):
+
+- `VERIFIED` — implemented and validated on planted controls with recorded receipts.
+- `PROMISING` — positive evidence exists but matched controls or audits are incomplete.
+- `CLOSED` — the hypothesis family was tested with validated instruments and excluded within a
+  declared scope (scoped closure, not a universal impossibility).
+- `POWER-LIMITED` — the instrument cannot detect the effect at the available text length or budget;
+  negatives are uninformative.
+- `INCONCLUSIVE` — mixed evidence, unresolved audit, or invalidated run.
+- `UNTESTED` — documented but not exercised.
+
+Editorial rules for public fields (`title`, `subtitle`, `summary`, `status_note`, `tags`, `family`,
+block `title`/`body`, glossary text):
+
+1. General cryptography only. Forbidden tokens (lint-enforced, case-insensitive, word-bounded):
+   `kryptos`, `ctf`, `sanborn`, `langley`, `cia`, `pk1`…`pk10`, `pk89`, `pk98`, `pk8910`, `k1`…`k4`
+   as puzzle labels, `leaderboard`, `submission`.
+2. Never quote a live ciphertext, plaintext, hint, or crib list. Examples must be generic and
+   reproducible (a stated plaintext of your own, a stated key, the resulting ciphertext).
+3. Numbers are quoted only from a receipt (a log, audit, or note named in `[[provenance]]`).
+4. Say what a negative means: scope, text length, control power.
+
+## 5. Brand (Dilate, light theme only)
+
+Derived from dilate.co.ke (Framer site) on 2026-09-04:
+
+- Ink `#000020`; secondary ink `rgba(0,0,32,0.65)`; Dilate blue `#0454ff`; indigo `#4946ff`/`#6764ff`;
+  purple accent `#A95DC9`; lavender tint `#e1e0ff`; surfaces `#ffffff`, `#f6f5f4`, `#f0f0eb`,
+  `#edede8`; hairline `#e4e4e1`.
+- Type: Geist (UI/body, weights 400/500/600), Adamina (serif display/quotes), DM Mono (data/code).
+  Letter-spacing −0.01em body, −0.04em display. Radii 8/12/20 px. Generous whitespace.
+- Motifs: hairline grids, dotted fields, concentric/tableau geometry; no gradients heavier than a
+  faint lavender wash; no dark mode.
+
+## 6. Layout of this directory
+
+```
+cipher-praxis/
+  ARCHITECTURE.md      this note
+  README.md            run/build instructions
+  Cargo.toml, build.rs
+  content/<section>/*.toml
+  src/                 app (Leptos), content model, search, markdown+math, labs, crypto core
+  static/              index.html template assets: styles.css, favicon, fonts CSS
+  scripts/             build.sh, serve.py, check.sh
+  dist/                build output (generated, ignored)
+```

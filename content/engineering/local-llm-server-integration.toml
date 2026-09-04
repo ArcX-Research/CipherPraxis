@@ -1,0 +1,87 @@
+id = "local-llm-server-integration"
+section = "engineering"
+title = "Local LLM server integration"
+subtitle = "Using a locally served language model as a frozen scorer or a constrained proposal generator, and the capability audit that decides which"
+status = "INCONCLUSIVE"
+status_note = "A read-only capability audit found that the deployed local server exposes log-probabilities only for generated tokens, so exact sequence likelihoods for a frozen reranker were unavailable and that lane was closed; a grammar-constrained proposal lane ran (3,500 calls, 1,128 s) and produced no complete proposal, which is a heuristic miss with no exclusion meaning."
+family = "Tooling"
+tags = ["language model", "local server", "reranking", "constrained decoding"]
+related = ["local-language-model-prior", "semi-markov-word-model", "english-gate-calibration", "tautological-gate-rule", "reproducibility-receipts", "control-first-policy", "quadgram-log-likelihood"]
+summary = "A neural language model can enter a cryptanalytic pipeline in two ways: as a frozen scorer that assigns an exact log-likelihood to a fully specified candidate, or as a proposal generator whose outputs are then verified by exact algebra. The first requires an API that returns per-token log-probabilities for supplied text; the second requires only sampling under a grammar. The program audited a running local server before using it, found that it could do the second and not the first, and treated every proposal miss as uninformative."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For a candidate ordering or plaintext $x = (x_1, \dots, x_T)$ the frozen-scorer use needs
+
+$$L(x) = \sum_{t=1}^{T} \log p(x_t \mid x_1, \dots, x_{t-1}),$$
+
+i.e. the log-probability of every token **already present** in the submitted text. A completion endpoint that returns top-$N$ probabilities only for tokens it generates cannot supply this; forcing tokens by logit bias changes the distribution being measured, and asking a chat model to choose among candidates is a judgement, not the predeclared score.
+
+The proposal use needs only next-token sampling. The program's version compiles, for each beam state, the finite set of dictionary words compatible with the ciphertext's exact within-residue equality and injectivity constraints into a trie grammar, lets the model choose complete legal words, and verifies every completed proposal by the exact modular relations, the all-different constraint, decryption and a literal forward reconstruction.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The server is inventoried read-only before use: process, model file hash and metadata, chat-template hash matching the served properties, adapter identity and scale, context size, build id, executable hash.
+- Requests are deterministic: temperature fixed, seed fixed, prompt caching off, penalties disabled, request-local adapter scale zero so that a post-launch fine-tune does not enter, serialised calls, and a hard memory stop.
+- Provenance is checked: the adapter's training data was scanned for project tokens (none found) and its date recorded; the audit notes this reduces but does not exclude contamination.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "The capability probe"
+body = '''
+A single generic request with `echo: true` and `logprobs: 5` returned five prompt tokens and one completion token, but a log-probability array of length **one**, for the generated token only. A directed next-token pilot then tried to score each ordered chunk pair by finding the successor's first token in the top-$N$ list with $N$ escalated 128, 512, 2,048: of 72 directed edges, 37 were observed and 35 remained censored, including four of the eight planted-path edges, so no complete $9!$ ranking existed. A final interval variant scored censored tokens as $[-\infty, \text{cutoff}]$; the planted path's second edge was censored, its lower bound was $-\infty$, and the preregistered certificate failed before any non-planted edge was requested. The stop rule was followed: no second token, no extra control, no target.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The probes were cheap (168 completion calls in 31.4 s; 19 calls in 2.2 s) and the server's resident memory stayed between about 8.8 and 11.6 GiB under a 16 GiB stop. The proposal lane spent 1,127.9 s on 3,500 model calls for one 95-letter zone and ended with 64 live partial states and zero complete proposals.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Substituting a surrogate for a missing likelihood.** Replacing censored entries by $-\infty$, the last returned probability, a rank or a forced token would not be the declared model probability and could manufacture an exact order; refused.
+- **Character-level proposals collapsing.** A character-token smoke reached 49 of 95 letters and collapsed into one-letter fragments; the successor changed the search unit to complete words.
+- **Source improved after the run.** The executed proposal lane's source hash differs from the current source; the ledger says the current hash must not be represented as the executed one.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The frozen-scorer lane predeclared 40 development controls and never submitted them because the capability gate failed first; a proposal lane's controls are its exact verifier (a readable survivor must reproduce both texts under the declared algebra) and the rule that a failed beam excludes nothing.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Deterministic probe request"
+body = '''
+```json
+{"prompt": "The capital of France is", "max_tokens": 1, "temperature": 0, "seed": 232,
+ "echo": true, "logprobs": 5, "repeat_penalty": 1.0, "cache_prompt": false,
+ "lora": [{"id": 0, "scale": 0.0}]}
+```
+Expected for a frozen scorer: log-probabilities for all five prompt tokens. Observed: one entry, for the generated token. Capability gate: FAIL.
+'''
+
+[[provenance]]
+path = "withmath/ROW_LLAMA_SERVER_CAPABILITY_AUDIT.md"
+kind = "audit"
+note = "Read-only inventory with hashes; echo/logprobs probe returning one entry; directed boundary pilot 37 observed / 35 censored of 72 edges, planted path 4/8; interval variant failing on the planted second edge; 168 calls in 31.39 s, 19 calls in 2.21 s; resident memory 9,200,960 to 12,128,800 KiB under a 16 GiB stop; adapter provenance scan."
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Complete-word constrained proposal lane: trie grammar from exact within-residue constraints, verification by modular relations and forward; character-level smoke reached 49/95 then collapsed; result 3,500 calls, 1,127.9 s, 64 live partial states, zero complete proposals; heuristic miss only; executed hash differs from current source."
+ref = "LOG393"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Reservation of the character-level proposal lane: proposals ranked only by the local model, then tested by exact relations; a failed beam has no exclusion meaning."
+ref = "LOG392"

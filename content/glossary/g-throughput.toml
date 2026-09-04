@@ -1,0 +1,10 @@
+id = "g-throughput"
+section = "glossary"
+title = "Throughput (of a search)"
+status = "VERIFIED"
+status_note = "Term as used in the compute and throughput entries."
+family = "Engineering vocabulary"
+tags = ["compute"]
+related = ["drainability-and-throughput", "throughput-fail", "power-measurement"]
+summary = "The measured rate at which a search processes its work units in the live task order (pairs per second, nodes per pair), together with the frontier size it implies a time to drain. A control that cannot reach its planted truth within budget is a throughput statement, and a capped live run's coverage is the fraction of the frontier its budget reached; neither is a negative."
+updated = "2026-09-04"

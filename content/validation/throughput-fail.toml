@@ -1,0 +1,108 @@
+id = "throughput-fail"
+section = "validation"
+title = "Throughput fail"
+subtitle = "A control that cannot reach its planted truth within budget is a rate statement, not a negative"
+status = "VERIFIED"
+status_note = "Recorded in the research program as a typed terminal (CONTROL_GATE FAIL by throughput, TARGET_REFUSED) with measured pairs per second, frontier size and truth depth; the affected live run was declared SCOPED_INCONCLUSIVE with its exact processed prefix, never a negative."
+family = "Compute and throughput"
+tags = ["throughput", "budget", "coverage", "exhaustive search"]
+related = ["drainability-and-throughput", "power-measurement", "control-first-policy", "state-checkpoints", "held-out-gates", "exhaustive-enumeration", "compiled-hot-cores"]
+summary = "An exhaustive search that is correct but too slow produces a special kind of failure: its control never reaches the planted truth, not because the pruning is wrong but because the truth's task is deep in the schedule. The program names this outcome, measures its cause in tasks per second and nodes per task, and forbids the live run from being read as a negative. The same measurement doubled as a diagnostic: the live text generated 500 times more search nodes per task than any random plant, which said something about the model, not the machine."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For a search over a deterministically ordered frontier of $F$ tasks, a **throughput fail** is the control terminal reached when the planted truth's task index $t^\ast$ satisfies $t^\ast > \rho T$, where $\rho$ is the measured task rate and $T$ the declared cap, so the truth was never scheduled. It is reported with $(\rho, F, t^\ast, T)$ and the terminal `CONTROL_GATE FAIL (throughput); TARGET_REFUSED`.
+
+It is distinguished from a **power fail** (the truth was scheduled and pruned away) by the segment test: search the ten tasks around $t^\ast$ and check that the truth is recovered there.
+'''
+
+[[blocks]]
+kind = "equations"
+body = '''
+Time to drain and coverage at cap:
+
+$$T_{\text{drain}} = \frac{F}{\rho}, \qquad \kappa(T) = \min\!\left(1, \frac{\rho T}{F}\right).$$
+
+Recorded values for one key cell: $\rho \approx 2.7$ pairs/s on 8 shared threads, $F = 708{,}732$, $t^\ast \approx 226{,}000$, $T = 903.7$ s, so 2,393 pairs were processed and $t^\ast$ was about 95 times beyond reach. The live text in the same cell ran at $0.5$ pair/s with $F = 1{,}706{,}348$: $T_{\text{drain}} \approx 40$ thread-days per relation and $\kappa(24\,\text{h}) \approx 2$ to $3\%$.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The task order is deterministic and identical between control and live run, so a processed prefix is a resumable segment.
+- The rate is measured, not estimated from an easier cell: the same core drained 248,405 pairs in 308 s in a three-shift cell and slowed by a factor of about 300 per pair when two more shifts were freed, because the linear pruning fired later and the frontier was 6.9 times larger.
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+A throughput fail forces a decision that a silent negative would hide: accept a scoped run and report its coverage, change the algorithm (an inhomogeneous-row core that restores the pruning strength, estimated at 2.4 days for a complete result), accumulate hash-ordered segments over idle time (exact union, no work reduction), or declare the cell non-viable and not run it. The program did the last for a seven-free-shift cell ("not run, not a negative").
+
+The per-task statistics of the live run carried information of their own. Against 20 random plants searched on exactly the same 224-task prefix, the live text produced a median-relative excess of $\log_{10} z = +2.76$ in nodes per pair and $+1.78$ in depth-3 continuations, above the heaviest random plant on both. That is diagnostic evidence that the live text's within-class pattern does not resemble the model's plants, not a rejection: a search-tree statistic on $n = 20$ and a single live text.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Measuring throughput costs the budget it measures. The economical form is the segment panel: locate each planted truth's index with a hash lookup, search ten tasks around it, and multiply recovery-when-scheduled by coverage (see [Power measurement](/validation/power-measurement)).
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Front-loaded controls.** A fixture whose truth sits at the start of the schedule "passes" at any throughput; reclassified as a wiring test.
+- **Extrapolating from an easy cell.** The three-shift cell's 308-second drain suggested feasibility; the two-extra-shift cell was 300 times slower per pair.
+- **Reading a capped run as exhaustive.** The design rule is `EXACT_ZERO` only on natural drain (`complete=1`), otherwise `SCOPED_INCONCLUSIVE` with `pairs=done/total` recorded.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The segment KAT proves that segment search equals full search: lexicographic segments $[0,100)$ and $[100,200)$ produced 165,733 and 1,427,442 nodes, and $[0,200)$ produced exactly 1,593,175, with the truth found in the segment that contains it and in the hash-order segment around its located index.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Throughput report"
+body = '''
+```
+THROUGHPUT cell=two-extra-free-shifts relation=A threads=8 cap=903.7s
+  frontier=708,732 pairs  processed=2,393  rate=2.65 pairs/s  truth_index~226,000
+  prunes fired: reach, inject   invalid candidates: 0
+CONTROL_GATE FAIL (throughput)  TARGET_REFUSED
+LIVE (declared 24 h cap, hash order): frontier=1,706,348  rate=0.5 pairs/s
+  expected coverage 2-3%  ->  terminal SCOPED_INCONCLUSIVE pairs=done/total
+```
+'''
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Blind control processed 2,393 of 708,732 pairs in 903.7 s (about 2.7 pairs/s), truth about 226,000 tasks deep: CONTROL_GATE FAIL, TARGET_REFUSED; about 300 times slower per pair than the three-shift cell."
+ref = "LOG503"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Live throughput measured: 0.5 pair/s, about 740,000 nodes per pair against about 80 in the easier cell, frontier 6.9 times larger, about 40 thread-days per relation, 24 h covers 2 to 3%; seven-free-shift cell declared non-viable, not run, not a negative."
+ref = "LOG503"
+
+[[provenance]]
+path = "withmath/logs/503_prefix224_20260904T103428Z.log"
+kind = "log"
+note = "Apples-to-apples prefix-224 comparison: live 3,207,326 nodes per pair and 277 triples per pair; plants median 3,077 and 20.9; log10 z +2.76 and +1.78; diagnostic, not a rejection."
+ref = "logs/503_prefix224_20260904T103428Z.log"
+
+[[provenance]]
+path = "withmath/logs/503_segment_kat_20260904T093519Z.log"
+kind = "log"
+note = "Segment KAT: 165,733 + 1,427,442 = 1,593,175 nodes; union-of-segments exactness and live-order recovery."
+ref = "logs/503_segment_kat_20260904T093519Z.log"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Reference drain of the three-shift cell: 248,405/248,405 pairs in 307.522 s, complete=1, endpoints 0."
+ref = "LOG475"

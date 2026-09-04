@@ -1,0 +1,113 @@
+id = "myszkowski"
+section = "ciphers"
+title = "Myszkowski transposition"
+subtitle = "Columnar transposition with a repeated-letter key: tied columns are read row-wise together"
+status = "INCONCLUSIVE"
+status_note = "The Myszkowski read-out was implemented and swept over dictionary key words with repeated letters (about 190,000 permutations, both directions) under a periodic layer on the 144-letter text, but the sweep's only planted control was a rail fence, so the negative is not Myszkowski-specific and no dedicated control receipt exists."
+family = "Transposition"
+tags = ["transposition", "columnar", "repeated key letters"]
+related = ["columnar-transposition", "route-transposition", "rail-fence", "dictionary-attack", "transposition-width-recovery", "g-transposition-grid"]
+summary = "A Myszkowski transposition uses a key word with repeated letters. Columns under distinct letters are read as in a columnar transposition, but columns under the same letter are read together, row by row, left to right. The tie rule changes the permutation enough that a plain columnar solver does not cover it, so the program enumerated it as its own vocabulary of dictionary words with repeated letters."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Write the plaintext in rows of width $w = |key|$. Process the distinct key letters in alphabetical order; for a letter occurring once, output its column top to bottom; for a letter occurring in columns $c_1 < c_2 < \dots$, output row 0 of $c_1, c_2, \dots$, then row 1 of those columns, and so on. Formally, with $\operatorname{rank}(c)$ the rank of the key letter above column $c$,
+
+$$\text{output order} = \text{sort positions } (r, c) \text{ by } \big(\operatorname{rank}(c),\ r,\ c\big).$$
+
+A key with all letters distinct reduces to an ordinary keyed columnar; a key with all letters equal is the identity.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Effect on the position permutation"
+body = '''
+For a tie group of $t$ columns the ciphertext contains their letters interleaved row by row, so consecutive ciphertext letters of that group are plaintext neighbours from the same row (distance 1 to $w$), whereas in a plain columnar consecutive letters of one column are a full row apart. Under an additive layer of period $m$ applied afterwards, this changes which plaintext positions share a coset in a way that depends on the tie pattern, not only on $w$.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Dictionary keys with repeated letters**, 4 to 16 letters, read forward or backward.
+- **Numeric keys** with ties are the same object.
+- The plain columnar and its exhaustive-order solvers are the tie-free case; see [Columnar transposition](/ciphers/columnar-transposition).
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Letter identities are preserved; histogram and index of coincidence unchanged.
+- Invariant: the tie pattern of the key is what matters; two words with the same letter-repeat pattern give the same permutation, so the effective key space is the set of tie patterns times the ordering of distinct letters.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Enumerate candidate key words with repeated letters (the program used its whole dictionary, lengths 4 to 16, with at least one repeated letter) and precompute the ciphertext-to-plaintext permutation for each, in both directions.
+2. For each permutation, undo the transposition, fit any periodic layer on top (both orders, both relations, a prefix drift for a key change) and score by quadgrams; polish the best.
+3. Compare the best rate with the sweep distribution; a solution reads as English at once.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+One decrypt and periodic fit per (word, direction); the full family shared a ten-minute sweep with rails, routes and block reversals (192,853 permutations in the control run).
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Vocabulary coverage.** A key that is not a dictionary word is missed; the tie pattern, not the word, is what a blind solver would have to search.
+- **No dedicated control.** The sweep validated its pipeline with a rail-fence plant; a Myszkowski plant with a strongly tied key was not run, so the power of the sweep for tie-heavy keys is not measured.
+- **Near-miss keys.** Words with the same tie pattern but a different distinct-letter order produce partially right decrypts (8-30% match in the sweep's best wrong entries).
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The transposition sweep (logs/29_pk9x.log) passed its planted rail-fence control at 100% and listed Myszkowski read-outs among its best wrong entries at 6-30% match; on the live 144-letter text and its 96-letter suffix no Myszkowski key read (whole $-6.00$, suffix $-5.71$). No Myszkowski-specific planted control was recorded, which is why the entry is INCONCLUSIVE rather than VERIFIED.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Key `TOMATO`, plaintext `WEAREDISCOVEREDFLEEATONCE`:
+
+```
+T O M A T O
+W E A R E D
+I S C O V E
+R E D F L E
+E A T O N C
+E
+```
+
+Alphabetical order of key letters: A, M, O, O, T, T. Column A: `ROFO`; column M: `ACDT`; the two O columns row by row: `ED SE EE AC`; the two T columns row by row: `WE IV RL EN E`. Ciphertext `ROFOACDTEDSEEEACWEIVRLENE`.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+A dedicated control would be a planted Myszkowski with a tie pattern such as `AABABCB` under the same period-7 layer; the program's key-pattern analysis of one text (a repeated-letter pattern among its coset classes) makes that a natural future control.
+'''
+
+[[provenance]]
+path = "withmath/wm_pk9x.py"
+kind = "solver"
+note = "Myszkowski read-outs of every dictionary word with repeated letters, both directions, under a period-7 layer with key change; rail-fence control only."
+ref = "logs/29_pk9x.log"
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Round 5d: rail fences, routes, block reversals, reversed text and 190k Myszkowski words; live text negative; control rail fence 100%."
+
+[[references]]
+title = "Elementary Cryptanalysis"
+author = "Helen Fouché Gaines"
+year = 1939

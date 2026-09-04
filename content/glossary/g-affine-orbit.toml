@@ -1,0 +1,10 @@
+id = "g-affine-orbit"
+section = "glossary"
+title = "Affine orbit of a cycle"
+status = "VERIFIED"
+status_note = "Orbit completeness was checked in every enumerated solution set of the corpus's exact cycle solvers."
+family = "Algebra"
+tags = ["group action", "canonical form"]
+related = ["group-actions-on-alphabets", "conjugacy-and-gauge", "affine-maps-mod-26", "g-gauge-freedom"]
+summary = "The set of all coordinate maps z' = alpha z + beta, with alpha a unit modulo 26 and beta any residue, obtained from one cipher alphabet z. Every member describes the same substitution once the keys are transformed along, so the orbit, of size 12 times 26 = 312, is the true unit of solution counting. Exact solvers partition their solution sets into complete orbits and score one canonical representative per orbit."
+updated = "2026-09-04"

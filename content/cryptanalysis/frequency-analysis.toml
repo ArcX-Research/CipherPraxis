@@ -1,0 +1,150 @@
+id = "frequency-analysis"
+section = "cryptanalysis"
+title = "Frequency analysis"
+subtitle = "Letter, coset and polygraph statistics as the first instrument on any classical ciphertext"
+status = "VERIFIED"
+status_note = "Monogram fits (maximum likelihood, chi-square, correlation), coincidence statistics with exact standard errors, and alphabet-free histogram comparisons are the base instruments of the corpus, each with planted calibration: a per-coset likelihood screen ranks a planted alphabet first of 2.06 million, a chi-square fit reads a planted keyed text at 100%, and the segment-identity references reproduce the expected z (logs/24, 07, 38, 01)."
+family = "Period and structure recovery"
+tags = ["monogram", "histogram", "index of coincidence", "chi-square", "monoalphabetic", "calibration"]
+related = ["caesar-shift", "keyword-mixed-alphabet", "index-of-coincidence", "chi-squared-fit", "estimator-standard-error", "coset-shift-recovery", "exact-period-alignment", "family-identification", "hill-climbing", "g-coset"]
+summary = "Frequency analysis compares the letter statistics of a ciphertext with those of the plaintext language. A monoalphabetic substitution preserves the histogram up to a relabelling, a Caesar shift up to a rotation, and a periodic cipher does the same per coset, so histograms, the index of coincidence and their standard errors decide what kind of layer sits on top before any key is searched. The corpus's contribution is calibration: every frequency statistic is reported with its exact or simulated error bar and against planted references of the same length."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For a text of $n$ letters with counts $f_x$, the histogram $\hat h(x) = f_x/n$ estimates the letter distribution. Under a monoalphabetic substitution $\sigma$ the ciphertext histogram is $\hat h(\sigma(x))$: the same multiset of frequencies with permuted labels. Under a Caesar shift $k$ it is $\hat h(x - k)$. Under a periodic substitution of period $m$ each coset $b$ has its own rotation or relabelling of the plaintext histogram of the positions $i \equiv b \pmod m$.
+
+The **index of coincidence** $\operatorname{IC} = \sum_x f_x(f_x-1)/(n(n-1))$ is invariant under relabelling and separates peaked (English $\approx 0.066$) from flat (uniform $1/26 \approx 0.0385$) material. For $n$ independent letters from a distribution with $\kappa_2 = \sum_x h(x)^2$ and $\kappa_3 = \sum_x h(x)^3$ the estimator's variance is
+
+$$\operatorname{Var}(\operatorname{IC}) = \frac{N\kappa_2(1-\kappa_2) + 2N(n-2)(\kappa_3 - \kappa_2^2)}{N^2}, \qquad N = \binom{n}{2},$$
+
+which gives a standard deviation of about $0.021$ for a 22-letter English coset and $0.008$ for the mean of seven such cosets.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Fits and alphabet-free comparisons"
+body = '''
+- Shift or relabelling fit against a reference $E$: correlation $\sum_x E(x-k)\hat h(x)$, chi-square $\sum_x (f_x - nE(x-k))^2/(nE(x-k))$, or log-likelihood $\sum_x f_x \log E(x-k)$ (see [Coset shift recovery](/cryptanalysis/coset-shift-recovery)).
+- Sorted profile: sort the histogram and compare with sorted profiles of language windows of the same length; this is invariant under any relabelling and tests "English letters under some substitution" without recovering it.
+- Segment identity: the cosine between two segment histograms (or its maximum over rotations in a reference order) tests whether two parts of a text share one substitution.
+- Within-coset coincidences: adjacent-pair and triple coincidences within one coset stay at the language digram/trigram level under any per-coset substitution and fall toward the product of letter rates under any inner mixing.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The plaintext is natural language with a known reference distribution; a list, a spelled-out number or a foreign language changes the reference and every fit built on it.
+- Statistics are compared at matched length: expectations and error bars depend strongly on $n$, so planted references are generated at the text's own length.
+- Histogram statistics see nothing of order: they are invariant under transposition, which is a strength (usable through a transposition) and a limitation (blind to word structure).
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Histogram, index of coincidence with error bar, number of distinct letters; compare with language, uniform and planted references at the same length.
+2. If the text is monoalphabetic ($\operatorname{IC}$ near the language value), map the most frequent ciphertext letters to the most frequent plaintext letters as a start and finish with a quadgram hill-climb over the substitution.
+3. If periodic, repeat per coset after the period is found; if the text is not homogeneous, repeat per zone.
+4. Read the sorted profile and the within-coset pair coincidences to decide between "substitution of language" and "mixed inner" before committing to a key family.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+All statistics are linear in $n$; the fits are $O(26)$ per candidate rotation and $O(26^2)$ per relabelling hypothesis. Simulated references cost one encryption and one statistic per replicate: 400 planted windows per model per text run in about a minute.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Degenerate objectives.** Maximising the coincidence rate of a decrypt over a free alphabet is not a language objective: on a planted 95-letter control the search found decrypts with 593 to 601 coincidences against the truth's 383 by collapsing letters, with 0 to 5% of letters right (logs/81). Coincidence must stay a diagnostic, never the thing optimised.
+- **Short texts.** A monoalphabetic solver calibrated at 92 letters fails its own reference at 55 letters (logs/98 to 101); below that, frequency order is a weak prior.
+- **Rotations versus relabellings.** Every same-coset statistic is identical for "seven rotations of one alphabet" and "seven unrelated alphabets"; frequency analysis cannot decide whether a periodic layer is additive.
+- **Pooling across zones.** A whole-text coset index of coincidence of $0.054$ was read as a mixed inner; it was 63 monoalphabetic-coset letters pooled with 90 flat ones.
+- **Error bars.** "Not monoalphabetic" at coset IC $0.0536$ against $0.0652$ is $z -1.5$ once the standard deviation of the mean ($0.0079$) is used (logs/01).
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+- Per-coset likelihood screen (logs/24): the planted alphabet ranked 1 of 2,057,878 at $-3.942$ against a shuffled-segment top of $-6.194$.
+- Chi-square shift fit plus polish (logs/07): planted phrase-keyed text read at $-4.34$, 100% match.
+- Exact IC standard deviations and 200-shuffle nulls on planted plain and transposed-inner references (logs/01).
+- Segment-identity references, 100 planted texts per case (logs/38); within-coset coincidence references, 400 planted windows per model at 153 and 144 letters (ck_diag_report.txt): a 153-letter text with 5 coincident adjacent pairs sits at $z -1.8$ against per-coset substitutions ($11.7 \pm 3.8$) and $z 0.0$ against a transposed period-2 inner ($4.9 \pm 2.3$).
+- A design note of the corpus also reports a shotgun quadgram hill-climb solving 5/5 planted 92-letter monoalphabetic controls at 93 to 100% match; no separate transcript of that run was located, so the figure is quoted from the note only.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Plaintext (39 letters) `ATTACKTHEEASTGATEATDAWNANDHOLDTHEBRIDGE` has counts A 7, T 7, E 5, D 4, H 3. A Caesar shift by 5 gives
+
+```
+FYYFHPYMJJFXYLFYJFYIFBSFSIMTQIYMJGWNILJ
+```
+
+with counts F 7, Y 7, J 5, I 4, M 3: the same frequency multiset, rotated. The index of coincidence of both texts is $\sum f_x(f_x-1)/(39 \cdot 38) = (42+42+20+12+6+2+2)/1482 = 0.085$ (G and N occur twice, every other letter once); only the labels moved. Mapping F$\to$A (or F$\to$T), Y$\to$T, J$\to$E already fixes the rotation $k = 5$, and the sorted profile $(7,7,5,4,3,2,\dots)$ is the same before and after encryption.
+'''
+
+[[provenance]]
+path = "withmath/wm_core.py"
+kind = "library"
+note = "ic_counts, coset_ics, digram_ic and ic_sd_monoalphabetic (exact IC standard deviation); reference distributions per alphabet order."
+
+[[provenance]]
+path = "withmath/wm_audit.py"
+kind = "solver"
+note = "Within-coset IC with exact s.d., aligned digram IC against shuffles and English windows, planted references."
+ref = "logs/01_audit.log"
+
+[[provenance]]
+path = "withmath/wm_pk9.py"
+kind = "solver"
+note = "Per-coset monogram maximum likelihood screen; planted alphabet rank 1 of 2.06M."
+ref = "logs/24_pk9_seg48.log"
+
+[[provenance]]
+path = "withmath/wm_phrase.py"
+kind = "solver"
+note = "Chi-square shift fit and polish; control 100%."
+ref = "logs/07_phrase.log"
+
+[[provenance]]
+path = "withmath/probes/step3_facts.py"
+kind = "script"
+note = "Segment identity/rotation tests with planted references; sorted and pooled coincidence checks."
+ref = "logs/38_step3_facts.log"
+
+[[provenance]]
+path = "ck_diag.py"
+kind = "solver"
+note = "Adjacent-pair and triple coincidences within cosets and pooled coset IC against nine planted models, 400 windows each."
+ref = "ck_diag_report.txt"
+
+[[provenance]]
+path = "withmath/logs/81_icalign_control_names.log"
+kind = "log"
+note = "Maximising decrypt coincidences over ring and shifts collapses letters: 593-601 found versus 383 true, 0-5% match."
+
+[[provenance]]
+path = "withmath/GRAMMAR_SOLVER.md"
+kind = "note"
+note = "Section 7 reports 5/5 planted 92-letter monoalphabetic controls solved by a shotgun quadgram hill-climb; transcript not located in the log directory."
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Monoalphabetic solver unreliable at 55 letters (fails its own reference, logs/98-101)."
+
+[[references]]
+title = "The Codebreakers"
+author = "David Kahn"
+year = 1967
+
+[[references]]
+title = "The Index of Coincidence and Its Applications in Cryptanalysis"
+author = "William F. Friedman"
+year = 1922

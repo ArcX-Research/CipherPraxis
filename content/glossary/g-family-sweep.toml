@@ -1,0 +1,10 @@
+id = "g-family-sweep"
+section = "glossary"
+title = "Family sweep"
+status = "VERIFIED"
+status_note = "Corpus term for a scoped exhaustive test of one construction family."
+family = "Method governance"
+tags = ["enumeration", "scope", "closure"]
+related = ["phrase-keyed-alphabet-attack", "multiple-rounds-analysis", "family-identification", "dictionary-attack", "planted-controls", "g-successor-review", "g-selection-freedom"]
+summary = "A family sweep enumerates every member of a declared construction family (every phrase-keyed alphabet from a set of sources, every combination of up to four rounds from a word set, every column order of a width) against a ciphertext, with a planted control that must rank first and a null that sets the noise level. Its result is a scoped closure: the family is excluded for that text, that length, that enumeration and that control power, and for nothing else. Sweeps compound badly when they share an unexamined assumption, which is why the corpus interleaves them with assumption reviews and stops them once the enumerable structures are exhausted."
+updated = "2026-09-04"

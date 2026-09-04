@@ -1,0 +1,126 @@
+id = "condi"
+section = "ciphers"
+title = "Condi"
+subtitle = "Plaintext-feedback substitution: each rank shifts the next letter's rank"
+status = "POWER-LIMITED"
+status_note = "Three successive decoders (transition-likelihood annealing, a gauge-aligned global population search, and an exhaustive parity decomposition with a bounded GF(13) lift) each scored 0/4 on planted 504-letter controls with arbitrary alphabets, although the hidden configurations are proven strict local optima; the family is unresolved, not excluded."
+family = "Stream and machine ciphers"
+tags = ["feedback", "keyed alphabet", "autokey-like", "power limit"]
+related = ["gromark", "autokey", "keyword-mixed-alphabet", "modular-inverse-and-crt", "conjugacy-and-gauge", "simulated-annealing", "exhaustive-enumeration", "polish-basin-measurement", "g-autokey-primer"]
+summary = "Condi encrypts through a keyed alphabet in which the shift applied to each letter is the previous plaintext letter's rank plus one, seeded by a starter value. Changing one alphabet cell changes the feedback state and hence almost the whole decrypt, so ordinary swap-based search has no gradient. The program built three increasingly global decoders around exact algebra of the cipher; all three failed their planted controls, which makes Condi a documented power limit rather than a negative."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $r(L) = \sigma^{-1}(L)$ be the rank of letter $L$ in a keyed alphabet $\sigma$, $u_i = r(p_i)$ and $v_i = r(c_i)$. With starter $s$,
+
+$$v_0 \equiv u_0 + s, \qquad v_i \equiv u_i + u_{i-1} + 1 \pmod{26} \ (i > 0), \qquad c_i = \sigma[v_i].$$
+
+Decryption is causal: $u_i = v_i - u_{i-1} - 1$, so one wrong alphabet cell propagates through everything after it.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Gauge, transition prediction and the parity split"
+body = '''
+For any unit $a$ modulo 26, $r'(L) = a(r(L) + 1) - 1$ and $s' = a s$ preserve every plaintext-ciphertext equation, so the raw alphabet and starter are identifiable only as a 12-member affine class. For a plaintext trigram $(x, y, z)$ the cipher predicts adjacent ciphertext ranks $(r(x) + r(y) + 1,\ r(y) + r(z) + 1)$, so a candidate $r$ projects the generic trigram table onto a predicted $26 \times 26$ transition table that can be fitted to the observed one; this objective moves smoothly under alphabet swaps, unlike the causal decrypt. Reducing modulo 2 gives $z(c_i) = z(p_i) + z(p_{i-1}) + 1$ with $z = r \bmod 2$, a balanced 13/13 partition that the gauge cannot change (every unit $a$ is odd); reducing modulo 13 gives the same feedback over $\mathrm{GF}(13)$, and CRT rebuilds $r$ from the two.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Standard keyword alphabet with a rotation and starter**: the configuration used by the program's first control.
+- **Arbitrary alphabet**: the family the three later decoders targeted.
+- Related feedback ciphers: [Autokey](/ciphers/autokey) (letter feedback without a keyed alphabet) and [Gromark](/ciphers/gromark) (numeric chain instead of plaintext feedback).
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- One alphabet and one starter for the whole text; natural-language plaintext.
+- Invariant: every fitted state round-trips (the cipher is invertible for any alphabet), so a round-trip is tautological.
+- Invariant: the parity partition of the alphabet is gauge-free and exactly enumerable, $\binom{26}{13} = 10{,}400{,}600$ masks.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. **Transition-likelihood annealing** over the rank permutation with a steepest-swap polish and basin hopping, then exact causal decryption under all 26 starters ranked by quadgrams.
+2. **Global population search**: minimise the full $L_2$ distance between predicted and observed transition tables (a complete Fourier-moment mismatch), then recombine gauge-aligned parents by whole alternating cycles of their assignment matchings, project elite votes back to a permutation by Hungarian assignment, and apply explicit 3-to-10-letter rank cycles.
+3. **Parity first**: exhaust all $\binom{26}{13}$ balanced masks with a binary Markov model, rerank the top million with a binary trigram model, lift the top 64 masks through a bounded $\mathrm{GF}(13)$ residue search and exact CRT.
+Each decoder's controls had to recover 504/504 letters and the exact 12-unit configuration class before any live text was admitted.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Annealing: 128 starts of 6,000 swaps plus 12 basin kicks per control, about 11 seconds in the compiled core. Population search: 96 relaxed starts, three generations of 768 children, 41,600 exhaustive three-cycles per control, 16 to 21 seconds. Parity stage: all 10,400,600 masks in 1.65 to 1.95 seconds; the residue lift is bounded far below the $(13!)^2$ pairs.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **No swap gradient on the causal decrypt.** The first control recovered only 28/504 letters.
+- **Real basin, never entered.** Post-selection tests showed the hidden alphabets are strict optima against all 325 single swaps (0/325 improving) under the transition likelihood, yet 128 annealing starts, a global population, and exhaustive three-cycles all finished 0.03 to 0.10 below the hidden aggregate with 5-8 of 26 correct classes.
+- **Selector misses.** Two of four hidden parity masks ranked 91,895 and 874,906 under the exact bigram selector and never reached the top-64 lift; for the two that did (ranks 14 and 1) the bounded residue lift still failed.
+- **Fluent false endpoints.** Selected outputs scored $-7.5$ to $-7.8$; the plaintexts themselves score near $-4.0$, so the gap is search, not model.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Log 186: standard-alphabet control, 28/504 plaintext, gate FAIL, live text never run. Log 203: 0/4 strict gate on four disjoint 504-letter windows with arbitrary alphabets and starters 0, 1, 2, 13; best searched aggregates $0.05$ to $0.09$ below the hidden values; plaintext match 4.0-6.3%. Log 208: 0/4; gaps $0.03$ to $0.09$; plaintext match 2.2-4.4%. Log 213: exhaustive parity stage certified 10,400,600 masks on every control; 0/4 overall; plaintext match 3.4-9.3%. In every lane the live text was never selected or opened.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Alphabet $\sigma$ keyed by `ZEBRAS` (`ZEBRASCDFGHIJKLMNOPQTUVWXY`), starter $s = 3$, plaintext `HELLO`. Ranks $u = r(H), r(E), r(L), r(L), r(O) = 10, 1, 14, 14, 17$.
+
+```
+i     0        1          2          3          4
+v_i   10+3=13  1+10+1=12  14+1+1=16  14+14+1=29->3  17+14+1=32->6
+c_i   K        J          N          R          C
+```
+
+Ciphertext `KJNRC`. Decrypt: $u_0 = 13 - 3 = 10 \to H$; $u_1 = 12 - 10 - 1 = 1 \to E$; and so on.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Condi is the clearest example in the corpus of a decoder-power failure that is honestly labelled: the exact algebra (gauge, transition prediction, parity/CRT decomposition) is verified and useful, and the failure is confined to global capture of a basin that demonstrably exists. Raising a blind local budget without a new global constraint is not control-qualified evidence.
+'''
+
+[[provenance]]
+path = "withmath/CONDI_EXACT_AUDIT.md"
+kind = "audit"
+note = "Log 203: transition-likelihood instrument, 12-unit gauge, strict optimum test (0/325 improving swaps), 0/4 controls."
+ref = "logs/203_condi_exact_20260831T200216Z.log"
+
+[[provenance]]
+path = "withmath/CONDI_GLOBAL_AUDIT.md"
+kind = "audit"
+note = "Log 208: Parseval L2 relaxation, gauge-aligned cycle crossover, Hungarian consensus, exhaustive three-cycles; 0/4."
+ref = "logs/208_condi_global_20260831T205807Z.log"
+
+[[provenance]]
+path = "withmath/CONDI_PARITY_AUDIT.md"
+kind = "audit"
+note = "Log 213: exhaustive C(26,13) parity stage, GF(13)/CRT lift; hidden mask ranks 91,895 / 19 / 874,906 / 2; 0/4."
+ref = "logs/213_condi_parity_20260831T220442Z.log"
+
+[[provenance]]
+path = "withmath/COLOSSUS_DYNAMIC_AUDIT.md"
+kind = "audit"
+note = "Log 186: external-engine Condi control 28/504, target locked."
+ref = "LOG186"
+
+[[references]]
+title = "The ACA and You"
+author = "American Cryptogram Association"
+year = 2005

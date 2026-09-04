@@ -1,0 +1,130 @@
+id = "coset-shift-recovery"
+section = "cryptanalysis"
+title = "Coset shift recovery"
+subtitle = "Fixing each coset's key element against a reference distribution: maximum likelihood, chi-square, marginalised evidence and class-EM"
+status = "VERIFIED"
+status_note = "Per-coset monogram maximum likelihood, chi-square fitting, shift-marginalised evidence, class-EM refinement and quadgram coordinate descent are implemented; on planted controls the evidence fit plus class-EM recovered 7/7 outer shifts, a 2.06-million-alphabet screen ranked the planted alphabet first by per-coset likelihood, and chi-square plus polish read a planted phrase-keyed text at 100% (logs/05, 24, 07)."
+family = "Period and structure recovery"
+tags = ["periodic", "shift", "monogram", "maximum likelihood", "chi-square", "evidence"]
+related = ["vigenere", "caesar-shift", "exact-period-alignment", "chi-squared-fit", "bayesian-evidence-model-selection", "quadgram-log-likelihood", "coordinate-descent", "expectation-maximisation", "conjugacy-and-gauge", "g-coset", "g-selection-freedom"]
+summary = "Once the period is known, each coset of a periodic additive cipher is a Caesar shift of the plaintext letters at those positions. Coset shift recovery reads the shift from the coset histogram against a reference distribution, by correlation, chi-square or likelihood, and, when the shifts are nuisance parameters of a larger model comparison, integrates them out rather than maximising them. The corpus treats the maximised shift as a vote whose reliability depends on coset length, and marginalises shifts whenever models are compared."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $F_b(x)$ be the histogram of coset $b$ (indices in the chosen alphabet order, $n_b$ letters) and $E$ the reference distribution of the plaintext language in the same order. Under an additive layer with key element $k_b$, the expected coset distribution is $E(x - k_b)$. Three estimators of $k_b$ are in use:
+
+- **Correlation**: $\hat k_b = \arg\max_k \sum_x E(x-k)\,F_b(x)$.
+- **Chi-square**: $\hat k_b = \arg\min_k \sum_x \frac{(F_b(x) - n_b E(x-k))^2}{n_b E(x-k)}$.
+- **Maximum likelihood**: $\hat k_b = \arg\max_k \sum_x F_b(x) \log E(x-k)$.
+
+The shifts recovered from relative alignment (see [Exact period alignment](/cryptanalysis/exact-period-alignment)) are determined only up to a common rotation; fitting against $E$ fixes that gauge. With a reciprocal relation ($c = k - p$) the argument $x - k$ becomes $k - x$.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Marginalised evidence and class-conditional refinement"
+body = '''
+When the shifts are nuisance parameters of a model comparison (which inner distribution $f$ produced the cosets?), the corpus integrates them out under a uniform prior instead of profiling them:
+
+$$Z_b(f) = \frac{1}{26} \sum_{k=0}^{25} \prod_x f(x-k)^{F_b(x)}, \qquad \log Z(f) = \sum_b \log Z_b(f).$$
+
+Profiling (taking $\max_k$ instead of the mean) buys about $0.15$ nats per letter of selection freedom at $n = 153$, enough to make a wrong inner model win on shuffled texts. The posterior over $k_b$ is $\propto \prod_x f(x-k)^{F_b(x)}$; its maximum is the MAP shift and the top few posterior shifts are carried as candidates.
+
+**Class-EM.** If the inner text is a mixture of classes (for example a period-2 inner substitution under a transposition) and every position has a predicted class $\gamma_i$, each coset's shift is re-estimated from the class-conditional likelihood $\sum_{i \in b} \log f_{\gamma_i}(x_i - k)$; on planted controls this corrected the one or two cosets the marginal fit had wrong (7/7 after EM, logs/05).
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The reference distribution is right: the plaintext language and the alphabet order in which the additive rule acts are both known. A wrong order gives shifts that fit at a diluted level and decrypt to nothing.
+- Each coset has enough letters: with $n/m$ letters per coset the argmax is reliable for English at about 20 or more letters and becomes a vote below that.
+- The layer is additive; for keyed alphabets on one or both sides the same estimators apply once the alphabet is hypothesised (as in a structured-alphabet screen).
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Fit each coset's shift by likelihood or chi-square against $E$ in the hypothesised order; or take the relative shifts from exact alignment and try the 26 absolute rotations.
+2. Decrypt and score with a language model (quadgrams); polish by coordinate descent over the $m$ shifts (each move re-scores the whole text), keeping a shuffled-text null for the polished rate, because free shifts overfit short texts.
+3. When comparing inner models, compute the marginalised evidence and read the shifts from the posterior of the winning model; refine by class-EM if the model assigns classes.
+4. Treat cosets whose posterior is spread over several shifts as ambiguous and carry the top candidates into later stages.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+$O(26\,m)$ fits per hypothesis; in a vectorised screen over $M$ candidate alphabets the per-coset likelihood table is one $M \times m \times 26$ contraction, so 2.06 million alphabets were screened in about 30 s per family and relation (logs/24). Quadgram coordinate descent over $m$ shifts costs $O(26\,m\,n)$ per sweep.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Selection freedom.** Profiling $m$ free shifts inflates the fit by about $0.15$ nats per letter at 153 letters; free sub-coset shifts (a period-$7m$ key read as $m$ varied copies of a 7-letter word) fitted to *shuffled* text reached quadgram rates of $-5.83$ to $-5.87$, so a target row at that level is noise (logs/27).
+- **Tautological flexibility.** A key modelled as any 7-letter dictionary word per block makes any text read like English: the planted control scored $-3.84$ with only 51% of its letters right, and shuffled text reached $-4.04$ (logs/40). A family that quadgrams cannot falsify needs its key set constrained first.
+- **Short cosets.** At zone lengths of 63 to 96 letters (9 to 14 letters per coset) the marginal fit alone is unreliable; the corpus relied on joint constraints (cribs, exact solvers) there.
+- **Diluted inner.** With a flat inner text the shifts are unrecoverable even though the alignment is visible.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+- Mixture pipeline (logs/05): evidence fit plus class-EM recovered all seven outer shifts on four planted sandwiches, which then solved at 100% plaintext match.
+- Structured-alphabet screen (logs/24): per-coset monogram maximum likelihood over 2,057,878 alphabets ranked the planted alphabet first at rate $-3.942$ against a shuffled-segment maximum of $-6.194$ on a 96-letter zone.
+- Chi-square fit followed by two quadgram sweeps and a polish (logs/07): the planted phrase-keyed control read at $-4.34$ with 100% match.
+- Varied-copy keys (logs/27): a planted key of four slightly different copies of a 7-letter word over 153 letters was read at 71% letter match (rate $-4.948$) from the alignment start; a three-copy reciprocal-relation control read at 100% ($-4.296$).
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Take the twelve plaintext letters of one coset, `ETAETEHEATEN`, and shift them by $k = 3$: the coset reads `HWDHWHKHDWHQ` with histogram H:5, W:3, D:2, K:1, Q:1. With approximate English frequencies (E $.127$, T $.091$, A $.082$, N $.067$, H $.061$, S $.063$, D $.043$, W $.024$, G $.020$, M $.024$, K $.008$, Q $.001$, Z $.001$) the correlation $\sum_x E(x-k)F(x)$ is
+
+```
+k = 0 : 0.47      k = 3 : 1.20      k = 4 : 0.45      k = 7 : 0.56
+```
+
+so $k = 3$ is read off, with H mapped back onto E. Relative to another coset with a different key element, the alignment step would already have given the difference of the two shifts; this step fixes the common rotation.
+'''
+
+[[provenance]]
+path = "withmath/wm_core.py"
+kind = "library"
+note = "fit_inner: shifts marginalised under a uniform prior, MAP shifts, per-coset posteriors; shift_candidates; the 0.15 nats/letter profiling remark."
+
+[[provenance]]
+path = "withmath/wm_mix.py"
+kind = "solver"
+note = "Class-EM refinement of the outer shifts from class-conditional likelihoods; four planted sandwiches solved at 100%."
+ref = "logs/05_mix.log"
+
+[[provenance]]
+path = "withmath/wm_pk9.py"
+kind = "solver"
+note = "Vectorised per-coset monogram maximum likelihood over a 2.06M-alphabet table; planted alphabet ranked first."
+ref = "logs/24_pk9_seg48.log"
+
+[[provenance]]
+path = "withmath/wm_phrase.py"
+kind = "solver"
+note = "Chi-square shift fit, two quadgram sweeps, polish; planted control 100%."
+ref = "logs/07_phrase.log"
+
+[[provenance]]
+path = "withmath/wm_var4.py"
+kind = "solver"
+note = "Quadgram coordinate descent over 7m sub-coset shifts with shuffled-text nulls; control matches and null band."
+ref = "logs/27_var4.log"
+
+[[provenance]]
+path = "withmath/logs/40_blocks7_dict.log"
+kind = "log"
+note = "Block-sequence keys from a 25k-word set: control -3.844 with 51% letters right; shuffled text -4.04."
+
+[[references]]
+title = "Military Cryptanalysis, Part II"
+author = "William F. Friedman"
+year = 1938

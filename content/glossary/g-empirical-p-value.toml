@@ -1,0 +1,10 @@
+id = "g-empirical-p-value"
+section = "glossary"
+title = "Empirical p-value"
+status = "VERIFIED"
+status_note = "Standard term; the strict rank-1-of-100 rule is its one-shot form."
+family = "Statistics"
+tags = ["rank", "permutation", "resolution"]
+related = ["permutation-test", "shuffled-null-z-score", "within-coset-null", "g-null-distribution"]
+summary = "The fraction of null draws whose statistic is at least as extreme as the observed one, computed with the observed value counted among the draws: p = (1 + number of nulls >= observed)/(N + 1). Its resolution is 1/(N + 1), so 99 nulls cannot certify below 0.01 and nine nulls cannot certify below 0.10; ties count against the observation. In the audited lanes a candidate is admitted only at strict rank 1 among 99 matched nulls, each null having been put through the complete selection, and the attainable p is printed in the terminal line of the transcript."
+updated = "2026-09-04"

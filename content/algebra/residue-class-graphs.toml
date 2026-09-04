@@ -1,0 +1,135 @@
+id = "residue-class-graphs"
+section = "algebra"
+title = "Residue-class graphs"
+subtitle = "Key residues as vertices, observed differences as edges, and potentials as the key-existence condition"
+status = "CLOSED"
+status_note = "The graph formulation is exact and its solver passed 4/4 planted controls with two clean negatives. The common-plaintext, common-cycle family with periods 26 and 7 (3,128 geometries) and the equal-period window family (132 cells) returned exact structural zeros on the target texts, closing those families in scope; the complete-bipartite period-7/period-9 lane has a designed control protocol and no target run."
+family = "Combinatorial constraints"
+tags = ["graph", "potential", "cycle space", "bipartite", "spanning tree", "components"]
+related = ["difference-operators", "lcm-of-periods", "finite-field-linear-algebra", "all-different-constraints", "dihedral-group", "key-cancellation", "segment-chain-analysis", "exact-chain-oracle", "g-residue-class", "g-invariant"]
+summary = "When two ciphertexts share a plaintext under independent periodic keys, the difference of their coordinates at each position equals a difference of two key values indexed by residue classes. Draw one vertex per residue class and one edge per position: the keys exist exactly when the observed differences are a potential difference on the graph, that is, when every cycle sums to zero. The cycle space gives an exact, key-free system of equations in the unknown alphabet, and the number of graph components gives the number of free key offsets."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let the left key have period $m$ and the right key period $q$, and let position $i$ carry residues $(r_i, g_i)$ and an observed difference $d_i$. Form the bipartite graph with vertex set $\mathbb{Z}_m \sqcup \mathbb{Z}_q$ and one edge $(r_i, g_i)$ per position labelled $d_i$. Keys $A, B$ with $d_i = A_{r_i} - \varepsilon B_{g_i}$ exist iff the labels are a **potential difference**: the signed sum around every cycle vanishes. With $E$ edges, $V$ vertices and $c$ components the cycle space has rank $E - V + c$; a spanning forest supplies potentials and every chord supplies one independent cycle equation. Adding a constant to all potentials on one side leaves every $d_i$ fixed (the potential gauge).
+'''
+
+[[blocks]]
+kind = "equations"
+body = '''
+- **Periods 26 and 7** (long source $X$, short source $Y$, one cycle $z$):
+$$d_i = z(X_i) + \varepsilon\, z(Y_i) = K_{26}[j_i \bmod 26] + \varepsilon K_7[h_i \bmod 7].$$
+Since $\gcd(26, 7) = 1$, for $n \ge 63$ the graph has 33 vertices, is connected, and has cycle rank $n - 32$. A closed-form basis is one winding equation $\sum_{i=0}^{6} d_i - \sum_{i=26}^{32} d_i = 0$ plus, for $q = 0..n-34$, $d_q - d_{q+7} - d_{q+26} + d_{q+33} = 0$.
+- **Periods 7 and 9 over 63 positions**: the graph is $K_{7,9}$ (16 vertices, 63 edges, cycle rank 48); a complete independent basis is the 48 rectangles $d_{(r,g)} - d_{(r,0)} - d_{(0,g)} + d_{(0,0)} = 0$ for $r = 1..6$, $g = 1..8$; the incidence matrix has rank 15 over both $\mathrm{GF}(2)$ and $\mathrm{GF}(13)$ and the rectangle rows rank 48.
+- **Equal periods** ($m = q = 7$): the graph is a matching plus multi-edges, so the condition reduces to $z(L_i) - \varepsilon z(R_i)$ being constant within each residue; subtracting the first equation of each residue removes $h$.
+- **Dihedral key graph**: 21 vertices $(t, r)$, 96 edges $(0, j \bmod 7) - (t, g_t(j) \bmod 7)$, $c$ components, $75 + c$ equations and $c$ free key offsets.
+
+With $z$ unknown, each cycle equation is a homogeneous linear row in the 25 free cycle coordinates.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- Additive keys periodic in their own physical index; alignment (offset, orientation) is enumerated as family cells since it changes which residues meet.
+- One shared cycle; with two different cycles the differences are not linear in one unknown.
+- The plaintext cancels only when it is literally common (or, in chains, when it is the key of the other text).
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+1. For each geometry (offset, orientation, sign) build the edge set and its cycle basis.
+2. Substitute the unknown coordinates: rows over $\mathrm{GF}(2)$ and $\mathrm{GF}(13)$ with the gauge $z(A) = 0$; keep balanced $\mathrm{GF}(2)$ vectors (exactly thirteen odd positions) and $\mathrm{GF}(13)$ vectors with every residue twice; CRT-lift; keep permutations; quotient the 12 units.
+3. Recover node potentials with $K[0] = 0$, decrypt through the inverse cycle, forward both sources and every derived edge independently.
+4. A complete zero over all geometries is a structural negative needing no language model; any survivor is only a family member until a separately frozen selector and matched nulls exist.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Periods 26/7: 3,128 signless geometries across four pairings (704, 884, 722, 818), 6,256 arbitrary-cycle cells and 12,512 fixed-alphabet cells; a full control scan took 5.85 s at 44 MB. Period 7/9 lane: 132 cells (33 window starts, 2 orientations, 2 signs), each a $48 \times 25$ matrix. Dihedral: 9,216 pairs with the component census $\{1: 8852, 2: 120, 3: 96, 4: 72, 5: 48, 6: 24, 7: 4\}$.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- Singleton fibres contribute no equation; 52 of the 96 dihedral elements lose at least one, so null spaces grow and solution sets must not be capped silently.
+- The potential gauge yields 26 plaintext/key completions per structural class; they are one class, not 26 hits.
+- Forward and reverse alignments have identical topology but different edge labels and cannot be merged before literal expansion.
+- Caps, oversized null spaces or process-census drift must return INCOMPLETE, never zero; one target successor was re-sealed after an audit found a launcher-census defect, without changing the cipher logic.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Periods 26/7: static KAT proved the closed-form basis equals a spanning-tree fundamental-cycle basis in full row space and rank over both fields for 24 topology cases; four positives (153, 63, 144, 96 letters; free and nested-period-13 keys; both orientations and signs) recovered the exact cycle, both keys and plaintext, each with one exact affine class; the wrong-period 26/9 negative and the within-residue shuffle negative gave zero classes over 704 and 884 geometries. Target production: zero balanced $\mathrm{GF}(2)$ solutions in every geometry and zero fixed-alphabet hits, terminal `STRUCTURAL-ZERO FAMILY=COMMON-CYCLE-P26-P7 REJECTED`. Equal-period 132-cell family: four hidden controls exact, 1.484 s; the target scan returned an exact structural zero. Dihedral: see [Dihedral group](/algebra/dihedral-group).
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+$K_{2,3}$ with left potentials $A = (0, 5)$ and right potentials $B = (1, 2, 3)$, $\varepsilon = +1$, edge labels $d_{(r,g)} = A_r - B_g \pmod{26}$:
+$$d = \begin{pmatrix} 25 & 24 & 23 \\ 4 & 3 & 2 \end{pmatrix}.$$
+Cycle rank $6 - 5 + 1 = 2$, with basis rectangles $d_{(1,1)} - d_{(1,0)} - d_{(0,1)} + d_{(0,0)} = 3 - 4 - 24 + 25 = 0$ and $d_{(1,2)} - d_{(1,0)} - d_{(0,2)} + d_{(0,0)} = 2 - 4 - 23 + 25 = 0$: potentials exist. Changing $d_{(1,2)}$ to 5 makes the second sum 3, so no keys exist for that labelling. Adding 7 to both $A$ and $B$ leaves every $d$ unchanged (potential gauge).
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The formulation turns "do two periodic keys explain these differences" into a linear condition whose failure is exact and language-free; see [Difference operators](/algebra/difference-operators) for where the differences come from and [lcm of periods](/algebra/lcm-of-periods) for why coprime periods give complete graphs.
+'''
+
+[[provenance]]
+path = "withmath/MIXEDPERIOD_GRAPH282_CONTROL_AUDIT.md"
+kind = "audit"
+note = "Edge equation d_i = K26 + epsilon K7, 33-vertex connected graph, cycle rank n - 32, winding plus four-term basis, 24 topology KATs, four positives, two negatives, caps as INCOMPLETE, 5.85 s / 44 MB."
+ref = "logs/282_mixedperiod_graph_controls.log"
+
+[[provenance]]
+path = "withmath/MIXEDPERIOD_GRAPH292_TARGET_AUDIT.md"
+kind = "audit"
+note = "Target successor: 3,128 geometries, 6,256 arbitrary-cycle and 12,512 fixed cells; launcher-census correction without cipher-logic change."
+
+[[provenance]]
+path = "withmath/logs/292_mixedperiod_graph_target.log"
+kind = "log"
+note = "RESULT STRUCTURAL-ZERO FAMILY=COMMON-CYCLE-P26-P7 REJECTED TARGET; method line: winding + rectangles, GF2 weight 13 -> GF13 two-each -> CRT AllDifferent, gauge z(A) = 0, K26[0] = 0."
+ref = "LOG292"
+
+[[provenance]]
+path = "withmath/PK89_MIXED_P7_P9_RESIDUE_GRAPH_REVIEW.md"
+kind = "design"
+note = "K_(7,9): 16 vertices, 63 edges, cycle rank 48, 48 rectangles, incidence rank 15; 132-cell controls-first protocol; potential gauge gives 26 completions."
+
+[[provenance]]
+path = "withmath/PK89_COMMONPLAIN_INVARIANT_CONTROL_AUDIT.md"
+kind = "audit"
+note = "Equal-period 132-cell family: subtracting the first equation per residue removes h; four hidden controls exact in 1.484 s."
+
+[[provenance]]
+path = "withmath/PK89_SHARED_STREAM_COUPLING375_DESIGN.md"
+kind = "design"
+note = "Coverage table: equal-period common-plaintext windows, retry-1 invariant, exact STRUCTURAL_ZERO over 132 cells."
+
+[[provenance]]
+path = "withmath/PK9_POSDIHEDRAL_D48_INDEPENDENT_REVIEW_CLAUDE.md"
+kind = "audit"
+note = "21-vertex key graph, components = free key dimension, singleton-fibre census (52 of 96 elements)."
+
+[[provenance]]
+path = "withmath/logs/pk89_commonplain_invariant_target_retry1.log"
+kind = "log"
+note = "Equal-period 132-cell family on the target texts: SELECTED-FAMILY NEGATIVE reason=STRUCTURAL_ZERO."
+
+[[references]]
+title = "Graph Theory"
+author = "J. A. Bondy and U. S. R. Murty"
+year = 2008
+
+[[references]]
+title = "Algebraic Graph Theory"
+author = "Norman Biggs"
+year = 1993

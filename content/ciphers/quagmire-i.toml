@@ -1,0 +1,127 @@
+id = "quagmire-i"
+section = "ciphers"
+title = "Quagmire I"
+subtitle = "Periodic shifts between a keyed plaintext alphabet and a straight ciphertext alphabet"
+status = "VERIFIED"
+status_note = "The crib-driven alphabet solver recovered planted Quagmire I ciphers (random alphabet, random shifts, 153 letters) in 3/3 seeds at every crib length from 7 to 25 letters; the phrase-keyed bank search recovers its planted control at 100%."
+family = "Polyalphabetic substitution"
+tags = ["periodic", "keyed alphabet", "polyalphabetic", "quagmire"]
+related = ["vigenere", "keyword-mixed-alphabet", "quagmire-ii", "quagmire-iii", "quagmire-iv", "crib-driven-alphabet-recovery", "phrase-keyed-alphabet-attack", "simulated-annealing", "quagmire-lab", "g-keyed-alphabet"]
+summary = "Quagmire I is a Vigenère whose plaintext alphabet is a mixed alphabet while the ciphertext alphabet stays straight. The coset structure of the plain Vigenère survives, so the period is found the same way, but each coset's histogram is a rotation of a permuted reference. With a crib of seven or more contiguous letters the shifts are determined and only the alphabet remains, which a batched annealer recovers reliably at 153 letters."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $P$ be a mixed plaintext alphabet and $C$ the straight alphabet, with $\operatorname{pos}_P$ and $\operatorname{pos}_C$ their index maps. With shifts $k = (k_0, \dots, k_{m-1})$,
+
+$$\operatorname{pos}_C(c_i) \equiv \operatorname{pos}_P(p_i) + k_{i \bmod m} \pmod{26}.$$
+
+In the classical presentation the shifts are given by a key word read against an indicator letter; the program treats them as free integers, which contains every word key.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "What a crib determines"
+body = '''
+A crib letter $p$ known at position $i$ in coset $b$ fixes $k_b = \operatorname{pos}_C(c_i) - \operatorname{pos}_P(p)$ for whatever alphabet $P$ is being tried. A contiguous crib of length at least $m$ therefore removes all $m$ shifts from the search; surplus crib letters in a coset vote for $k_b$ and dissenters are penalised. What remains is one unknown alphabet. Reversing $P$ turns a Beaufort relation into a Vigenère one, so the sign is not a separate parameter in this family. Because the ciphertext alphabet is known, a Quagmire I in a fixed order shows the ordinary period alignment in that order's index space, whereas a Quagmire II does not.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- [Quagmire II](/ciphers/quagmire-ii): straight plaintext alphabet, mixed ciphertext alphabet.
+- [Quagmire III](/ciphers/quagmire-iii): the same mixed alphabet on both sides.
+- [Quagmire IV](/ciphers/quagmire-iv): two different mixed alphabets.
+- **Structured alphabets**: keyword, phrase, text-keyed and two-keyword alphabets make the search a bank lookup; see [Keyword-mixed alphabet](/ciphers/keyword-mixed-alphabet).
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Periodic shifts and a single alphabet for the whole text.
+- Invariant: each coset is a simple substitution of the plaintext letters at those positions, so within-coset equalities $c_i = c_j \Leftrightarrow p_i = p_j$ hold regardless of the alphabet.
+- A blind (crib-free) search over an unstructured alphabet is not assumed to work; see the failure modes.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Recover the period from coincidences or the exact alignment objective.
+2. **Structured alphabet**: try every keyed alphabet in the bank, fit the shifts by chi-square and quadgram sweeps, rank by quadgram rate.
+3. **Crib**: for every crib and offset, derive the shifts from the crib votes and anneal the alphabet with a batched simulated annealer (swap and insertion moves, quadgram objective on the whole decrypt), then polish over all 925 swap/insertion neighbours and re-anneal the top placements (see [Crib-driven alphabet recovery](/cryptanalysis/crib-driven-alphabet-recovery)).
+4. A hit reads as English end to end (rate near $-4.3$); wrong placements stay at the $-6$ null.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Bank search: one decrypt per alphabet; 202,504 phrase-keyed alphabets in about ten minutes on twelve cores. Crib attack: every crib, offset, relation and restart is one annealing chain; the production sweep of 6,701 placements per text with 16 restarts of 40,000 steps took about six hours on twelve cores for two texts and four families.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **No crib, unstructured alphabet.** Blind annealing over the alphabet does not reach the basin at 153 letters; see [Quagmire III](/ciphers/quagmire-iii) for the measurements.
+- **Wrong crib or offset.** Wrong placements converge to alternative alphabets with rates around $-5.6$ to $-6.1$ that never read; the sweep must compare against that wrong-placement null rather than a fixed threshold.
+- **Key change inside the text.** A text whose shifts change part way through breaks the per-coset votes; the program handled this by fitting zones separately.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Crib calibration on planted ciphers (random alphabet, random shifts, real English, true crib at its offset): Quagmire I with a known straight or keyword-mixed ciphertext alphabet solved 3/3 seeds at crib lengths 7, 9, 11, 13, 16, 20 and 25, with 9 to 16 of 16 restarts reading English and 100% match, while wrong placements averaged $-6.06 \pm 0.21$ (logs/22_crib_smoke.log). On the two live texts, 6,701 placements each (46 cribs at every offset plus 66 opening cribs) gave best rates $-5.70$ to $-5.83$ and $-5.53$ to $-5.68$, at the wrong-placement null (logs/23_crib_pk8_pk9.log).
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Plaintext alphabet keyed by `ZEBRAS` ($P$ = `ZEBRASCDFGHIJKLMNOPQTUVWXY`), ciphertext alphabet straight, shifts $(3, 7, 12)$. Plaintext `QUAGMIRE`:
+
+```
+plain    Q   U   A   G   M   I   R   E
+pos_P   19  21   4   9  15  11   3   1
+shift    3   7  12   3   7  12   3   7
+sum     22  28  16  12  22  23   6   8
+cipher   W   C   Q   M   W   X   G   I
+```
+
+Check position 1: U is letter 21 of $P$; $21 + 7 = 28 \equiv 2 = C$ in the straight alphabet. Ciphertext `WCQMWXGI`.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The program regarded Quagmire I with a known ciphertext order as the principled reading of a text whose cosets align in that order's index space; the crib sweep excluded it for both short ciphertexts for every crib in a 112-word bank, which is a strong scoped negative because 3/3 seeds solved at every crib length.
+'''
+
+[[provenance]]
+path = "withmath/wm_crib.py"
+kind = "solver"
+note = "Crib attack on period-7 Quagmire I/II/III with an unknown alphabet: batched annealing, 925-neighbour polish, refine pass; calibration table."
+ref = "logs/22_crib_smoke.log"
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Round 4 results: q1K solved 3/3 seeds at every crib length >= 7; both live texts negative for q1K/q1S/q2K/q2S."
+ref = "logs/23_crib_pk8_pk9.log"
+
+[[provenance]]
+path = "withmath/wm_phrase.py"
+kind = "solver"
+note = "Quagmire I/II/III under phrase-keyed alphabets; control 100%."
+ref = "logs/07_phrase.log"
+
+[[provenance]]
+path = "ck_lib.py"
+kind = "library"
+note = "Keyed class and solve_periodic: periodic Quagmire decryption in keyed alphabets with quadgram annealing of shifts."
+
+[[references]]
+title = "The ACA and You"
+author = "American Cryptogram Association"
+year = 2005

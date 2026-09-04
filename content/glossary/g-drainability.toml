@@ -1,0 +1,10 @@
+id = "g-drainability"
+section = "glossary"
+title = "Drainability"
+status = "VERIFIED"
+status_note = "Term used in the corpus's throughput ledger; the numbers cited are from its power panel."
+family = "Exactness guarantees"
+tags = ["throughput", "coverage", "power"]
+related = ["rank-sharding", "drainability-and-throughput", "throughput-fail", "power-measurement", "g-shard"]
+summary = "Whether an exact search frontier can be processed to completion within the declared compute. With tasks in a deterministic order and a truth placed uniformly, the probability of recovery under a time cap equals the covered fraction of the frontier: a frontier of 1,706,348 pairs at 0.148 pairs per second covers 0.75% in 24 hours and would take about 134 days to drain. A non-drainable family yields scoped-inconclusive results, never negatives; a drained shard yields exact ones."
+updated = "2026-09-04"

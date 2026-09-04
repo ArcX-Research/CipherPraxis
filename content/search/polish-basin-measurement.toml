@@ -1,0 +1,112 @@
+id = "polish-basin-measurement"
+section = "search"
+title = "Polish-basin measurement"
+subtitle = "Measuring how far from the truth a deterministic polish still recovers it, to decide whether a search failure is budget or landscape"
+status = "VERIFIED"
+status_note = "The protocol was run on planted two-sided unknown-alphabet instances: starting d swaps from the truth with shifts refit per move and two-swap moves allowed, recovery was 3/4 at d=3 and 0/4 at d>=5 (joint 63+96: 1/4 at d=3-5), while the search's best states sat about ten swaps away; a crib widened the basin to three swaps (13 letters) or six (25 letters)."
+family = "Stochastic local search"
+tags = ["basin of attraction", "calibration", "landscape", "swap distance", "power"]
+related = ["hill-climbing", "simulated-annealing", "parallel-tempering", "coordinate-descent", "quagmire-iii", "power-measurement", "planted-controls", "tautological-gate-rule", "g-search-basin", "g-move-set"]
+summary = "A polish-basin measurement plants a known key, perturbs it by d random moves, runs the deterministic polish that production uses, and records for each d whether the truth is recovered. The largest d with reliable recovery is the basin radius. Compared with the distance at which the global search's best states end up, it says whether more budget could ever help: if the search plateaus outside the basin, the landscape, not the budget, is the obstacle, and the honest next step is an exact method."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+```
+plant: random alphabet A*, random shifts k*, real text of the target length; c <- encrypt
+for d in {1, 2, 3, 5, 8, ...}:
+    for r in 1 .. R:
+        A <- A* with d random swaps (or insertions) applied
+        k <- shifts refit exactly for A (as production does)
+        (A', k') <- polish(A, k)                # the production finisher, unchanged
+        recovered[d] += [A' == A* up to gauge]
+report recovered[d] / R for every d
+compare: distance from the truth of the search's best states (e.g. % of alphabet positions right)
+```
+
+The "distance" is the move count of the polish's own neighbourhood (swaps and insertions), so the measurement is stated in the units the polish can traverse.
+'''
+
+[[blocks]]
+kind = "equations"
+body = '''
+Basin radius $\rho = \max\{d : \text{recovery}(d) \ge \tau\}$ for a chosen reliability $\tau$. With alphabet match fraction $f$ reported by a search, the swap distance is roughly $(1 - f) \cdot 26 / 2$; a 40% match is about eight to ten swaps. The verdict rule: if $\text{dist}(\text{search best}) > \rho$ for every tested budget, the search is landscape-limited.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The polish used in the measurement is byte-identical to the production finisher, including any per-move refit of free parameters; a stronger polish in the measurement than in production overstates the basin.
+- Perturbations are random over the move set; adversarial perturbations give a smaller radius.
+- Recovery is judged up to the model's gauge (here rotations of the alphabet absorbed by the shifts).
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Use in an attack programme"
+body = '''
+The measurement was run after batch annealing and parallel tempering plateaued on a two-sided unknown alphabet. It showed that the truth's basin is at most three swaps wide even when the polish refits all shifts for every candidate move and tries two-swap moves, while the annealers' best states matched about 40% of the alphabet, about ten swaps away. The same instrument applied to the crib-pinned variant showed the crib widening the basin only to three swaps for a 13-letter crib and six for a 25-letter crib, which is why the crib-anneal solves one-sided alphabets and not the two-sided one. On that evidence the programme stopped adding chains and moved to exact constraint methods.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+$R$ polishes per $d$, each a few dozen batch-scored neighbourhood sweeps; the whole measurement costs less than one production anneal.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Confusing separation with reachability.** On a chained construction the truth scored $-10.01$ per letter against $-12.71$ one swap away and $-16.57$ for random states, yet swap annealing over 12 restarts of 40,000 iterations plateaued at a total of $-2101$ against the truth's $-1477$. A well-separated optimum can still have a tiny basin.
+- **Too few replicates.** Four replicates per $d$ give a coarse radius; the recorded numbers (3/4, 0/4, 1/4) are enough to separate "three swaps" from "ten swaps" but not to estimate a probability.
+- **Wrong distance metric.** Reporting percent match instead of move distance hides that a few swaps can move many positions.
+- **Basin measured on the wrong objective.** A degenerate objective (coincidence maximisation) has a huge basin around a wrong state; the measurement must use the production objective.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Planted 96-letter and joint 63+96-letter two-sided instances with random alphabets and shifts: recovery 3/4 at $d = 3$, 0/4 at $d \ge 5$; joint 1/4 at $d = 3$-$5$. Earlier calibration on 153 letters: from two swaps away steepest ascent and cold annealing read $-6.1$ and cannot get back; 0 of 24 random restarts across four schedules reach the basin. Search plateau on the same instances: 29-42% of the alphabet.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+A one-dimensional landscape over states $0..10$ with objective $f = (1, 2, 3, 4, 5, 4, 3, 2, 6, 7, 8)$ and truth at state $10$ ($f = 8$). Greedy ascent moves to the better neighbour.
+
+- From $9$: $f(10) = 8 > 7$, recover.
+- From $7$ ($f = 2$): neighbours $f(6) = 3$, $f(8) = 6$; go to $8$, then $9$, then $10$: recover.
+- From $6$ ($f = 3$): neighbours $f(5) = 4$, $f(7) = 2$; go to $5$, then $4$ ($f = 5$), stop: local optimum, no recovery.
+
+The basin of the truth is $\{7, 8, 9, 10\}$, radius $3$. A search whose best states land at $4$ or $5$ (well separated, only two steps from the basin edge) will never finish, however many restarts it is given, unless its moves can jump three positions.
+'''
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Polish basin on planted 96 / 63+96: recovery 3/4 at d=3, 0/4 at d>=5 (joint 1/4 at d=3-5) with shifts refit per move and two-swap moves; annealer best ~40% match ~10 swaps away; search plateau 29-42%."
+
+[[provenance]]
+path = "withmath/wm_q3joint.py"
+kind = "solver"
+note = "The production polish measured: alternating exact shift descent and 925-neighbour alphabet climb."
+
+[[provenance]]
+path = "withmath/wm_crib.py"
+kind = "solver"
+note = "Crib widens the polish basin only to 3 swaps (13-letter crib) / 6 swaps (25-letter crib) because the alphabet acts twice."
+
+[[provenance]]
+path = "withmath/wm_q3.py"
+kind = "solver"
+note = "153-letter calibration: from two swaps away steepest ascent and cold annealing read -6.1 and cannot return; 0 of 24 restarts across four schedules."
+ref = "logs/08_q3.log"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Separation without reachability on a chained construction: true -10.01 vs one swap -12.71 vs random -16.57 (33 sd), annealing plateau -2101 vs truth -1477 over 12 restarts x 40,000 iterations."
+ref = "LOG409b"

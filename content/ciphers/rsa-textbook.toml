@@ -1,0 +1,128 @@
+id = "rsa-textbook"
+section = "ciphers"
+title = "Textbook RSA on letter blocks"
+subtitle = "Modular exponentiation of fixed-width base-26 blocks with a small modulus"
+status = "CLOSED"
+status_note = "Every distinct-prime semiprime and every squarefree multi-prime modulus below 26^b at widths 2-3, with every invertible exponent and every fixed column-subset payload, was enumerated with exact planted-control recovery and literal modular replay; widths 2-4 with an exponent bank and a width-9 word-factor family were likewise negative, and two short hits were rejected by selection-matched nulls (p = .70 and 1.00)."
+family = "Modern and encoding schemes"
+tags = ["rsa", "modular exponentiation", "block", "base 26", "semiprime"]
+related = ["hill-cipher", "caesar-shift", "modular-inverse-and-crt", "units-mod-26", "exhaustive-enumeration", "family-wise-null", "selection-overfit-diagnostic", "g-polygraphic"]
+summary = "Textbook RSA raises a message block to a public exponent modulo a product of primes. Applied to letters, each b-letter block becomes a base-26 integer below 26^b, so the modulus must also be below 26^b for the ciphertext to fit in b letters. That constraint makes small-width RSA a finite family: the program enumerated every admissible modulus and exponent class at widths 2 and 3, every bank exponent at width 4, and a word-structured prime family at width 9, all under a mandatory modular-power replay."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Serialise a block of $b$ letters in digit order $O$ (straight or keyword-mixed) and orientation $e(r)$ (most- or least-significant first):
+
+$$X_j = \sum_{r=0}^{b-1} O(x_{jb+r})\, 26^{e(r)}, \qquad C_j \equiv P_j^{E} \pmod N, \qquad P_j \equiv C_j^{D} \pmod N,$$
+
+with $ED \equiv 1 \pmod{\lambda(N)}$, where $\lambda$ is the Carmichael function. Because $C_j < N < 26^b$, the ciphertext block is decoded back to $b$ letters by the same serialisation.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Admissible moduli and exponent classes"
+body = '''
+The observed maximum ciphertext block $c_{\max}$ satisfies $c_{\max} < N < 26^b$, which leaves a narrow interval of moduli. Enumerating every distinct-prime semiprime $N = pq$ in that interval (and every squarefree $N$ with three or more prime factors) covers all standard RSA moduli of that size; prime powers are excluded because exponentiation is not a permutation modulo $p^k$. For the exponent, enumerating every unit class $D \in (\mathbb{Z}/\lambda(N))^{\times}$ covers both naming directions at once, since inversion permutes the group. Padding is modelled as a subset of block columns: either every omitted column is constant across blocks (deterministic pad) or the omitted columns are unconstrained (erasure), and every non-empty payload subset is scored.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Unpadded fixed width** $b = 2, 3, 4$ with a classic exponent bank $\{3, 5, 17, 257, 65537\}$, then all odd exponents up to 257.
+- **Deterministic fixed-column padding** and **unconstrained erased columns**.
+- **All unit exponents** at $b = 2, 3$ (exact); **multi-prime** squarefree moduli at $b = 2, 3$.
+- **Width 9 with word-valued primes**: $N = pq < 26^9$ with $p, q$ the base-26 values of generic English words of 3-6 letters; 17 contiguous payload masks.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Fixed-width serialisation in one of four cells; a modulus bounded by the block width.
+- Invariant: a literal modular-power replay must reproduce every ciphertext block, which is the gate a language score can never replace.
+- Invariant: any block cipher of width above 1 mixes every plaintext letter of a block into every ciphertext letter, so within-class equalities $c_i = c_j \Leftrightarrow p_i = p_j$ that the corpus texts exhibit are incompatible with it; width-1 RSA ($N < 26$) is a monoalphabetic substitution.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Read $c_{\max}$ from the serialised ciphertext in each cell; enumerate every admissible $N$ (sieve, then products).
+2. For each $N$ and exponent class decrypt every block; score each payload subset by quadgrams.
+3. Keep the top candidates, verify by independent decryption and literal replay, and compare with an out-of-sample English threshold; any crossing requires a selection-matched null that permutes whole ciphertext blocks and reruns the complete selector.
+4. Gate on planted controls that recover the exact modulus, factors, exponent, mask and plaintext before any live text is loaded.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Width 3 with all unit exponents: 1,348,830 exponent maps and 14,618,198 payload scores for two-prime moduli; 4,214 multi-prime moduli (3,267 three-factor, 881 four-factor, 66 five-factor) with 360,512 maps. Width 4 with the expanded bank and erasure: 1,653,009 exponent pairs and 50,429,456 projections; the full unit group at width 4 (about $1.02 \times 10^9$ maps) was refused as intractable and not identifiable at four-letter blocks. Width 9 word factors: 648,896 moduli and 4,799,164 maps on the blind gate.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Short hits are selection noise.** The width-9 family produced two 16-letter and two 17-letter English-looking prefixes/suffixes; under 19 block-order permutations 13 of 19 (and 19 of 19) nulls scored at least as well, giving $p = 0.70$ and $p = 1.00$.
+- **Erased columns impose no forward constraint**, so replay is necessary but not sufficient there; an English threshold and a matched null are required.
+- **Scope.** Width 4 is only bank-complete; widths 5-8, 10 and above, non-word primes at width 9, variable-width serialisation, non-fixed pad positions and an external modulus remain open in principle, and none is both tractable and identifiable.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Every lane recovered its exact planted modulus, exponent pair, serialisation and plaintext with replay before release: widths 2-4 (log 478), deterministic padding (log 479, live structural admission count zero in every width and group), erasure (log 480), all unit exponents (log 481), multi-prime (log 482), and the width-9 word-factor lane (log 483), whose blind gate recovered a cross-convention plant with a 13-digit modulus and its two word factors. All live outcomes were negative; the two short width-9 hits were rejected by logs 484 and 485 as above. An independent read-only audit certified the closures.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Width $b = 2$, $N = 667 = 23 \times 29$, $\lambda(N) = \operatorname{lcm}(22, 28) = 308$, $E = 3$, $D = 103$ (since $3 \times 103 = 309 \equiv 1 \pmod{308}$). Block `HI` in straight order, most significant first: $X = 7 \times 26 + 8 = 190$.
+
+$$C = 190^3 \bmod 667 = 6{,}859{,}000 - 10{,}283 \times 667 = 239, \qquad 239 = 9 \times 26 + 5 \to \texttt{JF}.$$
+
+Decryption: $239^{103} \bmod 667 = 190 \to$ `HI`. A second block `YO` $= 638 < 667$ encrypts to $290 \to$ `LE`.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The RSA lanes are the corpus's demonstration that a "modern" cipher on a classical alphabet becomes a finite classical-style enumeration once the serialisation is fixed, and that language-scored short hits inside a million-map search need a selection-matched null before they mean anything.
+'''
+
+[[provenance]]
+path = "withmath/wm_smallrsa478.py"
+kind = "solver"
+note = "Fixed-width small RSA screen: semiprime enumeration below 26^b, exponent bank in both roles, planted controls, literal replay."
+ref = "logs/478b_smallrsa_odd257_live_20260903T195259Z.log"
+
+[[provenance]]
+path = "withmath/wm_rsaallexp481.py"
+kind = "solver"
+note = "Every unit exponent class modulo lambda(N) at widths 2-3 with all payload masks."
+ref = "logs/481_rsaallexp_w23_live_20260903T203015Z.log"
+
+[[provenance]]
+path = "withmath/wm_rsamultiprime482.py"
+kind = "solver"
+note = "Squarefree multi-prime moduli with all unit exponents at widths 2-3."
+ref = "logs/482_rsamultiprime_w23_live_20260903T204648Z.log"
+
+[[provenance]]
+path = "withmath/wm_rsaword9_483.py"
+kind = "solver"
+note = "Width-9 RSA with word-valued prime factors; blind cross-convention plant; two short hits."
+ref = "logs/483_rsaword9_20260903T222842Z.log"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "LOG478-482 terminal, LOG483 terminal, LOG484-485 selection-matched nulls (p = .70 and 1.00), RSA-family gap table."
+ref = "LOG485"
+
+[[references]]
+title = "A Method for Obtaining Digital Signatures and Public-Key Cryptosystems"
+author = "R. L. Rivest, A. Shamir, L. Adleman"
+year = 1978

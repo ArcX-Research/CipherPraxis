@@ -1,0 +1,109 @@
+id = "target-absent-controls"
+section = "validation"
+title = "Target-absent controls"
+subtitle = "Designing, sealing and auditing an instrument with no code path that can read the live text"
+status = "VERIFIED"
+status_note = "Every sealed control lane in the research program carries a target=ABSENT field in its manifest and transcript, an import allow-list KAT, a forbidden-string scan and refusal of any target mode; independent auditors verified the isolation transitively through the import chain."
+family = "Control design"
+tags = ["controls", "isolation", "leakage", "sealing"]
+related = ["planted-controls", "blind-controls", "seal-and-audit-protocol", "build-manifests-and-release-json", "kat-harness", "held-out-gates", "assumption-review-protocol", "g-target-absent"]
+summary = "A target-absent control lane is an instrument that is written, tested, sealed and independently audited while it is physically unable to load the live ciphertext: no loader import, no ciphertext constant, no target command-line mode. Its controls are therefore free of any tuning on the target, its power numbers can be published before the target is ever read, and a later one-shot target run inherits a validated selector rather than one shaped by peeking."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+A lane is **target-absent** when all of the following hold on its exact frozen bytes:
+
+- the source's import set equals a declared allow-list (numpy, the standard library and named frozen predecessors) and contains no module that can load a live text;
+- the source, parser and runner contain no long uppercase literal (the program scans for `[A-Z]` runs of length 30 or 40 and above) and none of the loader names or file tokens through which a target could arrive;
+- the runner refuses `--target`, `--live`, `--solve` and any production basename;
+- the transcript, manifest and release records carry the literal field `target = "ABSENT"`.
+
+Independent audits check these properties **transitively**: a lane that imports a frozen predecessor inherits the predecessor's isolation only if the predecessor was audited to the same standard.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- Generic corpus material and previously recorded measurements may enter; the live ciphertext may not. The program allows target-derived *constants* (a boundary position measured earlier, an alphabet order) but records them as oracle-supplied parameters that the controls never search over.
+- Isolation is a property of bytes, not of intent. The audit rehashes the files and reads the imports rather than trusting the creator's note.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "What isolation buys"
+body = '''
+1. **No target-conditioned tuning.** Thresholds, restart schedules and beam widths are frozen from disclosed calibration before any target read, so a later readable output cannot be an artefact of tuning until something looked like English.
+2. **Publishable power.** Because nothing secret entered, the control transcript, its seeds and its fixtures can be replayed by anyone.
+3. **A clean handover.** The one-shot target successor is a separate, separately audited artefact that pins the target-absent lane by hash. The target is read exactly once, after a durable attempt marker is written (see [Blind controls](/validation/blind-controls)).
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Isolation costs engineering time, not compute: an allow-list KAT, a forbidden-string scan and refusal probes are a few hundred lines, and the audits add a day per lane. It also constrains design: parameters that would normally be read from the target must either be searched (which costs power) or be declared as oracle inputs whose absence from the control's search is recorded as a coverage hole.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Accidental exposure.** A broad metadata search displayed archived target fields to a reviewer; the review recorded that it could no longer claim strict blind isolation and could not itself authorise a later target run.
+- **Oracle parameters hidden in "controls".** Plants generated with the target-measured boundary and period never test the selector's behaviour when those are wrong; the program's audit lists such parameters explicitly and marks the corresponding power as within-family only.
+- **A transcript that must carry the target.** A one-shot target transcript needs the ciphertext for loader-free replay; the program flags that such a file will trip other lanes' forbidden-string scans and says so in its note.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The isolation KAT is itself a control: it must reject a copy of the source with a loader import added, and a copy with a 40-letter uppercase literal inserted. The program's static KATs report these as counted refusals (for one lane, seven split fragments rejected in source, parser and runner).
+'''
+
+[[blocks]]
+kind = "example"
+title = "Isolation checklist"
+body = '''
+```
+[ ] imports == allow-list (ast scan)                      PASS
+[ ] no [A-Z]{40,} literal in source/parser/runner         PASS
+[ ] no loader module name, no target file token           PASS
+[ ] runner refuses --target/--live/--solve (rc 2)         PASS 3/3
+[ ] manifest.target == "ABSENT"                           PASS
+[ ] transitive: predecessors audited to same standard     PASS (chain of 3)
+```
+'''
+
+[[provenance]]
+path = "withmath/PK98_SEGCHAIN_A1S0_CONTROL366_DESIGN.md"
+kind = "design"
+note = "Section 10: a target loader/import is forbidden in the controls lane; even after a control PASS any target experiment requires a separately predeclared, sealed and audited successor."
+
+[[provenance]]
+path = "withmath/PK10_ALBERTI_ACCEL13_VALIDATION381_INDEPENDENT_AUDIT389.md"
+kind = "audit"
+note = "Target isolation verified transitively across three linked modules: zero loader imports, zero target file references, zero A-Z literals of length 30 or more; runner refuses --target, --live, --solve."
+ref = "LOG389"
+
+[[provenance]]
+path = "withmath/PK9_STRUCTURED_P7_CHAIN383_INDEPENDENT_AUDIT391.md"
+kind = "audit"
+note = "Zero loader imports and zero A-Z literals of length 40 or more in source and parser; refusal KAT guards five reserved names."
+ref = "LOG391"
+
+[[provenance]]
+path = "withmath/SEGCHAIN_CONTROL_MISMATCH399_AUDIT.md"
+kind = "audit"
+note = "Finding D5: oracle-supplied parameters (boundary, period, orders, signs) that plants receive from the target measurement rather than search; power never covers their alternatives."
+ref = "LOG399"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "A static review that accidentally displayed archived target fields recorded that it cannot claim strict blind isolation and cannot authorise a target run."
+ref = "LOG380"
+
+[[provenance]]
+path = "withmath/CLAUDE_LOG363_REPLACEMENT_AUDIT.md"
+kind = "audit"
+note = "A one-shot target transcript necessarily carries the ciphertext for loader-free replay; the note records that other lanes' forbidden-string scans will flag it."
+ref = "LOG363"

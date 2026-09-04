@@ -1,0 +1,127 @@
+id = "vigenere"
+section = "ciphers"
+title = "Vigenère cipher"
+subtitle = "Periodic additive substitution over Z26 with a repeating key"
+status = "VERIFIED"
+status_note = "The model, its exact period alignment and its planted-control generators are implemented and pass matched controls; period recovery and shift recovery are routine at 150+ letters of English."
+family = "Polyalphabetic substitution"
+tags = ["periodic", "additive", "polyalphabetic", "tabula recta"]
+related = ["beaufort", "variant-beaufort", "quagmire-iii", "index-of-coincidence", "exact-period-alignment", "vigenere-lab"]
+summary = "The Vigenère cipher adds a repeating key to the plaintext letter by letter modulo 26. Its only secret is a key of length m, so the ciphertext splits into m cosets, each a Caesar shift of the plaintext letters at those positions. That coset structure is what every attack on it exploits, and it is the reference model against which keyed-alphabet and compound variants are measured."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Fix the alphabet $\{A,\dots,Z\} \cong \mathbb{Z}_{26}$ and a key $k = (k_0, \dots, k_{m-1}) \in \mathbb{Z}_{26}^m$.
+Plaintext $p_0 p_1 \dots$ encrypts position by position:
+
+$$c_i \equiv p_i + k_{i \bmod m} \pmod{26}.$$
+
+Decryption subtracts the same key. Positions with the same residue $i \bmod m$ form a **coset**; inside a coset the cipher is a single Caesar shift, so the coset's letter histogram is a rotation of the plaintext's histogram.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Coset structure"
+body = '''
+Write $C_b = \{c_i : i \equiv b \pmod m\}$ for coset $b$. If $E$ is the plaintext letter distribution, the expected histogram of $C_b$ is $E$ rotated by $k_b$:
+
+$$\Pr[c = x \mid i \in C_b] = E(x - k_b).$$
+
+Two consequences drive the attacks:
+
+- **Period signature.** Coincidences $c_i = c_{i+t}$ occur at the plaintext rate ($\approx 0.066$ for English) when $t \equiv 0 \pmod m$ and near the uniform rate ($1/26 \approx 0.038$) otherwise.
+- **Shift recovery.** For a known $E$, each $k_b$ is read off by maximising the correlation $\sum_x E(x - k)\,\hat{h}_b(x)$ between the rotated reference and the observed coset histogram $\hat h_b$.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Beaufort**: $c_i = k_{i \bmod m} - p_i$; reciprocal (encrypting twice decrypts). See [Beaufort](/ciphers/beaufort).
+- **Variant Beaufort**: $c_i = p_i - k_{i \bmod m}$, i.e. Vigenère decryption used as encryption.
+- **Keyed alphabets**: replacing the straight alphabet on the plaintext side, ciphertext side, or both gives the Quagmire I–IV family; the coset structure is unchanged, only the reference histogram becomes an unknown permutation of $E$.
+- **Autokey and running key**: the key stream is the plaintext itself or a long text, which removes the period.
+- **Compound keys**: two periodic keys of lengths $m$ and $q$ compose to one key of period $\operatorname{lcm}(m,q)$; a short text may show both periods as separate coincidence peaks.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The key is strictly periodic and the same alphabet is used at every position.
+- The plaintext has a non-flat letter distribution (natural language). A flat inner text (random letters or a well-mixed fractionation) makes every coset uniform and the shift unrecoverable.
+- Invariant: the **multiset** of letters in each coset does not depend on any transposition applied *before* the periodic layer, only on which positions land in which coset. This is what lets a mixture analysis test "substitution over an unknown transposition" without knowing the transposition.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. **Find the period.** Kasiski repeats, the periodic index of coincidence, or an exact alignment objective over all shift vectors (see [Exact period alignment](/cryptanalysis/exact-period-alignment)).
+2. **Recover shifts per coset.** Correlate each coset histogram with the reference distribution; with $n/m \ge 20$ letters per coset this is reliable for English.
+3. **Polish.** Score the full decrypt with a language model (quadgram log-likelihood) and adjust individual shifts.
+
+With a crib (known plaintext), a crib letter at position $i$ determines $k_{i \bmod m}$ directly; a contiguous crib of length $\ge m$ determines the whole key.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Period test: $O(n \cdot t_{\max})$. Shift recovery: $O(26\, m)$ correlations. Exhaustive shift-vector enumeration for the exact alignment objective is $O(26^{m-1})$ after fixing one shift by gauge; $26^6 \approx 3.1\times10^8$ for $m = 7$ is feasible in a compiled core in seconds.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Flat cosets.** If the material under the periodic layer is not natural language (fractionated, transposed then substituted with a second layer, or random), the histogram correlation has nothing to align; the period may still be visible through coincidence counts while shifts are unrecoverable.
+- **Short cosets.** Below roughly 12 letters per coset the argmax shift is often wrong; treat single-coset readings as votes, not facts.
+- **Selection freedom.** Freely fitting $m$ shifts on a short text buys about $0.15$ nats per letter of spurious fit; a model comparison that profiles the shifts will prefer wrong models unless the shifts are marginalised or the gain is calibrated on shuffled nulls.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Every solver run prints planted controls first: real English of the same length, random keys of the same period, the same pipeline. A control that does not decrypt to readable English (quadgram rate near $-4.3$ per letter, 100% key match) means the instrument is broken and the target rows below it carry no information.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Plaintext `ATTACKATDAWN`, key `LEMON` ($m = 5$):
+
+```
+plain   A T T A C K A T D A W N
+key     L E M O N L E M O N L E
+cipher  L X F O P V E F R N H R
+```
+
+Check position 2: $T + M = 19 + 12 = 31 \equiv 5 = F$. The [Vigenère family lab](/labs/vigenere-lab) reproduces this and shows the coset histograms.
+'''
+
+[[provenance]]
+path = "withmath/wm_core.py"
+kind = "library"
+note = "Shared mathematics: exact period alignment over all shift vectors with a closed-form pairwise objective, fast heuristic alignment, planted-cipher generators."
+
+[[provenance]]
+path = "withmath/wm_audit.py"
+kind = "solver"
+note = "Alignment statistics with error bars: exact alignment and its near-optimal set, exact nulls, within-coset index of coincidence with its exact standard deviation."
+ref = "logs/01_audit.log"
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "'Evidence, not likelihood': profiling m shifts buys ~0.15 nats/letter of selection freedom at n = 153, so shifts are marginalised under a uniform prior."
+
+[[references]]
+title = "The Codebreakers"
+author = "David Kahn"
+year = 1967
+
+[[references]]
+title = "Military Cryptanalysis, Part II"
+author = "William F. Friedman"
+year = 1938

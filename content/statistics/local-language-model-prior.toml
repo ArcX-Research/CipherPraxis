@@ -1,0 +1,112 @@
+id = "local-language-model-prior"
+section = "statistics"
+title = "Local language-model prior"
+subtitle = "Neural or large-vocabulary models run locally as proposal priors and rerankers, and the gates they must pass"
+status = "POWER-LIMITED"
+status_note = "Three local models were tried as priors or rerankers under frozen development gates and none passed: a character GRU proposal placed at least one true cell below rank 8 in every one of 20 clean controls (max true rank 9-23), a distilled transformer reranker reached exact rank 1 on 24 of 34 planted orderings against a required 40/40 (worst rank 689), and a local server could not expose prompt log-probabilities at all (37 of 72 directed edges observed, half the planted path censored). The exact back ends they feed remain valid."
+family = "Language priors"
+tags = ["neural prior", "language model", "reranking", "proposal", "contamination"]
+related = ["semi-markov-word-model", "quadgram-log-likelihood", "local-llm-server-integration", "beam-search", "shared-cycle-attack", "exact-chain-oracle", "held-out-gates", "power-analysis", "g-held-out"]
+summary = "A local language model can serve an attack in two ways: as a proposal prior that narrows the plaintext letters admitted at each observed cipher cell before an exact solver takes over, or as a reranker of complete candidates such as the 9! orderings of nine recovered chunks. In both roles it is only a proposal; the exact algebra and the null-ranked endpoint decide. Its use is gated by held-out, decontaminated controls, by the availability of a deterministic full-sequence likelihood, and by the same power measurement as any other selector."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Given a ciphertext with observed cells $(g, c)$ (class $g$, cipher letter $c$) the prior supplies $\Pr_g(p \mid c)$, obtained by decoding a character model under the injective per-class maps in both reading directions and pooling the retained endpoint maps by normalised sequence likelihood. The exact solver admits, per cell, the top $K$ plaintext literals including ties, and the final ranking uses only the frozen quadgram score:
+
+$$\text{score} = \log_{10}\Big(\frac{1}{26^m}\sum_{v} P_{Q4}(v)\Big)$$
+
+for a window with $m$ unresolved symbols (uniform marginal over completions $v$), so that a centred neural prior helps during the partial search but cannot change the final exact score.
+
+As a reranker the required quantity is the full-sequence log-likelihood $L(x) = \sum_t \log p(x_t \mid x_{<t})$, and a directed pair approximation $S_{\text{pair}}(\pi) = L(c_{\pi_0}) + \sum_i \big(L(c_{\pi_i} \| c_{\pi_{i+1}}) - L(c_{\pi_i})\big)$ lets all $9! = 362{,}880$ orders be scored from an $9 \times 9$ edge matrix.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- **Provenance.** The model predates the texts under attack, or its training data is shown not to contain them; an adapter trained after the campaign began fails this and must be disabled (request-local scale zero) or excluded.
+- **Determinism.** Scores are exact log-probabilities of already-specified sequences, at temperature zero, without repetition penalties; forced tokens via logit bias, chat-style choices among orders, or top-$N$ lists that censor the desired token are not the declared score.
+- **Decontamination.** Controls come from a corpus range disjoint from training *and* free of duplicated boilerplate; three of the audited controls were exact training duplicates and had to be discarded.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Use in an attack pipeline"
+body = '''
+1. Pin the model files by hash, the tokeniser, the decoding settings and the lexicon lattice.
+2. Freeze the development gate before any control is scored: for a proposal prior, "every true cell within the admitted top-$K$ on all $N$ controls"; for a reranker, "planted order at exact rank 1 on all 40 controls".
+3. Run the gate on development controls; keep a separate set of unopened validation controls; a gate that fails on development is closed without opening validation.
+4. Only after both pass, run the live text through the same frozen cascade, with the exact back end and the null-ranked endpoint unchanged.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+A bidirectional GRU decode with beam 20,000 and an exact ring search of width 100,000 fits a laptop GPU; the reranker scored $40 \times 4{,}096$ pair-capped candidates in 195 s with peak memory about 7.9 GB; a local server pilot made 168 calls in 31 s. Cost is not the blocker; the gates are.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Contamination.** A development control was solved to rank 1 by the prior plus exact ring search, and the same 95-letter plaintext was then found at training offset 575,000: an in-sample demonstration that validates the exact back end when the proposal is strong, not evidence of decoder power.
+- **Hard top-$K$ does not generalise.** On 20 clean controls every control had at least one true cell below rank 8; the per-control maximum true rank ranged from 9 to 23. The prior must be used softly or with much larger $K$.
+- **Reranker gate failure.** 24 of 34 completed planted orderings at exact rank 1 (median 1, worst 689) against a 40/40 requirement; the six remaining controls and all post-hoc mixtures were not completed, and must not be reported as validation.
+- **API cannot score.** A local server accepted `echo` but returned log-probabilities only for the generated token; a next-token boundary construction observed the desired first token for 37 of 72 directed edges and only 4 of 8 planted-path edges by top-2,048, and a segmented lowercase variant left the planted path's lower bound at $-\infty$. No $9!$ ranking can be fabricated from censored entries.
+- **Fluency is not correctness.** Beam decoders under weak constraints produce readable fragments on nulls; the exact endpoint, not the prior, carries the decision.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Proposal prior: nominal held-out control, 40 true cells within strict rank 7, exact planted solution at rank 1 with the runner-up 9.5 log-units behind (contaminated, see above); predeclared 20-control diagnostic with a fixed seed, falsified as stated. Reranker: 40 planted orders all survived the structural caps (pair rank worst 3,479, secondary rank worst 1,339); end-to-end 24/34 exact rank 1, stopped once the gate had irreversibly failed. Server pilot: interval certificate failed at the second planted edge; no target or validation material was opened in any of the three lanes.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+Two chunks $A$ and $B$ of a recovered text are to be ordered. A causal model gives $L(A) = -120.0$, $L(B) = -118.5$, $L(A\|B) = -231.0$ and $L(B\|A) = -236.4$ (natural-log units). The directed edge scores are
+
+$$s(A \to B) = L(A\|B) - L(A) = -111.0, \qquad s(B \to A) = L(B\|A) - L(B) = -117.9,$$
+
+so $A \to B$ is preferred by $6.9$ nats, a likelihood ratio of about $1{,}000$. If instead the first token of $B$ after $A$ were censored from the top-$N$ list, $s(A \to B)$ would be known only as an interval $[-\infty, \text{cutoff}]$ and no order could be certified; that is precisely the situation that stopped the server lane, and the correct response is to refuse the ranking, not to fill the gap with a surrogate.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Every failure above is a *power* or *capability* failure of a specific frozen model, not a result about any cipher family; the ledger records them as such. The design principle survives: neural models propose, exact algebra disposes, and nulls judge.
+'''
+
+[[provenance]]
+path = "withmath/PK9_NEURALPRIOR442_NOTE.md"
+kind = "note"
+note = "Bidirectional character GRU as proposal prior for an exact ring CSP; uniform-marginal partial-window score; development control rank 1 (runner-up 9.5 log-units behind) found to be a training duplicate at offset 575,000; 20-control diagnostic falsified hard top-8 (max true rank 9-23); three duplicates across two runs."
+ref = "LOG442"
+
+[[provenance]]
+path = "withmath/ROW_SEMANTIC_CONTROLS_AUDIT.md"
+kind = "audit"
+note = "Distilled transformer reranker with frozen caps K_pair = 4,096 and K_secondary = 2,048; pair rank worst 3,479, secondary worst 1,339; end-to-end 24/34 exact rank 1, worst 689; 40/40 gate failed; validation sources left unopened; 194.6 s, peak footprint 7.9 GB."
+
+[[provenance]]
+path = "withmath/ROW_LLAMA_SERVER_CAPABILITY_AUDIT.md"
+kind = "audit"
+note = "Server build returns no prompt log-probabilities under echo; boundary pilot 37/72 edges observed, 4/8 planted-path edges, 168 calls in 31.39 s; segmented variant planted edge interval [-inf, -48.21]; adapter trained after the campaign, request-local scale zero."
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Complete-word local-model beam: 3,500 local-model calls in 1,127.9 s, 64 live partial states, zero complete proposals; heuristic proposal miss only."
+ref = "LOG393"
+
+[[provenance]]
+path = "withmath/LOG_AUDIT.md"
+kind = "audit"
+note = "No promotion of a quadgram/GRU string unless the full selected-family null is lower; language beams are a poor objective for peaked non-prose text."
+
+[[references]]
+title = "Language Models are Unsupervised Multitask Learners"
+author = "Alec Radford, Jeffrey Wu, Rewon Child, David Luan, Dario Amodei, Ilya Sutskever"
+year = 2019

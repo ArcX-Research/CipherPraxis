@@ -1,0 +1,21 @@
+id = "crt-lab"
+section = "labs"
+title = "Chinese remainder & inverse lab"
+subtitle = "Solve simultaneous congruences, including non-coprime moduli, and compute modular inverses"
+status = "VERIFIED"
+status_note = "Unit-tested: x ≡ 2 (3), 3 (5), 2 (7) → 23 (mod 105); the non-coprime system 1 (4), 3 (6) → 9 (mod 12); inconsistent systems are reported."
+family = "Algebra labs"
+tags = ["crt", "number theory", "modular inverse"]
+related = ["modular-inverse-and-crt", "lcm-of-periods", "units-mod-26", "affine-lab"]
+summary = "The Chinese remainder theorem reassembles an integer from its residues modulo several moduli; the general form handles shared factors and detects inconsistency. The same extended Euclidean algorithm gives modular inverses. Both operations appear whenever key information is recovered modulo small factors and must be lifted to a full residue."
+updated = "2026-09-04"
+lab = "crt"
+
+[[blocks]]
+kind = "notes"
+title = "What to try"
+body = '''
+- Enter `1 mod 4, 2 mod 6`: the moduli share the factor 2 and the residues disagree modulo 2, so the system is inconsistent.
+- Enter `5 mod 7, 5 mod 9`: the answer is 5 modulo 63, the least common multiple.
+- Ask for the inverse of 7 modulo 26 (15) and of 13 modulo 26 (none): the unit group of Z26 is the set of valid affine multipliers.
+'''

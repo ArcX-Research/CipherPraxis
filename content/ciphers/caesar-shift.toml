@@ -1,0 +1,133 @@
+id = "caesar-shift"
+section = "ciphers"
+title = "Caesar shift"
+subtitle = "Single additive shift over Z26; the atom of every periodic substitution"
+status = "VERIFIED"
+status_note = "Shift recovery is the coset step of every periodic solver in the program and is exercised by every planted control; the block-wide generalisation (one integer added to each base-26 block) was exhausted at width 3 with exact planted-control recovery."
+family = "Monoalphabetic substitution"
+tags = ["monoalphabetic", "additive", "shift", "block addition"]
+related = ["vigenere", "affine-cipher", "keyword-mixed-alphabet", "coset-shift-recovery", "frequency-analysis", "modular-arithmetic-z26", "g-coset"]
+summary = "A Caesar shift adds one constant to every letter modulo 26. It has 26 keys and is broken by a single histogram correlation, but it matters because every periodic additive cipher is a Caesar shift on each coset, so shift recovery is the inner loop of Vigenère, Beaufort and Quagmire solvers. The program also tested a non-periodic generalisation in which one integer is added to whole base-26 blocks with carries."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+With $\{A,\dots,Z\} \cong \mathbb{Z}_{26}$ and a key $k \in \mathbb{Z}_{26}$,
+
+$$c_i \equiv p_i + k \pmod{26}, \qquad p_i \equiv c_i - k \pmod{26}.$$
+
+The ciphertext histogram is the plaintext histogram rotated by $k$. In a keyed order $A$ (any fixed permutation of the alphabet) the same cipher reads $\operatorname{pos}_A(c_i) = \operatorname{pos}_A(p_i) + k$; the choice of order is part of the key.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Shift recovery and the block generalisation"
+body = '''
+For a reference distribution $E$ and an observed histogram $\hat h$, the maximum-likelihood shift is
+
+$$\hat k = \arg\max_k \sum_x \hat h(x) \log E(x - k).$$
+
+The program's block generalisation treats $b$ consecutive letters as one base-26 integer and adds a single key $K$ with carries:
+
+$$X_j = \sum_{r=0}^{b-1} O(x_{jb+r})\, 26^{e(r)}, \qquad C_j \equiv X_j + K \pmod{26^b},$$
+
+with digit order $O$ (straight or keyword-mixed) and $e(r)$ most- or least-significant-first. Unlike a period-$b$ Vigenère, a borrow couples the positions inside a block, so the coset structure disappears.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Keyed-order shift**: the same rotation in a mixed alphabet; see [Keyword-mixed alphabet](/ciphers/keyword-mixed-alphabet).
+- **Per-coset shifts**: a periodic vector of shifts is the [Vigenère cipher](/ciphers/vigenere); subtraction gives [Beaufort](/ciphers/beaufort) and [Variant Beaufort](/ciphers/variant-beaufort).
+- **Drifting shift**: a shift that changes by a constant per block ("Caesar-drifted key") is the block model tested by the program's block-structure instrument.
+- **Block addition**: the base-26 integer form above, exhaustive at width 3 ($26^3 = 17{,}576$ keys per serialisation cell) and beam-searched at width 9.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The plaintext letter distribution is non-flat; a flat histogram makes every shift equally likely.
+- Invariant: coincidences $c_i = c_j$ are exactly the plaintext coincidences $p_i = p_j$ under a single shift, so the index of coincidence is unchanged by the cipher.
+- In the block form the invariant fails: two ciphertext blocks differ in every digit that a borrow crosses.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Correlate the ciphertext histogram with the reference distribution over all 26 rotations (or all 26 rotations in each candidate order).
+2. Confirm with a language score of the decrypt; at 20 or more letters the correlation alone is decisive for English.
+3. For the block form, enumerate all $26^b$ keys at small $b$ and score each decrypt with quadgrams; at large $b$ use a least-significant-digit beam, keeping the best suffixes as digits are added.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Single shift: 26 correlations, $O(26 \cdot 26)$ work. Block addition at width 3: $17{,}576$ keys in each of four serialisation cells (two digit orders times two orientations), i.e. $70{,}304$ decrypt-and-score evaluations per objective. Width 9 ($26^9 \approx 5.4 \times 10^{12}$ keys) is not exhaustible; the program's beam kept every $26^3$ suffix through depth three and the best $20{,}000$ suffixes afterwards.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Short samples.** Below roughly 12 letters the argmax shift is unreliable; a coset of a periodic cipher can be that short.
+- **Non-language plaintext.** A flat inner text gives no rotation signal even though the cipher is trivial.
+- **Beam truncation.** In the width-9 block search the first three key digits are ranked from only 16 or 17 letters of a 144- or 153-letter text; a control can be recovered while a different true key is lost when the beam truncates at depth four, so a width-9 miss is not a family exclusion.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The block-addition lane ran target-profile planted controls for every width and objective before any live text was loaded: each control recovered the exact planted plaintext, block key and serialisation convention and passed an independent scalar forward replay; the width-9 truth ranked first at every beam depth for the true convention (logs/477_blockadd_live_20260903T194147Z.log). The live width-3 search was an exact key-space negative for English-like plaintext: best rates between $-7.25$ and $-7.68$ per letter, with 19 matched block-permutation nulls giving empirical $p$ between $0.35$ and $0.80$. Width 9 ended as NO_CANDIDATE_IN_BEAM, deliberately not an exclusion.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Plaintext `HELLO`, shift $k = 3$:
+
+```
+plain   H  E  L  L  O
+index   7  4 11 11 14
++3     10  7 14 14 17
+cipher  K  H  O  O  R
+```
+
+Check: $O = 14$, $14 + 3 = 17 = R$. Decryption subtracts 3.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The program never treated a Caesar shift as a hypothesis on its own; it appears as the per-coset step inside every periodic solver and as the degenerate $m = 1$ case of the affine-route and periodic dynamic-programming lanes. The block-addition experiment is the only place where a single shift is the whole cipher, and its value was to show that carries break the coset invariants on which all the other instruments rest.
+'''
+
+[[provenance]]
+path = "withmath/wm_core.py"
+kind = "library"
+note = "Per-coset shift recovery by histogram correlation; exact alignment over all shift vectors."
+
+[[provenance]]
+path = "withmath/wm_blocks.py"
+kind = "solver"
+note = "Block-structure instrument: are consecutive blocks Caesar shifts of one distribution; same-key null."
+ref = "logs/02_blocks.log"
+
+[[provenance]]
+path = "withmath/wm_blockadd477.py"
+kind = "solver"
+note = "Base-26 block addition with carries: exact width 3, least-significant-digit beam at width 9, planted target-profile controls, block-permutation nulls."
+ref = "logs/477_blockadd_live_20260903T194147Z.log"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "LOG477 terminal: width-3 exact negative with null p-values .35-.80; width-9 NO_CANDIDATE_IN_BEAM."
+ref = "LOG477"
+
+[[references]]
+title = "The Codebreakers"
+author = "David Kahn"
+year = 1967

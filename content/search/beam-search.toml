@@ -1,0 +1,141 @@
+id = "beam-search"
+section = "search"
+title = "Beam search over plaintext prefixes"
+subtitle = "Left-to-right extension of the W best partial decrypts under a character or word language model, with exact constraints applied to each prefix"
+status = "POWER-LIMITED"
+status_note = "Implemented in several forms (arbitrary per-residue substitutions, a shared 26-cycle with group-identity masks, exact-prefix Z3 filtering, word-level beams with a local language model). Every planted control at 63-95 letters lost the true prefix early: 19.0% and 9.5% plaintext recovered on two 63-letter controls, truth outside a 40,000-wide beam by character 5 or 13, and 0/84 survivals in a 3,000-wide beam even under an oracle hypothesis. Target runs were therefore never admitted."
+family = "Deterministic heuristics"
+tags = ["beam", "language model", "prefix", "constrained decoding", "identifiability"]
+related = ["k-best-lists", "meet-in-the-middle", "viterbi-decoding", "cp-sat-and-smt-solvers", "all-different-enumeration", "word-prefix-csp", "quagmire-iii", "local-language-model-prior", "within-coset-null", "planted-controls", "held-out-gates", "g-beam-width"]
+summary = "Beam search decodes a ciphertext letter by letter: every retained prefix is extended by each admissible plaintext letter, scored by a language model, and only the W best prefixes survive to the next position. Admissibility comes from the cipher model (equal ciphertext letters in one residue must decrypt equally, partial maps must be injective, partial rotation or reflection maps must close consistently). The corpus shows that at 63-95 letters the true prefix is ranked far below fluent wrong prefixes before any algebraic constraint bites, so the truth leaves the beam within the first 5-13 characters."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $B_t$ be the set of retained prefixes of length $t$, each with a score and a partial key map. With a language model giving $\log p(x \mid \text{prefix})$:
+
+```
+B_0 <- {(empty, score 0, empty map)}
+for t in 0 .. n-1:
+    C <- {}
+    for (prefix, s, map) in B_t:
+        for x in admissible(map, c_t):            # cipher constraints on the new letter
+            C <- C + {(prefix + x, s + log p(x | prefix), map + {c_t -> x})}
+    B_{t+1} <- the W highest-scoring elements of C   # W = beam width
+return B_n ranked by score (optionally checked by an exact solver)
+```
+
+Variants in the corpus: (i) seven unrelated injective residue maps, admissibility = within-residue equality and injectivity; (ii) one shared 26-cycle, admissibility adds the rotation (Vigenère) or reflection (Beaufort) identities between residue maps and an exact modular check of the endpoint; (iii) an adaptive checkpoint that sends a ranked pool larger than the beam through an exact solver and removes only proven-infeasible prefixes; (iv) word-level beams where a local language model may only emit complete words compatible with the residue pattern, with exact null-space feasibility as a prefix gate.
+'''
+
+[[blocks]]
+kind = "equations"
+body = '''
+Beam recurrence with a character model $h$ (a GRU state):
+
+$$B_{t+1} = \operatorname{top}_W\Big\{\big(s + \log p(x \mid h),\ h'(h, x)\big) : (s, h) \in B_t,\ x \in \mathcal{A}_t(\text{map})\Big\}.$$
+
+Shared-cycle admissibility for residue $b = i \bmod 7$ with cycle position function $a(\cdot)$:
+
+$$\text{vig: } a(P_i) = a(C_i) - k_b, \qquad \text{beau: } a(P_i) = k_b - a(C_i) \pmod{26},$$
+
+so residue maps are rotations (commuting) or reflections (involutions whose composition is a rotation). The endpoint check solves $x(C_i) - x(P_i) - k_b = 0$ (vig) or $x(C_i) + x(P_i) - k_b = 0$ (beau) with all 26 positions distinct.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The truth's prefix score must stay within the top $W$ at every position; a single early dip is fatal because beams do not backtrack.
+- The language model is trained on generic text disjoint from the held-out control windows (training on the first 1,350,000 letters of a corpus; controls drawn beyond letter 1,420,000).
+- Only proven-infeasible prefixes may be removed by an exact filter; `unknown` and timeout states must survive, otherwise the decoder fabricates power.
+- Readability plus an exact roundtrip is not identification: fluent alternative decrypts that reproduce the ciphertext exist at these lengths.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+The family is a period-7 polyalphabetic substitution on a 63-95-letter zone whose alphabet is unstructured. Constraints from the ciphertext are the only key information: equal letters in a residue decrypt equally, distinct ones distinctly, and (for a shared cycle) the residue maps are related by group identities. The beam proposes plaintexts consistent with those constraints, ranked by a character GRU (64/192, two layers) or a local word-level language model. Endpoint nulls shuffle letters within each period coset, preserving every coset histogram and equality count while destroying cross-coset order; a fluent output must beat that familywise null. In the word-level variants exact GF(2) and GF(13) null spaces of the position equations are computed for each prefix, and once the nullity is small a CRT all-different enumeration becomes a hard gate.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Per position: $|B_t| \times |\mathcal{A}_t|$ candidates scored by one batched model call; recorded beams are $W = 40{,}000$ (12,000 in fast mode), ranked pools of 40,000 with four parallel 15 ms exact pilots, and $W = 3{,}000$ in the hypothesis-forcing variant. A 30,000-wide trajectory audit of one control placed the true English prefix at rank 81,978 on character 5, so the beam needed to retain the truth there exceeds $8 \times 10^4$ states at a position where only five residues are open.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Truth leaves the beam early.** Seven-substitution beam on two 63-letter controls matched to the target's per-coset distinct counts: fluent, exactly round-tripping alternatives were produced, but only 19.0% and 9.5% of the hidden plaintexts were recovered; the true paths left the beam. Shared-cycle beam: all 12,000 final states were infeasible at the exact endpoint check.
+- **Exact prefix filtering cannot rescue it.** With adaptive Z3 checkpoints, four controls failed before feasibility became selective: the 63-letter controls lost the truth at position 5 (outside the top 40,000), the 95-letter controls at position 13 (ranks 34,950 and 30,359 in the pool, then outside the retained 20,000). Pilots at the point of loss returned 48 SAT / 0 UNSAT (n = 63, Vigenère), 44 SAT / 0 UNSAT / 4 unknown (n = 63, Beaufort) and 0 / 0 / 48 unknown (n = 95): nothing was provably infeasible yet.
+- **Oracle hypotheses do not help.** Forcing the true special-residue hypothesis in a 3,000-wide quadgram beam over 6 plants $\times$ 14 cells: truth alive at the end 0/84, first loss at position 2-4. The first letters open free residues before any constraint bites.
+- **Word beams collapse.** A ten-state complete-word beam retained four false lineages at 25-27 letters and exact CRT/all-different filtering then rejected every continuation; a larger run made 3,500 model calls in 1,127.9 s and ended with 64 live partial states and zero complete proposals; a whole-entry variant made 1,800 calls, kept 21 live prefixes and six partials, and produced zero complete entries.
+- **Lossy intermediate cuts.** A one-front intermediate cut in the bidirectional variant was identified as lossy and replaced by a full $26 \times 26$ product ranking (see [meet in the middle](/search/meet-in-the-middle)).
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Every beam decoder in the corpus is control-gated: hidden random cycles and shifts are planted on held-out English windows whose length and per-coset equality profile match the target zone, and a control passes only with 100% plaintext, the hidden key class up to gauge, and an independent forward roundtrip. Recorded outcomes: 2/2 seven-substitution controls failed (19.0%, 9.5%); 4/4 shared-cycle exact-prefix controls failed; 84/84 hypothesis-forced plants failed; both word-level lanes produced no complete proposal. No target was decoded by any of them, by design.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Beam width $W = 2$, a three-letter alphabet, toy log-probabilities. Position 1: `T` $-0.5$, `A` $-1.0$, `X` $-3.0$; keep `T`, `A`. Position 2 extensions: `TH` $-0.5 - 0.3 = -0.8$, `TX` $-0.5 - 2.5 = -3.0$, `AN` $-1.0 - 0.4 = -1.4$, `AT` $-1.0 - 0.9 = -1.9$; keep `TH`, `AN`. If the true plaintext began `AT`, it is now gone: no later evidence, however strong, can revive a discarded prefix. That is exactly the recorded behaviour at positions 5 and 13 of the 63- and 95-letter controls.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The corrected group mask (a path stops after its first closure, so identities and order-two powers remain legal) fixed a defect inherited by earlier lanes, but did not change the verdict. The open route recorded by the authors is exact null-space enumeration under a hypothesis, not a wider beam.
+'''
+
+[[provenance]]
+path = "withmath/wm_patternbeam.py"
+kind = "solver"
+note = "Seven-substitution constrained beam with a character GRU trained on generic text [0, 1,350,000); held-out controls beyond 1,420,000; default beam 40,000 (12,000 fast); within-coset shuffle nulls."
+
+[[provenance]]
+path = "withmath/PK8_PK10_HINTFREE.md"
+kind = "note"
+note = "Seven-substitution beam controls: fluent round-tripping alternatives, only 19.0% and 9.5% recovered, true paths left the beam; control gate failed."
+ref = "logs/150_patternbeam.log"
+
+[[provenance]]
+path = "withmath/wm_cyclebeam.py"
+kind = "solver"
+note = "Shared-cycle beam with rotation/reflection masks and an exact Z3 endpoint check."
+
+[[provenance]]
+path = "withmath/CYCLEBEAM_EXACTPREFIX_AUDIT.md"
+kind = "audit"
+note = "Adaptive exact-prefix beam: beam 20,000, pool 40,000, four 15 ms pilots; controls lost at character 5 (n63) and 13 (n95); pilot SAT/UNSAT/unknown counts; 12,000 final states UNSAT in the earlier lanes; rank 81,978 in a 30,000-wide audit; 400 million pairs for a naive bidirectional join."
+ref = "logs/183_cyclebeam_exactprefix.log"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Hypothesis-forced quadgram beam (width 3,000; 6 plants x 14 cells): truth alive at end 0/84, first loss at position 2-4 under the oracle hypothesis."
+ref = "LOG401"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Complete-word local-LM beam: v1 ten-state beam kept four false lineages at 25-27 letters; v2 3,500 model calls, 1,127.9 s, 64 live partial states, zero complete proposals."
+ref = "LOG393"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Whole-entry local-LM to exact-middle lane: 1,800 calls, 21 live prefixes, six partials, zero complete entries; heuristic miss only."
+ref = "LOG395"
+
+[[references]]
+title = "Speech and Language Processing (beam search decoding)"
+author = "D. Jurafsky, J. H. Martin"
+year = 2023

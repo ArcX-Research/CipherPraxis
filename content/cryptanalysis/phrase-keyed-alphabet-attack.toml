@@ -1,0 +1,120 @@
+id = "phrase-keyed-alphabet-attack"
+section = "cryptanalysis"
+title = "Phrase-keyed alphabet attack"
+subtitle = "Enumerating mixed alphabets keyed by phrases from known texts and screening each as the alphabet of a periodic keyed substitution"
+status = "CLOSED"
+status_note = "Every 4- to 60-letter substring of the known texts of the series, in six keying styles (202,504 distinct alphabets), was tried as the mixed alphabet of a period-7 keyed substitution: the planted control reads at 100%, the two target texts stay at the noise level (-6.54 and -6.35), so phrase-keyed alphabets are excluded for them within that scope (logs/07); the larger structured tables (2.06M dictionary and columnar alphabets, 100k near-neighbour alphabets, 1.56M numeric-grid alphabets) are excluded on the zones the same way (logs/24, 38, 41)."
+family = "Known-plaintext methods"
+tags = ["keyed alphabet", "phrase", "dictionary", "family sweep", "screen"]
+related = ["keyword-mixed-alphabet", "quagmire-i", "quagmire-ii", "quagmire-iii", "quagmire-iv", "dictionary-attack", "corpus-bank-screen", "coset-shift-recovery", "crib-driven-alphabet-recovery", "family-wise-null", "g-family-sweep"]
+summary = "A blind search over all 26! mixed alphabets is out of reach at 150 letters, but an alphabet keyed by a phrase is one of a few hundred thousand, and every one can be tested in milliseconds: fit the shifts of each coset, decrypt, score. The phrase-keyed attack enumerates every substring of every text the setter is known to have used, in every keying style, and screens the lot with a planted control that must read at 100%. It is the corpus's model of a scoped family sweep: cheap, controlled, and closing exactly what it enumerates."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+A **phrase-keyed alphabet** is built from a phrase $w$ by writing its distinct letters in order of first appearance and appending the remaining letters by a rule (the keying style):
+
+- straight remainder (`ABCD...` minus the used letters), or the remainder of a known keyed alphabet;
+- reversed remainder;
+- continued remainder, starting after the phrase's last letter and wrapping;
+- columnar read-out: the phrase plus remainder written in rows of the phrase's width and read by columns (straight or keyed base).
+
+For a periodic keyed substitution the alphabet can act on the plaintext side, on the ciphertext side or on both; each variant is screened separately with the same shift fit.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Screen"
+body = '''
+For each alphabet $A$ and variant, coset $b$'s shift is fitted by chi-square against the language distribution in $A$'s order, $\hat k_b = \arg\min_k \chi^2\big(F_b, n_b E_A(\cdot - k)\big)$, followed by two quadgram sweeps over the $m$ shifts; the score is the quadgram rate of the decrypt. Large screens replace chi-square by the vectorised per-coset log-likelihood $\sum_x F_b(x) \log E(A[x - k])$ over all alphabets at once and calibrate the top rate on shuffled segments (see [Coset shift recovery](/cryptanalysis/coset-shift-recovery)).
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The alphabet was derived from a phrase in one of the enumerated sources by one of the enumerated styles; the sweep closes nothing outside that.
+- The period, relation and zone are right: screening a whole text whose first third is keyed differently corrupts every score, which is why the corpus re-ran its screens per zone once the zones were known.
+- The plaintext is language of the reference distribution.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Build the alphabet table: all substrings of length 4 to 60 of every source text, six styles, deduplicated (202,504 alphabets from the known texts; a 2.06 million table adds dictionary words in six styles, columnar-keyed and multi-keyed alphabets).
+2. Plant a control: a known text under a keyed substitution whose alphabet is in the table; it must read at 100% and rank first.
+3. Screen every alphabet and variant; polish the top dozen; print the top rates against the noise level (about $-6.3$ per letter at 153 letters).
+4. Report the family as excluded for the enumerated sources and styles only.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+$O(|\mathcal{A}| \cdot m \cdot 26 \cdot n)$ for the chi-square screen: 202,504 alphabets in about 10 min on 12 cores. The vectorised likelihood screen handles 2.06 million alphabets per family and relation in about 30 s on a 96-letter zone.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Scope.** The sweep excludes only enumerated structures; the corpus concluded that either the alphabet's structure is of a kind not enumerated or the alphabet is random and was transmitted by other means. Family sweeps beyond that point were judged "buying lottery tickets".
+- **Zoning.** Whole-text screens on a text with a differently keyed prefix score every alphabet at noise; the zone screens had to be repeated.
+- **Top-of-null inflation.** The best of $10^6$ alphabets on a 63-letter zone sits near $-5.2$ to $-5.5$, the shuffled-segment maximum; only a rate near the language level with a readable decrypt counts.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+- Phrase alphabets (logs/07): planted text under a same-alphabet keyed substitution keyed by a 31-letter phrase in the keyed-remainder style, polished best $-4.34$, 100% match; targets $-6.54$ and $-6.35$.
+- 2.06M structured alphabets on the 96-letter zone (logs/24): planted alphabet rank 1 at $-3.942$ against the shuffled-segment top $-6.194$; targets: best $-5.77$ against a shuffled maximum of $-5.9$ (nothing). The 63-letter zone of the other text (logs/30): tops $-5.3$ to $-5.5$ at the 63-letter shuffled maximum.
+- Near-neighbour alphabets, within two transpositions of the two reference orders, 100,752 alphabets (logs/38): the planted swap-alphabet control ranked first and read $-3.94$; zones $-5.24$ against shuffled maxima $-5.75$ to $-5.90$ and $-5.91$ against $-6.1$ to $-6.3$.
+- Numeric-grid alphabets, 1.56M (logs/41): zones $-5.42$ and $-5.82$, whole texts $-6.49$ / $-6.36$, all at their nulls. Two-keyword alphabets, 425k (logs/35): zones $-5.48$ and $-5.85$ to $-5.89$.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Phrase `THE QUICK BROWN FOX`: distinct letters in order of appearance `THEQUICKBROWNFX` (15 letters). Styles:
+
+```
+straight remainder   THEQUICKBROWNFX ADGJLMPSVYZ
+reversed remainder   THEQUICKBROWNFX ZYVSPMLJGDA
+continued remainder  THEQUICKBROWNFX YZADGJLMPSV   (continue after X, wrap)
+```
+
+Each is a 26-letter permutation; a period-7 keyed substitution in the first of them applied to a 150-letter text is one row of the screen, and the table for a corpus of a few thousand letters of known text holds about two hundred thousand such rows.
+'''
+
+[[provenance]]
+path = "withmath/wm_phrase.py"
+kind = "solver"
+note = "Phrase-keyed alphabets from all substrings of the known texts in six styles; chi-square shift fit, quadgram sweeps, polish; planted control 100%."
+ref = "logs/07_phrase.log"
+
+[[provenance]]
+path = "withmath/wm_pk9.py"
+kind = "solver"
+note = "Vectorised screen of a 2.06M structured-alphabet table on the zones, five families, both relations, shuffled-segment nulls; planted alphabet rank 1."
+ref = "logs/24_pk9_seg48.log"
+
+[[provenance]]
+path = "withmath/probes/step3_swaps.py"
+kind = "script"
+note = "Alphabets within two transpositions of the reference orders; screened with the zone screen and its planted control."
+ref = "logs/38_knbr_zones.log"
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Round-2 phrase result (202,504 alphabets; targets -6.54 / -6.35), numeric-grid (logs/41), two-keyword (logs/35) and zone screen (logs/30) figures."
+
+[[provenance]]
+path = "withmath/STEP3_REVIEW.md"
+kind = "note"
+note = "Section 7: near-neighbour family excluded on both zones with the planted control ranked first at -3.94."
+
+[[references]]
+title = "Elementary Cryptanalysis"
+author = "Helen Fouché Gaines"
+year = 1939

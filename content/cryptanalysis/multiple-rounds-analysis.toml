@@ -1,0 +1,118 @@
+id = "multiple-rounds-analysis"
+section = "cryptanalysis"
+title = "Multiple rounds analysis"
+subtitle = "What repeated substitution rounds do to coset structure, and how to enumerate them exactly"
+status = "CLOSED"
+status_note = "Exact enumeration of one to four periodic-substitution rounds, each keyed from a small word set in either reference alphabet or in six word-keyed alphabets, finds a planted three-round control exactly among 98k combinations; on the two corpus texts (1.57M combinations each, whole texts and zones) every combination stays at the noise level, so that family is excluded within that scope (logs/09, 34)."
+family = "Layered-construction inference"
+tags = ["rounds", "composition", "compound key", "lcm", "exact enumeration"]
+related = ["compound-periodic-key", "quagmire-iii", "vigenere", "lcm-of-periods", "group-actions-on-alphabets", "exhaustive-enumeration", "family-identification", "coset-shift-recovery", "mixture-inference-under-transposition", "g-family-sweep", "g-inner-and-outer-layer"]
+summary = "Applying a periodic substitution several times is not the same in every alphabet. In one alphabet the rounds compose to a single key whose period is the least common multiple of the round periods; in different keyed alphabets they do not collapse, but as long as every round is periodic the cosets of the composite stay monoalphabetic, so the result is a member of the general per-coset-substitution family. The corpus enumerates small round families exactly, compares their coincidence fingerprints with single-layer references, and records which readings are redundant, which are unfalsifiable and which were excluded."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $Q_A(k)$ denote the additive substitution $c = A[\,A^{-1}(p) + k_{i \bmod m}\,]$ in alphabet order $A$. Two rounds in the **same** order compose additively:
+
+$$Q_A(k^{(2)}) \circ Q_A(k^{(1)}) = Q_A(k), \qquad k_i = k^{(1)}_{i \bmod m_1} + k^{(2)}_{i \bmod m_2}, \qquad \text{period } \operatorname{lcm}(m_1, m_2).$$
+
+Two rounds in **different** orders, $Q_B(k^{(2)}) \circ Q_A(k^{(1)})$, are a fixed substitution per residue $i \bmod \operatorname{lcm}(m_1,m_2)$ that is not a rotation of one alphabet; the composite belongs to the family of "one arbitrary substitution per coset". Every round-based reading of a ciphertext is therefore either a compound key (same alphabet) or a coset-substitution family (different alphabets); neither adds structure beyond those two, but the round description restricts the key space enough to enumerate.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Fingerprints"
+body = '''
+A compound key of periods $7$ and $2$ in one alphabet shows alignment at both periods and their multiples: on a planted example the period-7 alignment fell to $z +3.2$ (plain period-7 reference $+7.4$) while period 14 rose to $+5.3$ (logs/312). Rounds in different alphabets give monoalphabetic cosets whose histograms are not rotations of each other in any single order, so the exact alignment weakens while the within-coset index of coincidence stays at the language level; this is the signature the corpus's family classifier groups with unknown-alphabet substitutions.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The round keys come from a small declared set (a handful of candidate words, plus the two reference alphabets and six keyed variants of each word) so that exact enumeration is possible; with free keys the family is the general coset-substitution family and needs other tools.
+- Round periods are known or small; the composite period must divide the text length usefully (a period-45 composite over 153 letters leaves 3 letters per coset).
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Fix the candidate word set, the alphabets per round and the relation per round (additive or reciprocal).
+2. For $r = 1 \dots 4$ rounds enumerate every ordered choice of words, alphabets and relations; decrypt exactly (no search) and score with quadgrams; a true combination reads at the language rate at once.
+3. Calibrate with a planted $r$-round control that must rank first; the corpus control ranked first among 98k combinations.
+4. Same-alphabet rounds are handled once as a compound key: alternate exact monogram maximisation of the $m_1 + m_2$ shifts from many random starts (the alignment is useless here because the inner round flattens the cosets), then quadgram polish, with shuffled-text nulls (controls at $z +51$ and $+27$, 100% match, logs/06).
+5. Report the family as excluded only for the declared word set, alphabets, relations and round count.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+$|W|^r \cdot |\mathcal{A}|^r \cdot 2^r$ exact decrypts; with four words, three extra keys, eight alphabets and two relations the corpus reached 1.57 million combinations per text in minutes. The compound-key solver costs $O(\text{starts} \cdot \text{sweeps} \cdot 26(m_1+m_2) \cdot n)$.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Redundancy.** Enumerating same-alphabet rounds as rounds re-tests a single compound key many times; a periodic solver over the composite period already covers it.
+- **Unfalsifiable variants.** A "sequence of key words per 7-letter block" drawn from a 25k-word dictionary makes any text read like English: the control scored $-3.84$ with only 51% of its letters right and shuffled text reached $-4.04$ (logs/40). Only a constrained word set (704 words including one-letter variations: control $-3.97$ at 88% match, logs/39) is a test.
+- **Cluster inseparability.** "Four rounds in varied alphabets" sits in the family cluster the invariant statistics cannot split at 153 letters (Mahalanobis $d^2 = 13.2$ against $10.7$ for the nearest member, logs/04); a negative enumeration does not exclude the general coset-substitution family.
+- **Unknown alphabets.** With a round in an unstructured alphabet the enumeration is impossible and the family reverts to the blind unknown-alphabet problem, which is power-limited at these lengths.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+- Round enumeration (logs/09): a planted three-round construction (word-keyed alphabet, additive; second word in a different keyed alphabet, reciprocal; third word in a reference alphabet, additive) found exactly among 98k combinations; targets with 1 to 4 rounds and 1.57M combinations each at rates $-6.97$ to $-7.7$ (noise). Zones only (logs/34): $-6.2$ to $-6.9$, with the 63-letter control found exactly.
+- Compound keys (logs/06): planted period-70 key and two-alphabet period-7 over period-10 recovered at 100% ($z +51.1$ and $+26.7$); targets at noise for $q = 2 \dots 13$ in every order pair.
+- Block-sequence keys (logs/39): constrained-set control $-3.972$ at 88% match in the planted cell, 3 to 5% in the other three alphabet/relation cells.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Same alphabet, two rounds: key one $= (0, 1)$ (period 2), key two $= (0, 1, 2)$ (period 3). The composite key has period 6:
+
+```
+i         0 1 2 3 4 5
+key one   0 1 0 1 0 1
+key two   0 1 2 0 1 2
+sum       0 2 2 1 1 3
+```
+
+Encrypting `ATTACKATDAWN` with the composite gives `AVVBDNAVFBXQ` (for instance $T + 2 = V$, $K + 3 = N$, $D + 2 = F$), identical to applying the two rounds in turn. A period-6 solver recovers $(0,2,2,1,1,3)$ directly; the split into two rounds is not identifiable and not needed. Had round two used a different keyed alphabet, each of the six residue classes would carry its own fixed substitution and the composite would be a six-alphabet coset cipher rather than an additive one.
+'''
+
+[[provenance]]
+path = "withmath/wm_rounds4.py"
+kind = "solver"
+note = "1-4 rounds keyed from a small word set in reference and word-keyed alphabets, exact enumeration with quadgram scoring; planted three-round control found exactly."
+ref = "logs/09_rounds4.log"
+
+[[provenance]]
+path = "withmath/logs/34_rounds4_zones.log"
+kind = "log"
+note = "The same enumeration on the zones; 63-letter control found exactly; targets at noise."
+
+[[provenance]]
+path = "withmath/wm_compound.py"
+kind = "solver"
+note = "Outer period-7 over inner period-q in one or two alphabets; start-free alternating exact monogram fit; controls z +51 / +27."
+ref = "logs/06_compound.log"
+
+[[provenance]]
+path = "withmath/wm_blocks7.py"
+kind = "solver"
+note = "Key as a sequence of 7-letter words per block solved by exact Viterbi; constrained-set control and the unfalsifiable dictionary variant."
+ref = "logs/39_blocks7.log"
+
+[[provenance]]
+path = "withmath/logs/312_grammar_fingerprint.log"
+kind = "log"
+note = "Alignment z-profile of a planted period-7 over period-2 compound versus a plain period-7 layer."
+
+[[provenance]]
+path = "withmath/logs/04_abc.log"
+kind = "log"
+note = "Mahalanobis distances of the round and coset-substitution families from the 153-letter target."

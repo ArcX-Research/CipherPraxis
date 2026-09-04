@@ -1,0 +1,128 @@
+id = "autokey-difference-periodicity"
+section = "cryptanalysis"
+title = "Autokey difference periodicity"
+subtitle = "Cancelling a self-feeding key with a lag difference and testing what is left for periodicity"
+status = "VERIFIED"
+status_note = "The lag-difference screen (both signs, lags 1-20, period-7 alignment of the difference text against shuffles, family-wise null over all lags) and affine-lag filters are implemented, and a control-qualified plaintext-autokey solver recovers planted texts exactly at 144-504 letters for the additive and reciprocal relations (6/6 gates); its Porta variant failed its exact-recovery gate at two lengths and those target rows are void (logs/03, 185, 11)."
+family = "Period and structure recovery"
+tags = ["autokey", "difference text", "lag filter", "recurrence", "family-wise null"]
+related = ["autokey", "vigenere", "running-key", "difference-operators", "linear-recurrences-lcg", "exact-period-alignment", "family-wise-null", "running-key-relation-test", "coincidence-lag-profile", "g-selection-freedom"]
+summary = "An autokey feeds the plaintext or the ciphertext back into the key stream, so the key is aperiodic and coset statistics say nothing. Subtracting the ciphertext from itself at the feedback lag cancels the feedback: for ciphertext autokey the lag difference is the plaintext, for plaintext autokey it is a difference of two plaintext letters, and any periodic component added to the feedback survives as a periodic cipher of the difference text. The same idea, with an affine lag filter, cancels keys that obey a linear recurrence. The corpus screens all lags with a family-wise null and confirms candidates with a solver whose controls must recover primer, plaintext and forward encryption exactly."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Work in $\mathbb{Z}_{26}$ with a primer of length $m$. **Plaintext autokey**: $c_i = p_i + p_{i-m}$ for $i \ge m$ (and $c_i = p_i + r_i$ for $i < m$). **Ciphertext autokey**: $c_i = p_i + c_{i-m}$ for $i \ge m$. The lag-$m$ difference operator $\Delta_m c_i = c_i - c_{i-m}$ cancels the feedback:
+
+$$\text{ciphertext autokey:}\quad c_i - c_{i-m} = p_i, \qquad \text{plaintext autokey:}\quad c_i - c_{i-m} = p_i - p_{i-2m}.$$
+
+The first difference text *is* the plaintext from position $m$ on; the second is a difference of two independent language letters, whose distribution is the self-convolution of the language distribution (peaked at $0$ with mass $\sum_x E(x)^2 \approx 0.066$). If a periodic component $k_{i \bmod q}$ is added to a ciphertext autokey, $c_i - c_{i-m} = p_i + k_{i \bmod q}$ is an ordinary periodic cipher of the plaintext. For a key with an affine recurrence $k_i = a k_{i-L} + b$ ($a$ a unit) the filter $c_i - a c_{i-L}$ gives $p_i - a p_{i-L} + b$, whose distribution is the $a$-scaled self-convolution of the language distribution plus a constant.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Screens"
+body = '''
+For each sign $\pm$ (the reciprocal relation needs the sum) and lag $L = 1 \dots 20$ form $v_i = c_i \pm c_{i-L}$ and measure its period-$m$ alignment index of coincidence (heuristic alignment, see [Exact period alignment](/cryptanalysis/exact-period-alignment)) against position-shuffles of $v$. For the affine filters score $D_i = c_i - a c_{i-L}$ by the log-likelihood ratio of its histogram against the scaled self-convolution reference $R_a$ with the constant maximised out,
+
+$$\Lambda(a,L) = \max_d \sum_x N_D(x) \log\big(26\,R_a(x-d)\big),$$
+
+and compare the maximum over all $(a, L)$ with the same maximum on shuffles (family-wise null). A single $(a,L)$ or $(\pm, L)$ $z$ of $+3$ is the expected extreme of 40 to 480 trials and is not evidence.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The feedback is additive in a known index order; in an unknown mixed alphabet the difference does not cancel the feedback (the two occurrences of the alphabet do not commute with subtraction).
+- The feedback lag is small enough to scan; primers of length 1 to 40 were searched by the solver.
+- For the plaintext-autokey difference the plaintext must be peaked: the difference of two language letters has an index of coincidence only slightly above uniform, so its detection is weak at 150 letters.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Difference/sum screen over lags with shuffled nulls per lag and a family-wise null over all lags and signs.
+2. Affine-lag filter screen for recurrent keys (linear congruential, progressive, drifting), same null structure.
+3. If a lag shows a family-wise significant periodic structure, solve the difference text as a periodic cipher (ciphertext autokey plus periodic component) or read it directly (pure ciphertext autokey).
+4. Independently, run the direct autokey solver: for each primer length and relation, hill-climb the primer with a language score, then require exact plaintext, exact primer and an independent forward encryption on planted controls before any target is read.
+5. An additional necessary condition: under any autokey each coset is a sum of two or more language letters, so a text whose cosets are as peaked as monoalphabetic language (coset IC $0.067$ to $0.086$) cannot be an autokey of prose.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Screens: $O(n)$ per $(\pm, L)$ plus the alignment; $30$ to $100$ shuffles per configuration run in minutes. The direct solver used a budget of $500 \times 2000$ evaluations per primer length and took about 8 s per 153-letter text and 18 s per 504-letter text.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Selection over lags.** Per-lag maxima of $z +3.0$ to $+3.9$ appeared on every text (for example sum at lag 2, $z +3.0$; sum at lag 15, $z +3.9$) while the family-wise maxima of the affine filters sat at $z -0.1$ to $+0.3$ (logs/03).
+- **Failed controls void the row.** Of four planted "periodic layer over plaintext autokey" controls only the additive same-order case was read (86% match); the other three read 7%, 8% and 1%, so their target rows carry no information (logs/11).
+- **Exact-recovery gates.** The Porta-relation autokey solver reached 97.2% and 99.2% plaintext on 144- and 504-letter controls but not the exact primer, and was locked out of the target by the gate (logs/185).
+- **Alphabet.** None of the cancellations applies through an unknown keyed alphabet.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+- Direct plaintext-autokey solver, primer range 1 to 40 (logs/185): additive and reciprocal relations at 153, 144 and 504 letters, planted plaintext 100%, primer exact, forward reconstruction PASS (6/6 gates); Porta relation 1/3 gates. Targets under the passed gates: no candidate (best rate $-5.37$ on the 153-letter text against the language level of about $-4.3$).
+- Lag screens (logs/03): family-wise affine-filter maxima $z -0.1$, $+0.3$, $-0.0$, $+0.3$, $-0.7$, $+0.3$ across texts and orders; difference-text alignment maxima all within the selection band.
+- Periodic layer over autokey (logs/11): control 86% for the additive same-order case; targets at $-6.6$ to $-6.8$ (noise).
+- The 504-letter text: no autokey signature in either order (logs/70).
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Ciphertext autokey with primer `K` ($m = 1$) on `ATTACKATDAWN`: $c_0 = A + K = K$, then each letter adds the previous ciphertext letter:
+
+```
+plain   A T T A C K A T D A W N
+cipher  K D W W Y I I B E E A N
+```
+
+(for instance $c_1 = T + K = 19 + 10 = 29 \equiv 3 = D$, $c_2 = T + D = 22 = W$). The lag-1 difference $c_i - c_{i-1}$ is
+
+```
+D-K W-D W-W Y-W I-Y I-I B-I E-B E-E A-E N-A
+ T   T   A   C   K   A   T   D   A   W   N
+```
+
+the plaintext from position 1 onward, with no key search at all. Had a period-3 key been added to the feedback, the same difference text would be a period-3 Vigenère of the plaintext, detectable by period scan and solvable by coset shift recovery.
+'''
+
+[[provenance]]
+path = "withmath/wm_algebra.py"
+kind = "solver"
+note = "Test A affine-lag filters with family-wise null; test B lag difference/sum texts scored by period-7 alignment against shuffles."
+ref = "logs/03_algebra.log"
+
+[[provenance]]
+path = "withmath/logs/185_autokey_audit.log"
+kind = "log"
+note = "Control-qualified plaintext-autokey audit: vig/beau/porta, primer 1-40, exact plaintext + primer + forward gates; 6/9 gates pass, targets no candidate."
+
+[[provenance]]
+path = "withmath/wm_misc.py"
+kind = "solver"
+note = "Periodic layer over plaintext autokey, coordinate descent from many starts; only one of four control variants read."
+ref = "logs/11_misc.log"
+
+[[provenance]]
+path = "withmath/STEP3_FIRST_PRINCIPLES.md"
+kind = "note"
+note = "Section 2.1: autokeys excluded for prose-like cosets because each coset is a sum of two or more language letters (IC about 0.045)."
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Round-1 algebra summary (no LCG/affine/drifting key, no autokey signature) and the 504-letter text's lag facts (logs/70)."
+
+[[references]]
+title = "Military Cryptanalysis, Part III"
+author = "William F. Friedman"
+year = 1939

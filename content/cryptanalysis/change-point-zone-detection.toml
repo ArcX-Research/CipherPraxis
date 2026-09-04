@@ -1,0 +1,133 @@
+id = "change-point-zone-detection"
+section = "cryptanalysis"
+title = "Change-point and zone detection"
+subtitle = "Locating where a key, alphabet or plaintext regime changes along a ciphertext, without knowing the alphabet"
+status = "PROMISING"
+status_note = "An exact dynamic programme over same-coset coincidences located one key boundary in the 144-letter text at position 53 (z +3.3 against within-coset shuffles, reproduced at z +3.39 in a second implementation) and none in the 153-letter text; the companion letter-set, windowed-lag and segment-identity tests carry planted references, but the coincidence detector itself has no planted positive control and fixes its prose rates in advance (logs/56, 335, 38)."
+family = "Period and structure recovery"
+tags = ["change point", "segmentation", "zone", "dynamic programming", "coincidence", "alphabet-free"]
+related = ["exact-period-alignment", "segment-chain-analysis", "assumption-review-protocol", "within-coset-null", "permutation-test", "exact-dynamic-programming", "coincidence-lag-profile", "g-change-point", "g-zone", "g-coset"]
+summary = "A ciphertext need not be homogeneous: the key may change part-way, a prefix may be keyed with a degenerate key, or the plaintext itself may switch character. Zone detection finds such boundaries from statistics that need no alphabet, chiefly the rate at which letters a multiple of the period apart coincide, the letter set in use, and the identity or rotation relation between segment histograms. In the corpus it reorganised the whole analysis: statistics that had been read as evidence of a mixed inner text turned out to be artefacts of pooling a 63-letter period-7 zone with 90 flat letters."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Under a period-$m$ polyalphabetic substitution two letters a multiple of $m$ apart lie in the same coset and were enciphered by the same substitution. If both lie in the same key segment they coincide at the plaintext rate ($r_s \approx 0.066$ for English prose); if a key change separates them they coincide at the cross-substitution rate ($r_d \approx 0.0385$, the uniform rate). A **change point** at $t$ is a position such that same-coset pairs straddling $t$ coincide at the lower rate. The segments it delimits are **zones**; a zone may also differ in letter set (a different key selects different ciphertext letters) or in coincidence at all lags (a near-monoalphabetic segment is peaked at every lag).
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Exact segmentation by dynamic programming"
+body = '''
+Each same-coset pair $(i, j)$, $j - i = mk > 0$, contributes a log-likelihood-ratio weight for "same segment" against "different":
+
+$$W_{ij} = \log\frac{r_s}{r_d} \approx 0.539 \text{ if } c_i = c_j, \qquad W_{ij} = \log\frac{1-r_s}{1-r_d} \approx -0.029 \text{ otherwise.}$$
+
+Let $P(a,b)$ be the sum of $W_{ij}$ over pairs inside $[a,b)$. The best score of the prefix $[0,b)$ cut into $k$ segments obeys
+
+$$F_k(b) = \max_{j < b} \big[F_{k-1}(j) + P(j,b)\big], \qquad F_1(b) = P(0,b),$$
+
+with boundaries recovered by back-pointers; pairs across a boundary contribute nothing. The gain $F_k(n) - F_1(n)$ is calibrated against shuffles **within each coset**, which keep every coset histogram and destroy only positional structure. Companion statistics: the chi-square distance between prefix and suffix histograms maximised over $t$ (with a max-over-$t$ null), a sliding-window lag-$m$ coincidence map, the alignment $z$ of head and tail for every split, and an alphabet-free identity test between two segments (cosine of histograms, or its maximum over the 26 rotations in a reference order).
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The period is known and the layer is a substitution (not a transposition): in the corpus zones the coincidence rate at other lags stayed near $0.054$ while lag-7 pairs ran at $0.09$ to $0.13$.
+- The plaintext rate inside a segment is the prose rate; a peaked, small-vocabulary or repetitive plaintext raises it and shifts the likelihood weights.
+- The coincidence detector sees a *key* change only through its effect on same-coset pairs; a change of plaintext distribution, a transposition boundary or a switch to a different substitution regime produces the same signature.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Compute the same-coset coincidence rate in sliding windows (window 42, step 7 at period 7) and note where it rises above the uniform level: the zones.
+2. Run the exact segmentation DP for $k = 1 \dots 4$ segments; report boundaries and the gain against within-coset shuffles.
+3. Cross-check with the letter-set change (chi-square over $t$ with its max-over-$t$ null) and with per-segment alignment $z$ from the split scan.
+4. Relate the segments: the identity test decides between "same key" (histograms coincide), "key drifted by a constant in a reference order" (histograms coincide after a rotation) and "unrelated or uniform" (neither), each calibrated on planted references at the text's own geometry.
+5. Re-run every earlier whole-text statistic per zone; discard whole-text verdicts that the zoning explains.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Weights: $O(n^2/m)$ pairs. Prefix sums $P(a,b)$: $O(n^2)$ after a cumulative pass. DP: $O(k\,n^2)$. Two hundred shuffle replicates of a 144-letter text run in seconds.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **A change point is not a key proof.** Same-coset collision evidence arises equally from a plaintext-distribution change, a transposition boundary or a different substitution regime; and a peaked prefix is not proof of a one-letter (Caesar) key, since a peaked plaintext also gives a peaked prefix.
+- **Same key is undetectable by identity tests.** A same-key text and its whole-text shuffle give the same identity statistic, so the test decides only where the segments *differ*; on the 153-letter text the ends differed from the middle only at $z -1.5$ / $-1.4$, consistent with uniform letters or a many-shift layer.
+- **Little power on short zones.** The 63-letter zone of the 153-letter text gives the coincidence DP almost no power ($z \le -0.5$ for any boundary).
+- **Selection over $t$.** A single-$t$ chi-square peak must be judged against the maximum over $t$ under shuffles; the letter-set change of the 144-letter text was $z +3.7$ on that null, at $t \approx 33$ to $52$, while the coincidence DP puts the key boundary at 53: the two statistics answer different questions.
+- **Fixed rates.** The detector hard-wires the prose rates; a plaintext with a different within-substitution coincidence rate moves the weights, and no planted positive was run for the DP itself.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+- Coincidence DP (logs/56): the 144-letter text, two segments, gain $+8.07$ at boundary 53 against a within-coset shuffle null of $3.26 \pm 1.44$ ($z +3.3$); three segments $[53, 132]$ at $z +2.8$. The 153-letter text: gain $+2.76$ at 46 against $3.54 \pm 1.61$ ($z -0.5$).
+- Independent re-implementation (logs/335): best split of the 144-letter text at 53, gain $5.71$ against $2.16 \pm 1.05$ ($z +3.39$, $p = 0.000$); 153-letter text best split at 55, $z +0.71$ ($p = 0.15$); the 504-letter text at period 7, $z +1.46$.
+- Identity test planted references, 100 each at the texts' own geometry (logs/38): prefix key drifted by a constant $z(g{=}0) = -0.8 \pm 1.1$; uniform random prefix $-0.2 \pm 1.0$ and $-0.6 \pm 1.2$; prefix re-keyed in a random alphabet $-0.8 \pm 1.2$; the observed prefix of the 144-letter text differs from its zone at $z -5.2$, far outside every reference, the signature of a near-monoalphabetic block.
+- Zone prose checks against 300 planted period-7 prose zones (logs/38): coset-IC mean of the 63-letter zone $0.067$ (planted $0.065 \pm 0.018$, $z +0.1$), of the 96-letter zone $0.082$ ($z +1.4$).
+- Block tests (logs/02): the 144-letter text cut into three blocks of 48 has block histograms that are rotations of one distribution ($z +3.2$ / $+3.9$ in the two orders) and a key-change statistic of $z +2.5$ in one order; the 153-letter text shows no block structure ($z -1.0$ / $-0.7$).
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Period 2, sixteen ciphertext positions, so each coset holds eight letters and $2 \times \binom{8}{2} = 56$ same-coset pairs. Suppose the first half is keyed by one key and the second by another, and consider the split at $t = 8$. The 32 pairs that straddle the boundary are the ones the split removes from the score:
+
+- if none of the 32 straddling pairs coincides, the two-segment gain is $-32 \cdot (-0.029) = +0.93$;
+- if four of them coincide (about the prose rate, $0.066 \times 32 \approx 2$, would be two), the gain is $-(4 \cdot 0.539 + 28 \cdot (-0.029)) = -1.34$ and the split is rejected.
+
+Real detections rest on hundreds of pairs: the 144-letter text has 13 letters per coset after the boundary, and its two-segment gain of $+8.07$ exceeds the shuffle mean by three standard deviations.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Zoning changed the reading of every whole-text statistic in the corpus: a 63-letter zone with monoalphabetic cosets pooled with 90 flat letters gives exactly the "mixed inner" coset index of coincidence ($\approx 0.055$) and pair-coincidence deficit that had motivated sandwich, fractionation and perturbed-key sweeps. Those sweeps remain valid exclusions of what they tested but were aimed at an artefact (see [Assumption review protocol](/cryptanalysis/assumption-review-protocol)).
+'''
+
+[[provenance]]
+path = "withmath/wm_segments.py"
+kind = "solver"
+note = "Exact segmentation DP over same-coset coincidence log-likelihood ratios with within-coset shuffle nulls; rates 0.066 / 0.0385 fixed in the source."
+ref = "logs/56_segments.log"
+
+[[provenance]]
+path = "withmath/logs/335_changept.log"
+kind = "log"
+note = "Independent change-point DP at period 7 for all three texts: boundary 53 at z +3.39 for the 144-letter text; nothing significant elsewhere."
+
+[[provenance]]
+path = "withmath/probes/step3_facts.py"
+kind = "script"
+note = "Windowed lag-7 map, letter-set chi-square with max-over-t null, segment identity and rotation tests with planted references, zone prose checks."
+ref = "logs/38_step3_facts.log"
+
+[[provenance]]
+path = "withmath/wm_blocks.py"
+kind = "solver"
+note = "Equal-block histogram rotation test, block key-change statistic against within-coset shuffles, prefix/suffix split scan, windowed IC."
+ref = "logs/02_blocks.log"
+
+[[provenance]]
+path = "withmath/STEP3_REVIEW.md"
+kind = "note"
+note = "Section 0 explains the whole-text mixed-inner artefact; section 7 records the z -5.2 identity result and the reading of the prefix as a near-monoalphabetic block."
+
+[[provenance]]
+path = "withmath/PK89_SEGMENT_CANCELLATION_REVIEW.md"
+kind = "audit"
+note = "Section 4: a change point is not a key proof; the near-monoalphabetic prefix is not a Caesar proof; the 153-letter text's split is weak (z +0.71)."
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Audit remark that the segmentation DP has no positive control and hard-wires prose rates."

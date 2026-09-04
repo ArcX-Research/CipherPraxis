@@ -1,0 +1,10 @@
+id = "g-inner-and-outer-layer"
+section = "glossary"
+title = "Inner and outer layer"
+status = "VERIFIED"
+status_note = "Standard terms for layered constructions; the invariance statement is proved in the mixture-inference entry."
+family = "Cipher structure"
+tags = ["layered", "sandwich", "composition"]
+related = ["sandwich-construction", "mixture-inference-under-transposition", "transposition-width-recovery", "order-free-width-statistic", "exact-period-alignment", "multiple-rounds-analysis"]
+summary = "In a layered construction the outer layer is the last operation applied in encryption and the first to be removed in analysis; the inner layer is what sits beneath it. Which statistics survive depends on the order of layers: a periodic substitution applied after a transposition keeps its coset structure while the text beneath is scrambled, a transposition applied after a periodic substitution scrambles the cosets, and a transposition applied anywhere leaves every letter multiset untouched. The last fact is what lets an outer periodic layer be fitted and the inner distribution inferred without knowing the transposition at all."
+updated = "2026-09-04"

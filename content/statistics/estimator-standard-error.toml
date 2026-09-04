@@ -1,0 +1,134 @@
+id = "estimator-standard-error"
+section = "statistics"
+title = "Estimator standard error"
+subtitle = "Every reading carries an error bar: exact where the formula exists, simulated or resampled otherwise"
+status = "VERIFIED"
+status_note = "The exact standard deviation of the index-of-coincidence estimator is implemented and printed with every coset reading (0.0210 per 22-letter coset, 0.0079 for the mean of seven at 153 letters); simulated standard errors from planted references and held-out windows are used for statistics without a closed form, and an audit found that a widely repeated 'not monoalphabetic' claim had been a 1.5-sigma statement."
+family = "Null distributions and calibration"
+tags = ["standard error", "variance", "error bars", "U-statistic", "simulation"]
+related = ["index-of-coincidence", "shuffled-null-z-score", "power-analysis", "english-gate-calibration", "chi-squared-fit", "planted-controls", "g-z-score", "g-held-out"]
+summary = "A statistic without a standard error cannot support a conclusion. Three sources of error bars are used: exact formulas (the coincidence estimator is a U-statistic whose variance includes the covariance of pairs that share a position), simulation on planted references (real English windows enciphered with random keys under the hypothesised construction), and held-out calibration (thousands of genuine text windows of the target length). The z-score of an observation against the appropriate error bar is what distinguishes a finding from a fluctuation."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For an estimator $\hat\theta$ of a quantity $\theta$ with sampling standard deviation $\sigma_{\hat\theta}$, the standardised reading is
+
+$$z = \frac{\hat\theta - \theta_0}{\sigma_{\hat\theta}},$$
+
+where $\theta_0$ is the value predicted by the hypothesis under test. Three ways of obtaining $\sigma_{\hat\theta}$:
+
+- **Exact.** For the [index of coincidence](/statistics/index-of-coincidence) of $n$ independent letters from distribution $p$, with $\kappa_2 = \sum p_x^2$, $\kappa_3 = \sum p_x^3$ and $P = n(n-1)/2$,
+  $$\sigma^2_{\operatorname{IC}} = \frac{P\,\kappa_2(1-\kappa_2) + 2P(n-2)(\kappa_3 - \kappa_2^2)}{P^2}.$$
+- **Simulated.** Encipher $R$ real text windows under the hypothesised construction with random keys, compute the statistic each time, and take the sample standard deviation (e.g. the IC of a specific key geometry on real English: $0.04326 \pm 0.00324$).
+- **Held-out.** Compute the statistic on thousands of genuine windows of the target length (e.g. distinct-letter count of English: $15.19 \pm 1.56$ at 33 letters, $17.78 \pm 1.51$ at 53 letters, from 2,500 windows per length).
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Means of cosets and proportions"
+body = '''
+- The mean of $m$ independent coset readings has standard error $\sigma/\sqrt{m}$: $0.0210/\sqrt{7} = 0.0079$.
+- A recovery rate $\hat\rho = k/N$ from planted trials has standard error $\sqrt{\hat\rho(1-\hat\rho)/N}$: for $1013/1024$, $0.9893 \pm 0.0032$; for $59/64$, $0.922$ with a 95% interval $[0.856, 0.988]$.
+- An empirical $p$ from $N$ nulls has resolution $1/(N+1)$ and, for a true $p$ near $0.5$, standard error $\approx 0.5/\sqrt{N}$: nine nulls resolve nothing finer than $0.1$.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The exact IC formula assumes independent letters; real prose (word repeats) scatters more, which is why simulated references on real text accompany it.
+- Simulated standard errors are only as good as the simulated plaintext and key distributions; a peaked non-prose plaintext or a structured key is outside them.
+- Held-out windows must not overlap the model's training data or the planted controls.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Use in an attack pipeline"
+body = '''
+1. Print every measurement as value, expected value under the hypothesis, standard error and $z$.
+2. Treat $|z| < 2$ as "consistent", $2$–$3$ as "strained", and require $|z| \ge 3$ together with a matched null before calling anything a fact; with many readings, apply the [family-wise](/statistics/family-wise-null) correction.
+3. Use the error bar to size the next experiment: to turn a $1.5\sigma$ coset reading into a $3\sigma$ one at the same effect requires four times the letters.
+4. Prefer instruments with smaller standard errors for the same question: the aligned union IC and the aligned digram IC were sharper than the mean coset IC for the monoalphabetic question.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Exact formulas are $O(26)$. Simulated errors cost $R$ encryptions and statistic evaluations (400 planted references per model in the independent recomputation; 300 planted prose zones for the pooled lag rate). Held-out calibration over 2,500 windows per length is seconds.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Ignoring correlation.** The binomial guess $\sqrt{\kappa_2(1-\kappa_2)/P}$ is $0.016$ at $n = 22$; the exact value is $0.021$, 30% larger, because pairs sharing a position are positively correlated.
+- **Too few draws for a skewed maximum.** A change-point statistic reported at $z = +3.3$ rested on 60 null draws of a right-skewed maximum; the error bar of the error bar was not small.
+- **Ambiguity of the hypothesis.** An IC that matches one key geometry to $z = +0.38$ also matches 134 of 373 alternative geometries within one standard deviation; a small $z$ certifies consistency, not identification.
+- **Over-reading small z.** "Cosets are not monoalphabetic" was a $-1.5\sigma$ reading (mean coset IC $0.0536$ against $0.0652$ with standard error $0.0079$); several search rounds branched on it as if it were a fact.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The exact IC error bar was checked on planted references: a plain periodic substitution of English gave a mean coset IC of $0.0713$, $z = +0.8$ against the monoalphabetic expectation $0.0652$; a fractionated inner text gave $0.0575$, $z = -1.0$; both inside the error bar as they should be. The digram IC of the aligned text was compared with 60 English windows ($0.0074 \pm 0.0014$) and with 200 shuffles ($0.0059 \pm 0.0008$) at the same time, so that "English-like" and "above random" are separate statements.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+English letter frequencies give $\kappa_2 = 0.0655$ and $\kappa_3 = 0.00535$. For a coset of $n = 22$ letters, $P = 231$ pairs:
+
+$$P\kappa_2(1-\kappa_2) = 231 \times 0.0655 \times 0.9345 = 14.14, \qquad 2P(n-2)(\kappa_3 - \kappa_2^2) = 462 \times 20 \times (0.00535 - 0.00429) = 9.79,$$
+
+so $\sigma_{\operatorname{IC}} = \sqrt{14.14 + 9.79}/231 = 4.89/231 = 0.0212$, and for the mean of seven cosets $0.0212/\sqrt{7} = 0.0080$ (the corpus table in the receipts gives $0.0210$ and $0.0079$). A mean coset IC of $0.0536$ is then $z = (0.0536 - 0.0652)/0.0079 = -1.5$: not evidence against monoalphabetic cosets. Without the covariance term the standard error would be $\sqrt{14.14}/231 = 0.0163$ and the same reading would be misreported as $z = -1.9$.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The phrase "the facts with error bars" in the evidence corpus refers to this practice: the audit script recomputed, with exact or simulated errors, every quantity earlier search rounds had branched on, and several of them turned out to be within noise.
+'''
+
+[[provenance]]
+path = "withmath/wm_core.py"
+kind = "library"
+note = "ic_sd_monoalphabetic(n, dist): exact s.d. of the IC estimator for n iid letters (pairs sharing one element are correlated)."
+
+[[provenance]]
+path = "withmath/wm_audit.py"
+kind = "solver"
+note = "Docstring: 'a 22-letter coset has s.d. ~0.02; the 7-coset mean ~0.008 - most exclusions so far were ~1.5 sigma'; prints within-coset IC with the exact s.d. per coset and of the mean."
+
+[[provenance]]
+path = "withmath/logs/01_audit.log"
+kind = "log"
+note = "Exact s.d. 0.0210 per coset and 0.0079 of the mean at n = 153 (0.0218/0.0082 at n = 144); planted references z +0.8 and -1.0; target mean coset IC 0.0536, z -1.5; digram IC vs English windows 0.0074 +- 0.0014 and vs shuffles 0.0059 +- 0.0008."
+ref = "logs/01_audit.log"
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "'What the numbers mean': the within-coset IC comes with the exact s.d. of the estimator (0.008 for the mean of seven 22-letter cosets); the aligned union IC and aligned digram IC are the sharper instruments."
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Distinct-letter count of English at matched lengths from 2,500 held-out windows per length: 15.19 +- 1.56 at t = 33, 17.78 +- 1.51 at t = 53."
+ref = "LOG409c"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Simulated IC of one key geometry on real English 0.04326 +- 0.00324 (z +0.38); 134 of 373 simple geometries predict an IC within 1 sd of the observed value; 59/64 = 0.9219 with 95% CI [0.856, 0.988]."
+ref = "LOG398"
+
+[[provenance]]
+path = "withmath/REVIEW_A.md"
+kind = "audit"
+note = "Section 2.9a: a change-point z +3.3 rests on 60 null draws of a skewed maximum; appendix: max-over-35/877 statistics scored with z against right-skewed nulls."
+
+[[references]]
+title = "A class of statistics with asymptotically normal distribution"
+author = "Wassily Hoeffding"
+year = 1948

@@ -1,0 +1,21 @@
+id = "null-lab"
+section = "labs"
+title = "Shuffled-null z-score lab"
+subtitle = "Calibrate a period statistic against letter-shuffled copies of the same text"
+status = "VERIFIED"
+status_note = "Unit-tested: on a five-letter-key Vigenère ciphertext the mean coset IC at period 5 scores z > 4 against 200 shuffles while period 7 stays within noise."
+family = "Analysis labs"
+tags = ["null distribution", "z-score", "permutation test", "calibration"]
+related = ["shuffled-null-z-score", "family-wise-null", "permutation-test", "selection-overfit-diagnostic", "coincidence-lab"]
+summary = "A statistic is only evidence relative to a null. Shuffling the letters of a ciphertext keeps its letter counts but destroys positional structure, so order-dependent statistics such as the mean coset index of coincidence can be scored as a z against the shuffled distribution. The lab runs the null with a fixed seed and sweeps candidate periods."
+updated = "2026-09-04"
+lab = "null"
+
+[[blocks]]
+kind = "notes"
+title = "What to try"
+body = '''
+- Raise the number of trials: the null mean and standard deviation settle and the z stabilises; the seed makes every run reproducible.
+- Test a period that is not the key length: the z hovers around zero, which is what an honest negative looks like.
+- Read the sweep: the best of eleven periods is selected, so its z is inflated relative to a single pre-registered test. A family-wise null would repeat the whole sweep on every shuffle and compare maxima.
+'''

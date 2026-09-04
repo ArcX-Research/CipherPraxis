@@ -1,0 +1,10 @@
+id = "g-coset"
+section = "glossary"
+title = "Coset (of a periodic cipher)"
+status = "VERIFIED"
+status_note = "Standard term."
+family = "Cipher structure"
+tags = ["periodic"]
+related = ["vigenere", "index-of-coincidence"]
+summary = "For a cipher whose key repeats with period m, the coset b is the set of ciphertext positions i with i ≡ b (mod m). Each coset is enciphered with one key element, so it behaves like a monoalphabetic substitution of the plaintext letters at those positions."
+updated = "2026-09-04"

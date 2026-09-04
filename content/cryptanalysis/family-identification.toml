@@ -1,0 +1,121 @@
+id = "family-identification"
+section = "cryptanalysis"
+title = "Family identification"
+subtitle = "Deciding which construction could have produced a ciphertext by simulating candidate families and matching invariant statistics"
+status = "POWER-LIMITED"
+status_note = "Likelihood-free classification (29 constructions x 120 simulations, 19 invariant features, Mahalanobis distance) and the alignment z-profile fingerprint are implemented; they separate monoalphabetic-coset, transposed-inner, matrix-outside and mixed-inner families, but the mixed-inner cluster cannot be split at 153 letters (three of its four nearest members self-classify at 8 to 42% in the first run, the fourth at 82%), so negatives inside that cluster are uninformative (logs/04, 312)."
+family = "Model identification"
+tags = ["approximate Bayesian computation", "Mahalanobis", "fingerprint", "invariant statistics", "simulation", "power"]
+related = ["mahalanobis-family-distance", "index-of-coincidence", "coincidence-lag-profile", "power-analysis", "exact-period-alignment", "mixture-inference-under-transposition", "frequency-analysis", "assumption-review-protocol", "sandwich-construction", "bifid", "hill-cipher", "g-family-sweep", "g-inner-and-outer-layer"]
+summary = "Before searching keys it pays to ask which constructions are even consistent with a ciphertext. Family identification simulates each candidate construction many times on real language with random keys, computes the same vector of key- and transposition-invariant statistics on the simulations and on the target, and scores the target against every family's cloud. It also runs in the other direction, as a family-consistency check that rejects a proposed family whose simulated statistics do not contain the measured ones. The corpus's finding is one of power: the coarse families separate cleanly at 153 letters, the mixed-inner ones do not."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For each family $\mathcal{F}$ in a declared menu, draw $N$ simulations: a random window of language of the target's length, random keys, the family's encryption. Compute a feature vector $\phi \in \mathbb{R}^{19}$ on each: raw IC and distinct-letter count; aligned union IC, within-coset IC, aligned digram IC and residual periodicity after the exact period-7 alignment; periodic IC at 7, 14 and 28; alignment margin; the inner-model evidences $M_1, M_2, M_3$ with the outer shifts marginalised, their differences and the MAP evidence; the mean posterior sharpness and the class-posterior autocorrelations at lags 1 and 2. Each family becomes a cloud $(\mu_\mathcal{F}, \Sigma_\mathcal{F})$ in standardised feature space and the target is scored by
+
+$$d^2_\mathcal{F} = (\phi_{\text{target}} - \mu_\mathcal{F})^\top \Sigma_\mathcal{F}^{-1} (\phi_{\text{target}} - \mu_\mathcal{F}), \qquad \ell_\mathcal{F} = -\tfrac12\big(d^2_\mathcal{F} + \log\det\Sigma_\mathcal{F}\big),$$
+
+with a shrunk covariance ($0.7\Sigma + 0.3\operatorname{diag}\Sigma$). Per-feature $z$ values say *which* statistic disagrees for a rejected family. The self-classification accuracy of the simulations (each simulation scored against all clouds) is the honest power number of the classifier.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Fingerprint and consistency harness"
+body = '''
+A cheaper fingerprint uses one statistic across periods: the alignment-IC $z$ at $p \in \{3, 4, 7, 9, 14, 17, 21\}$ against within-text shuffles, for planted families and the target. A true period peaks at $p$ and inherits at its multiples; a transposition outside the periodic layer flattens the profile; a matrix cipher outside it flattens it too. The **family-consistency harness** inverts the logic: for a proposed family, the 99% prediction interval of each recorded statistic under 200 or more simulations must contain the target's measured value, or the family is marked inconsistent before any expensive selector is built.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The menu contains the true family, or at least a family with the same invariant statistics; the classifier reports the nearest cloud, not the truth.
+- Simulations use language of the target's kind and length; a non-prose plaintext moves every cloud.
+- Features are alphabet-free or computed in the hypothesised order; they cannot distinguish "rotations of one alphabet" from "unrelated alphabets per coset".
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Declare the menu (in the corpus: random letters, plain language, periodic substitution, transposed language under it, sandwiches at several widths and inner periods, a double columnar, three fractionations, running key, autokey, four compound keys, two binary-perturbed keys, unknown-alphabet substitution, seven independent alphabets, two-alphabet rounds, four varied rounds, segment variants, nulls, progressive key, a $3 \times 3$ matrix under the layer).
+2. Simulate, standardise, fit clouds; score the target; print the ranked table with per-feature $z$ above 2.
+3. Print the self-classification accuracy; treat any distinction below it as unresolved.
+4. Run the fingerprint as a cross-check and the consistency harness for any family about to receive a hidden bank.
+5. Use the result to prune: families rejected at large $d^2$ with a named disagreeing feature are closed; families inside the target's cluster remain open and need construction-specific instruments (see [Mixture inference under transposition](/cryptanalysis/mixture-inference-under-transposition)).
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Simulation cost dominates: $29 \times 120$ encryptions plus a heuristic alignment and three evidence fits each, about 15 min per text and order. The harness costs about 0.3 s per fixture per statistic (six minutes per family for 200 fixtures, three statistics, two texts).
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Inseparable cluster.** For the 153-letter text the nearest families were a fractionation under the layer ($d^2 = 10.7$), four varied rounds (13.2), an unknown-alphabet substitution (13.3) and seven independent alphabets (13.8), with self-classification accuracies of 8%, 42%, 30% and 82% in that run; those families cannot be told apart by invariant statistics at this length.
+- **Zone artefact.** The classifier saw a mixed inner because the text is a 63-letter monoalphabetic-coset zone pooled with 90 flat letters; the coincidence diagnostics tell the same story (adjacent same-coset pair coincidences 5 against $11.7 \pm 3.8$ for per-coset substitutions, $z -1.8$, and $4.9 \pm 2.3$ for a transposed period-2 inner, $z 0.0$). Family identification on a non-homogeneous text identifies the mixture, not the construction.
+- **Optimistic power.** Plug-in self-classification overestimates; a held-out split is stricter.
+- **Menu closure.** A construction outside the menu is reported as its nearest neighbour.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+- Cloud classifier (logs/04, first run, 153-letter text): plain language self-classifies at 100%, transposed language under the layer at 78 to 92% across runs, the plain periodic substitution at 30 to 60%, the mixed-inner members at 8 to 42% (fractionation 8%, unknown-alphabet 30 to 48%, sandwich 30 to 52%). Excluded families for the target with named features: transposed language under the layer ($d^2 = 109.8$, $M_1$ evidence $z -7.8$), plain periodic substitution ($d^2 = 159.2$, $M_1$ $z -8.3$), random letters ($d^2 = 30.3$, alignment IC $z +3.8$).
+- Fingerprint (logs/312): plain period-7 substitution $z +7.4$ at 7 (inherited $+4.9$ at 14, $+3.1$ at 21); the same under a width-9 transposition $-0.7$; a matrix layer outside a period-7 layer $+0.5$; period 7 over width 9 over period 2, $+2.6$; the 153-letter text $+4.1$ at 7, $+2.9$ at 14, $+2.6$ at 21 and within $\pm 0.4$ at 3, 4, 9 and 17. A known matrix-outside text of the series showed no spurious period-7 alignment, so the target's $+4.1$ is not a matrix artefact.
+- Consistency harness (coupling note): letter-wise running-key chains predict alignment $z +0.13$ ($-1.1$ to $+2.0$) and zone coset IC $0.040$ for the 153-letter text; a plain period-7 reference predicts $+4.95$ and $0.066$; measured $+4.2$ / $+3.3$ and $0.066$.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Three of the fingerprint's features for planted families at 153 letters (logs/312; the target row is the corpus's 153-letter text):
+
+```
+family                                raw IC   coset IC (p7)   aligned IC (p7)
+period-7 substitution of language     0.0417   0.0719          0.0712
+same over transposed language         0.0426   0.0690          0.0705
+same over transposed period-2 inner   0.0395   0.0524          0.0576
+transposition outside a period-7     0.0399   0.0367          0.0497
+matrix (3x3) under a period-7 layer   0.0393   0.0401          0.0524
+153-letter text                       0.0395   0.0536          0.0618
+```
+
+Coset IC separates constructions with the substitution outermost (about 0.07) from those with a transposition or matrix outside it (about 0.04); the aligned IC separates a language inner (0.071) from a mixed inner (0.058). The target's pair (0.054, 0.062) lies between the mixed-inner row and the language rows, which is what a text made of a monoalphabetic-coset zone and flat ends produces; the per-family Mahalanobis distances quantify the same picture over all 19 features.
+'''
+
+[[provenance]]
+path = "withmath/wm_abc.py"
+kind = "solver"
+note = "Likelihood-free family identification: 29 families x 120 simulations, 19 features, Mahalanobis / Gaussian log-likelihood, per-feature z, self-classification accuracy."
+ref = "logs/04_abc.log"
+
+[[provenance]]
+path = "withmath/logs/312_grammar_fingerprint.log"
+kind = "log"
+note = "Alignment-IC z-profile at periods 3-21 for planted families and the three texts; raw, coset and aligned IC columns."
+
+[[provenance]]
+path = "ck_diag.py"
+kind = "solver"
+note = "Within-coset adjacent-pair and triple coincidences and pooled coset IC against nine planted models, 400 windows each."
+ref = "ck_diag_report.txt"
+
+[[provenance]]
+path = "withmath/PK89_SHARED_STREAM_COUPLING375_DESIGN.md"
+kind = "design"
+note = "Family-consistency invariant harness (section 7) and the predicted-versus-measured table for chain families (section 5)."
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "First-run family table: one cluster the invariant statistics cannot split at n = 153; excluded families and their z."
+
+[[provenance]]
+path = "withmath/STEP3_REVIEW.md"
+kind = "note"
+note = "Section 0: why the whole-text statistics identified a mixture that was a zone artefact."

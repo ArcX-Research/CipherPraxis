@@ -1,0 +1,10 @@
+id = "g-beam-width"
+section = "glossary"
+title = "Beam width"
+status = "VERIFIED"
+status_note = "Standard term."
+family = "Search and optimisation"
+tags = ["beam search", "decoding"]
+related = ["beam-search", "meet-in-the-middle", "k-best-lists"]
+summary = "The number W of partial solutions retained after each extension step of a beam search. A prefix ranked below W at any position is discarded permanently, so the width needed is set by the worst rank the true prefix ever takes, not by its final rank; on planted 63-letter controls the true English prefix sat at rank 81,978 at character 5, beyond any beam that was run. Ranked pools larger than the beam can be screened by an exact solver before the cut."
+updated = "2026-09-04"

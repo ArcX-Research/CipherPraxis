@@ -1,0 +1,10 @@
+id = "g-autokey-primer"
+section = "glossary"
+title = "Primer (autokey, Gromark, Condi)"
+status = "VERIFIED"
+status_note = "Standard term."
+family = "Cipher structure"
+tags = ["feedback", "seed"]
+related = ["autokey", "gromark", "condi", "running-key"]
+summary = "The short secret that seeds a self-extending key stream: the initial letters of an autokey before the plaintext or ciphertext takes over, the starting digits of a Gromark chain, or the starter value of Condi. Each primer element governs one chain of positions spaced by the primer length in a plaintext autokey; in a ciphertext autokey the primer affects only the first m letters and drops out of the lag-m difference text entirely."
+updated = "2026-09-04"

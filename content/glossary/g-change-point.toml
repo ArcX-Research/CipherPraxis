@@ -1,0 +1,10 @@
+id = "g-change-point"
+section = "glossary"
+title = "Change point"
+status = "VERIFIED"
+status_note = "Standard term from sequential statistics, applied to key or regime boundaries inside a ciphertext."
+family = "Cryptanalysis technique"
+tags = ["segmentation", "zone"]
+related = ["change-point-zone-detection", "segment-chain-analysis", "g-zone", "within-coset-null"]
+summary = "A change point is a position at which the statistical regime of a ciphertext changes: the key, the alphabet, the period or the plaintext type differs on the two sides. Under a periodic substitution it is located by an exact dynamic programme over same-coset coincidences (letters a multiple of the period apart coincide at the language rate inside one key segment and at the uniform rate across a boundary), calibrated against shuffles within cosets. A detected change point is evidence of a boundary, not of its cause: a plaintext-distribution change, a transposition boundary or a different substitution regime all produce the same signature."
+updated = "2026-09-04"

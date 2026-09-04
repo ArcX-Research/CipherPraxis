@@ -1,0 +1,134 @@
+id = "selection-overfit-diagnostic"
+section = "statistics"
+title = "Selection-overfit diagnostic"
+subtitle = "Recognising when the best candidate of a large search is only the expected best of many chances"
+status = "VERIFIED"
+status_note = "Applied with receipts: a bank search over 66,628 ciphertext-derived cycles produced a candidate rated English at -4.869 that eight of nine complete-pipeline nulls beat (p = 0.90), a keyword-bank scan put all three targets at z +2.7 to +3.0 at the top of its period range while its control ranked 1 of 607,776 at z +7.6, and a profiled likelihood was shown to buy about 0.15 nats per letter of selection freedom at 153 letters."
+family = "Null distributions and calibration"
+tags = ["overfitting", "selection", "multiple comparisons", "search", "diagnostic"]
+related = ["family-wise-null", "within-coset-null", "quadgram-log-likelihood", "bayesian-evidence-model-selection", "selection-overfit-check", "corpus-bank-screen", "simulated-annealing", "polish-basin-measurement", "g-null-distribution"]
+summary = "Any search over keys, alphabets, cribs, offsets or bank members returns a best candidate; on a short text that candidate will look partly like English whether or not the hypothesis is true, because free parameters absorb noise. The diagnostic asks how the best candidate of the identical search behaves on nulls that keep what the hypothesis does not claim. Four signatures recur: the winner sits at the largest parameter scanned; the winner's score is inside the band of null maxima; the improvement comes from parameters fitted after the fact; and a readable fragment is produced by every run, including the null ones."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let a search return $\hat h = \operatorname{argmax}_{h \in H} T_h(c)$ with score $T^* = T_{\hat h}(c)$. The candidate is **selection-overfit** if $T^*$ is not unusual for $\max_{h \in H} T_h(c')$ over texts $c'$ that satisfy the null. The diagnostic statistic is the rank of $T^*$ among $N$ complete re-selections on null texts,
+
+$$\hat p = \frac{1 + \#\{j : T^*(c'_j) \ge T^*(c)\}}{N+1},$$
+
+with the nulls chosen to preserve the histograms the hypothesis predicts ([within-coset](/statistics/within-coset-null)) or the whole multiset ([shuffle](/statistics/shuffled-null-z-score)).
+
+A second diagnostic is the **selection freedom** of a fit: the average gain of the profiled likelihood $\max_\theta L(c \mid \theta)$ over the marginal $\int L(c \mid \theta)\,d\theta$ on null texts; at 153 letters with seven free shifts it is about $0.15$ nats per letter.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Signatures"
+body = '''
+1. **Edge of the scan.** If $|H|$ grows with a parameter (period, offset, width, crib length), the maximum on null texts drifts to the largest value scanned. A best at the top of the range in every text is the null's behaviour.
+2. **Inside the null band.** $T^*$ within one null standard deviation of the null mean of maxima, or below the null maximum.
+3. **Post-hoc parameters.** Free shifts, weights or alphabets refitted on the candidate raise its score by an amount that shuffled texts reproduce (nulls at $-4.7$ to $-5.0$ for seven free shifts on 63–95 letters).
+4. **Universal readability.** Every restart, including on decoys, yields fragments that segment into words; the "maximum of $N$ hill-climbs" shares one null across all $N$.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The null re-runs the *entire* selection, including candidate shortlisting, refits, polish and any window or segment choice made after looking at the data.
+- The candidate's quality is measured by the same statistic that selected it; a different statistic (a held-out language model, a forward re-encryption) is a separate check, not a substitute for the null.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Use in an attack pipeline"
+body = '''
+1. Before reading the target, decide the family $H$, the null group, $N$ and the admission rule.
+2. Run the search; note where in $H$ the winner sits and by how much it beats the runner-up.
+3. Run the identical search on $N$ nulls; compare $T^*$ with the null maxima, not with the English band.
+4. If the winner is within the null band, close the *bank* or *depth* that was searched, not the underlying family: the evidence corpus records "close this bank/depth; it does not close an arbitrary unknown cycle".
+5. Never promote a readable-looking string unless the full selected-family null is lower.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+$N$ additional full searches; when a single search takes 12 minutes only nine nulls were affordable, which caps the resolution at $\hat p \ge 0.10$ and is stated as such.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Verdict by threshold.** A candidate at $-4.869$ passed the English verdict rule (threshold near $-5.0$); its nine complete-pipeline nulls averaged $-4.836$ with maximum $-4.795$, so the pipeline routinely produces "English" from order-free copies of the histograms.
+- **Nulls from a different procedure.** Citing a $-5.3$ null measured by an annealer with 4,000 trials against the best of a 60,000–627,000-placement pipeline compares two different maxima; the sweep's own null was never measured, so its "best $= $ noise" was asserted, not shown.
+- **Polish without the constraint.** A final hill-climb that drops the constraint it was seeded with (a crib) makes every reported plaintext a free-search maximum; the reported text need not even contain the crib.
+- **Symmetry multiplicity.** Enumerating the twelve unit multiples of a solution as twelve solutions inflates counts and fills solution caps with duplicates.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Bank search: two hidden planted cycles recovered at 100% (relaxed-bigram ranks 16 and 2 of the bank, both inside the shortlist), so the instrument had power; the target's best $-4.869$ was then beaten by 8 of 9 nulls. Keyword-bank scan: control keyword rank 1 of 607,776 at the true inner period ($z = +7.6$); targets $+2.74$, $+2.83$, $+3.04$ with their top rows at periods 12–14, the top of the scan. Cross-text difference scan: planted pair solved at $z = +9.5$ at the true period and offset 0; every target hit sat at the largest period tested with a random offset. A localisation scan whose apparent window-key $z$-scores were later shown to be selection effects, with full completions remaining at $-6$ to $-7$, is recorded in the audit ledger.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+Nine null runs of a full pipeline give endpoint scores
+
+$$-4.876,\ -4.842,\ -4.838,\ -4.836,\ -4.831,\ -4.829,\ -4.822,\ -4.812,\ -4.795$$
+
+(mean $-4.831$, standard deviation about $0.021$) and the target run gives $-4.869$. Eight of the nine nulls exceed the target, so $\hat p = (1 + 8)/10 = 0.90$ and $z = (-4.869 + 4.831)/0.021 = -1.8$: the target's best is *worse* than what the pipeline typically finds on order-free copies of its own histograms. The verdict "English" attached to $-4.869$ by a fixed threshold is irrelevant; the candidate is rejected as selection overfit and the bank is closed at that depth.
+
+The same logic in the other direction: a candidate at $-4.60$ against the same nulls would be $0.195$ above the null maximum, about $9$ null standard deviations, and $\hat p = 0.10$ with nine nulls, the best resolution nine nulls can give.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The diagnostic is the statistical form of the ledger rule "no promotion of a quadgram or neural-model string unless the full selected-family null is lower". It closes banks and depths, never families: an arbitrary unknown alphabet is not excluded by the failure of a finite bank of alphabets.
+'''
+
+[[provenance]]
+path = "withmath/logs/152_crosscycle_full.log"
+kind = "log"
+note = "Top-128 bank search: best -4.869 rated ENGLISH; conditional familywise endpoint null -4.836 +- 0.024, max -4.795, z -1.37, p <= 0.90 over nine complete-pipeline nulls."
+ref = "logs/152_crosscycle_full.log"
+
+[[provenance]]
+path = "withmath/logs/151_crosscycle.log"
+kind = "log"
+note = "Post-hoc controls: two planted cycles recovered at 100% plaintext match (relaxed-bigram ranks 16 and 2, in shortlist), control gate PASS."
+ref = "logs/151_crosscycle.log"
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Rejected as selection overfit (p = 0.90); profiling seven shifts buys ~0.15 nats/letter at n = 153; free sub-coset shifts overfit short texts."
+
+[[provenance]]
+path = "withmath/logs/316_grammar_hill.log"
+kind = "log"
+note = "Keyword-bank scan: control rank 1 of 607,776; targets z +2.74/+2.83/+3.04 at periods 12-14 (top of the scan)."
+ref = "logs/316_grammar_hill.log"
+
+[[provenance]]
+path = "withmath/GRAMMAR_SOLVER.md"
+kind = "design"
+note = "N3 cross-text difference: planted pair at z +9.5, true period, offset 0; every target hit at the largest period tested with a random offset = selection noise; hill scan 'selection-overfit signature'."
+
+[[provenance]]
+path = "withmath/REVIEW_A.md"
+kind = "audit"
+note = "Section 2.1: sweeps as 'the maximum of N hill-climbs' sharing one null; nulls from a different procedure; polish that drops the crib; twelve-fold symmetry multiplicity in enumerated solutions."
+
+[[provenance]]
+path = "withmath/LOG_AUDIT.md"
+kind = "audit"
+note = "No-repeat checklist: no promotion of a quadgram/GRU string unless the full selected-family null is lower; window-key z-scores were selection effects; 'close this bank/depth, it does not close an arbitrary unknown cycle'."
+
+[[references]]
+title = "The garden of forking paths: Why multiple comparisons can be a problem, even when there is no fishing expedition"
+author = "Andrew Gelman, Eric Loken"
+year = 2013

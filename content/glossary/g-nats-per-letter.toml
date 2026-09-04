@@ -1,0 +1,10 @@
+id = "g-nats-per-letter"
+section = "glossary"
+title = "Nats per letter"
+status = "VERIFIED"
+status_note = "Standard unit; used for all evidence readings in the toolkit."
+family = "Information theory"
+tags = ["unit", "evidence", "log-likelihood"]
+related = ["bayesian-evidence-model-selection", "quadgram-log-likelihood", "g-evidence", "g-quadgram"]
+summary = "A natural-logarithm unit of log-likelihood or evidence, normalised by the number of letters scored. One nat is ln(e) = 1; one decade (log10 unit) is 2.303 nats; one bit is 0.693 nats. The evidence instruments report gains in nats per letter over the uniform model, whose entropy is ln 26 = 3.258 nats per letter; English monograms carry about 2.89 nats per letter, so the maximum monogram gain is about 0.36. Quadgram rates are conventionally quoted in log10 per letter instead, so the two scales must not be compared without converting."
+updated = "2026-09-04"

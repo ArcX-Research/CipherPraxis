@@ -1,0 +1,10 @@
+id = "g-fractionation"
+section = "glossary"
+title = "Fractionation"
+status = "VERIFIED"
+status_note = "Standard term."
+family = "Cipher structure"
+tags = ["polybius", "coordinates"]
+related = ["bifid", "trifid", "compressocrat", "polybius-square", "g-polygraphic"]
+summary = "Replacing each letter by two or three coordinates (or a digit code), rearranging the coordinate stream, and regrouping it into letters. Each ciphertext letter then carries parts of several plaintext letters, which flattens single-letter frequencies and removes digram structure within a block while leaving block boundaries detectable. Bifid, Trifid and Compressocrat are fractionations; a fractionated inner text is the classic reason a periodic outer layer shows flat cosets."
+updated = "2026-09-04"

@@ -1,0 +1,140 @@
+id = "viterbi-decoding"
+section = "search"
+title = "Viterbi decoding of a periodic key"
+subtitle = "Exact maximum of an order-three chain objective over key positions, with state = the last three key letters"
+status = "VERIFIED"
+status_note = "The cyclic order-three quadgram DP is implemented for arbitrary period in two solvers and passes blind planted controls at the target information budgets (63 and 95 letters at period 7, 126 at period 26, each 100% plaintext with exact key and forward reconstruction); a KAT compares it with exhaustive enumeration at width two (8/8)."
+family = "Dynamic programming"
+tags = ["viterbi", "dynamic programming", "periodic key", "quadgram", "exact within shortlist"]
+related = ["periodic-substitution-dp", "exact-dynamic-programming", "k-best-lists", "coordinate-descent", "vigenere", "beaufort", "porta", "affine-cipher", "quadgram-log-likelihood", "within-coset-null", "planted-controls", "g-objective-function"]
+summary = "A periodic key of length p is a chain: the plaintext quadgram ending at position i depends on the key letters at four consecutive key positions. The best key under the full quadgram likelihood is therefore a Viterbi maximisation over states made of three consecutive key letters, exact for an open chain and made exact for the cyclic closure by enumerating the first three states. Unlike per-coset statistics it works with four or five letters per coset, which is what makes long periods (26 on 126 letters) solvable."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let the key be $k_0 \dots k_{p-1}$ over a candidate set $\mathcal{K}_b$ per residue (all 26 shifts, or a shortlist of the $W$ best by monogram likelihood). For a start residue $r$ collect every quadgram of the decrypt that begins at a position $i \equiv r \pmod p$:
+
+$$\Phi_r(k_r, k_{r+1}, k_{r+2}, k_{r+3}) = \sum_{i \equiv r} \log_{10} Q_4\big(P_i P_{i+1} P_{i+2} P_{i+3}\big), \qquad P_i = A\big[(a(C_i) - k_{i \bmod p}) \bmod 26\big].$$
+
+The objective $\sum_r \Phi_r$ is an order-three cyclic chain. With states $(k_{t-2}, k_{t-1}, k_t)$:
+
+```
+for each choice of the first three key letters (k_0, k_1, k_2):
+    V_2(k_0,k_1,k_2) <- 0
+    for t in 3 .. p-1:
+        V_t(b,c,d) <- max_a [ V_{t-1}(a,b,c) + Phi_{t-3}(a,b,c,d) ]      # keep argmax a as back-pointer
+    close the cycle with Phi_{p-3}, Phi_{p-2}, Phi_{p-1}, whose last arguments are the fixed (k_0,k_1,k_2)
+    trace back the best (k_{p-3}, k_{p-2}, k_{p-1})
+return the best over all starting triples
+```
+
+An open-chain variant ignores the three wrap-around terms and repairs them with a coordinate polish; the Beaufort relation replaces $a(C_i) - k$ by $k - a(C_i)$.
+'''
+
+[[blocks]]
+kind = "equations"
+body = '''
+Recurrence (maximisation):
+
+$$V_t(b, c, d) = \max_{a \in \mathcal{K}_{t-3}} \Big[ V_{t-1}(a, b, c) + \Phi_{t-3}(a, b, c, d) \Big].$$
+
+Emission tables are built once per residue: $\Phi_r$ is a $|\mathcal{K}|^4$ array accumulated over the $\lceil n/p \rceil$ quadgrams starting at residue $r$. The state count is $|\mathcal{K}|^3$ and each transition step costs $|\mathcal{K}|^4$; with the cyclic enumeration of $|\mathcal{K}|^3$ starting triples the total is $O(p \cdot |\mathcal{K}|^7)$ in the worst case, which is why the shortlist ($W = 8$) matters: $8^7 = 2{,}097{,}152$ table operations per (alphabet order, relation).
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The plaintext is in order (a "quad" mode); if a transposition sits under the periodic layer the emission collapses to per-position monogram terms (a "mono" mode) and the chain structure carries no information.
+- The alphabet order is known (straight or one fixed keyword-mixed order) and the relation is additive (Vigenère or Beaufort) or belongs to a small per-residue family (13 Porta rows; 312 affine maps) that can be shortlisted.
+- Exactness holds inside the shortlisted product; a coordinate and adjacent-pair pass afterwards lets an omitted shift enter.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+Run the DP for every period in a range, both alphabet orders and both relations, and compare each finish with the same solve on a shuffled ciphertext (or on within-coset shuffles, which preserve every coset histogram and destroy only adjacency). A real key gives a decrypt that reads as English and a large excess over the null; a wrong period gives an excess near zero. The same finisher is used inside larger selectors: after an exact stage-one enumeration of alphabets, each retained alphabet's seven shifts are initialised by the width-8 cyclic DP and four polish rounds.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Full-width states $26^3 = 17{,}576$ and $26^4 = 456{,}976$ transitions per residue; a 504-letter text at periods 4-170 over two orders, three relations, two modes and two prior weights produced 4,676 jobs on a 12-core pool. With the width-8 shortlist a period-7 or period-26 zone finishes in seconds; the rank-sharded validation finished 512 such DP-plus-polish runs in 265.004 s.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Too few letters per residue for a wide family.** At period 26 on 126 letters (four to five observations per residue) the 312-map affine family manufactured a false state: the control's selected text scored $-4.2767$ (reads as English) and reproduced the ciphertext, yet was neither the hidden plaintext nor the hidden maps. The additive and Porta families, with 26 and 13 options per residue, recovered the same-size control exactly. Family width, not the DP, is the limit.
+- **Shortlist omission.** A shift outside the eight best monogram candidates is unreachable by the DP; the polish pass is the repair, not a guarantee.
+- **Free-shift overfit.** On measured 63-, 95- and 126-letter zones the best exact finishes ($-6.037$, $-6.290$, $-5.107$) sat at or below the maxima of five within-coset nulls ($-5.770$, $-6.185$, $-5.021$): a globally optimal key under a wrong model still scores like noise, and only the null says so.
+- **Wrap-around terms.** The open-chain variant is exact only up to the three closing quadgrams; the cyclic variant enumerates starts to remove that gap.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Cyclic periodic DP: three blind controls (63 letters period 7; 95 letters period 7; 126 letters period 26) recover 100% of the hidden plaintext and reproduce the ciphertext exactly; control gate PASS before any target zone was admitted. Free periodic Porta by the same DP: 63/63, 95/95 and 126/126 letters with exact row keys and forward checks. Periodic affine maps: 63/63 and 95/95 at period 7 pass, the 126-letter period-26 control fails as described. Rank-sharded validation with the width-8 DP finisher: 5/5 positives. KAT: cyclic DP versus exhaustive width-2 brute force, 8/8.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+One Viterbi step with four states. Previous scores $V_{t-1} = (-2.0, -1.0, -3.0, -1.5)$ for states $0..3$; transition-plus-emission scores into state $1$ from states $0..3$ are $(-1.0, -2.0, -0.5, -1.0)$. Then
+
+$$V_t(1) = \max(-2.0 - 1.0,\ -1.0 - 2.0,\ -3.0 - 0.5,\ -1.5 - 1.0) = \max(-3.0, -3.0, -3.5, -2.5) = -2.5,$$
+
+with back-pointer $3$. Repeating for every target state and every position, then tracing back from the best final state, yields the exact maximum-likelihood key inside the candidate product; ties (here between predecessors $0$ and $1$ for a hypothetical $-3.0$ winner) are broken by a fixed rule so the result is deterministic.
+'''
+
+[[provenance]]
+path = "ck_pviterbi.py"
+kind = "solver"
+note = "Open-chain Viterbi for any period: states = last three key letters, quad and mono emission modes, optional key-letter quadgram prior, coordinate polish repairs the wrap-around terms; shuffled-ciphertext nulls per (period, mode, prior)."
+
+[[provenance]]
+path = "ck_pviterbi_report.txt"
+kind = "log"
+note = "A 504-letter run over periods 4-170: 4,676 jobs; best excess over the shuffled null +0.225, decrypts not English."
+
+[[provenance]]
+path = "withmath/wm_periodic_dp.py"
+kind = "solver"
+note = "Cyclic order-three quadgram DP with an eight-shift monogram shortlist per residue, exact closure by enumerating the first three states, 26-way coordinate/pair polish, within-coset nulls."
+
+[[provenance]]
+path = "withmath/PK8_PK10_HINTFREE.md"
+kind = "note"
+note = "Three blind controls at width eight recover 100% with exact forward reconstruction; measured-zone finishes -6.037 / -6.290 / -5.107 against conditional null maxima -5.770 / -6.185 / -5.021."
+ref = "logs/148_periodic_dp.log"
+
+[[provenance]]
+path = "withmath/logs/148_periodic_dp.log"
+kind = "log"
+note = "POST-HOC CONTROL MATCH 100.0% PASS for all three controls; CONTROL GATE PASS."
+ref = "logs/148_periodic_dp.log"
+
+[[provenance]]
+path = "withmath/PERIODIC_PORTA_DP_AUDIT.md"
+kind = "audit"
+note = "Free periodic Porta by the same DP: controls 63/63, 95/95, 126/126 with exact key/order and forward PASS."
+ref = "logs/204_periodic_porta.log"
+
+[[provenance]]
+path = "withmath/PERIODIC_AFFINE_DP_AUDIT.md"
+kind = "audit"
+note = "312 affine maps per residue, eight best into the DP: p7 controls 63/63 and 95/95; the p26 control produced a false English state (-4.2767) and failed."
+ref = "logs/205_periodic_affine.log"
+
+[[provenance]]
+path = "withmath/CROSSCHAIN_M13_RANKSHARD_VALIDATION291_AUDIT.md"
+kind = "audit"
+note = "Width-8 cyclic DP plus four polish rounds as the stage-two finisher; 5/5 positives; static KAT cyclic DP vs exhaustive width-2 brute 8/8; 265.004 s first pass."
+
+[[references]]
+title = "Error bounds for convolutional codes and an asymptotically optimum decoding algorithm"
+author = "A. J. Viterbi"
+year = 1967

@@ -1,0 +1,105 @@
+id = "state-checkpoints"
+section = "engineering"
+title = "State checkpoints"
+subtitle = "Carried scan state that records whether its control passed, and exact task-frontier checkpoints for resumable exhaustive search"
+status = "VERIFIED"
+status_note = "Both forms are implemented in the research program: staged instruments carry JSON state whose downstream stage refuses to run on a failed control, and an exhaustive core's completion-bitmap checkpoint passed a differential KAT and an independent audit before a resumed run was relied on."
+family = "Reproducibility"
+tags = ["checkpoints", "resume", "state", "exhaustive search"]
+related = ["run-script-log-convention", "drainability-and-throughput", "throughput-fail", "compiled-hot-cores", "kat-harness", "seed-determinism", "control-first-policy", "exhaustive-enumeration"]
+summary = "Long pipelines are split into stages, and long searches are split into resumable segments; both need a checkpoint format that cannot smuggle a failure past the stage boundary. The program's scan state carries a control_pass flag that the next stage checks before touching a text, and its exhaustive cores checkpoint a completion bitmap whose frontier is the longest fully completed prefix of a deterministic task order, so a resume can repeat work but cannot skip it."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+**Carried scan state.** A measuring stage writes `logs/state_<text>.json` with, per text, the null mean and standard deviation of its familywise statistic, a `control_pass` boolean, and the ranked configuration rows (`ev`, `z`, width, inner period, outer period, alphabet, relation, class pattern). The finishing stage loads the file and, for any text whose `control_pass` is false, prints `upstream control FAILED -> VOID` and skips it.
+
+**Task-frontier checkpoint.** An exhaustive search over a deterministically ordered task list keeps a completion bitmap; after all workers join, `task_frontier` is the index of the first unset bit, i.e. the longest completed prefix. A continuation starts at `--task-begin <frontier>` and must present a bit-identical generated core and task list and identical relation, root range, split depth and task order, all pinned in the continuation receipt.
+'''
+
+[[blocks]]
+kind = "equations"
+body = '''
+With completion bits $b_0, b_1, \dots$ over tasks in fixed order, the frontier is
+
+$$f = \min\{i : b_i = 0\},$$
+
+and a resume from $f$ is exact because every task below $f$ completed; tasks above $f$ that a straggler finished may be repeated but never skipped. Segment search is exact by the same argument: the node count of $[0, 200)$ equalled the sum for $[0,100)$ and $[100, 200)$ (165,733 + 1,427,442 = 1,593,175), with the truth found in the segment containing it.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- Task order is a pure function of pinned inputs (lexicographic or hash order); changing it invalidates every frontier.
+- Checkpoint instrumentation must not change search semantics. This is not assumed but tested: the differential KAT runs the un-instrumented and instrumented cores on the same deliberately broken plant and requires identical task counts and every deterministic search counter.
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+Checkpoints turn a search that cannot drain in one allocation into one that can be accumulated over idle time as an exact union of segments, each with its own `complete=1` referring to that segment only. They also make a time-capped live run reportable: `pairs=done/total` in a deterministic order is itself a resumable coordinate, so a `SCOPED_INCONCLUSIVE` terminal names exactly the prefix it covered.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+A bitmap over $F$ tasks costs $F/8$ bytes (about 200 KB for 1.7 million pairs). The differential KAT costs two single-thread runs of a 40-task fixture; the independent audit of the frontier logic was a reading exercise.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Resuming under changed bytes.** A continuation with a different core or task order silently searches a different space; the receipt rule exists to make that visible.
+- **A state file that hides a failed control.** Without the `control_pass` gate, a fluent finishing stage would run on a text whose measuring stage had failed its plant.
+- **Cross-run hash expectations.** A fresh transcript embeds elapsed time and memory, so state or transcript hashes differ between otherwise identical runs; compare semantic records.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Oracle smoke: the instrumented core must recover both inherited planted controls with checksums and literal replay. Differential KAT: zero-start instrumented run equals the un-instrumented run on every counter; a run from task 20 reaches frontier 40 and exhausts cleanly.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Checkpoint records"
+body = '''
+```json
+{"text_A": {"null_mean": -3.2638, "null_sd": 0.0187, "control_pass": true,
+            "rows": [{"ev": -3.2376, "z": 1.40, "w": 17, "k": 2, "p": 7, "alpha": "S", "mode": "beau", "pat": "…"}]}}
+```
+```
+CHECKPOINT core_sha=<generated core hash> task_order=hash relation=<A|B> root_range=<lo:hi> split_depth=<d>
+  tasks_total=<F>  frontier=<f>  bitmap_sha=<hash>   resume: --task-begin <f>
+```
+'''
+
+[[provenance]]
+path = "withmath/wm_grammar.py"
+kind = "solver"
+note = "Writes per-text state (null_mean, null_sd, control_pass, rows) to the --state JSON; the finish stage prints 'upstream control FAILED -> VOID' and skips texts whose control failed."
+ref = "logs/state_pk8.json"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Task-frontier checkpointing: generated source and binary hashes, oracle smoke, differential KAT (identical task count and counters; resume from task 20 reaches frontier 40); independent audit GO with the receipt-pinning rule."
+ref = "LOG470"
+
+[[provenance]]
+path = "withmath/wm_pk9_bip39_checkpoint470_kat.py"
+kind = "script"
+note = "Deterministic differential KAT: old and new cores on a deliberately broken plant, single thread, task-begin variant."
+
+[[provenance]]
+path = "withmath/logs/503_segment_kat_20260904T093519Z.log"
+kind = "log"
+note = "Union-of-segments exactness: 165,733 + 1,427,442 = 1,593,175 nodes; truth found in its segment in both lexicographic and hash order."
+ref = "logs/503_segment_kat_20260904T093519Z.log"
+
+[[provenance]]
+path = "withmath/logs/470_pk9_bip39_checkpoint_20260903T145524Z_40936.log"
+kind = "log"
+note = "Oracle smoke of the checkpointed core recovering both inherited planted controls."
+ref = "logs/470_pk9_bip39_checkpoint_20260903T145524Z_40936.log"

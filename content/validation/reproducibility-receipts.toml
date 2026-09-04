@@ -1,0 +1,121 @@
+id = "reproducibility-receipts"
+section = "validation"
+title = "Reproducibility receipts"
+subtitle = "Every number carries the hash of the bytes that produced it"
+status = "VERIFIED"
+status_note = "Receipts are implemented throughout the research program: launchers print the transcript path, ledger entries carry SHA-256 of sources and transcripts, audits rehash before writing, and a fresh re-execution of a sealed controls run reproduced every semantic record with only timing fields differing."
+family = "Reproducibility"
+tags = ["receipts", "hashes", "transcripts", "provenance"]
+related = ["seal-and-audit-protocol", "ledger-reservations", "hash-chained-transcripts", "build-manifests-and-release-json", "seed-determinism", "run-script-log-convention", "g-receipt"]
+summary = "A receipt is the minimal record that lets a stranger recompute a claimed number: the hashes of the source, runner, parser, corpus and model tables, the seeds, the exact command, and the hash of the transcript the number was read from. This atlas quotes no figure without one. The practice sounds bureaucratic until the first time a claim is traced to a log that turns out to be empty, interrupted or from a superseded source; the program's own audit of two hundred logs found four empty ones and a dozen failed or partial ones that had been at risk of being cited."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+A **receipt** for a claim $x$ is the tuple
+
+$$\big(h(\text{source}),\ h(\text{runner}),\ h(\text{parser}),\ h(\text{corpus}),\ h(\text{model tables}),\ \text{seeds},\ \text{argv},\ h(\text{transcript}),\ \text{line or record id}\big)$$
+
+with $h = $ SHA-256, such that re-running the pinned bytes with the pinned inputs regenerates the transcript's semantic records and $x$ can be read from them. Receipts are recorded in three places: the transcript itself (a `PINS` or `LINEAGE` record), the ledger entry that announces the result, and the audit that verifies it.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "What must be equal"
+body = '''
+A fresh execution reproduces a transcript **semantically**, not byte-for-byte, whenever timing or memory fields are embedded. The program's audit of one sealed run found exactly three differences between the frozen transcript and a fresh re-execution:
+
+```
+elapsed_ms       156666    -> 200053
+peak_rss_bytes   131776512 -> 136200192
+prefix_sha256    38c98177… -> f1739a6b…   (necessarily, since the summary changed)
+```
+
+with all 24 fixture records byte-identical. A gate that expects transcript-hash equality across runs is therefore wrong by construction; compare the semantic records. Designs that want byte reproducibility keep elapsed values out of the canonical transcript entirely.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- Hashes are recomputed from the files at the moment of writing, not copied from a hand-off. Audits in the program state this explicitly.
+- Corpus and model tables are pinned by content hash, and derived tables (integer-scaled quadgram scores) by both their hash and a checksum.
+- Host artefacts outside the repository (a system dictionary used as a word bank) are a reproducibility risk; the audit recommended pinning the derived bank blob itself.
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+Receipts defeat three slow failures. **Drift**: a source is "improved" after a run, and the ledger notes that the current hash must not be represented as the executed one. **Promotion**: an exploratory, capped or empty log is later cited as an exclusion; the audit classified 200 logs and found four empty ones that prove nothing and a dozen failed or partial ones that are not exclusions. **Untraceable claims**: a statement made from the ledger's prose rather than from code or a log; the program retracted one such novelty claim after a source audit.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Hashing is free relative to any solver. The cost is procedural: the analysis script of a comparison is kept beside its transcript (as a `.py.txt` so it cannot be executed by accident), and every launcher prints `transcript: <path>` as its last line.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Path-bound hashes.** Smoke transcripts that embed the absolute log path in `argv` have path-dependent whole-file hashes; the program records a path-independent fixture digest alongside.
+- **Self-computed runner hash.** A runner that hashes itself at run time and exports the value validates a modified copy of itself; production modes pin the runner through the manifest and environment instead, and the auditors recorded that a public-mode transcript alone does not attest runner identity.
+- **Mis-filed transcripts.** A pilot's transcript was filed under a development directory when a superseded pilot was stopped; the ledger corrected the path and hash.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The receipt for an audit is the audit's own transcript and script, hashed in the ledger. Independent auditors re-derive counts rather than accepting them: one recomputed the COMMIT prefix hash over the first 178,821 bytes of a transcript and matched it; another rebuilt a 23,724-word bank from the raw source and matched its digest.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Receipt block"
+body = '''
+```
+RECEIPT
+  source   solver.py              sha256 9fe54b86…
+  parser   solver_parser.py       sha256 04642c07…
+  runner   run_solver.sh          sha256 11ac2a0b…  (normalised: b1f10523…)
+  corpus   corpus.txt             sha256 06ed53d8…  2,344,368 letters
+  q4       integer table          sha256 91f571a2…  scale 1e9, smoothing 0.01
+  seeds    plant=<seed> solver=<seed>
+  argv     <exact command line>
+  transcript logs/NNN_name_<stamp>.log   sha256 …   <record or line the number is read from>
+```
+'''
+
+[[provenance]]
+path = "withmath/PK9_STRUCTURED_P7_CHAIN383_INDEPENDENT_AUDIT391.md"
+kind = "audit"
+note = "Field-level diff of a fresh re-execution against the sealed transcript: three non-semantic differences; COMMIT prefix recomputed over 178,821 bytes; bank rebuilt from source and digest matched; host-file pinning recommendation."
+ref = "LOG391"
+
+[[provenance]]
+path = "withmath/LOG_AUDIT.md"
+kind = "audit"
+note = "Corpus accounting: 200 text logs, 106,010 lines; four empty logs prove nothing; table of failed, interrupted and partial records that are not exclusions."
+
+[[provenance]]
+path = "withmath/run_pk9_bip39_fullwords503.sh"
+kind = "script"
+note = "Launcher checks the frozen core source hash before compiling, preserves the driver exit status and prints transcript: <path> as its last line."
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Comparison script kept beside its transcript as logs/503_prefix224_script.py.txt; note that a source improved after a run must not be represented as the executed hash (LOG393 result entry)."
+ref = "LOG503"
+
+[[provenance]]
+path = "withmath/PK10_ALBERTI_ACCEL13_VALIDATION381_INDEPENDENT_AUDIT389.md"
+kind = "audit"
+note = "Observation O2: a self-computed runner hash in public modes does not attest runner identity; production modes pin the runner via manifest and environment."
+ref = "LOG389"
+
+[[provenance]]
+path = "withmath/PK98_SEGCHAIN_A1S0_CONTROL366_AUDIT.md"
+kind = "audit"
+note = "Residual 8: smoke transcripts embed the absolute log path in argv, so the whole-file hash is path-bound; the fixture digest is not."
+ref = "LOG366"

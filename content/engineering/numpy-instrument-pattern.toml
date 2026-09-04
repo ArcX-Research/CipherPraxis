@@ -1,0 +1,109 @@
+id = "numpy-instrument-pattern"
+section = "engineering"
+title = "NumPy instrument pattern"
+subtitle = "Vectorised statistics with error bars, batch search over many chains, and a null printed beside every reading"
+status = "VERIFIED"
+status_note = "The research program's shared mathematics library and its instruments are written in this pattern and pass their planted controls; batch annealing over thousands of chains and integer-matrix feasibility tests were profiled and tuned in the recorded logs."
+family = "Numerical engineering"
+tags = ["numpy", "vectorisation", "instruments", "batch search"]
+related = ["compiled-hot-cores", "seed-determinism", "kat-harness", "run-script-log-convention", "estimator-standard-error", "shuffled-null-z-score", "simulated-annealing", "exact-period-alignment", "index-of-coincidence"]
+summary = "An instrument is a measurement that prints its own null: a statistic, the distribution it would have on data with nothing to find, and the resulting z or evidence. In this pattern the whole computation is expressed as array operations so that one call scores thousands of candidates, shuffles or chains at once, error bars come from exact formulas or vectorised resampling, and the code stays short enough to audit. Compiled cores take over only the innermost loops that arrays cannot express."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Three conventions define the pattern:
+
+1. **Letters are integers.** A text is an array over $\mathbb{Z}_{26}$; an alphabet order is a permutation array with its inverse, so re-indexing between orders is a gather (`f[..., src.inv[dst.A]]`) and a shift is a roll.
+2. **Everything is batched along a leading axis.** A histogram of every coset, the score of every candidate key, the state of every annealing chain, and the statistic of every shuffled null are computed by the same expression with an extra dimension. Jobs are split into batches of at most $B$ chains (`--max-chains`, default 2,400) so that memory, not code, bounds the batch.
+3. **Every reading carries its null.** A function returns the statistic and, from the same code path applied to shuffled inputs, the null mean and standard deviation; the printed line is `ev=… z=…`.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Exact error bars where they exist"
+body = '''
+For the index of coincidence of a coset with counts $G_x$ and $n = \sum_x G_x$,
+
+$$\operatorname{IC} = \frac{\sum_x G_x (G_x - 1)}{n(n-1)},$$
+
+and its standard deviation under the null is available in closed form; the program reports $0.008$ for the mean of seven 22-letter cosets, which turned an earlier verbal claim ("the cosets are not monoalphabetic") into a $1.5\sigma$ statement. Where no closed form exists, the null is computed by pushing $B$ shuffles through the identical pipeline and the reported $z = (s - \mu_0)/\sigma_0$ is honest only because the shuffles repeat every selection step.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- Array code trades memory for throughput; a batch of $B$ chains over $n$ positions with a quadgram table lookup materialises $B \times n$ indices per step.
+- Floating-point sums are order-dependent; where exact ties and replay matter, scores are integer-scaled (see [Compiled hot cores](/engineering/compiled-hot-cores)).
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Two worked uses"
+body = '''
+- **Batch simulated annealing for a crib attack.** Every (crib, offset, relation, restart) is one chain; a job of up to 2,400 chains proposes swaps and insertions for all chains at once, scores the whole decrypt of every chain with one gather into the quadgram table, then finishes each survivor with an exhaustive first-improvement climb over its 925 single-swap neighbours, also batch-scored. Calibrated on plants, the one-sided keyed-alphabet families solved 3 of 3 seeds at every crib length of 7 or more; the two-sided family solved 0 of 21, which is the finding.
+- **Integer linear feasibility inside an enumerator.** A per-pair test rebuilt a $13^5$ digit matrix with an iterator product (64 ms) and multiplied in int64 (78 ms). Caching the digit matrices, switching to int16 matrix products with a `bincount` collision test and running 12 workers cut a nullity-5 pair from 142 ms to 44 ms and a nullity-4 pair to about 3 ms, with enumeration at 99% of the remaining 31 ms per pair.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Scoring $B$ chains of length $n$ with a $26^4$ table is $O(Bn)$ gathers per step and $O(Bn)$ memory; the exact period-7 alignment over all $26^6$ relative shift vectors uses a closed-form pairwise objective so that the enumeration is a broadcast over a $26^6$ grid rather than a loop, which is feasible in Python for one text but is delegated to a compiled core when repeated over nulls.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Silent broadcasting errors.** An axis mistake produces plausible numbers; the pattern's defence is a planted control whose expected statistic is known (a plain periodic control at $z \approx +9.6$, a sandwich at $+4.0$) printed before any target.
+- **Degenerate objectives under vectorised maximisation.** Maximising a decrypt's coincidence rate over ring and shifts is degenerate (letters collapse): a planted control reached 594 to 601 coincidences against the truth's 383. The instrument was closed on that control.
+- **Development smoke variants.** Several early smoke runs of a mixture statistic failed controls while the statistic was being written; only the final all-controls-pass variant may be cited.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Each instrument script begins with its planted references (a plain periodic construction, a mixture over a transposition, a fractionation, a double transposition) so that the negative signatures are visible next to the positive ones.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Batch scoring sketch"
+body = '''
+```python
+# chains: (B, 26) candidate alphabets; cidx: (n,) ciphertext indices; q4: (26,26,26,26) log-scores
+plain = chains[:, cidx]                                   # (B, n) decrypts, one gather
+score = q4[plain[:, :-3], plain[:, 1:-2], plain[:, 2:-1], plain[:, 3:]].sum(axis=1)   # (B,)
+# null: same call on shuffled cidx, repeated for every selection step of the pipeline
+z = (score.max() - null.mean()) / null.std()
+```
+'''
+
+[[provenance]]
+path = "withmath/wm_core.py"
+kind = "library"
+note = "Shared mathematics: alphabet orders with inverse index arrays, IC with exact counts, exact period-7 alignment over all 26^6 shift vectors with a closed-form pairwise objective, mixture fits with shifts profiled out, planted generators; under 500 lines."
+
+[[provenance]]
+path = "withmath/wm_crib.py"
+kind = "solver"
+note = "Batch simulated annealing: every (crib, offset, relation, restart) is a chain; jobs of at most --max-chains 2,400 chains; exhaustive 925-neighbour polish batch-scored."
+ref = "logs/22_crib_smoke.log"
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Within-coset IC with exact s.d. 0.008 for seven 22-letter cosets; crib-attack calibration table; degenerate IC-alignment control (594 to 601 versus 383); mixture control z 6 to 13; only smoke_mix_final has the all-control-pass contract."
+ref = "logs/01_audit.log"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Profiling of the integer feasibility test: cached digit matrices, int16 matmul plus bincount collision test, nullity-5 pair 142 to 44 ms, nullity-4 about 3 ms, 12 workers."
+ref = "LOG406"
+
+[[provenance]]
+path = "withmath/wm_audit.py"
+kind = "solver"
+note = "Alignment statistics with error bars; exact nulls."
+ref = "logs/01_audit.log"

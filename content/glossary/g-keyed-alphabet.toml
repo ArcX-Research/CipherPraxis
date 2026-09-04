@@ -1,0 +1,10 @@
+id = "g-keyed-alphabet"
+section = "glossary"
+title = "Keyed alphabet"
+status = "VERIFIED"
+status_note = "Standard term."
+family = "Cipher structure"
+tags = ["substitution", "keyword"]
+related = ["keyword-mixed-alphabet", "quagmire-i", "gromark", "g-mixed-alphabet"]
+summary = "A permutation of the alphabet generated from a keyword: the keyword's distinct letters first, then the unused letters in a base order (straight, reversed, continued from the keyword's last letter, or read out of a keyword-headed block by columns). Its value to a cryptanalyst is that the set of keyed alphabets from a word list or a text is enumerable, unlike the 26! arbitrary alphabets."
+updated = "2026-09-04"

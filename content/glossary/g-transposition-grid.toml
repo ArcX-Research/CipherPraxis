@@ -1,0 +1,10 @@
+id = "g-transposition-grid"
+section = "glossary"
+title = "Transposition grid"
+status = "VERIFIED"
+status_note = "Standard term."
+family = "Cipher structure"
+tags = ["transposition", "width"]
+related = ["columnar-transposition", "route-transposition", "rail-fence", "myszkowski", "sandwich-construction"]
+summary = "The rectangle (or triangle, square or zigzag) into which a message is written before its cells are read out in a different order. For a width w and length n the grid has ceil(n / w) rows, the first n mod w columns being one letter longer when the last row is short (an unpadded or irregular grid). Under a periodic layer applied after the read-out, the grid geometry fixes which plaintext positions share a coset, so the width can be measured before the read-out order is known."
+updated = "2026-09-04"

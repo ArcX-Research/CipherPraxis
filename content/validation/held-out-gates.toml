@@ -1,0 +1,115 @@
+id = "held-out-gates"
+section = "validation"
+title = "Held-out gates"
+subtitle = "Fresh fixtures from reserved corpus ranges, with a predeclared pass threshold, run before any live release"
+status = "VERIFIED"
+status_note = "Executed in the research program as a frozen no-argument gate of 24 fresh cases with a predeclared 18/24 threshold that was met exactly, and as disjoint corpus reservoirs (training, calibration, development, gap, hidden) enforced by an interval registry and checked by an independent range audit."
+family = "Power and calibration"
+tags = ["held-out", "corpus ranges", "leakage", "gates"]
+related = ["blind-controls", "power-measurement", "planted-controls", "control-first-policy", "seed-determinism", "run-script-log-convention", "english-gate-calibration"]
+summary = "A selector tuned on development fixtures will pass them; the question is whether it passes fixtures it has never seen, drawn from corpus material that neither it nor its language model was trained or calibrated on. A held-out gate reserves such material by explicit intervals, plants fresh cases with new seeds, fixes the success criterion in advance (for example 18 of 24 exact recoveries) and refuses to release the live successor until the gate's receipt says PASS."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Partition the generic corpus of $L$ letters into named half-open reservoirs, for example
+
+```
+training      [0,        1,200,000)   language-model tables
+calibration   [1,200,000,1,300,000)   English threshold windows (653 non-overlapping 153-letter windows)
+development   [1,350,000,1,500,000)   disclosed fixtures
+gap           [1,500,000,1,600,000)   dead separation
+hidden        [1,600,000,2,344,368)   one-shot bank
+```
+
+A **held-out gate** plants $N$ fixtures from the hidden or a fresh reservoir, at offsets at least $d$ letters (512 in the program) from every development window, with seeds never used before, and declares before running that the gate passes if at least $k$ of $N$ are recovered exactly. The runner takes no arguments, pins every input by hash, derives $k$ from the actual arguments and asserts it, and machine-checks the exclusion distance of every window.
+'''
+
+[[blocks]]
+kind = "equations"
+body = '''
+With true power $\pi$ and $N$ independent fixtures, the gate passes with probability $\Pr[\operatorname{Bin}(N, \pi) \ge k]$. For $N = 24$ and $k = 18$ this is about $0.99$ at $\pi = 0.9$, $0.61$ at $\pi = 0.75$ and $0.10$ at $\pi = 0.6$, so the gate separates a strong selector from a weak one but is close to a coin flip at the declared minimum power of $0.75$; the result is therefore reported as the count, not as pass/fail alone.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- No plaintext window crosses a reservoir boundary, and all windows are pairwise disjoint; the program's registry object records every interval and the parser re-checks disjointness across the transcript.
+- The corpus is pure letters so byte and letter offsets coincide (2,344,368 letters, 0 non-letter bytes).
+- The fixtures' construction matches the live geometry (which segments are scored, which are neutral holdouts); a later lane corrected a gate that rewarded prose in a segment the live text does not exhibit as prose by declaring that segment an unscored holdout.
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+The gate is the last step before the only irreversible one. In the program's joint two-text lane, development on deliberately difficult fixtures produced a selector that recovered both; the held-out gate then ran 24 fresh sentence-start fixtures selected as evenly spaced order statistics of the eligible starts, with a 512-letter exclusion around every development window, and recovered 18 of 24. The live successor is written so that its runner cannot start without a pinned gate receipt containing all 24 cases and at least 18 successes.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+One selector run per fixture at the live budget. The lane's gate used a beam of 100,000, 5,000 maps, two repair rounds and 24 cases under a 1,800 s per-case timeout; the first two-case launch was discarded before citation when an auditor found transcript reproducibility gaps, and the restarted gate is the one on record.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Reused ranges presented as fresh.** An independent range audit found that one of three proposed validation ranges was byte-identical to an earlier control range; the reuse was deliberate (promoting a sentinel), but "must not be described as fresh held-out data".
+- **Tight margins.** Another range cleared a development window by 37 letters and a third abutted its neighbours with zero margin; both valid, neither tolerant of an off-by-one.
+- **Calibration equal to plant range.** One engine calibrated its gate on the tail it planted from, affecting the threshold rather than recovery.
+- **A gate that rejects real English.** A prose-tail threshold rejected genuine held-out windows (11 of the hardest windows below one threshold, 0 below the re-anchored one); the design audit blocked the lane until the gate was fixed.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The gate's own controls are the range registry (every interval, its role and pairwise disjointness printed), the seed assertions (three frozen seeds asserted by the runner) and the hash pins (corpus, six imported stages, the compiled core, the wrapper, two model checkpoints), all refused on drift before launch.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Gate record"
+body = '''
+```
+HELDOUT_GATE target=ABSENT cases=24 success=18/24 threshold=18 (derived from args)
+  offset_rule=evenly-spaced-fresh-eligible-sentence-starts  development_buffer=512
+  seeds plant=5040000 second_text=5040001 solver=5041001
+  pins corpus 06ed53d8… core f2f10162… wrapper 11825e25… checkpoints eff722f7… 37fdc8be…
+CONTROL_GATE PASS -> live successor may be released by the authority
+```
+'''
+
+[[provenance]]
+path = "withmath/logs/504_pk89_mapjoin_heldout_gate_20260904T095226Z.log"
+kind = "log"
+note = "HELDOUT_GATE cases=24 success=18/24, development buffer 512, seeds and joint protocol recorded."
+ref = "logs/504_pk89_mapjoin_heldout_gate_20260904T095226Z.log"
+
+[[provenance]]
+path = "withmath/run_pk89_mapjoin504_heldout_gate.sh"
+kind = "script"
+note = "Frozen no-argument gate: refuses arguments, checks eleven SHA-256 pins (corpus, stages, core, wrapper, model checkpoints) and launches with --cases 24 --minimum-power 0.75 --strict."
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Gate design: 24 fresh sentence starts as evenly spaced order statistics, 512-letter exclusion, success predeclared at 18/24, first two-case launch discarded before citation; live successor requires the pinned receipt."
+ref = "LOG504"
+
+[[provenance]]
+path = "withmath/PK98_SEGCHAIN_A1S0_CONTROL366_DESIGN.md"
+kind = "design"
+note = "Section 7: leakage-separated reservoirs with a global interval registry and a dead separation gap."
+
+[[provenance]]
+path = "withmath/INDEPENDENT_RANGE_FIXTURE_AUDIT_CLAUDE.md"
+kind = "audit"
+note = "Range verification: one proposed range identical to an earlier control range (reused by design, not fresh), one clearing a development window by 37 letters, one with zero margin; corpus 2,344,368 pure letters."
+ref = "LOG296"
+
+[[provenance]]
+path = "withmath/logs/394_pk98_width8_selector_power.log"
+kind = "log"
+note = "Held-out prose only: 11 genuine English windows fall below the earlier threshold and 0 below the re-anchored one."
+ref = "logs/394_pk98_width8_selector_power.log"

@@ -1,0 +1,10 @@
+id = "g-mixed-alphabet"
+section = "glossary"
+title = "Mixed alphabet"
+status = "VERIFIED"
+status_note = "Standard term."
+family = "Cipher structure"
+tags = ["substitution"]
+related = ["keyword-mixed-alphabet", "quagmire-iii", "quagmire-iv", "g-keyed-alphabet", "g-gauge-class"]
+summary = "Any permutation of the 26 letters used as the index order of a cipher, structured (keyed by a word or phrase) or unstructured (arbitrary). In a Quagmire the mixed alphabet may sit on the plaintext side, the ciphertext side or both; in the both-sides case a single letter swap alters about four mapping entries in every coset, which is what makes an unstructured mixed alphabet unsearchable at short lengths."
+updated = "2026-09-04"

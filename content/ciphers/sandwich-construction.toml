@@ -1,0 +1,129 @@
+id = "sandwich-construction"
+section = "ciphers"
+title = "Sandwich construction"
+subtitle = "A short-period substitution inside a transposition inside a longer-period substitution"
+status = "VERIFIED"
+status_note = "Four planted sandwiches (widths 8, 9, 9 and 12; inner periods 2 and 3; mixed alphabets) were solved 100% from cold by the mixture-inference and order-free width solver with the true width ranked first at z +4.3 to +12.8, and the exact cross-derived width-9 solver recovered 23/24 development controls; the reading was excluded for the two short corpus texts."
+family = "Composite constructions"
+tags = ["composite", "layered", "transposition", "mixture", "periodic"]
+related = ["vigenere", "columnar-transposition", "compound-periodic-key", "mixture-inference-under-transposition", "order-free-width-statistic", "bayesian-evidence-model-selection", "expectation-maximisation", "within-coset-null", "g-period", "g-transposition-grid"]
+summary = "A sandwich is c = Q_m(T(Q_k(p))): a short-period substitution, then a transposition, then a longer-period substitution. The inner layer depresses letter statistics, the transposition removes its periodicity and all digram structure, and the outer layer supplies visible cosets. The program's key observation is that the multiset of inner letters does not depend on the transposition, so the inner mixture can be inferred first and the transposition width read off from the pattern of inner classes without knowing the column order."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+With an inner key $v$ of period $k$ in alphabet $A_1$, a transposition $T$ (typically a columnar of width $w$) and an outer key $u$ of period $m$ in alphabet $A_2$,
+
+$$y = A_1\big[\operatorname{pos}_{A_1}(p) + v_{i \bmod k}\big], \qquad z = T(y), \qquad c_j = A_2\big[\operatorname{pos}_{A_2}(z_j) + u_{j \bmod m}\big].$$
+
+The corpus's solved texts stack these layers in other orders too (transposition after two substitutions); the sandwich moves the transposition between them.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Transposition invariance and the class pattern"
+body = '''
+Under the outer layer, coset $b$ of the ciphertext is a rotation of the multiset of inner letters at the positions $T$ sends there. Because a transposition only moves letters, the multiset of all inner letters is $T$-invariant, and for $k = 2$ each coset histogram is a rotation of the balanced mixture $\tfrac12\big(E(\cdot - g_1) + E(\cdot - g_2)\big)$ of two rotated English distributions. Marginalising the $m$ outer shifts (profiling them buys about 0.15 nats per letter of spurious fit at 153 letters) gives an evidence for one, two or three inner alphabets and a posterior class for every ciphertext letter. In plaintext order the classes read $0101\dots$; a columnar of width $w$ turns that into a block pattern (constant per column for even $w$, alternating for odd $w$) that a DP over the long and short columns of the unpadded grid measures **without the column order**.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Single columnar** of width 3-20 with $k = 1 \dots 7$; **double columnar** (two word keys, as in one of the solved texts of the corpus).
+- **Mixed alphabets**: inner and outer layers in different orders.
+- **Cross-derived sandwich** $T_9(Q_7(T_9(P)))$: two width-9 rectangles around a period-7 layer, solved exactly by phase profiling and a subset DP.
+- The tie-free case $T = \text{identity}$ is the [Compound periodic key](/ciphers/compound-periodic-key).
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The outer layer is periodic and additive in a known order; the inner layer has a small period.
+- Invariant: inner-letter multiset independent of $T$ (the whole attack rests on it).
+- Invariant: posteriors are centred per class (a period-$k$ inner is exactly balanced), so the degenerate "everything is class 0" configuration scores zero.
+- Wrong models must lose: shuffled ciphertexts through the identical pipeline give the null for every width.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Fit the inner mixture by evidence (one, two or three alphabets), marginalising the outer shifts; read the inner spacing $\delta = g_2 - g_1$ from its marginal evidence (correct on 7 of 8 planted seeds; the top three $\delta$ are carried).
+2. Compute class posteriors for every letter and the order-free width statistic for every width; run class-EM to re-estimate each outer shift from its coset's class-conditional likelihood (this fixes the one or two cosets the evidence fit gets wrong).
+3. Hand widths with $z \ge 3$ to the column solver: residue classes fix part of the order, quadgrams fix the rest, then polish shifts and order alternately.
+4. Nulls: shuffled ciphertexts through fit, $\delta$ candidates, EM and DP, so the reported $z$ per width is honest.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Evidence fits and the width DP are cheap (seconds per width); 60 null pipelines per control took about 20 seconds at 153 letters. The exhaustive column-order stages of the older solver cost $w!$ per width (about two hours for two texts including width 10); the cross-derived exact solver replaces that with 90,720 phase classes plus a subset DP.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Flat inner text.** If the inner layer is not a short-period substitution of language (a fractionation, say) the mixture evidence is silent; a Bifid control printed alongside shows no width, as designed.
+- **Double transposition.** A double columnar under the outer layer still shows the two-alphabet evidence (z +5.8 on its control) but no single width, so the width solver cannot finish it.
+- **Selection freedom.** Profiling instead of marginalising the outer shifts lets wrong models win on shuffled nulls.
+- **Handoff basins.** In the exact width-9 solver one of 24 controls was lost because a single key initialised the inner DP in the wrong basin; the true key supplied post hoc recovered it immediately.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Mixture and width solver (logs/05_mix.log): four planted sandwiches, all solved 100% from cold with the true width on top (width-9 exact grid z +12.8, width-8 ragged z +11.3, width-12 mixed alphabets z +4.3, width-9 with period-3 inner z +5.1); a Bifid-7, a plain period-7 cipher and a double columnar printed alongside show the negative signatures. Older exhaustive solver (ck_sandwich_report.txt): three controls (width 8 with period-2 inner, width 12 with period-3 inner, two width-9 word keys with period-2 inner) read ENGLISH at $-4.34$ with 100% match. Cross-derived exact solver (log 237): 23/24 development controls. On the two short corpus texts the mixture evidence found no inner spacing and no width in any alphabet combination, which excludes a period-2 or -3 inner under *any* transposition for the 153-letter text.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Inner shifts $(3, 10)$ of period 2, columnar of width 4 with key `CADB` (read order 1, 3, 0, 2), outer shifts $(1, 5, 7)$ of period 3, plaintext `SANDWICHLAYER`:
+
+```
+inner       V K Q N Z S F R O K B O U
+grid        VKQN / ZSFR / OKBO / U
+columns     0: VZOU  1: KSK  2: QFB  3: NRO
+read 1,3,0,2  K S K N R O V Z O U Q F B
+outer       L X R O W V W E V V V M C
+```
+
+Check the first letter: $S + 3 = V$; after transposition the first output letter is column 1's `K`; $K + 1 = L$. Ciphertext `LXROWVWEVVVMC`.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The sandwich was the program's leading hypothesis for the two short texts because every measured fact fitted it; its exclusion by a transposition-invariant argument is the clearest example in the corpus of testing a composite without searching its transposition.
+'''
+
+[[provenance]]
+path = "withmath/wm_mix.py"
+kind = "solver"
+note = "Bayesian inner-mixture inference, delta marginal, class posteriors, order-free width DP, class-EM, column solver, shuffled-null pipelines; four planted controls."
+ref = "logs/05_mix.log"
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Mathematics of wm_mix (transposition invariance, evidence not likelihood, class posteriors, EM, nulls); Round 1 results including the double-columnar control at z +5.8."
+
+[[provenance]]
+path = "ck_sandwich.py"
+kind = "solver"
+note = "Exhaustive/dictionary/annealed column orders with 7 + k shift fits; three planted controls at 100%."
+ref = "ck_sandwich_report.txt"
+
+[[provenance]]
+path = "withmath/CROSS_SANDWICH9_AUDIT.md"
+kind = "audit"
+note = "Log 237: T9(Q7(T9(P))) exact solver; 23/24 development controls; D8 postmortem."
+ref = "LOG237"
+
+[[references]]
+title = "Military Cryptanalysis, Part IV"
+author = "William F. Friedman"
+year = 1941

@@ -1,0 +1,22 @@
+id = "coincidence-lab"
+section = "labs"
+title = "Coincidence & Kasiski lab"
+subtitle = "Index of coincidence, periodic IC scan, lag coincidence profile and Kasiski repeats on any text"
+status = "VERIFIED"
+status_note = "The statistics are unit-tested on a Vigenère ciphertext with a five-letter key: the periodic IC, the lag profile and the Kasiski factor votes all single out period 5."
+family = "Analysis labs"
+tags = ["index of coincidence", "kasiski", "period", "statistics"]
+related = ["index-of-coincidence", "coincidence-lag-profile", "kasiski-examination", "estimator-standard-error", "null-lab"]
+summary = "Three classical period-finding instruments on one page. The whole-text index of coincidence says whether the letters are drawn from a language-like or a flat distribution; the periodic scan finds the key length as the period whose cosets look monoalphabetic; the lag profile and the Kasiski table show the same period from repeated fragments."
+updated = "2026-09-04"
+lab = "coincidence"
+
+[[blocks]]
+kind = "notes"
+title = "What to try"
+body = '''
+- Paste plain English: the whole-text IC sits near the English reference and the periodic scan is flat, because there is no period to find.
+- Paste the ciphertext from the [Vigenère lab](/labs/vigenere-lab) encrypted with a seven-letter key: period 7 (and 14) light up.
+- Paste random letters: the IC falls to the uniform reference 0.0385 and no instrument shows structure.
+- Note the exact standard deviation printed next to the English reference: at 150 letters a difference of 0.005 in IC is within one standard deviation.
+'''

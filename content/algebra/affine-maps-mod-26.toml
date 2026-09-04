@@ -1,0 +1,136 @@
+id = "affine-maps-mod-26"
+section = "algebra"
+title = "Affine maps modulo 26"
+subtitle = "x ↦ ux + b with a unit multiplier: cipher keys, key recurrences, position routes and gauges"
+status = "VERIFIED"
+status_note = "Affine maps with unit multipliers are exact and invertible and appear as cipher keys, key recurrences, position routes and gauge transformations. Planted controls pass for the affine position-route family (3/3 held-out texts) and for polynomial key schedules (4/4); the corresponding target results were negative within their declared scopes, and the affine-lag key screen showed no family-wise excess on any of the three texts."
+family = "Modular arithmetic"
+tags = ["affine", "AGL", "route", "recurrence", "gauge"]
+related = ["units-mod-26", "modular-arithmetic-z26", "linear-recurrences-lcg", "conjugacy-and-gauge", "group-actions-on-alphabets", "affine-cipher", "route-transposition", "alberti-progressive", "selection-overfit-diagnostic", "affine-lab", "g-affine-orbit"]
+summary = "An affine map multiplies by a unit and adds a constant. It is the affine cipher on letters, the one-step recurrence behind LCG-type running keys, a way of reading a text along positions ui + d, and the coordinate change that leaves a keyed cipher alphabet equivalent to itself. The maps form a group of order 312, and each of these uses comes with a gauge that must be fixed before recovered parameters can be compared."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+$$f_{u,b}(x) = u x + b \pmod{26}, \qquad u \in U(\mathbb{Z}_{26}),\; b \in \mathbb{Z}_{26}.$$
+$f_{u,b}$ is a bijection exactly when $u$ is a unit, with inverse $f^{-1}(y) = u^{-1}(y - b)$. Under composition the maps form the affine group $\mathrm{AGL}(1, \mathbb{Z}_{26})$ of order $12 \cdot 26 = 312$:
+$$(u_1, b_1) \circ (u_2, b_2) = (u_1 u_2,\; u_1 b_2 + b_1).$$
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Four appearances of the same map"
+body = '''
+- **Affine cipher**: $c = u p + b$ on letters; see [Affine cipher](/ciphers/affine-cipher).
+- **Affine recurrence keys**: $k_i = a\,k_{i-L} + b$ (LCG, progressive and drifting keys). Then $c_i - a\,c_{i-L} = (p_i - a\,p_{i-L}) + b$: the filtered ciphertext is the $a$-scaled self-difference of the plaintext plus a constant, whose distribution is the $a$-scaled self-convolution of the language.
+- **Affine position routes**: $X_i = C_{(u i + d) \bmod n}$ with $\gcd(u, n) = 1$. When every admitted period $p$ divides $n$ the cut is a gauge: $P'_i = P_{i+s}$, $k'_b = k_{b+s}$, $d' = d + u s$ give the same ciphertext.
+- **Affine gauge on cycles**: $z' = \alpha z + \beta$ leaves a keyed additive cipher equivalent, with keys $k' = \alpha k + (1 - a_t)\beta$ (Vigenère-type, row multiplier $a_t$) or $k' = \alpha k + 2\beta$ (Beaufort-type).
+
+A second-order relative is the polynomial key schedule $a_i = \beta i + \alpha\, i(i-1)/2$, whose second difference is the constant $\alpha$; over both alphabet orders and all $\alpha, \beta$ it has 1,352 raw descriptions falling into 1,351 equality classes.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The multiplier is a unit; for routes it must also be coprime to the text length $n$.
+- Recurrence coefficients $(a, L, b)$ are the same at every position; a change point breaks the filter identity.
+- A route gauge exists only when the period divides $n$; otherwise the absolute cut is identifiable and must be compared literally.
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+- **Affine-lag filters.** For each unit $a$ and lag $L = 1..40$ form $c_i - a\,c_{i-L}$, score it by log-likelihood ratio against the $a$-scaled self-convolution of English with the additive constant maximised out, and compare the family-wise maximum with the same scan on shuffled texts.
+- **Affine routes.** Exhaust every unit $u$, every offset $d$ evaluated as a cyclic cut, every divisor period $p \le 42$, both alphabet orders and both relations; the 96 best endpoints receive the quadgram periodic finish; an independent forward rebuilds $X$ and writes it back through $C_{(ui+d) \bmod n} = X_i$.
+- **Polynomial schedules.** Exact deprogression of the schedule followed by a substitution engine.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+$|\mathrm{AGL}(1, \mathbb{Z}_{26})| = 312$. The lag screen runs $12 \times 40 = 480$ filters per text and alphabet order. The route family's cheap stage exhausts all units and cuts before polishing 96 endpoints; the schedule engine passed 112,216 arbitrary-acceleration recurrence checks in its known-answer test.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Selection overfit in a high-parameter route family.** On the 144-letter text the best route endpoint scored $-4.8163$, above the nominal language threshold, yet all three complete-pipeline shuffled maxima beat it ($-4.7400$, $-4.9034$, $-4.8844$). Readability plus an invertible round trip is not evidence.
+- The lag screen is a maximum over 480 correlated cells; individual cells reach $z \approx +4$ by chance. Only the family-wise comparison is meaningful (for one text and order: observed maximum LLR $5.0$ against shuffled $5.1 \pm 0.6$).
+- A non-unit multiplier is neither a cipher nor a route; enumerations must skip it explicitly.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Routes: 36 route inversions, three exhaustive cyclic-cut score comparisons and three algebraic rotation-gauge identities passed; held-out controls of 153, 144 and 504 letters (route plus periodic layer at periods 17, 16 and 28) recovered the exact cyclic plaintext class and round-tripped. Targets then gave no candidate: $-6.0616$ (153 letters) and $-6.4356$ (504 letters) failed the language gate, and the 144-letter endpoint lost to its nulls as above.
+
+Polynomial schedules: four full-length controls with accelerations 2, 7, 12 and 24 recovered the hidden plaintext at rank one with independent forwards (rates $-9.62$ to $-10.06$); three live seeds round-tripped but scored $-14.968$, $-14.932$, $-14.931$ against a frozen gate of $-12.5$ and disagreed on the best cell.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+$f(x) = 3x + 5$. Since $3^{-1} = 9$ and $-45 \equiv 7$, the inverse is $f^{-1}(y) = 9y + 7$: $x = 2 \mapsto 11 \mapsto 9 \cdot 11 + 7 = 106 \equiv 2$.
+
+Composition: $(3, 5) \circ (5, 2) = (15, 3 \cdot 2 + 5) = (15, 11)$. Check on $x = 1$: inner $5 + 2 = 7$, outer $3 \cdot 7 + 5 = 26 \equiv 0$; directly $15 + 11 = 26 \equiv 0$.
+
+Route with $n = 7$, $u = 3$, $d = 1$: positions $3i + 1 \bmod 7$ for $i = 0..6$ are $1, 4, 0, 3, 6, 2, 5$, a permutation because $\gcd(3, 7) = 1$.
+
+Filter identity with the recurrence $k_i = 3k_{i-1} + 5$: $c_i - 3c_{i-1} = p_i - 3p_{i-1} + 5$ for every $i$, so the constant 5 is common to all filtered positions.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The order 312 recurs as the size of the affine orbit of a cycle solution; see [Group actions on alphabets](/algebra/group-actions-on-alphabets). The recurrence use is developed under [Linear recurrences and LCG keys](/algebra/linear-recurrences-lcg).
+'''
+
+[[provenance]]
+path = "withmath/wm_algebra.py"
+kind = "solver"
+note = "Test A: affine-lag filters c_i - a c_{i-L} over the 12 units and lags 1..40, LLR against the a-scaled self-convolution with the constant maximised out, per-cell and family-wise shuffled nulls."
+
+[[provenance]]
+path = "withmath/logs/03_algebra.log"
+kind = "log"
+note = "Family-wise affine-lag results: observed max LLR 5.0 vs shuffled 5.1 +- 0.6 (z -0.1) for one text/order; all six text/order cells between z -0.7 and +0.3."
+ref = "logs/03_algebra.log"
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Round-1 reading: no LCG, affine or drifting key on either short text."
+
+[[provenance]]
+path = "withmath/AFFINE_ROUTE_AUDIT.md"
+kind = "audit"
+note = "Affine position route X_i = C_((u i + d) mod n), route gauge, 36/3/3 primitive checks, three held-out controls, target endpoints and null losses."
+ref = "logs/195_affine_route.log"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Constant-acceleration schedule a_i = beta i + alpha i(i-1)/2: 1,352 raw / 1,351 classes, 112,216 KAT checks, 4 controls rank one, live seeds -14.968/-14.932/-14.931 vs gate -12.5."
+ref = "LOG408"
+
+[[provenance]]
+path = "withmath/PK9_UNITMULT_INDEPENDENT_AUDIT.md"
+kind = "audit"
+note = "Affine gauge z' = alpha z + beta with k' = alpha k + (1 - a_t) beta; free action of order 312."
+
+[[provenance]]
+path = "withmath/PK9_PIECECYCLE_BEAU_CONTROL_AUDIT.md"
+kind = "audit"
+note = "Beaufort-type gauge a' = u a + b, k' = u k + 2b."
+
+[[references]]
+title = "Cryptography: Theory and Practice"
+author = "Douglas R. Stinson"
+year = 2005
+
+[[references]]
+title = "Decrypted Secrets: Methods and Maxims of Cryptology"
+author = "Friedrich L. Bauer"
+year = 2007

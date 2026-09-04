@@ -1,0 +1,22 @@
+id = "vigenere-lab"
+section = "labs"
+title = "Vigenère family lab"
+subtitle = "Encrypt with Vigenère, Beaufort, variant Beaufort or Porta and watch the coset histograms"
+status = "VERIFIED"
+status_note = "The cipher code is unit-tested against published test vectors (Vigenère ATTACKATDAWN/LEMON → LXFOPVEFRNHR, Beaufort reciprocity, Porta rows) and the same compiled module runs in this page."
+family = "Substitution labs"
+tags = ["periodic", "polyalphabetic", "coset", "histogram"]
+related = ["vigenere", "beaufort", "variant-beaufort", "porta", "coset-shift-recovery", "coincidence-lab"]
+summary = "A periodic additive cipher splits its ciphertext into cosets, one per key letter, and each coset is a Caesar shift of the plaintext letters at those positions. This lab encrypts a text of your choice, shows every coset's letter histogram with its index of coincidence, and recovers the key blind by χ² fitting whenever the cosets carry enough language."
+updated = "2026-09-04"
+lab = "vigenere"
+
+[[blocks]]
+kind = "notes"
+title = "What to try"
+body = '''
+- Shorten the plaintext until the blind recovery returns a wrong key letter: that is the "short coset" failure mode, and the histogram of the failing coset shows why.
+- Switch to **Beaufort** and encrypt the ciphertext again with the same key: the cipher is reciprocal, so the plaintext comes back.
+- Use a key with repeated letters (for example `PAPAYA`): cosets 0, 2 and 4 share one shift, and their histograms line up.
+- Under **Porta** the key letter selects one of thirteen reciprocal half-alphabet tables, so histograms are no longer plain rotations of English.
+'''

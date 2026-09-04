@@ -1,0 +1,119 @@
+id = "tautological-gate-rule"
+section = "validation"
+title = "Tautological gate rule"
+subtitle = "Prove that a check can fail before citing it as evidence"
+status = "VERIFIED"
+status_note = "The rule is applied in the research program's gate designs (a valid-model negative that the gate must reject, and a random-input power row) and was enforced by audits that blocked a lane whose null could not fail and a ledger rule that a fitted invertible key always roundtrips."
+family = "Power and calibration"
+tags = ["gates", "roundtrip", "nulls", "self-deception"]
+related = ["valid-model-nulls", "planted-controls", "power-measurement", "selection-overfit-check", "kat-harness", "shuffled-null-z-score", "english-gate-calibration"]
+summary = "A gate that every candidate passes carries no information, however impressive it looks in a log. The rule requires two demonstrations before any check is cited: a necessity row (conforming inputs pass) and a power row (inputs that should fail do fail, with the failure fraction printed). The program's recurring tautology was the forward roundtrip: a key fitted by inverting the ciphertext re-encrypts the plaintext to the ciphertext by construction, so every false state passes it."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+A **gate** is a predicate $G(x)$ applied to a candidate solution $x$ (a recovered key, plaintext or construction). $G$ is **tautological** on a family $\mathcal{F}$ when $\Pr[G(x)] = 1$ for every $x \in \mathcal{F}$, including wrong ones. The rule: a gate may be cited as evidence only after a transcript shows
+
+1. **necessity**: $G$ passes on planted truths (else it is broken), and
+2. **power**: $G$ fails on a stated fraction of inputs that are not solutions, drawn from the relevant alternative (random letters, a valid-model negative, a wrong placement).
+
+The rule extends to nulls: a null distribution that the observed statistic cannot fall inside is not a null.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Roundtrip is not a test of a fitted key"
+body = '''
+If a decryption map $D_k$ is invertible and $k$ was obtained by fitting $D_k(c) = p$ for some $p$, then $E_k(p) = E_k(D_k(c)) = c$ identically. The forward check therefore has
+
+$$\Pr[\text{roundtrip passes} \mid k \text{ fitted from } c] = 1$$
+
+for every $k$ in the family, and the program records `forward_consistency` as a field that is logged but *excluded from evidence, tautological by construction*. A roundtrip becomes informative only when the construction is re-encrypted with parameters that were **not** all fitted from the same ciphertext (a key word from a dictionary, a boundary chosen independently), or when two independently implemented forwards are compared.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The failing inputs must be plausible alternatives. A gate that rejects white noise but accepts every fluent overfit has power only against white noise.
+- Necessity and power are measured on the *full decision*, including selection over cells and the language threshold, not on a preliminary statistic.
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+Three tautologies recur in cryptanalytic pipelines and each appears in the program's ledger:
+
+- **Fitted roundtrip.** Fluent-looking overfits with exact two-layer roundtrips were produced by several lanes; the ledger rule "English-looking and exact roundtrip are separate checks; a freely fitted invertible key always roundtrips" was written after three such logs.
+- **A null the decision cannot lose to.** An audit of a two-stage selector found that its null replayed only a preliminary monogram statistic, never the finishing stage that declared a positive, so "every null comparison can fail and the immutable PASS can still be emitted". The lane was blocked.
+- **A structural check that cannot fire.** A within-coset alignment null was found to be mathematically invariant under the shuffles that generated it; an exact-solver certificate was noted to be unable to fail for any candidate that reached it.
+
+The cure in each case was the same: add an input class on which the check must fail, run it, and print the failure fraction.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Negligible in compute (a few hundred random or valid-model inputs) and large in leverage: a single power row converts a decorative check into a measurement.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- A parity-style block test was presented with its necessity row (400 conforming plants, 0 violations) **and** its power row (random-letter zones violate with fraction 0.81 and 0.98; known prose windows 1 to 6 violations), so its exact refutation of two forms could be cited.
+- A language gate whose threshold was placed by a prose-tail order statistic rejected genuine held-out English windows; the tautology in reverse (a necessity failure) was caught by running known-real text through it, and the gate was re-anchored to an independent-letter ceiling.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Every gate in this atlas carries a two-row certificate: `necessity: conforming plants pass a/a` and `power: alternative inputs fail b/c`. Where a check is retained for diagnostics only, it is labelled as such and excluded from the evidence fields.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Gate certificate"
+body = '''
+```
+GATE within-block all-different (42 pairs)
+  necessity : 200 conforming plants x 2 forms -> violations 0/400
+  power     : 200 random-letter zones -> P(>=1 violation) = 0.81 / 0.98
+              (analytic: 1-(25/26)^42 = 0.81; 1-(12/13)^42 = 0.966)
+  reference : known prose windows -> 1..6 violations
+VERDICT gate is informative; a single violation refutes the form
+```
+'''
+
+[[provenance]]
+path = "withmath/PK9_BLOCKPERM427_NOTE.md"
+kind = "note"
+note = "Controls section: necessity (0 violations in 400 conforming plants) and power, the test can fail (random zones violate with fraction 0.81 and 0.98)."
+ref = "LOG427"
+
+[[provenance]]
+path = "withmath/CLAUDE_FRESH_PK8910_SYNTHESIS.md"
+kind = "design"
+note = "Control plan item 2: a valid-model null negative that proves the gate can fail (identical algebra, plaintext replaced by independent letters with English monogram statistics)."
+
+[[provenance]]
+path = "withmath/LOG_AUDIT.md"
+kind = "audit"
+note = "Evidence rule 2: English-looking and exact roundtrip are separate checks; a freely fitted invertible key always roundtrips; overfits in logs 148, 151 and 152 looked English."
+
+[[provenance]]
+path = "withmath/PK98_SEGCHAIN_CONTROL362_INDEPENDENT_AUDIT.md"
+kind = "audit"
+note = "Blocker B2: the second-stage null never replayed the finishing selector, so every null comparison could fail while PASS was still emitted; within-coset alignment null mathematically invariant."
+ref = "LOG362"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "forward_consistency recorded but excluded from evidence (tautological by construction); several entries noting that every false state roundtrips tautologically."
+ref = "LOG287"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "GATE LESSON: a prose-tail order-statistic gate fails real English; threshold re-anchored to the independent-letter ceiling plus 0.5."
+ref = "LOG385"

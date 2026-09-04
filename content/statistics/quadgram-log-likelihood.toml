@@ -1,0 +1,143 @@
+id = "quadgram-log-likelihood"
+section = "statistics"
+title = "Quadgram log-likelihood"
+subtitle = "Per-letter log-probability of a text under a smoothed four-letter model, the workhorse language score"
+status = "VERIFIED"
+status_note = "Implemented as a smoothed 26^4 table from a fixed corpus and calibrated on held-out prose: 1,545 genuine 153-letter windows read median -4.27 (range -5.56 to -3.76) log10 per letter, random letters about -7, and planted decrypts of every solved control read -4.1 to -4.4. Its nulls under free parameters and its blindness under an unstripped transposition are both measured."
+family = "Language-model scoring"
+tags = ["quadgram", "language model", "log-likelihood", "scoring", "objective"]
+related = ["english-gate-calibration", "bayesian-evidence-model-selection", "selection-overfit-diagnostic", "shuffled-null-z-score", "order-free-width-statistic", "simulated-annealing", "hill-climbing", "exact-dynamic-programming", "g-quadgram", "g-nats-per-letter"]
+summary = "The quadgram score of a letter string is the sum over all overlapping four-letter windows of the log-probability of that window in a reference corpus, and the rate is that sum divided by the number of windows. English prose scores about -4.3 log10 per letter, random letters about -7, and the gap of 2.7 decades per letter is what makes the score a usable objective for hill-climbing, annealing and dynamic-programming solvers. It is a likelihood, not a probability of correctness: its value under wrong keys with free parameters, and its behaviour when a transposition is still in place, must be calibrated separately."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $q(abcd)$ be the count of the quadgram $abcd$ in a reference corpus of $N$ letters. With additive smoothing the table entry is
+
+$$\ell(abcd) = \log_{10}\frac{q(abcd) + \alpha}{N}$$
+
+(the toolkit uses $\alpha = 0.01$), and for a text $x_0 \dots x_{n-1}$
+
+$$L(x) = \sum_{i=0}^{n-4} \ell(x_i x_{i+1} x_{i+2} x_{i+3}), \qquad r(x) = \frac{L(x)}{n - 3}.$$
+
+$r$ is the *rate*, in $\log_{10}$ per letter. A second implementation used by the exact solvers builds the table in natural logarithms with $\alpha = 0.05$ from the first $1{,}300{,}000$ corpus letters ($1{,}299{,}997$ overlapping quadgrams), scales by $10{,}000$ and rounds to 32-bit integers so that a compiled core can add integers; its extreme entries are $-170{,}910$ and $-56{,}951$.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Reference levels and verdicts"
+body = '''
+- English prose: $r \approx -4.3$ ($\log_{10}$ per letter); on 1,545 held-out 153-letter windows the median was $-4.27$, the best $-3.76$ and the worst $-5.56$.
+- Uniform random letters: $r \approx -7$.
+- The toolkit's verdict rule: `ENGLISH` if $r > r_{\text{Eng}} - 0.7$, `partial` down to $r_{\text{Eng}} - 1.7$, else `no`. See [English gate calibration](/statistics/english-gate-calibration) for why such a threshold must be measured on real prose before it is trusted.
+- In natural-log units per letter the same quantities are $2.303$ times larger; per-letter evidence in nats is used by the [Bayesian instruments](/statistics/bayesian-evidence-model-selection), quadgram rates in $\log_{10}$ by the search solvers.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The plaintext is prose in the corpus language. A peaked, small-vocabulary plaintext (lists, spelled digits, names) scores badly even when correct.
+- The candidate is a *complete* decrypt in reading order. A transposition destroys quadgrams but preserves the letter multiset: on a planted control the correct periodic key, recovered order-free, scored $-6.95$ while the transposition was still in place and $-4.38$ once it was stripped. While any transposition remains, score order-free (monogram evidence, [order-free width statistic](/cryptanalysis/order-free-width-statistic)); only afterwards score with quadgrams.
+- The corpus is disjoint from the plaintext being scored (held-out); duplicated boilerplate in a concatenated corpus has produced in-sample controls that look stronger than they are.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. **Objective.** Energy for [simulated annealing](/search/simulated-annealing) and [hill climbing](/search/hill-climbing) over keys, alphabets or column orders; the per-window additivity makes it exact for [dynamic programming](/exact/exact-dynamic-programming) over periodic keys (a window's score depends on at most four consecutive key elements).
+2. **Polish.** Coordinate descent over individual shifts or column swaps with the rate as the criterion, applied only after the order-free stages have fixed the structure.
+3. **Verdict.** Compare with the English band and with the *null* of the same search: the best rate over all wrong keys at that length, not the random-letter level.
+4. **Segmentation.** A dictionary segmentation of the candidate (see [semi-Markov word model](/statistics/semi-markov-word-model)) is printed for human inspection; fluent-looking fragments at $-5$ are not evidence.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+One evaluation is $O(n)$ table lookups on a $26^4 = 456{,}976$-entry array; a vectorised implementation scores thousands of candidates per second, and the integer table lets a compiled dynamic program score $26^7$ key vectors exactly.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Free parameters inflate the null.** Seven free shifts fitted on a 63-letter zone reach $-4.7$ to $-5.0$ on shuffled texts; a 95-letter search over 4,033 crib placements has a wrong-placement null with median $-5.3$ and maximum $-4.83$; at 153 letters the wrong-placement null has median $-6.0$ to $-6.2$ and maximum $-5.5$ to $-5.9$. A candidate must beat the null *maximum* of its own search, which is why the [selection-overfit diagnostic](/statistics/selection-overfit-diagnostic) exists.
+- **Verdict without a null.** A search over a large bank returned a candidate at $-4.869$ that the verdict rule labelled English; eight of nine complete-pipeline nulls scored higher ($-4.836$ on average).
+- **Unstripped transposition.** See the assumptions block: ranking candidates by quadgrams while a transposition is in place discards the true key as noise, and every negative obtained that way is void for such constructions.
+- **Heavy prose tail.** Real English windows reach $-5.56$ at 153 letters; a gate at English $-0.7$ rejects $0.71\%$ of genuine windows.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Every solver prints its planted controls first: a control decrypt that does not reach the English band ($-4.1$ to $-4.4$ on the planted sandwiches, $-4.34$ for all four width solves of the mixture solver, $-4.14$ for the crib-CSP control) means the pipeline is broken and the target rows below it carry no information. The held-out calibration of 1,545 windows is the receipt for the English band itself.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+A 153-letter candidate has $150$ quadgram windows. At the English rate $-4.3$ its total is $L = -645$; at the random rate $-7$ it would be $-1050$. The verdict threshold English $-0.7$ corresponds to a total $0.7 \times 150 = 105$ decades, i.e. the candidate above the threshold is $10^{105}$ times more probable under the quadgram model than one at the threshold. That enormous ratio is exactly why the score cannot be read as a posterior: it compares two strings under one model, not the hypothesis "this is the plaintext" against "this is the best of a million wrong keys".
+
+Because windows overlap, the score of `THEQUICK` is $\ell(\mathrm{THEQ}) + \ell(\mathrm{HEQU}) + \ell(\mathrm{EQUI}) + \ell(\mathrm{QUIC}) + \ell(\mathrm{UICK})$, five terms for eight letters.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Two tables coexist in the corpus (base-10 with $\alpha = 0.01$; natural-log integer with $\alpha = 0.05$); rates from the two are not directly comparable and each lane calibrates its own English band. The natural-log table is pinned by hash in the exact-solver audits so that a score is reproducible byte for byte.
+'''
+
+[[provenance]]
+path = "ck_lib.py"
+kind = "library"
+note = "QuadgramLM: log10((count + 0.01)/total) table cached as q4.npy; score, rate = score/(n-3); verdict thresholds english_rate - 0.7 and - 1.7; header states English ~ -4.3, random ~ -7."
+
+[[provenance]]
+path = "withmath/PK9_THIRDS_ENDPOINT_NULL_CONTROL_AUDIT.md"
+kind = "audit"
+note = "Frozen natural-log Q4 table: corpus range [0, 1,300,000), 1,299,997 quadgrams, smoothing 0.05, x10,000 rounded to int32, extrema -170910 and -56951."
+
+[[provenance]]
+path = "withmath/logs/394_pk98_width8_selector_power.log"
+kind = "log"
+note = "1,545 held-out 153-letter windows: rate median -4.2732, max -3.7588, min -5.5584; 0.71% below English - 0.7."
+ref = "LOG394"
+
+[[provenance]]
+path = "withmath/GRAMMAR_SOLVER.md"
+kind = "design"
+note = "Statistic-discipline demonstration: correct inner under an unstripped transposition scores -6.9464, -4.3830 after the transposition is stripped; the order-free vs quadgram rule."
+
+[[provenance]]
+path = "withmath/logs/311_grammar_verify.log"
+kind = "log"
+note = "Transcript of the demonstration (monogram LL/letter -2.8297 vs English -2.8944; quadgram -6.9464 vs -4.3830)."
+ref = "logs/311_grammar_verify.log"
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Wrong-placement nulls at 153 letters (medians -6.0 to -6.2, maxima -5.5 to -5.9) and at 95 letters (median -5.3 to -5.4, max -4.83 to -4.91); free sub-coset shifts overfitting 63-95-letter zones to -4.7/-5.0 nulls."
+
+[[provenance]]
+path = "withmath/logs/152_crosscycle_full.log"
+kind = "log"
+note = "Candidate at -4.869 labelled ENGLISH by the verdict rule but beaten by 8 of 9 complete-pipeline nulls (mean -4.836)."
+ref = "logs/152_crosscycle_full.log"
+
+[[provenance]]
+path = "withmath/logs/05_mix.log"
+kind = "log"
+note = "Control width solves all read -4.34 at 100% plaintext match."
+ref = "logs/05_mix.log"
+
+[[references]]
+title = "Statistical Methods in Cryptanalysis"
+author = "Solomon Kullback"
+year = 1938
+
+[[references]]
+title = "Automated Cryptanalysis of Substitution Ciphers"
+author = "Thomas Jakobsen"
+year = 1995

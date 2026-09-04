@@ -1,0 +1,10 @@
+id = "g-ledger"
+section = "glossary"
+title = "Ledger"
+status = "VERIFIED"
+status_note = "Term as used in the research program."
+family = "Validation vocabulary"
+tags = ["coordination"]
+related = ["ledger-reservations", "correction-and-retraction", "internal-evidence-corpus"]
+summary = "An append-only, dated record shared by all agents of a research program in which log numbers and file names are reserved before work, seals and audit verdicts are recorded with hashes, outcomes are stated with their scope, and errors are corrected by later entries rather than edits. The program also keeps a negative-results ledger that classifies every transcript as complete, failed, interrupted or exploratory."
+updated = "2026-09-04"

@@ -1,0 +1,10 @@
+id = "g-null-distribution"
+section = "glossary"
+title = "Null distribution"
+status = "VERIFIED"
+status_note = "Standard term; the toolkit prints one with every reading."
+family = "Statistics"
+tags = ["null", "calibration"]
+related = ["shuffled-null-z-score", "within-coset-null", "family-wise-null", "permutation-test", "g-z-score", "g-empirical-p-value"]
+summary = "The distribution a statistic would have if the hypothesis under test were false and only the structure the hypothesis does not claim were present. In cryptanalysis it is almost always obtained by recomputing the statistic on transformed copies of the same ciphertext: position shuffles (keeping the letter multiset), within-coset shuffles (keeping every coset histogram), or re-pairings of two texts. A reading is reported as the observed value, the null mean and standard deviation, the null maximum, and the observed value's rank; a reading without its null is not a result."
+updated = "2026-09-04"

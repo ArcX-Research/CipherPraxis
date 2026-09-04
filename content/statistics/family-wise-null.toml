@@ -1,0 +1,144 @@
+id = "family-wise-null"
+section = "statistics"
+title = "Family-wise null"
+subtitle = "The null distribution of the best statistic over an entire search family, not of a single trial"
+status = "VERIFIED"
+status_note = "Implemented as 'max over the family on each shuffled text' in the alignment, algebra, grammar and cascade solvers; on planted controls it recovers a period-7 key at z +15.3 and a composite-period control reads only +0.9 (correctly weak), while a cross-text relation that looked like +5.7 sigma per trial fell to +0.8 sigma family-wise after 1,296 trials."
+family = "Null distributions and calibration"
+tags = ["multiple comparisons", "selection", "null distribution", "max statistic", "familywise"]
+related = ["shuffled-null-z-score", "selection-overfit-diagnostic", "permutation-test", "within-coset-null", "bayesian-evidence-model-selection", "coincidence-lag-profile", "kasiski-examination", "g-null-distribution", "g-empirical-p-value"]
+summary = "A cryptanalytic search rarely tests one hypothesis: it scans periods, offsets, widths, relations, alphabets and keys, and reports the best. The right null for 'the best over the family' is the distribution of the best over the same family on shuffled texts. A per-trial null, which asks how one fixed hypothesis would score on random order, makes the winner of a large search look significant when it is only the expected maximum of many chances. Every reading that involved a scan in the evidence corpus is therefore quoted against a family-wise null, and the per-trial figure is kept only as a warning."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $H$ be a finite family of hypotheses (e.g. all periods $2 \dots 26$ in two alphabet orders and two relations) and $T_h$ the statistic for hypothesis $h$. The reported statistic is $T^* = \max_{h \in H} T_h(c)$. The family-wise null is the distribution of
+
+$$T^*(\pi c) = \max_{h \in H} T_h(\pi c)$$
+
+over shuffles $\pi$, and the family-wise $z$ and empirical $p$ are computed from it. For $N$ independent standard-normal trials the expected maximum is about $2.5$ for $N = 100$ and $3.2$ for $N = 1{,}000$; a "$+3\sigma$" best-of-a-thousand is therefore the null expectation, not a finding.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Margins and gates"
+body = '''
+Decision rules in the toolkit are written against the family-wise maximum rather than the mean:
+
+- periodic-substitution gate: fire if $\max_{p, A, \text{rel}} g(p, A, \text{rel}) \ \ge\ \max_{\pi} T^*(\pi c) + 0.02$ nats per letter;
+- conditional endpoint of a bank search: $\hat p = \frac{1 + \#\{j : T^*(\pi_j c) \ge T^*(c)\}}{N + 1}$ with the whole bank re-selected on every null;
+- when a family is heterogeneous and no single shuffle is exchangeable for all its members, use one null bank per sub-family and report the worst (largest) $p$; do not pool incompatible hypotheses.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The family used in the null is the family actually searched, including any post-hoc choices: a second window added after seeing the first is an uncharged trial unless the null maximises over both windows.
+- Hypotheses may be correlated; the family-wise null handles that automatically because it maximises over the same correlated statistics on each shuffle. A Bonferroni correction would be conservative and is not needed.
+- The shuffle preserves everything the family does not claim; otherwise a subgroup shuffle (within coset, within segment) is required.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Define the family before the scan (periods, widths, offsets, relations, alphabet orders, cribs, keys) and write the maximiser as one function.
+2. Evaluate that function on the target and on $N$ shuffles; report the target's rank.
+3. Look at *where* the maximum falls: a best that sits at the largest period or offset scanned, in every text, is the signature of selection over a family whose size grows with the parameter; treat it as null.
+4. Reserve the family-wise reading for gates; per-trial readings are diagnostics only.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+$N$ times the cost of the full scan. Exhaustive scans that are cheap on one text (a $607{,}776$-row Hill keyword bank in 2 s) remain cheap with 100 shuffles; complete-pipeline solvers with annealing are the expensive case and are run with 9–99 nulls.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Per-trial illusion.** A cross-text relation scan reached a coincidence rate of $0.0495$ against a per-trial null of $0.0387 \pm 0.0019$, i.e. $+5.7\sigma$; over the 648 relation-offset trials per pairing the transcript already notes that a maximum near $+3\sigma$ is chance, and the family-wise null over all 1,296 trials put the same value at $+0.8\sigma$.
+- **Largest-period artefact.** A keyword bank scan reported $z = +2.74$, $+2.83$ and $+3.04$ for three targets, all at periods 12–14, the top of the scan, while its planted control ranked its true keyword 1 of $607{,}776$ at $z = +7.6$ and the true period.
+- **Family too small in the null.** Re-using the observed cycle, sign or key inside the nulls (instead of re-selecting them) shrinks the null and manufactures significance.
+- **Invariant sub-families.** Members whose statistic is invariant under the shuffle contribute a constant; they neither help nor hurt but inflate the family size in a Bonferroni count, another reason to simulate rather than correct.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Affine-lag filters (2 alphabet orders, all lags and multipliers): the best per-trial $z$ was $+4.2$, the family-wise maximum log-likelihood ratio $5.0$ against a shuffled maximum $5.1 \pm 0.6$, $z = -0.1$. Order-free substitution scan: a planted period-7 key found at $z = +15.28$ family-wise; a planted composite key of period $\operatorname{lcm}(5, 9) = 45$, outside the scanned range, at $+0.91$ (expected weak). Bank search with nine complete-pipeline nulls: observed $-4.869$ against null $-4.836 \pm 0.024$, maximum $-4.795$, $\hat p \le 0.90$.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+A scan over 26 periods, 2 alphabet orders and 2 relations is a family of $104$ hypotheses. Suppose on the target the best gain is $+0.030$ nats per letter, and on 100 shuffles the best-of-104 gain has mean $+0.018$, standard deviation $0.006$ and maximum $+0.033$.
+
+- Per-trial reading (wrong): the shuffled gain of one fixed hypothesis has mean $-0.010$ and standard deviation $0.008$, so $z_{\text{trial}} = (0.030 + 0.010)/0.008 = +5.0$.
+- Family-wise reading (right): $z_{\text{fw}} = (0.030 - 0.018)/0.006 = +2.0$, and three shuffles exceed the target, $\hat p = 4/101 \approx 0.04$.
+
+The gate requires the target to clear the family-wise maximum by a margin; here it does not ($0.030 < 0.033 + 0.02$), so the scan is quiet.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The family-wise null is the cryptanalytic form of the multiple-comparisons problem. Its discipline is procedural: write the maximiser once, call it on the target and on the shuffles, never on the target alone.
+'''
+
+[[provenance]]
+path = "withmath/wm_grammar.py"
+kind = "solver"
+note = "familywise_null(text, fn, trials): fn is the same max-over-family statistic applied to shuffled texts; used by align_z, the subst stage and the hill scan."
+
+[[provenance]]
+path = "withmath/logs/313_grammar_subst.log"
+kind = "log"
+note = "Planted period-7 key at z +15.28 family-wise; planted lcm(5,9) composite at +0.91 (expected weak)."
+ref = "logs/313_grammar_subst.log"
+
+[[provenance]]
+path = "withmath/logs/316_grammar_hill.log"
+kind = "log"
+note = "Keyword bank 607,776 rows: control keyword rank 1 at the true period; three targets at z +2.74/+2.83/+3.04 with every top row at periods 12-14 (top of the scan)."
+ref = "logs/316_grammar_hill.log"
+
+[[provenance]]
+path = "withmath/logs/03_algebra.log"
+kind = "log"
+note = "Affine-lag filters: per-trial top z +4.2; family-wise max LLR 5.0 vs shuffled-max 5.1 +- 0.6 (z -0.1), and five further family-wise lines all within |z| <= 0.7."
+ref = "logs/03_algebra.log"
+
+[[provenance]]
+path = "withmath/logs/11_misc.log"
+kind = "log"
+note = "Cross-text relation scan: best coincidence rate 0.0495 vs random pairing 0.0387 +- 0.0019 (+5.7 per trial); 648 trials, 'a max near +3 sd is chance'."
+ref = "logs/11_misc.log"
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Round 3: the same 0.0495 is z +0.8 against the family-wise null; selection over 1,296 trials explains all of it."
+
+[[provenance]]
+path = "withmath/logs/152_crosscycle_full.log"
+kind = "log"
+note = "CONDITIONAL FAMILYWISE ENDPOINT: obs -4.869; null -4.836 +- 0.024, max -4.795; z -1.37, p <= 0.90 over nine complete-pipeline nulls."
+ref = "logs/152_crosscycle_full.log"
+
+[[provenance]]
+path = "withmath/wm_infer.py"
+kind = "solver"
+note = "D2 gate: best gain must beat the shuffled family-wise maximum by GAIN_MARGIN = 0.02 nats/letter."
+
+[[provenance]]
+path = "withmath/PK10_LOCALIZED_ALBERTI_SPAN_CONTROL_POWER_AUDIT.md"
+kind = "audit"
+note = "A second selected window is an uncharged trial unless every null maximises over both; heterogeneous rule families need per-family null banks and the worst-case p."
+
+[[references]]
+title = "Resampling-Based Multiple Testing"
+author = "Peter H. Westfall, S. Stanley Young"
+year = 1993

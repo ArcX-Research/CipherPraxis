@@ -1,0 +1,143 @@
+id = "power-analysis"
+section = "statistics"
+title = "Power analysis"
+subtitle = "Measuring the probability that a pipeline recovers a planted truth before its live miss is allowed to mean anything"
+status = "VERIFIED"
+status_note = "Measured per stage on target-absent planted fixtures with frozen pipelines: 98.93% end-to-end recovery over 1,024 trials for one selector (with 100% cross-cell discrimination on 64 further fixtures), 99.83% shortlist retention over 600 trials and 97.5% on the 200 hardest windows for another, 100% over 256 trials for a third, while a fourth measured 59/64 = 0.922 and correctly refused its live pass at a 0.95 gate."
+family = "Power and error control"
+tags = ["power", "planted controls", "false negative", "gate", "sample size"]
+related = ["power-measurement", "planted-controls", "control-first-policy", "blind-controls", "permutation-test", "english-gate-calibration", "estimator-standard-error", "throughput-fail", "held-out-gates", "g-power", "g-held-out"]
+summary = "A negative result from a search is worth exactly as much as the probability that the search would have found the answer had it been there. Power analysis measures that probability directly: the frozen pipeline is run on many planted fixtures (real held-out prose enciphered with random keys under the hypothesised construction), stage by stage, and the fraction recovered exactly is reported with its confidence interval. Coverage ratios, step-level success rates and intuition are all poor proxies for it, in both directions: a shortlist that covers 0.026% of the key space had 99.8% power because it was adaptive, and an initialisation that is right only 42% of the time fed a pipeline with 98.9% power because later stages repaired it."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For a hypothesis family $\mathcal{H}$ and a pipeline $\Pi$ that returns a candidate or a refusal,
+
+$$\text{power}(\Pi, \mathcal{H}, n) = \Pr\big[\Pi(\text{Enc}_{h}(P)) = (h, P)\big], \qquad h \sim \mathcal{H},\ P \sim \text{held-out prose of length } n,$$
+
+estimated by $\hat\rho = k/N$ over $N$ planted trials with the binomial standard error $\sqrt{\hat\rho(1-\hat\rho)/N}$ or an exact interval. "Recovers" means the exact planted plaintext and parameters, with an independent forward re-encryption reproducing the ciphertext; partial matches are reported separately. A live miss at measured power $\rho$ excludes the family *at that power*: the probability that the truth was in the family and was missed is at most $1 - \rho$.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Stage decomposition and gates"
+body = '''
+A pipeline is measured in stages so that a weak step is not mistaken for a weak selector:
+
+- $S_1$: initialisation (e.g. per-residue monogram start) — fraction of trials with every parameter right;
+- $S_2$: exhaustive or exact stage given the true key (e.g. order scan) — should be 1.0;
+- $S_3$: end-to-end exact recovery — the power;
+- $S_4$: cross-cell discrimination — the planted cell wins against all alternative cells.
+
+Gate rule used by the lanes: a live pass is refused unless $S_3 \ge 0.95$ on the controls; the gate is fixed before the controls are run and is not re-tuned afterwards.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The fixtures match the live problem: same length, same alphabet orders, same relation set, keys drawn uniformly, plaintext from a range disjoint from the model's training and calibration data.
+- The pipeline is frozen (hashed) between the power measurement and the live run.
+- The plaintext distribution of the fixtures covers the tail the live text might occupy; power measured on ordinary prose ($99.8\%$) fell to $97.5\%$ on the 200 lowest-scoring windows.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Use in an attack pipeline"
+body = '''
+1. Write the fixture generator inside the frozen engine, asserting both forward relations on every fixture.
+2. Run $N \ge 256$ trials across the full grid of cells (alphabet orders, relations, boundary parameters) and several seeds; report $S_1$–$S_4$.
+3. If $S_3$ is below the gate, refuse the live pass and say so in the terminal line; improve the pipeline (a multistart repair took one selector from $255/256$ to $256/256$; never pruning a beam before its score is informative took an order stage from $0.125$ to $0.875$) and re-measure.
+4. Only then run the live pass; cite the miss together with the power and the scope (cells, parameter ranges, plaintext class) it was measured for.
+5. For time-capped exact searches, power is the *coverage at the cap*: with 20 random plants recovered 20/20 whenever their pair was scheduled but median coverage $0.13$ of the frontier within 24 hours, the power of a capped run is about $0.13$, and a non-hit is "power-unmeasured, scoped inconclusive", not a negative.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+$N$ full pipeline runs: 1,024 trials at 0.09 s per cell for one selector; 64 trials at beam 32,768 for a width-17 order solver; 700 exact selections in the audited null lane. Power measurement is usually cheaper than the live run it licenses.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Coverage is not power.** $8^7/26^7 = 0.026\%$ of keys were in a shortlist that retained the true key $99.83\%$ of the time because the shortlist was chosen adaptively per residue.
+- **A weak step is not a weak selector.** Initialisation right in only $41.80\%$ of trials; exhaustive order scan $100\%$; local refit rescued $585/596$ bad starts; end-to-end $98.93\%$. The earlier reading "closes little" was withdrawn once the stages were measured.
+- **Small-sample optimism.** $31/32 = 0.969$ became $59/64 = 0.922$ (95% interval $[0.856, 0.988]$) with more trials, below the $0.95$ gate.
+- **Detecting the class is not recovering the object.** A span selector picked the planted structural class in $12/12$ positives but recovered the exact map in only $3/6$ and $4/6$; in the failures the wrong map scored higher than the truth under the frozen model, so more restarts cannot help, and $2$ to $5{,}040$ disk completions remained ambiguous.
+- **Plants sharing a model range.** Fixtures drawn from the same corpus tail used as the model's second argument are disjoint from training but not from calibration; a clean design uses a third range.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Segment-chain programme, target-absent: no-transposition lane $97.5$–$99.8\%$ (600 reachability trials, $10/10$ end-to-end); width-9 lane $98.93\%$ ($1{,}013/1{,}024$, $S_4$ $64/64$); width-3 lane $100\%$ ($256/256$); width-17 lane $0.9219$, live refused. Derived-alphabet invariant: power $47/48$, negatives $6/6$. Exact semi-Markov panel: $20/20$ recovered when scheduled, coverage at the cap $0.012$–$1.0$ (median $0.13$). Every live miss in the programme is cited with these numbers and the scope they cover, and no plaintext was produced.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+A lane recovers $59$ of $64$ planted fixtures exactly. The point estimate is $0.922$; the binomial standard error is $\sqrt{0.922 \times 0.078/64} = 0.034$, and the exact 95% interval is about $[0.83, 0.97]$ (the lane's own report gives $[0.856, 0.988]$ with a normal approximation). Because the interval reaches below the $0.95$ gate, the live pass is refused: a miss at $0.92$ power would leave an 8% chance that the truth was simply not found, and the family would remain open anyway.
+
+Rule of three for perfect scores: $256/256$ recoveries bound the miss rate below about $3/256 = 1.2\%$ at 95% confidence; $20/20$ only below $15\%$.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Power is a property of the complete pipeline on the exact hypothesis grid, at the exact length, with plaintext of the exact kind. A number measured elsewhere does not transfer. The reverse error, treating a step-level success rate or a coverage fraction as power, has produced both over- and under-statements in the evidence corpus and is the reason the stage decomposition is mandatory.
+'''
+
+[[provenance]]
+path = "withmath/PK98_T9_SELECTOR_POWER396.md"
+kind = "audit"
+note = "1,024 trials: S1 41.80% all-seven, S2 100%, S3 1013/1024 = 98.93%, refit rescued 585/596, S4 64/64; multistart repair 255/256 -> 256/256; width-3 successor 256/256 and gate >= 0.95."
+ref = "LOG396"
+
+[[provenance]]
+path = "withmath/logs/396_pk98_t9_selector_power.log"
+kind = "log"
+note = "Transcript of the stage measurements."
+ref = "logs/396_pk98_t9_selector_power.log"
+
+[[provenance]]
+path = "withmath/PK98_SEGCHAIN_LIVE_MEASURE_INDEPENDENT_REVIEW394.md"
+kind = "audit"
+note = "Coverage 8^7/26^7 = 0.026% is not power; 600 trials, all-seven retention 99.83%, 10/10 end-to-end, 97.5% on the 200 hardest windows."
+ref = "LOG394"
+
+[[provenance]]
+path = "withmath/logs/398_pk98_width17_live_t53_n64.log"
+kind = "log"
+note = "64 trials: s1 0.4062, s2 0.9844, s3 0.9219 (59/64); gate 0.95; LIVE REFUSED INSUFFICIENT_CONTROL_POWER."
+ref = "LOG398"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Width-17 lane: beam pruning fix 0.125 -> 0.875; 31/32 = 0.9688 small-sample optimism corrected by 59/64 = 0.9219 with 95% CI [0.856, 0.988]; gate not re-tuned."
+ref = "LOG398"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Derived-alphabet invariant: controls power 47/48, negatives 6/6; live miss cited at power 0.979."
+ref = "LOG403"
+
+[[provenance]]
+path = "withmath/logs/503_panel_stats_20260904T095257Z.log"
+kind = "log"
+note = "20 random plants recovered 20/20 when scheduled; coverage at the 24 h cap 0.0278-1.0, median 0.1266; 'power = coverage at cap, not a gate'."
+ref = "LOG503"
+
+[[provenance]]
+path = "withmath/PK10_LOCALIZED_ALBERTI_SPAN_CONTROL_POWER_AUDIT.md"
+kind = "audit"
+note = "12/12 structural class selected; exact map 3/6 and 4/6; wrong maps outscore the truth by up to 0.517 rate units; 2 to 5,040 completions ambiguous; BLOCK as a transfer stage."
+
+[[references]]
+title = "Statistical Power Analysis for the Behavioral Sciences"
+author = "Jacob Cohen"
+year = 1988

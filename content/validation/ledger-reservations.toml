@@ -1,0 +1,100 @@
+id = "ledger-reservations"
+section = "validation"
+title = "Ledger reservations"
+subtitle = "An append-only coordination ledger in which log numbers and file names are claimed before work begins"
+status = "VERIFIED"
+status_note = "The research program's ledger holds 240 headed entries over 13,552 lines, including 82 reservations, 8 seals, 25 terminal entries and 12 corrections; collisions were resolved by voiding the later claim and renumbering rather than by editing."
+family = "Audit and release governance"
+tags = ["ledger", "coordination", "reservations", "append-only"]
+related = ["seal-and-audit-protocol", "correction-and-retraction", "reproducibility-receipts", "run-script-log-convention", "g-ledger"]
+summary = "When several agents attack the same texts, the ledger is the shared memory that prevents duplicated work, silent overwrites and retroactive claims. Each lane reserves a log number and the exact new-only file names it will create, records its seal with hashes, and records its terminal outcome or correction. Nothing is edited after the fact: a wrong claim is followed by a dated correction, and a numbering collision voids the later claim and renumbers it. The ledger is also what a later audit reads to decide which negatives are real."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+The ledger is a single Markdown file with dated `##` headers. Entry types, in the order a lane normally passes through them:
+
+- **RESERVED**: a log number, the lane's question, the exact new-only paths (source, runner, parser, audit note, transcript names) and the paths the author promises never to create (canonical production transcripts and attempt markers).
+- **SEALED**: the frozen hashes of every byte the lane will be audited on, with the disclosed evidence and its hashes.
+- **INDEPENDENT AUDIT**: the auditor's verdict with the hashes it audited.
+- **COMPLETE / TERMINAL / RESULT**: the outcome with transcript hashes and an explicit statement of what is and is not claimed.
+- **CORRECTION / AMENDMENT / VOID**: a later entry that changes the reading of an earlier one without editing it.
+
+Numbered logs are owned by exactly one lane; the ledger is the registry that makes the log directory's `NNN_name.log` convention unambiguous.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- Append-only. Frozen bytes and earlier entries are never modified; even a hash miscount is corrected by a later entry so the sealed hashes stay valid.
+- New-only paths. A successor never rewrites a predecessor's file; a blocked lane's bytes remain on disk as the predecessor of record.
+- Reservation precedes creation. Creating an unreserved artefact, or a reserved one out of order, is itself a defect the auditors look for ("reserved paths absent before and after").
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+The ledger defends the evidence base rather than any single result. It records the *scope* of every negative ("closes only the enumerated family and search depth"), which is what allows a family to be reopened when a control is later found defective without relitigating everything else. It also carries the frozen no-repeat checklist: after a failed control no target run; no promotion of a fluent string unless the full selected-family null is lower; no reruns of closed banks unless the mathematical family changes.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The ledger grew to 1.2 MB, which is why it is grepped rather than read: the headers alone are a 240-line index. Every lane pays a few minutes per entry; the alternative, a private notebook per agent, was the state before the ledger and produced two false exclusions found by the later audit.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Collisions.** Two numbering collisions are recorded; each time the later claim was declared VOID, no artefact had been created under it, and the identical protocol was renumbered atomically to a fresh number with new-only paths.
+- **Keyword search as audit.** A novelty claim was made by grepping the ledger for phrases; the implementations swept widths generically and had never needed to name the width in prose. Retracted with the rule that novelty claims must inspect code, not narrative (see [Correction and retraction](/validation/correction-and-retraction)).
+- **Reservation without result.** Reserved-but-never-run designs remain in the ledger as reservations; the corpus map distinguishes them from executed lanes.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Audits verify the ledger against the filesystem: every path a reservation promises to leave absent is checked absent before and after the audit, and every hash a seal states is recomputed.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Entry templates"
+body = '''
+```
+## 2026-09-04 LOG NNN RESERVED (creator) — one-line question
+Files claimed (new only): wm_name.py, run_name.sh, NAME_AUDIT.md, logs/NNN_name_disclosed.log
+Reserved and never to be created by the author: logs/NNN_name_controls.log / .attempt
+Scope: controls-only, target absent. No target read is authorised by this reservation.
+
+## 2026-09-04 LOG NNN SEALED (creator) — static KAT PASS, disclosed 12/12, mutations 40/40 rejected
+Frozen bytes: source sha256 …; runner sha256 … (normalised …); parser sha256 …; design sha256 …
+Disclosed transcript logs/NNN_name_disclosed.log sha256 …  Awaiting different-agent audit.
+
+## 2026-09-04 LOG NNN TERMINAL (creator) — outcome in one line
+Transcript logs/NNN_name_20260904T093519Z.log sha256 …  What is claimed: … What is not: …
+```
+'''
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "The ledger itself: 240 level-two headers over 13,552 lines and 1,225,284 bytes; header counts by keyword on 2026-09-04: RESERVED 82, SEALED 8, TERMINAL 25, CORRECTION 12, PASS 33, BLOCK 12, VOID 2."
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Reservation entry naming new-only files and the canonical paths the author will never create."
+ref = "LOG385"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Collision correction: a later claim under an already-reserved number is VOID, nothing was created under it, and the protocol is renumbered atomically to a fresh number."
+ref = "LOG265"
+
+[[provenance]]
+path = "withmath/LOG_AUDIT.md"
+kind = "audit"
+note = "Negative-results ledger with the frozen no-repeat checklist and the scope rule that a negative closes only the enumerated family and depth."

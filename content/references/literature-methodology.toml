@@ -1,0 +1,79 @@
+id = "literature-methodology"
+section = "references"
+title = "Methodology literature"
+subtitle = "Preregistration, forking paths, reproducible computation, known-answer testing and tamper-evident records"
+status = "VERIFIED"
+status_note = "Bibliographic entry: the external sources that motivate the validation and engineering practices in this atlas; no experimental claim is made here."
+family = "Literature"
+tags = ["bibliography", "methodology", "reproducibility", "preregistration"]
+related = ["tautological-gate-rule", "seal-and-audit-protocol", "reproducibility-receipts", "hash-chained-transcripts", "kat-harness", "correction-and-retraction", "selection-overfit-check", "internal-evidence-corpus"]
+summary = "The validation section is an application of a small methodological literature to cryptanalysis: Feynman's demand that one report everything that could invalidate a result; Gelman and Loken's garden of forking paths and Simmons, Nelson and Simonsohn's false-positive mechanics, which are the selection-overfit problem under another name; Nosek's preregistration, which is the sealed design; Peng and Sandve on reproducible computation, which are the receipts; NIST's known-answer tests; and Haber and Stornetta's hash chains, which are the transcripts."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "notes"
+body = '''
+Two ideas from this list are load-bearing for the whole atlas. Popper's falsifiability, in its operational form, is the tautological-gate rule: a check that cannot fail is not a check. Preregistration, in its operational form, is the seal: the design, the controls, the nulls, the gates and the terminal vocabulary are frozen and audited by a different agent before the one-shot resource is spent, so that nothing about the decision can be adjusted after the data are seen.
+'''
+
+[[references]]
+title = "The Logic of Scientific Discovery"
+author = "Karl R. Popper"
+year = 1959
+
+[[references]]
+title = "Cargo Cult Science (Engineering and Science 37:7)"
+author = "Richard P. Feynman"
+year = 1974
+
+[[references]]
+title = "Why Most Published Research Findings Are False (PLoS Medicine 2:8)"
+author = "John P. A. Ioannidis"
+year = 2005
+
+[[references]]
+title = "False-Positive Psychology: Undisclosed Flexibility in Data Collection and Analysis Allows Presenting Anything as Significant (Psychological Science 22:11)"
+author = "Joseph P. Simmons, Leif D. Nelson and Uri Simonsohn"
+year = 2011
+
+[[references]]
+title = "The Statistical Crisis in Science: the garden of forking paths (American Scientist 102:6)"
+author = "Andrew Gelman and Eric Loken"
+year = 2014
+
+[[references]]
+title = "The Preregistration Revolution (Proceedings of the National Academy of Sciences 115:11)"
+author = "Brian A. Nosek, Charles R. Ebersole, Alexander C. DeHaven and David T. Mellor"
+year = 2018
+
+[[references]]
+title = "Reproducible Research in Computational Science (Science 334:6060)"
+author = "Roger D. Peng"
+year = 2011
+
+[[references]]
+title = "Ten Simple Rules for Reproducible Computational Research (PLoS Computational Biology 9:10)"
+author = "Geir Kjetil Sandve, Anton Nekrutenko, James Taylor and Eivind Hovig"
+year = 2013
+
+[[references]]
+title = "How to Time-Stamp a Digital Document (Journal of Cryptology 3:2)"
+author = "Stuart Haber and W. Scott Stornetta"
+year = 1991
+
+[[references]]
+title = "A Digital Signature Based on a Conventional Encryption Function (CRYPTO 1987, LNCS 293)"
+author = "Ralph C. Merkle"
+year = 1988
+
+[[references]]
+title = "FIPS PUB 140-2: Security Requirements for Cryptographic Modules (power-up known-answer self-tests)"
+author = "National Institute of Standards and Technology"
+year = 2001
+url = "https://doi.org/10.6028/NIST.FIPS.140-2"
+
+[[references]]
+title = "Cryptographic Algorithm Validation Program (CAVP): known-answer test vectors"
+author = "National Institute of Standards and Technology"
+year = 2024
+url = "https://csrc.nist.gov/projects/cryptographic-algorithm-validation-program"

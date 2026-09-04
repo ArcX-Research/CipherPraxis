@@ -1,0 +1,10 @@
+id = "g-invariant"
+section = "glossary"
+title = "Invariant (necessary condition)"
+status = "VERIFIED"
+status_note = "Standard term; the corpus distinguishes invariants proved for a whole family from statistics that are merely typical of it."
+family = "Algebra"
+tags = ["necessary condition", "structural test"]
+related = ["residue-class-graphs", "difference-operators", "dihedral-group", "tautological-gate-rule", "valid-model-nulls"]
+summary = "A quantity or relation that every member of a cipher family must satisfy regardless of the unknown key, alphabet or plaintext, such as agreement of equality partitions within a key class or vanishing cycle sums on a residue graph. An invariant that fails rejects the family exactly and without a language model; an invariant that holds is only a necessary condition and never evidence for the family. A statistic that most members satisfy but some legal members violate is a typicality diagnostic, not an invariant, and cannot serve as a gate."
+updated = "2026-09-04"

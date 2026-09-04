@@ -1,0 +1,130 @@
+id = "running-key"
+section = "ciphers"
+title = "Running-key cipher"
+subtitle = "Vigenère with a long natural-language text as the key"
+status = "POWER-LIMITED"
+status_note = "With the key text in a known bank the exact window test is verified (a planted window yields a consistent alphabet, wrong windows die in a few nodes) and the recipe-free cascade recovered a running-key link between two solved texts; with an unknown English key the joint beam decoder failed identifiability on all matched controls (41%, 50% and 26% at 63, 95 and 126 letters)."
+family = "Stream and machine ciphers"
+tags = ["running key", "aperiodic", "book key", "two-language-stream"]
+related = ["vigenere", "book-cipher", "autokey", "one-time-pad", "running-key-relation-test", "key-cancellation", "beam-search", "viterbi-decoding", "constraint-satisfaction-forward-checking", "word-prefix-csp"]
+summary = "A running-key cipher adds a long meaningful text to the plaintext letter by letter, so there is no period to exploit. Both the plaintext and the key are language, which is a weakness when the key text is available and a hard identifiability problem when it is not: a decoder that separates one ciphertext into two fluent streams can produce many convincing wrong pairs. The program verified the known-bank case and measured the unknown-key case as a power failure."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+With a key text $t_0 t_1 \dots$ at least as long as the message and an index order $a$,
+
+$$a(c_i) \equiv a(p_i) + a(t_i) \pmod{26}$$
+
+(Vigenère), or $a(t_i) - a(p_i)$ (Beaufort), or $a(p_i) - a(t_i)$ (Variant). The key is the identity of the text and the starting offset; a keyed order adds a permutation. The one-time pad is the limit in which $t$ is uniformly random and never reused.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Known bank versus unknown key"
+body = '''
+**Known text, unknown alphabet and shifts.** If the key is a window $T[o : o+n]$ of a known text and a period-$m$ word shift $w$ is added, every position gives one linear equation in the alphabet positions, $x(c_i) - x(T_{o+i}) - k_{i \bmod m} \equiv 0$, with all $x$ distinct; $n = 63$ or $95$ equations make a wrong window inconsistent within a few search nodes and the right one yield a consistent alphabet. **Unknown English key.** The pair $(p, t)$ must be inferred jointly from $c$ alone; the symmetry $p \leftrightarrow t$ under Vigenère is intrinsic, and language models admit many fluent decompositions. Between two ciphertexts, a shared running key cancels: $c^{(1)}_i - c^{(2)}_i = p^{(1)}_i - p^{(2)}_i$, which is the relation test the program ran on its two short texts in every index-space pairing.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Book cipher**: the key is a passage identified by its location in a book; see [Book cipher](/ciphers/book-cipher).
+- **Chained running key**: one recovered plaintext keys the next message; the solved prefix of the corpus contains such a link, which the cascade recovered through its running-key decision (see [Running-key relation test](/cryptanalysis/running-key-relation-test)).
+- **Running key under a transposition**: score the plaintext side order-free (monograms only) and recover the key text from the ciphertext.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Both streams are natural language; the cipher is additive in a known or guessed order.
+- Invariant: no lag has an elevated coincidence rate, so period-finding statistics are silent.
+- Invariant: two messages under the same key text differ by the difference of their plaintexts, regardless of the key.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. **Bank sweep.** Slide every candidate key text past the ciphertext at every offset in every order and relation; score offsets by monogram likelihood (vectorised), re-score the top ones by index of coincidence and quadgrams, and compare with the same sweep on shuffled ciphertext.
+2. **Exact window test.** With a candidate text, solve the alphabet-position CSP for every window; keep windows that admit a consistent alphabet.
+3. **Unknown key.** Exact Viterbi over the last three key letters ($26^3$ states) scoring quadgrams of both streams, or a recurrent language model run jointly on both streams inside a beam; in either case require matched planted controls first.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Bank sweep: one vector correlation per (text, offset), minutes for four novels and all offsets. Exact Viterbi: $26^3 = 17{,}576$ states per position. Joint beam: two recurrent states per hypothesis, beam 12,000, seconds per 100-letter control.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Identifiability.** The joint beam decoder's best hidden-pair matches were 41.3%, 49.5% and 26.2% on 63-, 95- and 126-letter controls; the truth left the beam every time while the decoder emitted two fluent streams with exact round-trips. That is why fluency plus round-trip cannot authenticate a running-key reading.
+- **Multiple comparisons.** Sweeping thousands of windows and offsets yields top alignments at the family-wise null; one lane's best alignment (z +4.7) sat at the multiple-comparison expectation of about 4.5.
+- **Bank coverage.** A negative bank sweep excludes only the texts in the bank.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Known-text CSP (logs/60_knowntext.log, logs/63_knowntext2.log): the planted 63-letter window under a random alphabet and random shifts yields a consistent solution while the adjacent wrong window dies. Joint beam decoder (log 166): control gate FAIL on all three matched controls, so no live text was run. Recipe-free cascade (logs/145_infer.log): the running-key link between two solved texts of the corpus was recovered at 100% published match. Cross-text relation tests in all four index-space pairings on the two short texts: the best index of coincidence, 0.0495, is z +0.8 against the family-wise null once selection over 1,296 trials is included (logs/11_misc.log).
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Plaintext `SENDHELP`, key text beginning `THEQUICKBROWN`, Vigenère relation:
+
+```
+plain   S  E  N  D  H  E  L  P
+key     T  H  E  Q  U  I  C  K
+cipher  L  L  R  T  B  M  N  Z
+```
+
+Check position 3: $D + Q = 3 + 16 = 19 = T$; position 4: $H + U = 7 + 20 = 27 \equiv 1 = B$. With the key text known, decryption is subtraction; without it, `LLRTBMNZ` is consistent with many (plaintext, key) pairs.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The program's practical conclusion: a running key is attackable exactly when the key text can be enumerated, and any claimed reading with an unknown key needs an independent constraint (a second message under the same key, or a crib) rather than more search.
+'''
+
+[[provenance]]
+path = "withmath/wm_knowntext.py"
+kind = "solver"
+note = "Known-text window CSP: exact alphabet-position equations with seven free shifts; planted and wrong-window controls."
+ref = "logs/60_knowntext.log"
+
+[[provenance]]
+path = "withmath/wm_runkeybeam.py"
+kind = "solver"
+note = "Joint two-stream GRU beam decoder for an unknown English running key; matched controls 41.3%/49.5%/26.2%; gate FAIL."
+ref = "logs/166_runkeybeam.log"
+
+[[provenance]]
+path = "ck_runkey.py"
+kind = "solver"
+note = "Exact Viterbi over the last three key letters (26^3 states) scoring both streams; shuffled-ciphertext null; order-free mode."
+ref = "ck_logs/43_runkey.log"
+
+[[provenance]]
+path = "withmath/wm_infer.py"
+kind = "solver"
+note = "Decision D3: running-key links over plaintexts recovered earlier in the same run; solved-prefix validation."
+ref = "logs/145_infer.log"
+
+[[provenance]]
+path = "withmath/wm_misc.py"
+kind = "solver"
+note = "Test C: cross-text relations in all index-space pairs with a family-wise null (z +0.8 after selection over 1,296 trials)."
+ref = "logs/11_misc.log"
+
+[[references]]
+title = "The Codebreakers"
+author = "David Kahn"
+year = 1967

@@ -1,0 +1,125 @@
+id = "compiled-hot-cores"
+section = "engineering"
+title = "Compiled hot cores"
+subtitle = "Single-file C++ solvers with a self-KAT, a line protocol and integer scores, driven from Python"
+status = "VERIFIED"
+status_note = "Fifty single-file cores exist in the research program; each is compiled by its launcher, must pass --self-kat before use, and is driven over pipes; recorded throughput includes an exhaustive drain of 248,405 pairs in 307.5 s and a 209 ms benchmark at 96 MB peak memory."
+family = "Compute and throughput"
+tags = ["c++", "cores", "protocol", "threads", "integer scores"]
+related = ["numpy-instrument-pattern", "kat-harness", "seed-determinism", "run-script-log-convention", "drainability-and-throughput", "state-checkpoints", "exhaustive-enumeration", "simulated-annealing"]
+summary = "When a search is dominated by an inner loop that arrays cannot express, the program moves that loop into one C++ file: no build system, one compiler line in the launcher, a self-test mode, and a text protocol so that Python still owns the experiment, the controls and the transcript. Scores are integers at a fixed scale so that ties, ranks and replays are exact across machines. A validated core is reused by embedding it byte for byte and pinning its hash, never by copying code."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+A **hot core** is a program `name_core.cpp` with two entry modes:
+
+- `--self-kat`: deterministic known-answer tests of the core's own algebra and scoring deltas; prints one `SELF_KAT PASS` line with check counts or throws.
+- `--server CORPUS [WORKERS]` (or a batch CLI): builds the language model from the pinned corpus, prints a `READY` event carrying the model checksum, then reads one request per line (`SOLVE <seed> <ciphertext>`) and answers with one JSON line (`RESULT`, or `ERROR` with `BAD_REQUEST` / `BAD_CIPHERTEXT`), until `QUIT`.
+
+The Python driver spawns the core with pipes, reads the `READY` line, sends requests, parses replies, and on exit sends `QUIT` and waits with a timeout. The transcript is written by Python; the core never touches the filesystem beyond the corpus.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Integer scoring"
+body = '''
+Log-scores are stored as integers, $q = \operatorname{rint}(10^{s} \cdot \log_{10} p)$ with $s = 3$ or $9$ depending on the lane, and a candidate's score is $Q = \sum_i q[w_i]$ over its windows; the displayed rate is $Q / (10^{s} \cdot \#\text{windows})$. Gates are then exact integer comparisons ($Q \ge -724{,}864{,}974{,}231$ for one frozen threshold), ties are exact, and a replay on another machine reproduces every rank.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- One compiler line reproduces the binary's behaviour: `clang++ -std=c++17 -O3 -DNDEBUG -pthread name_core.cpp -o core` (some lanes use C++20). The compiler version and binary hash are recorded where a lane depends on them; one audit noted their absence as a residual.
+- Work units are independent so that a thread pool with an atomic counter (work-stealing over raw cells) is deterministic in its results regardless of scheduling.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Patterns from the corpus"
+body = '''
+- **Embedding a validated engine.** A successor core includes its predecessor's file with `main` renamed by a macro, changes only the state schedule and outer selector, and pins the predecessor's SHA-256 as a string constant printed by the self-KAT.
+- **Staged selection inside the core.** One core enumerates $2 \times 4 \times 26 \times 26 = 5{,}408$ raw cells, solves each with a short annealing stage, keeps 192 for a second stage and 32 for a third, and emits the top 256 with per-cell seeds derived by XOR of the request seed with the cell coordinates.
+- **Batch CLI cores.** A restart-based annealer exposes `--restarts 96 --iterations 300000 --threads 4 --seed 202000 --t0 16 --t1 0.08` and screening, refinement and consensus stages as flags; its runner script and Python wrapper own the protocol.
+- **Frozen cores with scheduling-only edits.** A build script verifies the frozen core's source hash, applies guarded textual insertions (`--pair-begin/--pair-end` slicing, `--locate-pair`), records the generated source and binary hashes, and a KAT proves the union of segments equals the full run.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Recorded rates: an exhaustive three-shift cell drained 248,405 pairs (494,577 triples) in 307.5 s; a fixed-order structured-plaintext solver benchmarked at 209 ms with 95.7 MB peak memory for 26 first-stage and 104 endpoint states; the same family's largest identity enumerated 2.47 million first-stage and 9.9 million endpoint states inside a 156.7 s suite. Sanitiser builds (ASAN and UBSAN) were run on both oracle and blind paths before one core was frozen.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Rate extrapolated across cells.** A two-extra-shift cell ran about 300 times slower per pair than its three-shift sibling because the linear pruning fired later; see [Throughput fail](/validation/throughput-fail).
+- **Truth-map arguments.** A core that can be handed the planted truth for oracle KATs must refuse that argument in live mode; the lane's design states that no truth map is passed to the core.
+- **Unrecorded compiler provenance.** A different compiler could fail a deterministic replay at admission (fail-closed, but then permanently incomplete).
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The self-KAT is mandatory before any mode. Typical contents: for every one of the 325 letter pairs, the incremental swap delta equals the full rescore difference; forward then inverse of the state schedule reproduces the input over all 5,408 cells and 504 positions; a zero-width variant equals the constant-slope schedule for all 26 slopes.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Protocol transcript"
+body = '''
+```
+$ ./core --self-kat
+CORE SELF_KAT PASS raw_cells=5408 schedule_checks=2725632 constant_alias_checks=52416 base_sha256=fe882dde…
+$ ./core --server corpus.txt 8
+{"event":"CORE_READY","model_checksum":<integer>,"raw_cells":5408,"workers":8}
+SOLVE 490001 ABCD…(504 letters)
+{"cells":[{"d0":3,"d1":9,"key":"…","outer":"S","plaintext":"…","quarter":2,"score":-5012345,"stage":3},…],
+ "emitted":256,"event":"CORE_RESULT","model_checksum":<integer>,"raw_top_ties":1,"seed":490001}
+QUIT
+```
+'''
+
+[[provenance]]
+path = "withmath/wm_pk10_quarterpulse490_core.cpp"
+kind = "solver"
+note = "Embeds the validated base core via a renamed main, pins its SHA-256, enumerates 5,408 raw cells with a work-stealing thread pool, three keep stages (192, 32), per-cell seeds by XOR, --self-kat and --server line protocol with JSON events."
+
+[[provenance]]
+path = "withmath/wm_pk10_quarterpulse490.py"
+kind = "solver"
+note = "Driver: subprocess with stdin/stdout pipes, SOLVE seed ciphertext requests, QUIT and communicate with a 30 s timeout."
+
+[[provenance]]
+path = "withmath/wm_pk10_alberti_monosub_core327.cpp"
+kind = "solver"
+note = "Base substitution engine: self-KAT checks every swap delta against a full rescore and the deprogress roundtrip for two alphabets and seven slopes."
+
+[[provenance]]
+path = "withmath/wm_shared9_factor_deal_core.cpp"
+kind = "solver"
+note = "Batch CLI annealer with restarts, iterations, threads, seed, temperature and staged screening flags; driven by run_shared9_factor_deal.sh and wm_shared9_factor_deal.py."
+
+[[provenance]]
+path = "withmath/run_pk9_bip39_fullwords503.sh"
+kind = "script"
+note = "Compiles the frozen core (C++20, -O3, -pthread) after checking its source hash, into a private 0700 directory."
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Drain of 248,405 pairs in 307.522 s; sanitiser builds passed on oracle and blind paths; no truth map passed to the core in live mode."
+ref = "LOG475"
+
+[[provenance]]
+path = "withmath/PK9_STRUCTURED_P7_CHAIN383_CREATOR_AUDIT.md"
+kind = "audit"
+note = "Benchmark 209 ms, 95,731,712 bytes peak RSS; largest identity 2,468,776 first-stage and 9,875,104 endpoint states; suite 156.666 s."
+ref = "LOG383"
+
+[[provenance]]
+path = "withmath/CLAUDE_LOG363_REPLACEMENT_AUDIT.md"
+kind = "audit"
+note = "Residual 6: compiler version and binary hash not recorded; a different compiler would fail the deterministic replay fail-closed."
+ref = "LOG363"

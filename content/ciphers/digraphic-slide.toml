@@ -1,0 +1,113 @@
+id = "digraphic-slide"
+section = "ciphers"
+title = "Digraphic slide ciphers (Slidefair and Portax)"
+subtitle = "Digraph rectangles between a fixed top row and a key-shifted bottom row"
+status = "CLOSED"
+status_note = "All four direct families (Portax; Slidefair with Vigenère, Variant and Beaufort rules) recovered their 504-letter controls exactly with periods 1-12 selected blind and byte-matched a source generator; every live endpoint on the 504-letter text scored -7.42 to -7.58 and the family is excluded there at periods 1-12."
+family = "Polygraphic substitution"
+tags = ["digraphic", "slide", "periodic", "reciprocal"]
+related = ["porta", "vigenere", "beaufort", "variant-beaufort", "playfair", "two-square-four-square", "g-polygraphic", "g-reciprocal-cipher"]
+summary = "Slide ciphers pair the plaintext letters of a digraph across two rows of a rectangle: the top row is the straight alphabet and the bottom row is the alphabet shifted by a key letter that changes with a period. The two letters of a digraph mark two columns and the ciphertext takes the other corners, as in Playfair's rectangle rule. Portax uses the Porta half-alphabet rectangle instead. Both are periodic and digraphic, so they combine a period search with a rectangle rule."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+**Slidefair.** Split the text into digraphs $(a, b)$ and let the key position be $i \bmod P$ with shift $k$. The bottom-row coordinate is
+
+$$\operatorname{bottom}_k(j) = j + k \ (\text{Vigenère}), \qquad j - k \ (\text{Variant}), \qquad k - j \ (\text{Beaufort}) \pmod{26}.$$
+
+With $a$ at column $j_a = a$ of the top row and $b$ at column $j_b = \operatorname{bottom}_k^{-1}(b)$ of the bottom row, the ciphertext is $\big(\text{top}[j_b], \text{bottom}[j_a]\big)$: the columns are exchanged. **Portax** lays each block of $2P$ letters in two rows of width $P$ and uses the Porta rectangle for each vertical pair with $s = \lfloor \operatorname{pos}(k)/2 \rfloor$; the same-column case exchanges rows, so encryption and decryption coincide.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Explicit Slidefair map and observable key"
+body = '''
+For the Vigenère rule, $j_b = b - k$ and the digraph maps to
+
+$$(a, b) \mapsto \big((b - k) \bmod 26,\ (a + k) \bmod 26\big),$$
+
+which is an involution on digraphs for each $k$: applying it again returns $(a, b)$. When $j_a = j_b$ (the "vertical" case) a convention shifts one column. Under Portax the observable key is the pair class A/B, C/D, ... of each key letter, canonicalised to the even representative, exactly as for Porta.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Slidefair** with the three bottom-row rules.
+- **Portax** with a period-$P$ key word.
+- Related: [Porta](/ciphers/porta) (monographic), [Playfair](/ciphers/playfair) (square instead of slide).
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Digraph boundaries aligned with the text; period 1 to 12.
+- Invariant: each Slidefair digraph map is an involution, so a fitted key round-trips and the round-trip is not evidence.
+- Invariant: the first ciphertext letter of a digraph depends only on $b$ and $k$, the second only on $a$ and $k$: the digraph is not mixed the way a Hill block is.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Enumerate the period $P = 1 \dots 12$ exhaustively; for each, search the key with the external annealer under a quadgram objective.
+2. Re-implement the rectangle rules independently and verify every recovered result by forward encryption.
+3. Gate on the control recovering all letters, the hidden period and the observable key class before the live text is admitted; require the language gate before any null.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+$26^P$ keys per rule and period (13 classes per position for Portax); with $P \le 12$ the annealer converged on every 504-letter control within the audit's standard budget in both declared seeds.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Period selection on a wrong family.** Live searches selected periods 8, 12, 12 and 11 with rates $-7.58$, $-7.49$, $-7.48$ and $-7.42$: a free period plus key fits nothing but noise.
+- **Vertical-case conventions.** A source that shifts the vertical case differently produces a different cipher; the program's independent implementation had to match the generator byte for byte.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Log 200: Portax with a nine-letter key (period 9) recovered at rate $-4.18$; Slidefair Vigenère, Variant and Beaufort with seven-letter keys recovered at $-4.46$, $-4.05$ and $-4.01$; all four gates passed in both production seeds, with periods and observable key classes recovered and the complete ciphertext reproduced by the independent transform (logs/200_digraphic_slides.log). Live text: all four rules non-English as above; no null spent.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Slidefair, Vigenère rule, key shift $k = 3$, digraph `HI` ($a = 7$, $b = 8$):
+
+```
+top row     A B C D E F G H I ...   (j)
+bottom row  D E F G H I J K L ...   (j + 3)
+```
+
+`H` is column 7 of the top row; `I` is in the bottom row at column $8 - 3 = 5$. Exchanging columns gives top[5] $=$ `F` and bottom[7] $= 7 + 3 = 10 =$ `K`: ciphertext `FK`. Applying the same rule to `FK` returns `HI`.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The slide families were audited because a bounded all-family sweep of an external engine timed out before reaching them; the lane's value is the independently verified rectangle algebra and the byte-matched generator, which make its scoped negative reproducible.
+'''
+
+[[provenance]]
+path = "withmath/DIGRAPHIC_SLIDES_AUDIT.md"
+kind = "audit"
+note = "Log 200: Portax and Slidefair algebra, admission gate, 4/4 controls with rates, live periods and rates."
+ref = "logs/200_digraphic_slides.log"
+
+[[provenance]]
+path = "withmath/wm_digraphic_slides.py"
+kind = "solver"
+note = "Independent Python rectangle transforms, control generation, generator byte-match, external search wrapper."
+
+[[references]]
+title = "The ACA and You"
+author = "American Cryptogram Association"
+year = 2005

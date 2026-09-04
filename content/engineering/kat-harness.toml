@@ -1,0 +1,127 @@
+id = "kat-harness"
+section = "engineering"
+title = "KAT harness"
+subtitle = "Known-answer tests for cores, parsers, transactions and control filters, run before every mode"
+status = "VERIFIED"
+status_note = "Self-KATs, static KATs, parser mutation panels, transaction fail-once KATs, differential KATs and segment KATs are implemented and recorded in the research program, with counts such as 420 parser mutations rejected, 18 interruption failpoints classified and every swap delta checked against a full rescore."
+family = "Tooling"
+tags = ["kat", "testing", "self-test", "mutation"]
+related = ["compiled-hot-cores", "hash-chained-transcripts", "state-checkpoints", "control-first-policy", "tautological-gate-rule", "gauge-defect-invalidation", "known-answer-tests", "g-kat"]
+summary = "A known-answer test asserts that a component produces a predetermined result on a predetermined input. The program layers them: the core checks its own algebra and incremental scoring; the Python wrapper checks its derivations against published vectors and its parser against hundreds of mutated transcripts; the transaction layer checks that every failure point leaves a fail-closed filesystem state; and control filters are checked against planted truths so that a control cannot be failed by its own filter. No mode runs before its KATs pass."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+KAT layers observed in the corpus, each with a required exit status and a printed count:
+
+- **Self-KAT (core).** Incremental scoring deltas equal full rescores for all 325 letter-pair swaps; forward followed by inverse of the state schedule reproduces the input over every cell; alias identities (a zero-width variant equals the constant-slope schedule) hold for all parameters.
+- **Static KAT (wrapper).** With a synthetic language and no corpus, the real pipeline runs on two fixtures and must reach its control terminal; the derivation primitives reproduce published seed vectors; the isolation scan rejects planted loader fragments.
+- **Parser KAT.** A clean transcript parses; hundreds of structural and semantic mutations (duplicate key, NaN, non-canonical JSON, bool-for-int, reordered records, wrong count, forged score, dropped tie) are each rejected; a no-op guard checks that every mutation actually changed bytes.
+- **Transaction KAT.** Injected failures at every stage of the durable write (before marker, after marker, after placeholder, after write, after fsync, at readback, at publication) must leave the canonical path absent or poisoned and the marker durable; hard link, wrong mode, symlink and parent replacement must be rejected.
+- **Differential KAT.** An instrumented core must match the un-instrumented core on every deterministic counter for a deliberately broken plant.
+- **Segment KAT.** The union of segment runs must equal the full run in nodes and outcome.
+- **Control-filter KAT.** Every predicate applied to candidates must accept the planted truth of every control before any search runs, and must still reject a genuine non-member.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Delta consistency"
+body = '''
+For a state $k$, a move $m$ and an incremental scorer $\Delta$,
+
+$$\operatorname{full}(m(k)) - \operatorname{full}(k) = \Delta(k, m)$$
+
+must hold exactly (integers) for every move in a deterministic sweep; the base core checks it for all $\binom{26}{2} = 325$ swaps on a random stream and random table.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- KATs use synthetic or disclosed inputs only; they never open a hidden fixture or a live text. A static KAT's transcript is admitted under a `KAT` mode flag and is refused at any canonical path.
+- A KAT that cannot fail is not a KAT; mutation panels include the no-op guard for that reason.
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+Two defects in the corpus were of the kind a control-filter KAT catches. A rotation-orbit mask rejected valid identity and half-turn rotations because it tested "returns at length $\ell$" instead of "first return at $\ell$"; on planted truths it rejected 30.2% of complete maps for one relation and 21.2% on observed edges. A structural parser accepted a transcript whose null tie count had been changed from 1 to 2 with the commit regenerated. The recommended KATs, `filter(true maps) == True` for every plant plus a negative case, and a parser mutation for every field class, are now part of the sealed designs.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Static KATs in the program run in 7 to 51 s; parser KATs with 420 mutations in about 46 s; transaction KATs in about 2 s; a differential KAT is two single-thread runs of a small fixture. They are cheap relative to any solve and are run at the start of every mode, including production.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **A KAT loop that never executed.** A dead KAT loop was found and removed in one successor; a KAT must print a count.
+- **Inherited KATs.** Algebra KATs delegated to a pinned predecessor module are sound only while the pin holds; the auditor re-derived the structural claims independently rather than trusting the delegation.
+- **Bool/float laxity.** Dictionary equality admits `true` for `1` and `504.0` for `504`; the fix is to compare canonical serialisations.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Refusal panels complement KATs: every production mode without its token, every tamper on a copy, and every forbidden flag must exit 2 without creating a file, and the counts are recorded (13 of 13 in one audit).
+'''
+
+[[blocks]]
+kind = "example"
+title = "KAT report"
+body = '''
+```
+CORE SELF_KAT PASS checks=325 deltas + 728 roundtrips
+STATIC_KAT  fixtures=2 terminal=CONTROL_PASS parser_mutations_rejected=38 transaction_refusals=6 target=ABSENT
+PARSER_KAT  clean=1/1 mutations_rejected=420/420 noop_guard=PASS
+TRANSACTION_KAT failpoints=18 classified, filesystem_rejections=4, committed=1, non_overwrite=1
+FILTER_KAT  plants=400 accepted=400/400  negative(3-cycle)=rejected
+```
+'''
+
+[[provenance]]
+path = "withmath/wm_pk10_alberti_monosub_core327.cpp"
+kind = "solver"
+note = "Self-KAT: every swap delta equals a full rescore for all 325 pairs; deprogress roundtrip for two alphabets and seven slopes."
+
+[[provenance]]
+path = "withmath/wm_pk10_quarterpulse490_core.cpp"
+kind = "solver"
+note = "Self-KAT: embedded base KAT, forward/deprogress roundtrip over 5,408 cells and 504 positions, constant-slope alias check."
+
+[[provenance]]
+path = "withmath/PK10_ALBERTI_ACCEL13_VALIDATION381_CREATOR_AUDIT.md"
+kind = "audit"
+note = "Static KAT 51 s, parser KAT 420 mutations in 46 s, transaction KAT 18 failpoints and 4 filesystem rejections in 2 s, child-environment probe, refusal panel."
+ref = "LOG381"
+
+[[provenance]]
+path = "withmath/PK98_SEGCHAIN_A1S0_CONTROL373_INDEPENDENT_AUDIT.md"
+kind = "audit"
+note = "Static KAT 38/38 mutations rejected; false normalised-runner field rejected at three layers; a mixed generator-tie KAT with one flat cell."
+ref = "LOG373"
+
+[[provenance]]
+path = "withmath/SEGCHAIN_CONTROL_MISMATCH399_AUDIT.md"
+kind = "audit"
+note = "Orbit mask defect and the recommended control-filter KATs: filter(true maps) == True for every plant, and a negative KAT that a genuine 3-cycle is rejected."
+ref = "LOG399"
+
+[[provenance]]
+path = "withmath/PK98_SEGCHAIN_A1S0_CONTROL366_INDEPENDENT_AUDIT.md"
+kind = "audit"
+note = "Structural parser accepted a transcript with a false null tie count (1 changed to 2); blocked."
+ref = "LOG366"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Dead KAT loop removed in the successor; bool/float laxity residual and its one-line fix."
+ref = "LOG385"
+
+[[provenance]]
+path = "withmath/wm_pk9_bip39_checkpoint470_kat.py"
+kind = "script"
+note = "Differential KAT of an instrumented core against its predecessor."

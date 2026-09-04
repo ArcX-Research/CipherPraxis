@@ -1,0 +1,10 @@
+id = "g-certificate"
+section = "glossary"
+title = "Certificate (of an exact result)"
+status = "VERIFIED"
+status_note = "Usage as recorded in the corpus's sealed audits."
+family = "Exactness guarantees"
+tags = ["exactness", "reproducibility"]
+related = ["bound-benchmarks-and-certificates", "known-answer-tests", "rank-sharding", "reproducibility-receipts", "hash-chained-transcripts"]
+summary = "A record that lets a reader verify an exact search's conclusion without re-running it: pinned input hashes, the declared space and its census, the winning state written literally, its score recomputed by an independent scalar routine, the tie count within tolerance, an independent forward re-encryption, and the outcome token (complete, incomplete, structural zero, tied best). A transcript that ends without its terminal line, or whose replay disagrees, certifies nothing and is retained as a failed attempt."
+updated = "2026-09-04"

@@ -1,0 +1,116 @@
+id = "power-measurement"
+section = "validation"
+title = "Power measurement"
+subtitle = "The fraction of planted cases an instrument recovers, with its budget and ordering stated"
+status = "VERIFIED"
+status_note = "Recorded power panels include 195/200 all-seven shift retention for a width-8 shortlist, 20/20 exact recovery when the truth's segment is scheduled with median 8.7% coverage at a 24 h cap, and an 18/24 held-out gate; each figure is tied to a transcript."
+family = "Power and calibration"
+tags = ["power", "calibration", "coverage", "controls"]
+related = ["planted-controls", "blind-controls", "held-out-gates", "throughput-fail", "tautological-gate-rule", "power-analysis", "estimator-standard-error", "drainability-and-throughput"]
+summary = "Power is what a negative result is worth. The program measures it directly, as the fraction of planted cases recovered by the frozen pipeline under the live budget and task order, and refuses to interpret a target miss whose power was not measured. For time-capped searches, power decomposes into recovery-when-scheduled (measured on segments around the planted truth) times coverage-at-cap (the fraction of the frontier the budget reaches), which turned a hopeful 24-hour run into an honest 2% statement."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For $N$ planted fixtures drawn uniformly from the model, run through the exact frozen pipeline (same code, gates, nulls, ordering and budget as the live run), with recovery indicators $r_i$:
+
+$$\hat{\pi} = \frac{1}{N}\sum_i r_i, \qquad \operatorname{se}(\hat\pi) \approx \sqrt{\frac{\hat\pi(1-\hat\pi)}{N}}.$$
+
+A negative on the target is then reported as "excluded with power $\hat\pi$ at length $n$", and a family is called `POWER-LIMITED` when $\hat\pi$ is too small for the negative to mean anything.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Power under a time cap"
+body = '''
+For an exhaustive search over a deterministically ordered frontier of $F$ tasks that processes $\rho$ tasks per second, a cap of $T$ seconds covers a fraction $\kappa = \min(1, \rho T / F)$. If the truth's position is uniform over the frontier and the search recovers it whenever its task is scheduled (probability $\pi_{\text{sched}}$),
+
+$$\pi_{\text{cap}} = \pi_{\text{sched}} \cdot \kappa .$$
+
+The program measured $\pi_{\text{sched}} = 20/20$ by searching a ten-task segment around each planted truth's located index in the live order, and $\kappa$ per fixture between $0.012$ and $1.0$ with median $0.087$ at a 24 h cap, so $\pi_{\text{cap}} \approx 9\%$ for random plants. The live text's own coverage at its cap was $0.75\%$.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- Fixtures are drawn from the same distribution the target is assumed to come from; a hardest-window panel (planted prose down to rate $-5.56$) is reported separately from the uniform panel.
+- Ordering matters: power measured in one task order does not transfer to another. The driver gained a `--control-task-order {lex,hash}` option so that controls use the live ordering.
+- Power is a property of the whole decision, including gates and nulls, not of a preliminary statistic.
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+Power measurement is where a pipeline's weak link is found. In a segment-chain lane the suspected weak link was a width-8 shortlist of per-residue shifts; a different-agent review measured that all seven true shifts survived the shortlist in 195 of 200 hard-plaintext trials (0.975) and that the per-residue true shift was in the top eight 99.64% of the time, so the shortlist was not the reason the live runs missed. In a blind annealing lane, best-of-$N$ recovery plateaued at 30 to 40% of the alphabet for $N$ from 500 to 8,000 chains, which showed that the landscape, not the budget, was the obstacle and closed the approach.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+A power panel costs $N$ full solves. Segment panels reduce this for exhaustive searches: locating the truth's index is a hash lookup, and searching ten tasks around it costs seconds, so twenty fixtures ran beside a live job on two threads. A full-frontier control, by contrast, cost 903.7 s and never reached its truth.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Unmeasured power reported as a negative.** A cell whose blind control never reached its truth was at first described in outcome language; the ledger amended it to `POWER_UNMEASURED + SCOPED_INCONCLUSIVE` and ruled that no result from it may be called a negative.
+- **One control read as a panel.** A one-null disclosed run establishes rank against a single null, worth $p \le 1/2$; the auditor recorded that it must not be read as evidence of separation.
+- **Power from the wrong region.** Prose plants recovered at 97.5% say nothing about a target whose statistics no prose plant reproduces; the audit recommended citing such figures as within-family power only.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Every power number in this atlas states $N$, the fixture distribution, the ordering and the budget. Panels use fresh seeds recorded in the transcript, and the predeclared success threshold (for example 18 of 24) is derived and asserted from the run arguments rather than typed by hand.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Power panel report"
+body = '''
+```
+POWER_PANEL fixtures=20 seed_range=503100-503119 order=hash threads=2 cap=86400s
+  recovered_when_scheduled = 20/20   invalid_candidates = 0   segments_complete = 20/20
+  frontier_pairs: min=55,497 max=1,825,380      truth_index/frontier: 0.08..0.99
+  pairs_per_second: 0.17..16.1 (median 1.21)
+  coverage_at_cap: min=0.012 median=0.087 max=1.0  (4/20 would drain)
+VERDICT power_at_cap ~= coverage; median ~9% for random plants
+```
+'''
+
+[[provenance]]
+path = "withmath/logs/503_panel_20260904T094538Z.log"
+kind = "log"
+note = "Held-out hash-order power panel: 20/20 recovered when scheduled, coverage at the 24 h cap 0.012 to 1.0 with median 0.087."
+ref = "logs/503_panel_20260904T094538Z.log"
+
+[[provenance]]
+path = "withmath/logs/394_pk98_width8_selector_power.log"
+kind = "log"
+note = "POWER394 records: all_seven_in_shortlist 0.975 over 200 hard-plaintext trials, per-residue true shift in top 8 0.9964, all-seven reachability 0.9983."
+ref = "logs/394_pk98_width8_selector_power.log"
+
+[[provenance]]
+path = "withmath/logs/504_pk89_mapjoin_heldout_gate_20260904T095226Z.log"
+kind = "log"
+note = "HELDOUT_GATE cases=24 success=18/24 with the threshold derived from the arguments."
+ref = "logs/504_pk89_mapjoin_heldout_gate_20260904T095226Z.log"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Ledger amendment: unmeasured power is POWER_UNMEASURED + SCOPED_INCONCLUSIVE; live coverage at cap 0.75%; control task-order option added so controls use the live ordering."
+ref = "LOG503"
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Scaling law of the blind annealer: chains 500 gave 29%, 2000 gave 35%, 8000 gave 29 to 33% of the alphabet; best-of-N does not improve with N."
+ref = "logs/32_q3joint_ctrl.log"
+
+[[provenance]]
+path = "withmath/PK9_STRUCTURED_P7_CHAIN383_INDEPENDENT_AUDIT391.md"
+kind = "audit"
+note = "Observation O2: a rank-one result against a single null is worth p <= 1/2 and must not be read as separation."
+ref = "LOG391"

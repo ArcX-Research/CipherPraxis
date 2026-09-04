@@ -1,0 +1,138 @@
+//! Entry pages: method pages (blocks + evidence), lab pages (instrument + notes), glossary terms.
+use crate::components::badges::StatusBadge;
+use crate::components::cards::EntryRow;
+use crate::components::evidence::EvidencePanel;
+use crate::components::markdown::Markdown;
+use crate::labs::render_lab;
+use crate::pages::not_found::NotFound;
+use crate::state::use_state;
+use crate::util::set_title;
+use leptos::prelude::*;
+use leptos_router::hooks::use_params_map;
+use praxis_core::content::{Entry, Section};
+
+#[component]
+pub fn EntryPage() -> impl IntoView {
+    let params = use_params_map();
+    let key = Memo::new(move |_| {
+        params.with(|p| {
+            (
+                p.get("section").unwrap_or_default(),
+                p.get("id").unwrap_or_default(),
+            )
+        })
+    });
+    let state = use_state();
+    let catalog = state.catalog.clone();
+    view! {
+        {move || {
+            let (section, id) = key.get();
+            match (Section::from_slug(&section), catalog.get(&id).cloned()) {
+                (Some(s), Some(e)) if e.section == s => {
+                    set_title(&e.title);
+                    view! { <EntryView entry=e/> }.into_any()
+                }
+                _ => view! { <NotFound/> }.into_any(),
+            }
+        }}
+    }
+}
+
+#[component]
+fn EntryView(entry: Entry) -> impl IntoView {
+    let state = use_state();
+    let catalog = state.catalog.clone();
+    let related: Vec<Entry> = catalog.related(&entry).into_iter().cloned().collect();
+    let backlinks: Vec<Entry> = catalog.backlinks(&entry.id).into_iter().cloned().collect();
+    let section = entry.section;
+    let is_lab = section == Section::Labs;
+    let is_glossary = section == Section::Glossary;
+    let toc: Vec<(String, String)> = entry
+        .blocks
+        .iter()
+        .map(|b| {
+            (
+                format!("{}-{}", b.kind.slug(), b.kind.ordinal()),
+                b.heading(),
+            )
+        })
+        .collect();
+    let lab_key = entry.lab.clone();
+    let blocks = entry.blocks.clone();
+    let provenance = entry.provenance.clone();
+    let references = entry.references.clone();
+    let tags = entry.tags.clone();
+    let title = entry.title.clone();
+    let subtitle = entry.subtitle.clone();
+    let summary = entry.summary.clone();
+    let status = entry.status;
+    let status_note = entry.status_note.clone();
+    let family = entry.family_or_default().to_string();
+    let updated = entry.updated.clone();
+
+    view! {
+        <article class="wrap entry" class:entry-lab=is_lab>
+            <nav class="breadcrumbs mono" aria-label="Breadcrumb">
+                <a href="/">"Cipher Praxis"</a><span class="sep">"/"</span>
+                <a href=format!("/{}", section.slug())>{section.title()}</a><span class="sep">"/"</span>
+                <span aria-current="page">{title.clone()}</span>
+            </nav>
+            <header class="entry-header">
+                <p class="eyebrow mono">
+                    {format!("{:02} · {}", section.ordinal(), family)}
+                    {updated.map(|u| view! { <span class="sep">"·"</span><span>{format!("updated {u}")}</span> })}
+                </p>
+                <h1 class="display">{title.clone()}</h1>
+                {subtitle.map(|s| view! { <p class="entry-subtitle serif">{s}</p> })}
+                <div class="entry-status glass">
+                    <StatusBadge status=status large=true/>
+                    <p class="entry-status-note">{status_note.unwrap_or_else(|| status.description().to_string())}</p>
+                </div>
+                <p class="lede">{summary}</p>
+                {(!tags.is_empty()).then(|| view! { <div class="card-tags">{tags.iter().map(|t| view! { <span class="tag">{t.clone()}</span> }).collect_view()}</div> })}
+            </header>
+
+            <div class="entry-grid">
+                <div class="entry-main">
+                    {lab_key.map(|k| view! {
+                        <section class="lab-panel" aria-label="Interactive lab">
+                            <div class="lab-panel-head mono"><span class="lab-live"><i></i>"WebAssembly · running locally"</span><span>{format!("lab/{k}")}</span></div>
+                            {render_lab(&k)}
+                        </section>
+                    })}
+                    {blocks.into_iter().map(|b| {
+                        let id = format!("{}-{}", b.kind.slug(), b.kind.ordinal());
+                        view! {
+                            <section class="block" id=id.clone() aria-labelledby=format!("{id}-h")>
+                                <h2 class="block-h" id=format!("{id}-h")><span class="block-n mono">{format!("{:02}", b.kind.ordinal())}</span>{b.heading()}</h2>
+                                <Markdown source=b.body.clone()/>
+                            </section>
+                        }
+                    }).collect_view()}
+                    {is_glossary.then(|| view! { <p class="prose">"This is a glossary term. Follow the related entries for the methods that use it."</p> })}
+                </div>
+                <aside class="entry-side">
+                    {(!toc.is_empty()).then(|| view! {
+                        <nav class="toc" aria-label="On this page">
+                            <h2 class="side-h">"On this page"</h2>
+                            <ol>{toc.iter().map(|(id, h)| view! { <li><a href=format!("#{id}")>{h.clone()}</a></li> }).collect_view()}</ol>
+                        </nav>
+                    })}
+                    {(!related.is_empty()).then(|| view! {
+                        <section class="related" aria-labelledby="related-h">
+                            <h2 id="related-h" class="side-h">"Related"</h2>
+                            <div class="row-list">{related.into_iter().map(|e| view! { <EntryRow entry=e/> }).collect_view()}</div>
+                        </section>
+                    })}
+                    {(!backlinks.is_empty()).then(|| view! {
+                        <section class="related" aria-labelledby="cited-h">
+                            <h2 id="cited-h" class="side-h">"Cited by"</h2>
+                            <div class="row-list">{backlinks.into_iter().map(|e| view! { <EntryRow entry=e/> }).collect_view()}</div>
+                        </section>
+                    })}
+                    <EvidencePanel provenance=provenance references=references/>
+                </aside>
+            </div>
+        </article>
+    }
+}

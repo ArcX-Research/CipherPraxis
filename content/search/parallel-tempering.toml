@@ -1,0 +1,129 @@
+id = "parallel-tempering"
+section = "search"
+title = "Parallel tempering (replica exchange)"
+subtitle = "Batch annealing over a geometric temperature ladder with periodic exchange of states between adjacent levels"
+status = "POWER-LIMITED"
+status_note = "Implemented as a 2000-chain batch solver over (alphabet, shifts) with 8-12 temperature levels and replica exchange. On planted two-sided unknown-alphabet controls of 63+96 and 96 letters it recovers 3-42% of the alphabet at best and its best-of-N score does not improve with more chains, so negatives from it carry no family information."
+family = "Stochastic local search"
+tags = ["replica exchange", "temperature ladder", "batch chains", "quagmire iii", "unknown alphabet"]
+related = ["simulated-annealing", "hill-climbing", "polish-basin-measurement", "quagmire-iii", "quadgram-log-likelihood", "shuffled-null-z-score", "planted-controls", "power-measurement", "cp-sat-and-smt-solvers", "g-temperature-schedule", "g-search-basin"]
+summary = "Parallel tempering runs many Metropolis chains at different temperatures and periodically swaps states between neighbouring levels, so a hot chain can carry a state across barriers that trap a cold one. The corpus implements it as vectorised batch annealing over an unknown 26-letter alphabet plus seven shifts per text, with quadgram (optionally bigram and trigram) scoring and a deterministic polish of the best chains. Planted controls show that it does not reach a blind two-sided alphabet at 63-96 letters: the search plateaus at roughly a third of the alphabet however many chains are used."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Choose $L$ temperatures on a geometric ladder and assign $N_c$ chains round-robin to levels. Each step is an ordinary Metropolis update at the chain's own temperature. Every $x$ steps, chains on adjacent levels $l$ and $l+1$ are paired and their states swapped with the replica-exchange probability.
+
+```
+temps[l] <- T_cold * (T_hot/T_cold)^(l/(L-1)),  l = 0..L-1
+for each chain c: level[c] <- c mod L, state[c] <- random
+for t in 1 .. steps:
+    propose one move per chain (alphabet swap/insertion with prob p_alpha, else one shift redrawn)
+    accept per chain with prob min(1, exp(delta / temps[level[c]]))
+    if t mod x == 0:
+        for l in 0 .. L-2: pair chains at level l with chains at level l+1
+            d <- (1/temps[l] - 1/temps[l+1]) * (E[b] - E[a])
+            swap states of a and b with prob min(1, exp(d))
+polish the best chains; report the best polished score
+```
+'''
+
+[[blocks]]
+kind = "equations"
+body = '''
+Exchange acceptance for a state $a$ at temperature $T_l$ and a state $b$ at $T_{l+1}$ with scores $E_a, E_b$ (maximisation):
+
+$$\Pr[\text{swap}] = \min\!\left(1,\ \exp\!\Big[\Big(\tfrac{1}{T_l} - \tfrac{1}{T_{l+1}}\Big)(E_b - E_a)\Big]\right).$$
+
+A better state on the hotter level always moves down the ladder. The state is $(A, k)$ with $A$ a permutation of 26 letters shared by the texts and $k$ one shift vector of length 7 per text; the decrypt of text $j$ is $p_i = A[(A^{-1}(c_i) - k^{(j)}_{i \bmod 7}) \bmod 26]$ (Vigenère relation) or $A[(k^{(j)}_{i \bmod 7} - A^{-1}(c_i)) \bmod 26]$ (Beaufort). The score is the quadgram log-likelihood of all decrypts plus optional bigram and trigram terms with weights $w_2, w_3$ intended to smooth the early landscape.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Exchange only helps if some temperature level mixes across the barriers that separate basins; the ladder ($T_{hot} = 12$, $T_{cold} = 0.4$ by default) is assumed to span that range.
+- The unknowns are determined in principle: an alphabet (about 84 bits after gauge) and 14 shifts (66 bits) against about 500 bits of redundancy in 159 letters of English. Identifiability is not the issue; reachability is.
+- Polishing (exact per-coset shift descent alternating with an exhaustive 925-neighbour alphabet climb) is applied to the top chains, so the reported number is a polished score.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+Target family: a period-7 keyed substitution whose single unknown alphabet acts on both sides (Quagmire III), possibly shared by two texts with separate shift vectors, on zones of 63 and 96 letters. Moves: with probability $p_\alpha = 0.5$ an alphabet move (swap with probability 0.7, else an insertion), otherwise one shift of one text redrawn uniformly; exchange every 20 steps. Optional key-word mode derives shifts from the positions of a candidate key word in the alphabet, removing 33 bits from the state. Nulls: shuffled zones through the identical pipeline calibrate the polished score, because free shifts overfit short texts.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Cost per step is one vectorised decrypt-and-score of all chains, $O(N_c \cdot n)$. Recorded budgets and wall times on one machine: 2,000 chains $\times$ 60,000 steps $\times$ 8 levels took 920 s for the joint 63+96 control and 599 s for the 96-letter control; at 50,000 steps, 500 / 2,000 / 8,000 chains took 40 / 164 / 655 s. The polish of the top 8 chains is negligible by comparison.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Plateau, not tail.** On one planted 96-letter instance the polished best was $-5.045$ with 500 chains, $-4.829$ with 2,000 and $-4.916$ with 8,000 (two other search seeds at 2,000: $-4.971$, $-4.876$), i.e. 29-40% of the alphabet: best-of-$N$ does not improve with $N$. The truth reads near $-4.3$.
+- **Smoothing does not rescue it.** Bigram weight 1 gave $-4.87$ (42% of the alphabet) on the 96-letter control versus $-5.07$ (19%) with weight 3; a bigram ramp with trigrams gave $-5.45$ on the joint control (27% on the 96-letter part); key-word-derived shifts were worse ($-5.57$, 16%). A longer run (2,000 chains $\times$ 100,000 steps, bigram weight 1) ended at $-4.83$ with 35% match.
+- **Why.** The alphabet acts twice, so every swap is both a cryptogram move and a re-slotting of ciphertext letters; the polish basin around the truth is at most three swaps wide while the search's best states are about ten swaps away (see [polish-basin measurement](/search/polish-basin-measurement)).
+- **Consequence.** A target run of this solver cannot distinguish "not this family" from "family present but unreachable"; it was therefore not used as a family negative.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Planted Quagmire III with a random alphabet and random shifts on real English, 2,000 chains $\times$ 60,000 steps, 8 levels, quadgram only: joint 63+96 letters polished $-5.603$ with 3% and 6% of the two plaintexts right; 96 letters alone $-5.108$ with 16% right. Both are failures by the pre-declared standard (read as English, match near 100%). The one-sided variants of the same problem (alphabet on one side only, shifts pinned by a crib) are solved by plain annealing, so the failure is specific to the two-sided landscape.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Ladder with $L = 4$, $T_{cold} = 0.4$, $T_{hot} = 12$: $T_l = 0.4 \cdot 30^{l/3}$, giving $0.4,\ 1.243,\ 3.862,\ 12$.
+
+Exchange between a chain at $T_1 = 1.243$ with score $E_a = -520$ and a chain at $T_2 = 3.862$ with score $E_b = -505$:
+
+$$d = \Big(\tfrac{1}{1.243} - \tfrac{1}{3.862}\Big)(-505 + 520) = 0.5456 \times 15 \approx 8.18 > 0,$$
+
+so the swap is accepted and the better state moves to the colder level. If instead $E_b = -530$, $d = 0.5456 \times (-10) \approx -5.46$ and the swap is accepted with probability $e^{-5.46} \approx 0.0043$.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The negative calibration is the useful output: it is the reason the two-sided-alphabet problem was moved from landscape search to exact constraint solving (crib plus key-word linear systems, all-different enumeration, CP-SAT). Any future claim of a blind two-sided solve at these lengths needs a planted control that this solver could not pass.
+'''
+
+[[provenance]]
+path = "withmath/wm_q3joint.py"
+kind = "solver"
+note = "Batch parallel-tempering annealer over (alphabet, shifts): geometric ladder, round-robin levels, exchange every 20 steps, moves and acceptance as described; polish = exact shift descent alternating with a 925-neighbour alphabet climb."
+
+[[provenance]]
+path = "withmath/logs/32_q3joint_ctrl.log"
+kind = "log"
+note = "Controls at 2000 chains x 60k steps x 8 levels: joint 63+96 polished -5.603 (match 3%/6%, 920 s); 96 alone -5.108 (match 16%, 599 s)."
+ref = "logs/32_q3joint_ctrl.log"
+
+[[provenance]]
+path = "withmath/logs/36_scaling.log"
+kind = "log"
+note = "Scaling law on one planted 96-letter instance: polished best -5.045 / -4.829 / -4.916 for 500 / 2000 / 8000 chains (40 / 164 / 655 s); -4.971 and -4.876 at 2000 chains with two other seeds."
+ref = "logs/36_scaling.log"
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Step-2 variants (bigram weight 1 vs 3, ramp plus trigrams, key-word shifts) and the final 2000 x 100k calibration (-4.83, 35% match); unknowns ~84 + 66 bits against ~500 bits of redundancy."
+ref = "logs/32_q3joint_ctrl_w1_100k.log"
+
+[[references]]
+title = "Replica Monte Carlo Simulation of Spin-Glasses"
+author = "R. H. Swendsen, J.-S. Wang"
+year = 1986
+
+[[references]]
+title = "Exchange Monte Carlo Method and Application to Spin Glass Simulations"
+author = "K. Hukushima, K. Nemoto"
+year = 1996

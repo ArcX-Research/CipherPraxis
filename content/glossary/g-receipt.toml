@@ -1,0 +1,10 @@
+id = "g-receipt"
+section = "glossary"
+title = "Receipt"
+status = "VERIFIED"
+status_note = "Term as used throughout this atlas's provenance panels."
+family = "Validation vocabulary"
+tags = ["provenance", "hashes"]
+related = ["reproducibility-receipts", "hash-chained-transcripts", "g-manifest"]
+summary = "The minimal record that lets a stranger recompute a claimed number: hashes of the source, runner, parser, corpus and model tables, the seeds and command line, and the hash and line of the transcript the number was read from. A number without a receipt is removed from public text, not rounded."
+updated = "2026-09-04"

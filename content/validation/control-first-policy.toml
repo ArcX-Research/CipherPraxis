@@ -1,0 +1,112 @@
+id = "control-first-policy"
+section = "validation"
+title = "Control-first policy"
+subtitle = "No target row is printed, and no target is loaded, until the planted controls pass"
+status = "VERIFIED"
+status_note = "Implemented as a fixed ordering in every launcher of the research program and as an explicit gate terminal (CONTROL_GATE PASS / FAIL, TARGET_REFUSED); the no-repeat checklist forbids any target run after a failed control."
+family = "Control design"
+tags = ["controls", "gating", "launchers", "policy"]
+related = ["planted-controls", "target-absent-controls", "blind-controls", "throughput-fail", "run-script-log-convention", "kat-harness", "seal-and-audit-protocol", "g-planted-control"]
+summary = "The control-first policy fixes the order of every run: self-tests, then planted controls, then, only if the controls passed, the live text. A control failure is a statement about the tool, so the run stops there and records a gate failure rather than a target result. The policy converts the informal advice to calibrate your instrument into a mechanical property of the launchers, and it is what allows a long negative ledger to be trusted."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+A run under the control-first policy has three phases in a fixed order:
+
+1. **Known-answer tests** of the compiled core and the parser (see [KAT harness](/engineering/kat-harness)); any failure aborts before a corpus is loaded.
+2. **Planted controls** at the target's length and information budget, printed in full with their planted and recovered parameters (see [Planted controls](/validation/planted-controls)).
+3. **Target** rows, printed only if phase 2 ended in `CONTROL_GATE: PASS`.
+
+The policy is stated in the program's launcher as: every script prints planted controls before the targets; a control that fails means the tool is broken and the target rows below it mean nothing.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Evidence conditional on the gate"
+body = '''
+Write $G$ for the event that the control gate passes and $E$ for a target reading. The policy asserts that a claim about the target has weight only through $\Pr[E \mid G]$: with $G$ false the likelihood ratio of any target reading is set to $1$ by fiat, because the same pipeline is known to produce garbage on a solvable instance. Formally the program records a failed gate as a **decoder-power result**, never as evidence about the target family.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The control phase exercises the same code path, budget and ordering that the target phase will use. A control run in lexicographic task order does not validate a live run in hash order; the program had to reclassify such a pass as a wiring test.
+- The controls are matched to the selector's real decision, including its gates and nulls, not only to a preliminary statistic (see [Tautological gate rule](/validation/tautological-gate-rule)).
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Why the order matters"
+body = '''
+Running the target first invites two self-deceptions. The first is post-hoc control design: after seeing a suggestive target score, one builds controls that the score would pass. The second is silent promotion: an unfinished or partly failed run leaves a readable-looking row in a log, and months later the row is cited as an exclusion. The program's negative-results ledger was written to catch exactly that, and it found two earlier jobs that had not excluded what the working memory said they had: one had failed its own controls and one had crashed.
+
+Under the policy the target phase is gated in code. The launchers expose modes `controls`, `smoke` and `live`; the `live` mode re-runs the controls in-process before touching the target, and a control gate failure ends with `TARGET_REFUSED`.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The cost is the control phase itself, typically one to twenty extra solves plus their nulls. For a search whose control cannot reach its planted truth within the declared budget, the policy converts a would-be negative into a throughput statement at the price of the whole budget (see [Throughput fail](/validation/throughput-fail)).
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Fluent output from a control-gated decoder.** A seven-alphabet beam decoder produces fluent English on any input; because its matched 63-letter controls failed, the program locked its target mode so that no such string could be promoted.
+- **Controls passing on a broken selector.** An exact solver's control returned an unknown status (neither proved nor refuted) and the run was still catalogued; the ledger later ruled that no target verdict from that run is admissible.
+- **A gate that never runs.** Early smoke variants of a mixture statistic failed several controls while the statistic was being developed; only the final variant with an all-controls-pass contract may be cited.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The policy's own control is the ledger audit: every log is classified as complete, failed, interrupted or intentionally partial, and a frozen no-repeat checklist names the runs after which no target may be executed until the family changes.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Launcher skeleton"
+body = '''
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+core=$(mktemp -d)/core
+clang++ -std=c++17 -O3 -pthread solver_core.cpp -o "$core"
+"$core" --self-kat                       # phase 1: abort on failure
+case "${1:-live}" in
+  controls) python3 driver.py --core "$core" --controls-only ;;
+  smoke)    python3 driver.py --core "$core" --controls 1 --target ;;
+  live)     python3 driver.py --core "$core" --target 2>&1 | tee "logs/NNN_name_$(date -u +%Y%m%dT%H%M%SZ).log" ;;
+esac
+```
+
+Inside `driver.py` the `--target` branch begins with the control suite and raises `TARGET_REFUSED` on a gate failure.
+'''
+
+[[provenance]]
+path = "withmath/run_withmath.sh"
+kind = "script"
+note = "Header comment states the policy; steps run in fixed order and tee to numbered logs."
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Policy statement; the control-gated beam decoder that does not emit a target guess because its matched controls fail; two earlier jobs found not to have excluded what was believed."
+
+[[provenance]]
+path = "withmath/LOG_AUDIT.md"
+kind = "audit"
+note = "Frozen no-repeat checklist: no target run after a failed control; disposition table for failed, interrupted and partial logs; the exact solver whose control returned UNKNOWN."
+
+[[provenance]]
+path = "withmath/run_pk10_quarterpulse490.sh"
+kind = "script"
+note = "Modes controls | smoke | live; core self-KAT before any mode."
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Blind control processed 2,393 of 708,732 pairs in 903.7 s without reaching its truth: CONTROL_GATE FAIL, TARGET_REFUSED; a separate lane released its live cell only after CONTROL_GATE PASS."
+ref = "LOG503"

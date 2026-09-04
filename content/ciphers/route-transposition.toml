@@ -1,0 +1,130 @@
+id = "route-transposition"
+section = "ciphers"
+title = "Route transposition"
+subtitle = "Write into a shape by one path, read out by another"
+status = "VERIFIED"
+status_note = "Two finite route vocabularies (78 triangular-lattice and 81 square compositions) under a two-key additive layer recovered 4/4 held-out controls at rank 1, and the affine position-route lane recovered 3/3 controls at 153, 144 and 504 letters; both families were then excluded on the corpus texts at the declared depth."
+family = "Transposition"
+tags = ["transposition", "route", "spiral", "boustrophedon", "affine route"]
+related = ["columnar-transposition", "rail-fence", "myszkowski", "transposition-width-recovery", "units-mod-26", "selection-overfit-diagnostic", "exhaustive-enumeration", "g-transposition-grid"]
+summary = "A route transposition writes the message into a grid or other shape along one path (rows, spiral, diagonals, boustrophedon) and reads it out along another. The key is the pair of paths and the shape. Because the set of natural paths on a given shape is finite, the program treated route ciphers as enumerable vocabularies, adding a complete family of affine position permutations j = ui + d for every unit u and offset d."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+A route is a permutation $q$ of the positions $0 \dots n-1$ induced by a write path $\pi_w$ and a read path $\pi_r$ over the same set of cells: $q = \pi_r^{-1} \circ \pi_w$ and
+
+$$c_j = p_{q[j]}.$$
+
+The affine position route is the special family $X_i = C_{(u i + d) \bmod n}$ with $\gcd(u, n) = 1$, which is a complete cyclic re-reading of the text by a fixed stride.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Routes under an additive layer and the cut gauge"
+body = '''
+With outer order $o$, inner order $a$, a period-7 outer key $u$ indexed by ciphertext position and a period-$k$ inner key $v$ indexed by plaintext position, the shape-route model reads
+
+$$o(C_j) \equiv a(P_{q[j]}) + u_{j \bmod 7} + v_{q[j] \bmod k} \pmod{26}$$
+
+(Vigenère), or with the plaintext term negated (Beaufort). For the affine route with a divisor period $p \mid n$ the absolute cut is not identifiable: rotating the plaintext by $s$, the key phase by $s$ and replacing $d$ by $d + us$ leaves the ciphertext unchanged, so controls compare cyclic plaintext and configuration classes rather than the generator's arbitrary start.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Square and rectangular routes**: spirals (four starting corners, two directions), diagonals, boustrophedon, on every width; 15 standard scans of a $12 \times 12$ square give 81 distinct write/read compositions.
+- **Triangular lattice routes**: 24 barycentric lexicographic or serpentine scans of a side-17 triangle, 78 distinct compositions.
+- **Affine position routes**: every unit stride and offset, with the inner stream then decrypted at every period dividing $n$ up to 42.
+- **Block reversal and whole-text reversal**: trivial routes included in the transposition sweeps.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The shape is fixed by the text length (153 is the 17th triangular number; 144 is a square) or by a chosen width.
+- Invariant: letter identities and histograms are preserved.
+- The vocabulary is finite by construction; an arbitrary keyed path is outside it.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Enumerate every route in the vocabulary and every inner period $k$, both alphabet orders and both relations.
+2. For each cell fit the outer and inner keys (exact per-residue maximisation for the shape routes; a cheap exact cyclic-cut stage for every offset $d$ in the affine family, followed by the validated quadgram periodic finish on the best 96 MAP endpoints).
+3. Check every endpoint by an independent scalar decrypt and forward.
+4. Compare the live best with nulls that shuffle within the seven outer cosets and repeat the complete selector.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Shape routes: 78 or 81 routes times 4 order pairs times 2 relations times $k = 1 \dots 7$, all cells fitted exactly. Affine routes: $\varphi(n)$ units times $n$ offsets times divisor periods; e.g. 504 letters give 144 units and 504 offsets. The route sweep of the earlier lane covered every width 2-24 with all standard paths in both directions.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Selected-family overfit.** The affine-route endpoint on the 144-letter text scored $-4.82$, above the nominal English threshold, yet all three complete-pipeline shuffled maxima ($-4.74$, $-4.90$, $-4.88$) beat it: a high-parameter family manufactures fragmentary English.
+- **Finite vocabulary.** A negative closes only the enumerated paths; an unusual path or padding rule is untested.
+- **Unidentifiable cut.** Without the gauge argument a control would fail on a correct answer merely because its start differed from the generator's.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Shape routes (log 411): four target-absent held-out controls (triangle with straight/mixed orders and Vigenère at period 3; triangle with Beaufort at period 5; square with Vigenère at period 7; square with Beaufort at period 4) all recovered their exact hidden plaintext at rank 1 with rates $-3.96$ to $-4.18$ and passed the independent forward; live endpoints $-6.35$ and $-6.29$, ranks 4/20 and 7/20 among 19 nulls ($p = 0.20$ and $0.35$), no candidate. Affine routes (log 195): 36 route inversions, three exhaustive cyclic-cut comparisons and three gauge identities passed; hidden controls at 153/period 17, 144/period 16 and 504/period 28 recovered their cyclic plaintext and configuration class exactly; live: $-6.06$ and $-6.44$ fail the language gate, $-4.82$ beaten by all three nulls.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Plaintext `ROUTECIPHERS` written row by row into a $3 \times 4$ grid and read out by a clockwise inward spiral from the top-left corner:
+
+```
+R O U T
+E C I P
+H E R S
+```
+
+Read: top row `ROUT`, then down the right column `PS`, then the bottom row leftwards `REH`, then up the left column `E`, then the inner cells `CI`. Ciphertext `ROUTPSREHECI`. Decryption refills the spiral and reads the rows.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The route lanes are examples of "closing a finite vocabulary": the audits state exactly which 78 or 81 compositions were tested and decline to claim anything about arbitrary keyed paths, padding, or an additional layer.
+'''
+
+[[provenance]]
+path = "withmath/SHAPE_ROUTES411_AUDIT.md"
+kind = "audit"
+note = "Log 411: 78 triangular and 81 square write/read compositions under a two-key additive layer; 4/4 controls exact; live p = .20 and .35."
+ref = "logs/411_shape_routes.log"
+
+[[provenance]]
+path = "withmath/AFFINE_ROUTE_AUDIT.md"
+kind = "audit"
+note = "Log 195: affine position route with every unit and offset; cut gauge; 3/3 controls; selected-family overfit on the 144-letter text."
+ref = "logs/195_affine_route.log"
+
+[[provenance]]
+path = "withmath/wm_pk9x.py"
+kind = "solver"
+note = "Routes (spirals, boustrophedon, diagonals) on every width 2-24, block reversals and the reversed text under a period-7 layer with a key change."
+ref = "logs/29_pk9x.log"
+
+[[provenance]]
+path = "ck_rounds.py"
+kind = "solver"
+note = "Section B: route transpositions on 9x17, 17x9, 3x51 and 51x3 grids scored by periodic IC."
+ref = "ck_logs/46_rounds.log"
+
+[[references]]
+title = "Elementary Cryptanalysis"
+author = "Helen Fouché Gaines"
+year = 1939

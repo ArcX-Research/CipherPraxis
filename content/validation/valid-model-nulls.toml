@@ -1,0 +1,113 @@
+id = "valid-model-nulls"
+section = "validation"
+title = "Valid-model nulls"
+subtitle = "Negatives that satisfy every assumption of the model except the one being tested"
+status = "VERIFIED"
+status_note = "Sealed control suites in the research program pair positives with independent-letter negatives of correct monogram statistics and with model-violating negatives; the independent-letter negative is the one that caught an English gate which would otherwise have passed on algebra alone."
+family = "Power and calibration"
+tags = ["nulls", "negatives", "controls", "calibration"]
+related = ["tautological-gate-rule", "planted-controls", "selection-overfit-check", "family-wise-null", "within-coset-null", "shuffled-null-z-score", "permutation-test", "english-gate-calibration"]
+summary = "A model-violating negative (an independent random key stream, a broken chain) is rejected for a trivial reason: the algebra does not hold. A valid-model null is harder and more useful: the construction is exactly right, the key is legal, the letter frequencies are English, but the letters are independent draws. Only a gate that looks at adjacency, order or language can reject it, so it tests the part of the pipeline that is actually claimed to detect plaintext, and it measures what the selector does when the model is true but there is nothing to find."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Fix a cipher model $\mathcal{M}$ with key space $K$ and a selector that outputs a candidate plaintext and a decision. A **valid-model null** is a fixture $(p^\ast, k, c)$ with $k \in K$ legal, $c = \operatorname{Enc}_{\mathcal{M}}(p^\ast, k)$ computed by the real forward, and $p^\ast$ drawn so that every *marginal* the model exploits is preserved while the *signal* the gate claims to detect is absent. The program's standard choice is independent letters from the English monogram distribution: correct unigram statistics, no adjacency.
+
+The required outcome is a **negative terminal** (`NON_ENGLISH` or "no candidate"). A valid-model null that reaches the candidate terminal is a gate failure of the whole pipeline, regardless of how many positives pass.
+
+Model-violating negatives are kept alongside (an independent random key for the second text; an offset or reversed chain) because they test a different property, that the algebra rather than the language does the rejecting.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Conditional randomisation nulls"
+body = '''
+The same idea applied to a *target* rather than a fixture gives the program's candidate-null certificate: permute the positions of the observed ciphertext so that its letter histogram $H(C)$ and its nuisance class structure are preserved exactly, re-run the identical full selector on each of $B$ permutations, and report
+
+$$p = \frac{1 + \#\{b : S_1(\text{null}_b) \ge S_1(\text{obs})\}}{B + 1}, \qquad \text{equality loses}.$$
+
+With $B = 99$ the finest attainable value is $p = 0.01$, and certification requires zero exceedances. The selection over classes is inside every replicate, so the multiplicity of the search is charged to the null automatically.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The null preserves exactly the invariants the selector is allowed to use (histogram, coset multisets, class census) and destroys exactly the structure it claims to detect. A within-coset shuffle preserves each coset's histogram, so a periodic-substitution selector sees identical coset statistics and can differ only through order.
+- The null is generated before any score exists (a precommitted permutation bank with a digest), and no null is filtered by the observation's gates.
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+Valid-model nulls expose the decisions a pipeline makes on pure noise under a true model. In one sealed suite the independent-letter negative ranked first among its nulls *with the true cycle*, because the algebra was exactly right, and was stopped only by the English gate; a suite without that fixture would have certified a gate that merely checks algebra. In another, the negative ranked 3 to 12 among nulls and was rejected on rank alone. Both outcomes are informative and both were recorded per fixture.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Each valid-model null costs one full selector run; a conditional randomisation certificate costs $B + 1$ full runs (100 for $B = 99$). The program budgets these inside the same wall and memory caps as the observation and treats any replicate that fails for a computational reason as `INCOMPLETE` for the whole certificate, never as a null loss.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Nulls that skip the finishing stage.** A two-stage selector's null replayed only the first stage; the decision-bearing second stage was never nulled, so the null could not lose. Blocked at audit.
+- **Score-dependent null membership.** Accepting or replacing a null after seeing its score invalidates the bank; the design forbids reroll and requires the bank digest before selection.
+- **Tied nulls dropped.** A null that ties the observation must count as a loss for the observation; the design states "equality loses" and the parser enforces `ties == len(top)`.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+A control suite in this atlas lists, per fixture, its role: exact positive, structured-plaintext positive, valid-model negative, model-violating negative, boundary or robustness diagnostic. The pass predicate counts positives and negatives separately, and robustness diagnostics are excluded from it.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Suite layout"
+body = '''
+```
+P01..P16  exact positives, every (order, sign) cell once; two with list-like plaintext
+N1, N2    valid-model: legal key, independent letters with English monogram frequencies
+N3, N4    model-violating: second text keyed by an independent random stream
+B50, B56  robustness diagnostics (boundary planted off by 3), reported with caps, not gated
+nulls     99 precommitted within-residue permutations per fixture, digest recorded first
+gate      Q_obs > max(Q_null[0:99]) and Q_obs >= frozen English threshold; equality fails
+```
+'''
+
+[[provenance]]
+path = "withmath/PK98_SEGCHAIN_A1S0_CONTROL366_DESIGN.md"
+kind = "design"
+note = "Section 6: two valid-algebra negatives with independent English-monogram plaintext and two no-chain negatives; section 5: identical 99-null replay, equality fails."
+
+[[provenance]]
+path = "withmath/PK98_SEGCHAIN_A1S0_CONTROL373_INDEPENDENT_AUDIT.md"
+kind = "audit"
+note = "Disclosed rows: independent-letter and unchained negatives PASS as negatives; parser enforces ties == len(top) and strict Q_obs > max null."
+ref = "LOG373"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Sealed disclosed run: the independent-letter negative ranks 1/1 with the true cycle and is stopped by the English gate alone; the other negatives rank 3 to 12."
+ref = "LOG385"
+
+[[provenance]]
+path = "withmath/PK10_CHAOCIPHER_FOURCLASS_CANDIDATE_NULL_CERTIFICATION_DESIGN.md"
+kind = "design"
+note = "Conditional histogram-preserving null bank: 99 position permutations accepted before any score, p = (1 + exceedances)/100, equality loses, class multiplicity inside every replicate."
+
+[[provenance]]
+path = "withmath/PK98_SEGCHAIN_CONTROL362_INDEPENDENT_AUDIT.md"
+kind = "audit"
+note = "Blocker: the null replayed a preliminary statistic, not the finishing selector that declares a positive."
+ref = "LOG362"
+
+[[provenance]]
+path = "withmath/PK9_STRUCTURED_P7_CHAIN383_CREATOR_AUDIT.md"
+kind = "audit"
+note = "Eight sentinels with typed terminals (independent prose, wrong period, structured-versus-random pair, out-of-bank row, variable-length tokens, forced ambiguity, offset chain, wrong endpoint)."
+ref = "LOG383"

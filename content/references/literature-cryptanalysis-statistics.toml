@@ -1,0 +1,87 @@
+id = "literature-cryptanalysis-statistics"
+section = "references"
+title = "Cryptanalysis and statistics literature"
+subtitle = "Coincidence, evidence, nulls, multiplicity and power"
+status = "VERIFIED"
+status_note = "Bibliographic entry: standard sources for the statistical instruments and the validation vocabulary; no experimental claim is made here."
+family = "Literature"
+tags = ["bibliography", "statistics", "cryptanalysis"]
+related = ["index-of-coincidence", "kasiski-examination", "chi-squared-fit", "quadgram-log-likelihood", "bayesian-evidence-model-selection", "mahalanobis-family-distance", "family-wise-null", "permutation-test", "power-analysis", "selection-overfit-check", "literature-classical-ciphers"]
+summary = "Friedman's index of coincidence and Kullback's statistical methods founded quantitative cryptanalysis; Shannon supplied the information-theoretic frame (unicity distance, redundancy). The evidence-based instruments in this atlas draw on Jaynes, MacKay and Kass and Raftery for marginal likelihood and model comparison, on Fisher and on Westfall and Young for permutation and family-wise nulls, on Mahalanobis for family distance, and on Cohen for the notion that a negative without power is not a result."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "notes"
+body = '''
+The validation practices in this atlas (matched nulls that repeat the full selection, family-wise maxima, power measured on plants) are applications of standard resampling and multiple-testing theory to a setting where the "hypotheses" are keys, placements and cipher families. Readers who want the theory behind a specific instrument should pair the instrument's page with the entry here it names.
+'''
+
+[[references]]
+title = "The Index of Coincidence and Its Applications in Cryptography (Riverbank Publication No. 22)"
+author = "William F. Friedman"
+year = 1922
+
+[[references]]
+title = "Statistical Methods in Cryptanalysis"
+author = "Solomon Kullback"
+year = 1938
+
+[[references]]
+title = "Elementary Cryptanalysis: A Mathematical Approach"
+author = "Abraham Sinkov"
+year = 1966
+
+[[references]]
+title = "Communication Theory of Secrecy Systems (Bell System Technical Journal 28:4)"
+author = "Claude E. Shannon"
+year = 1949
+
+[[references]]
+title = "Prediction and Entropy of Printed English (Bell System Technical Journal 30:1)"
+author = "Claude E. Shannon"
+year = 1951
+
+[[references]]
+title = "Probability Theory: The Logic of Science"
+author = "Edwin T. Jaynes"
+year = 2003
+
+[[references]]
+title = "Information Theory, Inference, and Learning Algorithms"
+author = "David J. C. MacKay"
+year = 2003
+
+[[references]]
+title = "Bayes Factors (Journal of the American Statistical Association 90:430)"
+author = "Robert E. Kass and Adrian E. Raftery"
+year = 1995
+
+[[references]]
+title = "On the Generalised Distance in Statistics (Proceedings of the National Institute of Sciences of India 2:1)"
+author = "Prasanta Chandra Mahalanobis"
+year = 1936
+
+[[references]]
+title = "The Design of Experiments"
+author = "Ronald A. Fisher"
+year = 1935
+
+[[references]]
+title = "Resampling-Based Multiple Testing: Examples and Methods for p-Value Adjustment"
+author = "Peter H. Westfall and S. Stanley Young"
+year = 1993
+
+[[references]]
+title = "An Introduction to the Bootstrap"
+author = "Bradley Efron and Robert J. Tibshirani"
+year = 1993
+
+[[references]]
+title = "Testing Statistical Hypotheses (3rd edition)"
+author = "Erich L. Lehmann and Joseph P. Romano"
+year = 2005
+
+[[references]]
+title = "Statistical Power Analysis for the Behavioral Sciences (2nd edition)"
+author = "Jacob Cohen"
+year = 1988

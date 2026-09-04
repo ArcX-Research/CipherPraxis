@@ -1,0 +1,124 @@
+id = "mnemonic-wordlist-encoding"
+section = "ciphers"
+title = "Mnemonic word-list encoding"
+subtitle = "A checksummed 2,048-word mnemonic hidden as letter blocks under a keyed cipher"
+status = "CLOSED"
+status_note = "Exact solvers for a 24-word (and 12- to 21-word) mnemonic written as unique four-letter prefixes or full spellings under a period-2, -4 or -7 keyed cipher recovered blind planted mnemonics with their cycle and shifts, then drained every live task with zero endpoints in the declared geometries; other origins, padded three-letter words and an unknown alphabet under seven free shifts remain open."
+family = "Modern and encoding schemes"
+tags = ["mnemonic", "word list", "checksum", "structured key", "exact search"]
+related = ["quagmire-iii", "quagmire-iv", "keyword-mixed-alphabet", "word-prefix-csp", "constraint-satisfaction-forward-checking", "modular-inverse-and-crt", "all-different-enumeration", "shared-cycle-attack", "g-mixed-alphabet"]
+summary = "A standard mnemonic encodes 128 to 256 random bits as 12 to 24 words from a fixed 2,048-word list, each word carrying 11 bits and the last word including a hash checksum. Every English list word is identified by its first four letters, so 24 words fit exactly into 96 letters. The program treated such a mnemonic as a candidate high-entropy structured plaintext, wrote it in letter blocks, enciphered it with a keyed periodic cipher, and built exact solvers in which the checksum is part of the search rather than a score."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For $s$ words the mnemonic carries $\mathrm{ENT} = 32s/3$ entropy bits and $\mathrm{CS} = s/3$ checksum bits, the first $\mathrm{CS}$ bits of $\operatorname{SHA256}(\text{entropy})$; the $11s$ bits split into $s$ indices into the list. With four-letter prefixes the plaintext zone is $4s$ letters; 1,945 of the 2,048 English words have at least four letters (103 have three). The cipher layer studied is a Quagmire with one unknown 26-cycle $z$ and shifts $k$ by absolute position:
+
+$$\text{Vigenère: } z(c_i) - z(p_i) - k_{i \bmod m} \equiv 0, \qquad \text{Beaufort: } z(c_i) + z(p_i) - k_{i \bmod m} \equiv 0 \pmod{26}.$$
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Exact search structure"
+body = '''
+The first $s - 1$ words are assigned most-constrained-first; the remaining $\mathrm{ENT} - 11(s-1)$ entropy bits leave at most eight tails, and SHA-256 fixes the last word's index for each, so the checksum prunes rather than scores. At every node the solver enforces equality and injectivity of each residue map, shared-cycle group identities (Vigenère maps must be restrictions of rotations of one cycle; Beaufort maps of reflections whose pair products are rotations), and homogeneous linear feasibility over $\mathrm{GF}(2)$ and $\mathrm{GF}(13)$ maintained as incremental echelon bases; CRT lifts a residue solution to a permutation of $\mathbb{Z}_{26}$ exactly when each residue is used twice with opposite parity. A cap overrun retains the branch, so caps cannot create false negatives. For period 2 the problem is an affine graph problem: each observed pair adds an edge $z(v) = s_v t + a_v$ and the components are packed exactly into the 26 coordinates.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Fixed four-letter prefixes**, 24 words, origin at a measured zone start, period 7 with a measured shift tie $k_2 = k_4 = k_6$ or seven free shifts.
+- **Period 4** (word-aligned shifts) and **period 2**, at 12, 15, 18, 21 and 24 words.
+- **Key-word-tied shifts** $k_r = z(W_r)$ for a seven-letter key word, 56 cells (4 words, 7 rotations, 2 signs).
+- **Full spellings** of 24 words totalling the whole 144-letter text under the four fixed-order alphabet pairs, or under one unknown cycle.
+- **Wildcard-padded layouts** (12 + 24 words).
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The standard English list and checksum rule; a declared word count, block origin and cipher period.
+- Invariant: prefix uniqueness makes the four-letter encoding lossless.
+- Invariant: an endpoint is accepted only if the checksum passes, $z$ is a permutation, a separately written literal decrypt yields the printed prefixes, and literal re-encryption reproduces every ciphertext letter; these are algebraic cross-checks, and only the checksum and literal replay are independent gates.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Freeze the geometry (words, origin, period, tie) and the list hash.
+2. Run the compiled most-constrained-first DFS with split prefixes scheduled by the size of the next domain; stop at the first verified endpoint for a power test, or drain every task for an exhaustive zero.
+3. Before any live run, recover blind planted mnemonics over all 1,945 roots with no word, cycle or shift supplied.
+4. Report a zero only on natural drain (`complete`, every task finished, no endpoint over cap); otherwise the cell is scoped-inconclusive.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Period-7 tie, 24 prefixes: 73,528 tasks and 793,712,197 nodes in 1,594 s (Vigenère), 33,540 tasks and 47,310,816 nodes in 79 s (Beaufort). Period 4: 743,973 tasks and $6.68 \times 10^9$ nodes in 4,333 s (Vigenère), 619,859 tasks in 213 s (Beaufort). Full spellings under known alphabets: 25,022,464 word assignments per cell, eight cells. Power runs found their plants after 27,361 of 63,629 tasks (95 s) and 110 of 78,002 tasks (9 s).
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Power tests are not uniqueness tests.** A control that stops at its first verified endpoint proves recovery power, not that no other endpoint exists.
+- **Incomplete drains.** One 12 + 24 wildcard cell stopped at 73.3% of its tasks after an hour and is recorded as inconclusive, never as an exclusion.
+- **Model boundaries.** Mnemonics containing any three-letter word, a different origin, another word count, or an unknown alphabet under seven free shifts are outside the closed cells; the unknown-cycle full-spelling model is the principal remaining version.
+- **Dictionary-distance optimisers** (annealing toward valid words) are decoder-power tools only and never authorised a live claim.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Period-7 tie (log 445): blind full-root Vigenère and Beaufort plants recovered with checksum and scalar forward; live: both relations drained with zero endpoints. Period 4 (log 447): blind plants recovered for both relations; live: zero solutions, zero over-cap. Period 2 (logs 450/452): four blind 12-word controls and 2/2 controls at 15, 18 and 21 words; eight live cells complete with zero solutions. Key-word-tied (logs 454/455): Vigenère and Beaufort truths recovered blind in 200.8 s and 346.6 s, cycles equal to the plants up to a unit. Full spellings under the four known alphabet pairs (log 472): 8/8 planted controls, eight live cells exact with zero candidates. Wildcard 12 + 24 (log 465): Beaufort exact negative, Vigenère inconclusive.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+The all-zero entropy vectors show the checksum rule. With 128 zero bits, $\operatorname{SHA256}(16 \text{ zero bytes})$ begins `37...`, so the 4 checksum bits are `0011` $= 3$, and the 12-word mnemonic is `abandon` eleven times followed by word 3, `about`. With 256 zero bits, $\operatorname{SHA256}(32 \text{ zero bytes})$ begins `66...`, so the 8 checksum bits give index $102$, and the 24-word mnemonic is `abandon` twenty-three times followed by `art`. Written as four-letter prefixes, the 24-word vector is `ABAN` repeated 23 times and then `ART` padded, which is why three-letter words were treated as a separate model.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The hypothesis was chosen because it is a concrete, checksum-constrained realisation of a high-entropy but structured key; the exact negatives remove its simplest geometries and the audits are explicit that they do not justify a blind sweep of further periods without an independent reason.
+'''
+
+[[provenance]]
+path = "withmath/PK9_BIP39_CRT445_NOTE.md"
+kind = "note"
+note = "Exact period-7 tied-shift solver: group identities, GF(2)/GF(13) echelon bases, CRT all-different lift, blind power passes, live drains."
+ref = "logs/445_bip39_crt_live_20260902T235019Z_12776.log"
+
+[[provenance]]
+path = "withmath/PK9_BIP39_P4_447_NOTE.md"
+kind = "note"
+note = "Period-4 lane: blind Vigenère/Beaufort power passes and complete live census."
+ref = "logs/447_bip39_p4_live_20260903T013545Z_67015.log"
+
+[[provenance]]
+path = "withmath/PK9_BIP39_P2_450_NOTE.md"
+kind = "note"
+note = "Period-2 affine-graph decision procedure; 12/15/18/21-word controls and live zeros."
+ref = "logs/450_bip39_p2_live_20260903T035320Z_4657.log"
+
+[[provenance]]
+path = "withmath/PK9_BIP39_KEYED454_455_NOTE.md"
+kind = "note"
+note = "Key-word-tied shifts: 56-cell campaign; blind controls recovered in 200.8 s and 346.6 s."
+ref = "logs/454_bip39_keyed_20260903T044914Z_39190.log"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "LOG472 full-spelling known-alphabet exact negative (8/8 controls); LOG465 wildcard layout (Beaufort exact, Vigenère inconclusive); LOG503 reservation."
+ref = "LOG472"
+
+[[references]]
+title = "BIP-39: Mnemonic code for generating deterministic keys"
+author = "M. Palatinus, P. Rusnak, A. Voisine, S. Bowe"
+year = 2013

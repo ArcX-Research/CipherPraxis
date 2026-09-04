@@ -1,0 +1,132 @@
+id = "index-of-coincidence"
+section = "statistics"
+title = "Index of coincidence"
+subtitle = "Probability that two letters drawn from a text coincide, with its exact standard error"
+status = "VERIFIED"
+status_note = "Implemented with the exact standard deviation of the estimator and calibrated on planted references: a plain period-7 substitution of English shows within-coset IC 0.0713 against the monoalphabetic expectation 0.0652 (z +0.8), while a fractionated inner text drops to 0.0575 (z -1.0)."
+family = "Coincidence and frequency statistics"
+tags = ["coincidence", "frequency", "period detection", "monoalphabetic test"]
+related = ["coincidence-lag-profile", "estimator-standard-error", "shuffled-null-z-score", "within-coset-null", "chi-squared-fit", "exact-period-alignment", "vigenere", "g-coset", "coincidence-lab"]
+summary = "The index of coincidence (IC) is the probability that two letters chosen at random from a text are the same. It is about 0.066 for English and 1/26 = 0.0385 for uniformly random letters, and it is invariant under any monoalphabetic substitution and any transposition. That makes it the basic instrument for deciding whether a text, a coset, or a segment is monoalphabetic, for finding key periods, and for aligning cosets without knowing the key. Because the estimator averages correlated pairs, its standard error is larger than a binomial guess; the exact formula is derived and used here."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For a text of $n$ letters with letter counts $n_1, \dots, n_{26}$,
+
+$$\operatorname{IC} = \frac{\sum_{x} n_x (n_x - 1)}{n (n - 1)},$$
+
+the fraction of the $\binom{n}{2}$ unordered pairs of positions that hold the same letter. If the letters are independent draws from a distribution $p$, the expectation is $\kappa = \sum_x p_x^2$:
+
+- uniform letters: $\kappa = 1/26 = 0.0385$;
+- English monograms: $\kappa \approx 0.066$ (the corpus table used in the evidence panel gives $0.0652$).
+
+The IC of a text is unchanged by any permutation of its positions and by any bijective relabelling of the alphabet, so it measures only the shape of the letter histogram.
+
+**Derived forms.** The *periodic IC* at period $m$ is the mean IC of the $m$ cosets $\{c_i : i \equiv b \pmod m\}$. The *union IC* of an alignment is the IC of the text after each coset has been rotated by its own shift $s_b$, i.e. of the histogram $G(x) = \sum_b F_b(x + s_b)$. The *digram IC* is the same statistic on the $26^2$ ordered letter pairs.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Exact standard deviation of the estimator"
+body = '''
+Write $P = n(n-1)/2$ for the number of pairs, $I_{ij}$ for the indicator that positions $i$ and $j$ agree, $\kappa_2 = \sum_x p_x^2$ and $\kappa_3 = \sum_x p_x^3$. Each pair has variance $\kappa_2 (1 - \kappa_2)$; two pairs that share one position are correlated, with covariance $\kappa_3 - \kappa_2^2$, and every pair has $2(n-2)$ such partners. Pairs with no common position are independent. Hence
+
+$$\operatorname{Var}\Big(\sum_{i<j} I_{ij}\Big) = P\,\kappa_2(1-\kappa_2) + 2P(n-2)\,(\kappa_3 - \kappa_2^2), \qquad \operatorname{sd}(\operatorname{IC}) = \frac{1}{P}\sqrt{\operatorname{Var}\Big(\sum_{i<j} I_{ij}\Big)}.$$
+
+For English letters and a 22-letter coset this gives $\operatorname{sd} = 0.0210$; the mean of seven such cosets has $\operatorname{sd} = 0.0210/\sqrt{7} = 0.0079$. The naive binomial value $\sqrt{\kappa_2(1-\kappa_2)/P} = 0.016$ understates the error by about 30% because it ignores the shared-position covariance.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The reference values assume letters drawn independently from one distribution. Real prose has word repeats, so an English window of a few dozen letters scatters more than the formula says; simulated references on real text windows are used alongside the exact formula.
+- Invariance: IC is blind to order. A transposition of English keeps IC at the English level; a periodic substitution lowers the whole-text IC towards $0.038$ while leaving each coset at the plaintext level; a fractionating or mixed inner layer lowers the coset IC as well.
+- Two different keys mixed inside one coset (a key change in the middle of a text) pull the coset IC below the monoalphabetic level even though every segment is monoalphabetic on its own.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. **Is it monoalphabetic?** Compare the whole-text IC with $0.066$ and $0.0385$, using the exact standard deviation at that length.
+2. **Period.** Scan the periodic IC over candidate periods; the true period (and its multiples) shows cosets at the plaintext level. The [lag profile](/statistics/coincidence-lag-profile) is the same signal read pairwise.
+3. **Alignment.** Choose per-coset rotations that maximise the union IC; for period 7 all $26^6$ relative shift vectors can be enumerated exactly with a closed-form pairwise objective (see [Exact period alignment](/cryptanalysis/exact-period-alignment)). The maximised union IC is then compared with the same maximisation on position-shuffled texts, because a maximum over shift vectors is biased upwards.
+4. **Gate for transposition.** In a cascade solver a monogram histogram that is still English (IC $\ge 0.058$ together with a small [chi-squared misfit](/statistics/chi-squared-fit)) marks a pure transposition and diverts the text to order solvers.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+One histogram is $O(n)$; a periodic scan over periods $2 \dots m_{\max}$ is $O(n \cdot m_{\max})$. The exact period-7 alignment enumerates $26^6 \approx 3.1 \times 10^8$ relative shift vectors with a closed-form pairwise objective in $0.4$–$0.5$ s per 144–153-letter text in a vectorised implementation, so 200 shuffled nulls of the same exact alignment take about 90 s per text.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Short cosets.** At 22 letters per coset the standard deviation ($0.021$) is a third of the gap between English and uniform. A reading such as "mean coset IC 0.0536 against 0.0652" is a $-1.5\sigma$ statement, not an exclusion of monoalphabetic cosets.
+- **Maximised statistics.** The union IC after alignment, the best lag, or the best period is a maximum; its null is the distribution of the same maximum on shuffled texts, never the single-value reference.
+- **Order blindness.** Because IC ignores order, it cannot see a transposition and cannot distinguish "rotations of one alphabet" from "seven unrelated alphabets" inside cosets.
+- **Degenerate objectives.** Maximising the *decrypt's* coincidence rate over an unknown alphabet and shifts is not a solver: on a planted control it found 594–601 coincidences by collapsing letters where the true plaintext has 383.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Two planted references are audited with the same code as every target: a plain period-7 substitution of English at 153 letters (within-coset IC mean $0.0713$ against $0.0652$, $z = +0.8$; union IC after exact alignment at $z = +9.6$ against a shuffle null of $0.0535 \pm 0.0025$) and the same construction over a fractionated inner text (within-coset mean $0.0575$, $z = -1.0$ against monoalphabetic English; alignment $z = +4.0$). The targets' readings are reported on the same scale, so "at the flat-inner reference level" is a comparison with a receipt, not an impression.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+Text `COINCIDENCE` ($n = 11$): counts C 3, O 1, I 2, N 2, D 1, E 2.
+
+$$\sum_x n_x(n_x-1) = 3\cdot 2 + 0 + 2\cdot 1 + 2\cdot 1 + 0 + 2\cdot 1 = 12, \qquad n(n-1) = 110, \qquad \operatorname{IC} = 12/110 = 0.109.$$
+
+The value is high because an eleven-letter word repeats letters; at this length the standard error is of the same order as the value, which is why the instrument is only used on segments of a few dozen letters or more. The [coincidence lab](/labs/coincidence-lab) computes the histogram, the IC and the periodic scan for any pasted text.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The kappa notation follows Friedman. The exact variance is the classical U-statistic variance of a degree-2 kernel; it is what the audit panel prints as "exact s.d. per coset" and "of the mean".
+'''
+
+[[provenance]]
+path = "withmath/wm_core.py"
+kind = "library"
+note = "ic, coset_ics, periodic_ic, digram_ic, union_ic_from_J and ic_sd_monoalphabetic (exact variance with the shared-position covariance)."
+
+[[provenance]]
+path = "withmath/wm_audit.py"
+kind = "solver"
+note = "Exact period-7 alignment with shuffle nulls; within-coset IC printed with the exact s.d. per coset and of the mean."
+
+[[provenance]]
+path = "withmath/logs/01_audit.log"
+kind = "log"
+note = "Planted references: plain period-7 within-coset IC 0.0713 (z +0.8), fractionated inner 0.0575 (z -1.0); exact s.d. 0.0210 per coset, 0.0079 for the mean of seven; alignment null 0.0535 +- 0.0025, z +9.6 and +4.0; monoalphabetic English kappa 0.0652."
+ref = "logs/01_audit.log"
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "'What the numbers mean': the 1.5-sigma reading of 'cosets are not monoalphabetic'; the degenerate IC-maximising alignment (594-601 coincidences vs the truth's 383) recorded under logs/81."
+
+[[provenance]]
+path = "withmath/wm_infer.py"
+kind = "solver"
+note = "IC_GATE = 0.058 with the chi-squared gate in the transposition decision of the cascade solver."
+
+[[references]]
+title = "The Index of Coincidence and Its Applications in Cryptanalysis"
+author = "William F. Friedman"
+year = 1922
+
+[[references]]
+title = "Military Cryptanalysis, Part II"
+author = "William F. Friedman"
+year = 1938

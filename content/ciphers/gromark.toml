@@ -1,0 +1,137 @@
+id = "gromark"
+section = "ciphers"
+title = "Gromark"
+subtitle = "Keyed substitution driven by a lagged-Fibonacci digit chain from a numeric primer"
+status = "CLOSED"
+status_note = "Direct basic Gromark was control-qualified at primer lengths 4, 5, 6 and 7 (every 504-letter control recovered plaintext, primer and alphabet exactly, including a leading-zero primer) and excluded on the 504-letter text at those lengths; primer length 8 and layered variants remain open."
+family = "Stream and machine ciphers"
+tags = ["running digit chain", "primer", "keyed alphabet", "lagged fibonacci", "stream"]
+related = ["keyword-mixed-alphabet", "condi", "linear-recurrences-lcg", "meet-in-the-middle", "modular-inverse-and-crt", "exhaustive-enumeration", "simulated-annealing", "g-autokey-primer", "g-keyed-alphabet"]
+summary = "Gromark adds a running decimal digit to each plaintext letter before a keyed substitution. The digits come from a short numeric primer extended by a lagged Fibonacci rule, so the key is the primer plus an alphabet. The primer stage is exact and costs 10 to the power of the primer length; the program paid that cost through length 7 by meeting two half-chains modulo 10 and using a substitution-invariant selector before any alphabet search."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For a primer of $P$ digits $r_0, \dots, r_{P-1}$ and a keyed alphabet $\sigma$,
+
+$$d_i = r_i \ (i < P), \qquad d_i \equiv d_{i-P} + d_{i-P+1} \pmod{10} \ (i \ge P),$$
+
+$$c_i = \sigma\big[(p_i + d_i) \bmod 26\big], \qquad p_i \equiv \sigma^{-1}(c_i) - d_i \pmod{26}.$$
+
+The standard alphabet is "K2M": deduplicate a keyword, append the unused letters, fill rows of keyword width and read the columns in the alphabetical order of the keyword letters.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Linearity and the substitution-invariant selector"
+body = '''
+The chain is linear, so every running digit is a public linear form of the primer:
+
+$$d_i \equiv \sum_j A_{i,j}\, r_j \pmod{10}, \qquad A_{i,j} = A_{i-P,j} + A_{i-P+1,j}.$$
+
+Splitting $\mathbb{Z}_{10} \cong \mathbb{Z}_2 \times \mathbb{Z}_5$ and the primer into two halves lets all $10^P$ states be visited by a meet in the middle without recomputing the chain. Before any alphabet is known, equal ciphertext letters have equal pre-substitution ranks, so
+
+$$c_i = c_j \ \Rightarrow\ p_j - p_i \equiv d_i - d_j \pmod{26},$$
+
+which turns the consecutive occurrences of each ciphertext letter into a spanning forest of plaintext-difference constraints scored by a generic lag/difference model. That selector ranks primers exactly and is independent of $\sigma$.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Periodic Gromark**: a distinct-letter keyword of length $P$ gives the alphabet, the primer (letter ranks $1 \dots P$) and block offsets $o_g = \sigma^{-1}(\text{keyword}_g)$ added per block of $P$ letters.
+- **Basic Gromark with longer primers**: each extra digit multiplies the exact primer stage by ten.
+- **Condi**: a related running-key substitution whose feedback comes from the plaintext itself; see [Condi](/ciphers/condi).
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The chain rule and the alphabet style are fixed by the model; the primer and alphabet are unknown.
+- Invariant: with $\sigma$ unknown, the ciphertext-letter equality forest above constrains only plaintext differences, never absolute letters.
+- A fitted invertible state always round-trips; only exact control recovery is evidence.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Enumerate all $10^P$ primers (meet in the middle at $P = 6, 7$) and score each by the substitution-invariant difference model.
+2. Give the top cells (32,768 at $P = 6$, 131,072 at $P = 7$) a one-to-one monogram assignment (Hungarian) and a provisional quadgram score.
+3. Anneal the arbitrary 26-letter alphabet for the best 32 (or 64 at $P = 5$) primers.
+4. Require the control gate: exact plaintext, exact transmitted primer including leading zeros, the hidden alphabet on every observed rank, and an independent forward reconstruction; only then read a live text, and require an English verdict before spending any null budget.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Exact primer stage: $10^4$ to $10^7$ cells; the $P = 5$ lane ran 100,000 primers with a Hungarian pre-pass in about 51 to 54 seconds per control. The alphabet anneal is bounded (top 32 or 64 primers) and therefore control-qualified rather than exhaustive. Each additional primer digit multiplies the exact stage by ten, which is why $P \ge 8$ was left open.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Rank spread of the true primer.** Under the invariant selector the hidden primers ranked 8,319 and 6,499 of $10^6$ at $P = 6$ and 72,008 and 13,812 of $10^7$ at $P = 7$; a shortlist smaller than those ranks would silently lose the truth. The leading-zero control is what set the $P = 7$ shortlist size.
+- **Non-language endpoints.** Every live endpoint round-tripped but scored $-6.67$ to $-7.20$ per letter, far below the English gate, so the nulls were never triggered.
+- **Scope.** A different composition (Gromark under or over another layer) or $P \ge 8$ is not covered.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+$P = 4$: exhaustive primer pre-pass, control PASS in 13.39 s; periodic Gromark $P = 4..8$: control PASS in 9.46 s (COLOSSUS_DYNAMIC_AUDIT.md). $P = 5$: two independently generated 504-letter controls recovered 504/504 letters, the exact primer and alphabet, forward PASS, in 51.37 s and 54.28 s; the live text gave primer-stage rate $-7.12$ (no) (logs/201_gromark5.log). $P = 6$ and $7$: four held-out 504-letter controls (two per length, arbitrary alphabets, one seven-digit primer with a leading zero) all recovered 504/504 letters, 26/26 alphabet entries and the exact primer with forward PASS; live endpoints $-7.20$ and $-7.11$ (no) (logs/212_gromark67_recurrence.log). Every control ciphertext also byte-matched an independently compiled source generator.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Primer `27182`, alphabet $\sigma$ keyed by `ZEBRAS` (`ZEBRASCDFGHIJKLMNOPQTUVWXY`), plaintext `GROMARK`. Chain: $2, 7, 1, 8, 2$, then $d_5 = 2 + 7 = 9$, $d_6 = 7 + 1 = 8$.
+
+```
+plain    G   R   O   M   A   R   K
+p        6  17  14  12   0  17  10
+d        2   7   1   8   2   9   8
+p+d      8  24  15  20   2  26   18
+mod 26   8  24  15  20   2   0   18
+sigma    F   X   M   T   B   Z   P
+```
+
+Ciphertext `FXMTBZP`. Decrypt position 5: `Z` is rank 0 of $\sigma$, $0 - 9 \equiv 17 = R$.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The corpus result is a control-qualified negative for direct basic Gromark at primer lengths 4 to 7 and the declared alphabet budgets on one 504-letter text, and for periodic Gromark at keyword lengths 4 to 8. It is not a theorem about longer primers or about Gromark composed with another layer.
+'''
+
+[[provenance]]
+path = "withmath/GROMARK5_AUDIT.md"
+kind = "audit"
+note = "Log 201: complete 100,000-primer enumeration, top-64 alphabet anneal, 2/2 controls exact, live non-language."
+ref = "logs/201_gromark5.log"
+
+[[provenance]]
+path = "withmath/GROMARK67_RECURRENCE_AUDIT.md"
+kind = "audit"
+note = "Log 212: CRT/meet-in-the-middle primer selector, substitution-invariant difference model, 4/4 controls exact including a leading-zero primer, live negative at P=6 and P=7."
+ref = "logs/212_gromark67_recurrence.log"
+
+[[provenance]]
+path = "withmath/wm_gromark67_recurrence.py"
+kind = "solver"
+note = "Driver for the P=6/7 lane; compiled core wm_gromark67_recurrence_core.cpp."
+
+[[provenance]]
+path = "withmath/COLOSSUS_DYNAMIC_AUDIT.md"
+kind = "audit"
+note = "Log 186: basic Gromark P=4 and periodic Gromark P=4..8 control PASS; live rates -7.156 and -7.606."
+ref = "LOG186"
+
+[[references]]
+title = "The ACA and You"
+author = "American Cryptogram Association"
+year = 2005

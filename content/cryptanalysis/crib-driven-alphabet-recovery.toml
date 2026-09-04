@@ -1,0 +1,137 @@
+id = "crib-driven-alphabet-recovery"
+section = "cryptanalysis"
+title = "Crib-driven alphabet recovery"
+subtitle = "Using a crib to remove the shifts of a keyed periodic substitution and search only the unknown mixed alphabet"
+status = "VERIFIED"
+status_note = "With one unknown alphabet on either side, a 13-letter crib lets a batch annealer recover the alphabet at 100% on planted 153-letter texts (3/3 seeds at every crib length from 7 for the mixed plaintext alphabet; 12/21 for the mixed ciphertext alphabet); with the same unknown alphabet acting on both sides the annealer fails 0/21 even with 25-letter cribs, and only an exact constraint solver with the key word known and cribs of 15 to 20 letters pins the alphabet (logs/22, 42)."
+family = "Known-plaintext methods"
+tags = ["crib", "mixed alphabet", "keyed substitution", "simulated annealing", "constraint satisfaction", "polish basin"]
+related = ["quagmire-i", "quagmire-ii", "quagmire-iii", "quagmire-iv", "keyword-mixed-alphabet", "crib-dragging", "simulated-annealing", "parallel-tempering", "polish-basin-measurement", "constraint-satisfaction-forward-checking", "all-different-constraints", "power-measurement", "g-crib", "g-selection-freedom"]
+summary = "A periodic keyed substitution has two unknowns, the shifts and the mixed alphabet. A crib of at least one period fixes every shift for whatever alphabet is being tried, leaving a single unknown permutation. When that permutation acts on only one side (mixed plaintext or mixed ciphertext alphabet) a batch annealer over alphabets recovers it from a 13-letter crib. When one alphabet acts on both sides every swap moves letters in every coset at once, the search basin shrinks to a few swaps, and only an exact constraint solver with the key word known and a long crib succeeds."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Families with an unknown alphabet $A$ and a known reference order $B$ (straight or a known keyed alphabet):
+
+- **mixed plaintext alphabet** ($P = A$, $C = B$): $\operatorname{idx}_B(c) = \operatorname{idx}_A(p) + k_b$;
+- **mixed ciphertext alphabet** ($P = B$, $C = A$): $\operatorname{idx}_A(c) = \operatorname{idx}_B(p) + k_b$;
+- **same alphabet both sides** ($P = C = A$): $\operatorname{idx}_A(c) = \operatorname{idx}_A(p) + k_b$.
+
+For the one-sided families the additive and reciprocal relations are the same problem (reversing $A$ absorbs the sign). A crib letter in coset $b$ **defines** $k_b$ for the alphabet under test, so a contiguous crib of at least $m$ letters removes all shifts from the search: the only remaining unknown is $A$, and the crib is satisfied by construction.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Search and exact formulation"
+body = '''
+Batch annealing: $N$ chains (one per crib, offset, relation and restart), each holding an alphabet; a step proposes a swap or an insertion in every chain, derives the shifts from the crib votes, scores the full decrypt with quadgrams minus $\mu$ per unsatisfied vote, and accepts per chain by the Metropolis rule on a geometric schedule ($T$ from 8 to 0.25); the best chain of each placement is polished by first-improvement over all 925 swap and insertion neighbours.
+
+Exact formulation for the same-alphabet family with a key word $W$ under the rule $k_b = \operatorname{idx}_A(W_b)$: each crib letter gives one linear equation over $\mathbb{Z}_{26}$ in the **positions** of three letters,
+
+$$\operatorname{idx}_A(c_i) - \operatorname{idx}_A(p_i) - \operatorname{idx}_A(W_{i \bmod m}) \equiv 0 \pmod{26},$$
+
+with the 26 positions all different and one position fixed to kill the rotation. Unit propagation and branching on the most constrained letter enumerate every consistent assignment; the letters the crib does not touch are a small cryptogram completed by a quadgram hill-climb.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The crib is present at the tested offset in the cipher's own convention; the family (which side is mixed) is one of those being tried.
+- One-sided families: the known side is really the reference order.
+- Same-alphabet family: the exact route needs the key-word rule and the key word itself; with the word free the seven extra unknowns multiply the assignments past any cap.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. For each family, crib and offset, run the batch annealer; print any placement whose polished rate beats $-5.0$ and the null level of all wrong placements.
+2. Re-anneal the top placements with four times the restarts and twice the steps; a real hit reads language end to end at about $-4.3$.
+3. For the same-alphabet family, do not anneal: enumerate candidate key words and cribs of 12 letters or more at every offset with the exact solver; rank consistent assignments by the quadgrams of their pinned letters, complete the best, and polish with the key-word-aware 925-neighbour climb (planted control reads at $-4.14$).
+4. Two short cribs placed jointly reach the equation count of one long crib (19 equations from 13 + 6 letters) at the cost of about $4 \times 10^5$ placement pairs, most rejected in under a millisecond.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Annealer: chains $\times$ steps $\times$ (one $n$-letter decrypt and quadgram sum); 2,400 chains per job on one core, 6,701 placements $\times$ 16 restarts $\times$ 40k steps in about 3 h per text on 12 cores. Exact CSP: node counts from a few dozen (wrong placement) to $3 \times 10^5$ (cap); 14,336 placements for eight key words and 14 cribs on two zones in hours (logs/43).
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **The alphabet acting twice.** In the same-alphabet family every swap is both a cryptogram move and a re-slotting of two ciphertext letters: a swap corrupts about 4 of 26 mapping entries in every coset. The crib widens the polish basin only to 3 swaps at 13 letters and 6 swaps at 25; annealing from random plateaus at 35 to 42% of the alphabet with 2,000 chains and does not improve with 8,000 (logs/32, 36), and 0/24 planted controls solve blind (logs/08).
+- **Crib length.** With the key word known the exact solver needs about 15 to 17 letters for a reliable pin (13 letters: 2,148 assignments in the solved case); without the word it never pins.
+- **Moderate power on the mixed-ciphertext side.** One planted seed failed at most crib lengths (12/21 overall), so a negative there is weaker than on the mixed-plaintext side.
+- **Nothing read on the corpus texts** for the four validated families, at the wrong-placement null in every sweep (logs/23, 26, 43); the same-alphabet rows produced by the annealer are not evidence either way and were not counted.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Calibration table (logs/22; planted period-7, random alphabet and shifts, real English, true crib at its offset, 16 restarts $\times$ 40k steps, 3 seeds):
+
+```
+family                       7    9   11   13   16   20   25   (crib length)
+mixed plaintext alphabet    3/3  3/3  3/3  3/3  3/3  3/3  3/3   100% match, 9-16 of 16 restarts read
+mixed ciphertext alphabet   2/3  1/3  1/3  2/3  2/3  2/3  3/3   100% when solved, 0-7 of 16 restarts
+same alphabet both sides    0/3  0/3  0/3  0/3  0/3  0/3  0/3   22-36% match, 8 restarts
+```
+
+Exact solver with the key word known (logs/42): 13 letters 1/3 (2,148 assignments, completion 100%), 15 letters 1/3 (396 assignments), 17 letters 2/3 (2,028 and 96), 20 letters 3/3 (240 and 24 assignments; one case capped but completed at 100%); key word free 0/18. Sweep of eight key words $\times$ 14 long cribs $\times$ every offset on both zones (logs/43): 14,336 placements, 244 consistent, best $-5.42$, nothing.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Mixed plaintext alphabet $A$ = `ZEBRASCDFGHIJKLMNOPQTUVWXY` (keyword-mixed), straight ciphertext alphabet, period 2 with shifts $(3, 10)$. Encrypting `ATTACKATDAWN` by $\operatorname{idx}_B(c) = \operatorname{idx}_A(p) + k_{i \bmod 2}$ gives `HEXOJXHEKOAA` (A is at position 4 in $A$, so $c_0 = 4 + 3 = 7 = $ H; T is at 20, so $c_1 = 20 + 10 \equiv 4 = $ E).
+
+Now suppose $A$ is unknown and the crib `ATTACK` is placed at offset 0. The six equations $\operatorname{idx}_A(p_j) + k_{j \bmod 2} = \operatorname{idx}_B(c_j)$ give, after eliminating the two shifts, the relative positions
+
+$$\operatorname{idx}_A(T) - \operatorname{idx}_A(A) \equiv 16, \quad \operatorname{idx}_A(C) - \operatorname{idx}_A(A) \equiv 2, \quad \operatorname{idx}_A(K) - \operatorname{idx}_A(A) \equiv 9, \quad k_1 - k_0 \equiv 7,$$
+
+and the two letters that occur in both cosets (A at positions 0 and 3, T at positions 1 and 2) give the same shift difference $k_1 - k_0 \equiv 7$, a check a wrong placement fails with probability about $25/26$. Four letters of $A$ are pinned relative to each other; the remaining 22 positions are what the annealer or the exact enumeration must supply, using the rest of the text.
+'''
+
+[[provenance]]
+path = "withmath/wm_crib.py"
+kind = "solver"
+note = "Families, crib votes defining the shifts, batch annealing, 925-neighbour polish, calibration table in the docstring."
+ref = "logs/22_crib_smoke.log"
+
+[[provenance]]
+path = "withmath/wm_cribcsp.py"
+kind = "solver"
+note = "Exact crib + key-word CSP with all-different positions, ranked completion and key-word-aware polish; planted control reads at -4.14."
+ref = "logs/43_cribcsp_zones.log"
+
+[[provenance]]
+path = "withmath/probes/step3_cribcsp.py"
+kind = "script"
+note = "Calibration over crib lengths 7-20, key word known or free."
+ref = "logs/42_cribcsp_calibration.log"
+
+[[provenance]]
+path = "withmath/wm_q3.py"
+kind = "solver"
+note = "Why the same-alphabet family does not anneal: a swap corrupts about 4 of 26 entries in every coset; 0% success on planted controls."
+ref = "logs/08_q3.log"
+
+[[provenance]]
+path = "withmath/wm_q3joint.py"
+kind = "solver"
+note = "Parallel-tempering annealer over (alphabet, shifts); planted 96-letter control reaches 16-35% of the alphabet."
+ref = "logs/32_q3joint_ctrl.log"
+
+[[provenance]]
+path = "withmath/logs/36_scaling.log"
+kind = "log"
+note = "Best-of-N does not improve with N: plateau at about 30-40% of the alphabet from 500 to 8,000 chains."
+
+[[provenance]]
+path = "withmath/STEP3_REVIEW.md"
+kind = "note"
+note = "Section 4 and 7: the CSP formulation, its calibration summary, and the two-crib joint placement idea."

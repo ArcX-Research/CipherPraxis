@@ -1,0 +1,10 @@
+id = "g-move-set"
+section = "glossary"
+title = "Move set (neighbourhood)"
+status = "VERIFIED"
+status_note = "Standard term."
+family = "Search and optimisation"
+tags = ["search", "local search"]
+related = ["simulated-annealing", "hill-climbing", "polish-basin-measurement", "g-search-basin"]
+summary = "The set of elementary changes a local search may apply to a state. For an alphabet permutation: swaps of two letters and insertions of one letter into another slot (325 + 600 = 925 neighbours); for a 5x5 square also row swaps, column swaps and transpositions; for a column order also segment reversals, rotations and cyclic relabellings. Every move must preserve the legality of the key (a permutation stays a permutation). The move set defines the distance in which a basin radius is measured."
+updated = "2026-09-04"

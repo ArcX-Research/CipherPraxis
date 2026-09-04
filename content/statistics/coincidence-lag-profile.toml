@@ -1,0 +1,129 @@
+id = "coincidence-lag-profile"
+section = "statistics"
+title = "Coincidence lag profile"
+subtitle = "Rate of equal letters at each displacement, per segment and per window, with an alignment z-profile across periods"
+status = "VERIFIED"
+status_note = "Implemented with within-segment and within-coset permutation nulls and planted prose references; a planted period-7 substitution shows its period at lag 7 with inherited peaks at 14 and 21 (z +7.4, +4.9, +3.1 at 153 letters), and the same profile is flat (z -0.7) when a width-9 transposition is applied outside the periodic layer."
+family = "Coincidence and frequency statistics"
+tags = ["coincidence", "lag", "period detection", "zone detection", "fingerprint"]
+related = ["index-of-coincidence", "shuffled-null-z-score", "family-wise-null", "within-coset-null", "kasiski-examination", "exact-period-alignment", "change-point-zone-detection", "family-identification", "coincidence-lab"]
+summary = "The coincidence rate at lag d is the fraction of position pairs (i, i+d) that carry the same letter. Under a repeating key of period m the rate at multiples of m sits at the plaintext level (about 0.066 for English) and elsewhere near the random level (about 0.04), so the profile over d reveals the period. Read per segment and in sliding windows it also localises where a periodic layer starts and stops; read across candidate periods after coset alignment it becomes a fingerprint that separates constructions such as 'substitution outside a transposition' from 'transposition outside a substitution'."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For a text $c_0 \dots c_{n-1}$ and a lag $d \ge 1$,
+
+$$\kappa(d) = \frac{1}{n-d} \sum_{i=0}^{n-d-1} [\,c_i = c_{i+d}\,].$$
+
+If the text is a periodic substitution of period $m$ over a plaintext with monogram distribution $p$, then for $d \equiv 0 \pmod m$ the two letters were enciphered with the same key element, so $\mathbb{E}\,\kappa(d) = \sum_x p_x^2 \approx 0.066$ for English; for other lags the letters carry different shifts $s \ne t$ and $\mathbb{E}\,\kappa(d) = \sum_x p_x\, p_{x + t - s}$, which averages close to $1/26$. The profile $d \mapsto \kappa(d)$ is therefore a comb with teeth at multiples of $m$.
+
+Repeated plaintext words add coincidences at the distance between the repeats (the Kasiski signal), so the profile mixes key periodicity with plaintext self-similarity.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Per-segment profile.** $\kappa(d)$ computed on a segment, with a null from shuffles of that segment; lags with $|z| \ge 2.5$ are listed. Used to compare the head, middle and tail of a text.
+- **Windowed lag map.** In a window of 42 letters at lag 7 there are 35 pairs; a period-7 substitution of prose expects about $2.3/35 = 0.066$ coincidences, uniform letters $0.038$. Sliding the window (step 7) draws where the periodic layer lives.
+- **Pooled same-coset rate.** Lags $7, 14, 21$ pooled against planted prose zones of the same geometry (300 plants) gives one number per zone with a simulated standard error.
+- **Alignment z-profile.** For each candidate period $p$, align the cosets by histogram rotation, take the union [IC](/statistics/index-of-coincidence), and report its $z$ against within-text shuffles. The vector of $z$ over $p \in \{3,4,7,9,14,17,21\}$ is compared with the same vector for planted constructions.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The plaintext distribution is non-flat; a flat inner text (fractionated or random) gives no comb even under a true periodic key.
+- Lags are compared against a null that preserves what the hypothesis does not claim: within-segment shuffles for "is there any lag structure", within-coset shuffles for "is there lag structure beyond the coset histograms".
+- The alignment z-profile assumes an additive layer in a known alphabet order; a keyed alphabet on the plaintext side does not change the coincidences, a keyed alphabet on both sides does not change them either, but a fractionation destroys them.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Compute $\kappa(d)$ for $d = 1 \dots 70$ and list the lags whose $z$ against shuffles exceeds $2.5$; a comb at $m, 2m, 3m$ is the period.
+2. Slide a window along the text at the candidate lag to find where the periodic layer starts and stops; one zoned 153-letter text showed a lag-7 rate of $0.00$ in its first four 42-letter windows, $0.11$–$0.14$ across its middle and $0.00$ again at the end, and a 144-letter text rose from $0.03$–$0.09$ in its first half to $0.11$–$0.17$ in its second, i.e. periodic layers confined to zones.
+3. Run the alignment z-profile and compare with the planted library. At 153 letters a plain period-7 substitution reads $(p_7, p_{14}, p_{21}) = (+7.4, +4.9, +3.1)$ with nothing at $3, 4, 9, 17$; a period-7 substitution applied *under* a width-9 columnar transposition collapses to $-0.7$ at $p_7$; a Hill layer outside or inside the periodic layer gives $+0.5$. A target whose profile peaks at 7 with the inherited 14/21 tail therefore has its periodic layer outermost, and the magnitude of the peak estimates the inner text's IC.
+4. Hand the period to [exact period alignment](/cryptanalysis/exact-period-alignment) and the zone boundaries to [change-point detection](/cryptanalysis/change-point-zone-detection).
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+$O(n \cdot d_{\max})$ for the profile; the windowed map is $O(n)$ per lag; the alignment z-profile costs one heuristic alignment per period per shuffle, about $200$ shuffles $\times$ 7 periods $\times$ 4 planted replicates per library row.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Plaintext repeats masquerade as key structure.** An excess at lag 28 in a 96-letter zone (rate $0.164$, $z = +2.6$ against a within-coset permutation null and about $+3$ against every planted prose model, including a 28-letter varied-copies key) is plaintext self-similarity at $4 \times 7$, not a period-28 key. A shuffle null also destroys such repeats, so repetition can mimic a key change in a change-point scan.
+- **Granularity.** Thirty-five pairs per window resolve the rate only in steps of $0.029$; a window that reads $0.00$ is compatible with a rate of $0.03$.
+- **Multiplicity.** Seventy lags are tested; a single lag at $z = +2.9$ is not significant on its own. Use a [family-wise null](/statistics/family-wise-null) for "any lag".
+- **Disagreement with alignment.** A text can show no individually significant lag (whole-text lag 7 at $z = +0.0$) while its coset histograms align at $z = +4$; when the key is zoned, the histogram alignment sees the zone and the whole-text lag profile dilutes it.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Per-segment profiles are printed with within-segment shuffle nulls; the pooled same-coset rate of each zone is compared with 300 planted prose zones of identical geometry (one zone read $0.068$ against $0.064 \pm 0.022$, $z = +0.2$; the other $0.081$ against $0.065 \pm 0.017$, $z = +0.9$). The alignment z-profile is calibrated on a 13-model library (plain period 7, 14, 21; compound 7 with 2 or 3; sandwiches at widths 9 and 17; transposition outside; Hill inside and outside) at 153, 144 and 504 letters. At 504 letters the plain period-7 model reads $z = +39$ at $p_7$, which shows how quickly the instrument gains power with length.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+Text `ATTACKATDAWN` ($n = 12$). Lag 6 compares positions $(0,6), (1,7), (2,8), (3,9), (4,10), (5,11)$: A=A, T=T, T$\ne$D, A=A, C$\ne$W, K$\ne$N, so $\kappa(6) = 3/6 = 0.50$. Lag 1 compares eleven adjacent pairs, of which only TT agrees: $\kappa(1) = 1/11 = 0.09$.
+
+The spike at lag 6 is a plaintext repeat (`ATTA…ATDA`), exactly the kind of coincidence a repeating key of period 6 would also produce. On a real ciphertext the two are separated by their nulls: a key period keeps its comb under within-segment shuffles of the plaintext repeats, a repeat does not survive a change of plaintext.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The lag profile is the pairwise reading of the [periodic index of coincidence](/statistics/index-of-coincidence): summing $\kappa(d)$ over $d \equiv 0 \pmod m$ recovers the within-coset pair count.
+'''
+
+[[provenance]]
+path = "withmath/logs/38_step3_facts.log"
+kind = "log"
+note = "Per-segment lag profiles with within-segment shuffle nulls; windowed lag-7 map (window 42, step 7; prose reference 2.3/35 = 0.066, uniform 0.038); pooled same-coset rate vs 300 planted prose zones (0.068 vs 0.064 +- 0.022, z +0.2; 0.081 vs 0.065 +- 0.017, z +0.9)."
+ref = "logs/38_step3_facts.log"
+
+[[provenance]]
+path = "withmath/probes/review_A_stats.py"
+kind = "script"
+note = "Independent recomputation: lag rates 7/14/21/28 with within-coset permutation nulls and four planted prose key structures (400 plants each)."
+
+[[provenance]]
+path = "withmath/logs/46e_review_A_stats.log"
+kind = "log"
+note = "Lag-28 rate 0.164 vs within-coset null 0.085 +- 0.031 (z +2.6) and vs planted prose 0.067 +- 0.033 (z +2.9); lag 14 at null."
+ref = "logs/46e_review_A_stats.log"
+
+[[provenance]]
+path = "withmath/wm_grammar.py"
+kind = "solver"
+note = "align_ic, align_z, fingerprint and model_library: the alignment z-profile over periods 3,4,7,9,14,17,21 with within-text shuffle nulls."
+
+[[provenance]]
+path = "withmath/logs/312_grammar_fingerprint.log"
+kind = "log"
+note = "Planted library at 153/144/504 letters: plain period-7 (+7.4, +4.9, +3.1 at p7/p14/p21), transposition-outside (-0.7), Hill inside/outside (+0.5); +39 at p7 for 504 letters."
+ref = "logs/312_grammar_fingerprint.log"
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Rounds 5c-5d: 'honest lag profiles', the windowed lag-7 zone maps, and the disagreement between whole-text lag z and histogram-alignment z."
+
+[[provenance]]
+path = "withmath/REVIEW_A.md"
+kind = "audit"
+note = "Section 5.4: the lag-28 excess is plaintext self-similarity, not key structure; section 2.9a: shuffle nulls destroy plaintext repeats so repetition mimics a key change."
+
+[[references]]
+title = "Military Cryptanalysis, Part III"
+author = "William F. Friedman"
+year = 1939

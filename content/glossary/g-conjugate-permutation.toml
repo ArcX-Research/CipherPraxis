@@ -1,0 +1,10 @@
+id = "g-conjugate-permutation"
+section = "glossary"
+title = "Conjugate permutation"
+status = "VERIFIED"
+status_note = "Standard term; the cipher use is verified in the permutation-cycles entry."
+family = "Algebra"
+tags = ["permutation", "group theory"]
+related = ["permutation-cycles", "conjugacy-and-gauge", "keyword-mixed-alphabet", "g-cycle-type"]
+summary = "Two permutations w and t are conjugate when w = z^-1 t z for some bijection z; conjugation relabels the elements and preserves the cycle type. A keyed additive substitution is the conjugate of a plain rotation by the coordinate map of its mixed alphabet, so when the shift is a unit it is itself a single 26-cycle. This representation lets a partial decryption map be extended edge by edge and completed to a full cycle by joining its path components."
+updated = "2026-09-04"

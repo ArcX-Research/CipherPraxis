@@ -1,0 +1,10 @@
+id = "g-selection-freedom"
+section = "glossary"
+title = "Selection freedom"
+status = "VERIFIED"
+status_note = "Corpus term; the quoted magnitudes come from the marginalised-evidence and shared-cycle entries."
+family = "Method governance"
+tags = ["overfitting", "null", "multiplicity"]
+related = ["selection-overfit-diagnostic", "family-wise-null", "shuffled-null-z-score", "coset-shift-recovery", "shared-cycle-attack", "crib-dragging", "g-family-sweep"]
+summary = "Selection freedom is the improvement a score gains merely because parameters were chosen to maximise it: profiling seven free shifts on a 153-letter text buys about 0.15 nats per letter of fit that wrong models enjoy too, free sub-coset shifts fitted to shuffled text reach quadgram rates of about -5.8, and the best of thousands of crib placements or of 256 exact cycle finishes sits well above the typical wrong one. The only honest reference for a selected score is the same selection repeated on nulls: shuffled texts pushed through the identical pipeline, or a family-wise null over every trial, with the observed maximum compared to the replicate maxima."
+updated = "2026-09-04"

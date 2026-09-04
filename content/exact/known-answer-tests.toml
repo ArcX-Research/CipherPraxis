@@ -1,0 +1,139 @@
+id = "known-answer-tests"
+section = "exact"
+title = "Known-answer tests for cipher cores"
+subtitle = "Fixed inputs with fixed expected outputs, brute-force parity at small sizes, mutation tests that must fail, sentinels that must stop, and negatives that must be rejected"
+status = "VERIFIED"
+status_note = "Every sealed core in the corpus ships a KAT suite that is run before controls: forward/inverse roundtrips over entire schedule spaces (2,725,632 coordinates), DP versus brute force (8/8), exact-algebra identities on 1,092 score cells, parser and transcript mutations (23/23 rejected), forced-failure proofs that each gate exits non-zero (7/7), and structured negatives (5/5); a defect the suite missed (tests that bypassed the production parser) is recorded with its repair."
+family = "Exactness guarantees"
+tags = ["KAT", "self-test", "mutation test", "parity", "sentinel", "tautological gate"]
+related = ["kat-harness", "tautological-gate-rule", "reproducibility-receipts", "seal-and-audit-protocol", "bound-benchmarks-and-certificates", "exhaustive-enumeration", "cp-sat-and-smt-solvers", "all-different-enumeration", "vigenere", "vigenere-lab", "seed-determinism", "g-certificate"]
+summary = "A known-answer test feeds a core a fixed input whose correct output is known independently and fails loudly on any difference. For cipher solvers the useful KATs are of five kinds: roundtrip identities over whole parameter spaces, parity between a fast implementation and a brute-force one at a size where brute force is affordable, algebraic identities checked cell by cell, mutations of inputs or transcripts that must be rejected, and forced failures that prove each gate can actually fail. A check that cannot fail is not a test."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+```
+roundtrip KAT:     for every parameter in the space: decrypt(encrypt(x, p), p) == x
+parity KAT:        for small instances: fast_core(instance) == brute_force(instance)   (score, winner, ties, literal)
+identity KAT:      for every cell: algebraic relation holds exactly (e.g. relabelling of per-residue scores)
+mutation KAT:      for every single-coordinate edit of a valid input/transcript: verifier rejects
+sentinel KAT:      with an impossible budget (node cap 1): core reports INCOMPLETE, exits non-zero, leaks no key
+negative KAT:      structurally wrong instances (wrong period, three cycles, reversed latent, random letters): rejected
+forced-failure:    edit each gate to be wrong, run the suite, require a non-zero exit naming that gate; delete the mutant
+```
+
+A KAT suite runs before any control and any target, and its counts are printed in the transcript so a reader can see that it ran.
+'''
+
+[[blocks]]
+kind = "equations"
+body = '''
+Schedule KAT of a piecewise progressive key: for all $2 \times 4 \times 26 \times 26 = 5{,}408$ schedules and all $504$ positions, deprogress(forward(coordinates)) = coordinates, $5{,}408 \times 504 = 2{,}725{,}632$ checks; plus the alias identity that a zero-width pulse equals the constant slope $d \cdot i \bmod 26$ for every quarter, $26 \times 504 \times 4 = 52{,}416$ checks.
+
+Rank-invariance identity: for planted key $k$ and candidate $h$, $LL_b(h_b) = S_b(k_b - h_b)$ (Vigenère) or $S_b(h_b - k_b)$ (Beaufort), verified on $6 \times 7 \times 26 = 1{,}092$ cells across six key/relation fixtures, all giving the same rank 43.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The expected answer comes from an independent path (a scalar loop against a vectorised core; Python against C++; brute force against DP), never from the code under test.
+- Tests exercise the production entry point: a suite that called an internal helper by name stayed green while the production parser was broken; the repaired suite calls the production function with no explicit guard.
+- Exit codes and status lines are cross-checked: a core that returns 3 on INCOMPLETE must not be read as a crash, and COMPLETE must always carry a key while INCOMPLETE never does.
+- Binary hashes are informational; source hashes are the pin (two identical compilations produce different bytes).
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Use in an attack programme"
+body = '''
+KATs gate every stage. Compiled enumeration cores self-test before serving; exact CSP oracles are checked against brute force (240 systems, 538,656 solutions, 0 mismatches) and against planted chains (256 synthetic chains, 256/256 mutations rejected, 4,096-window scalar/vector agreement); language automata are compared with a literal recogniser on all 254 strings of a toy alphabet (207 accepted by both, 0 mismatches) and on all strings of lengths 1-3 for four banks (12/12 exact); k-best factorisations must match brute Cartesian ranking; transcript parsers reject 16-23 crafted mutations; transaction layers prove that 4/4 injected post-write failures leave parser-invalid poison and that a stdout failure after commit cannot alter committed bytes.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+KATs are cheap by design: a whole-schedule roundtrip of 2.7 million coordinates, a 1,092-cell identity check and three compiled/Python parity cases fit in seconds; the sealed anchored-residue suite (core rebuild, 3 KATs, 12 type-rejection cases, 6 plants, sentinel, 6 mutations, 5 negatives) runs in about 1.9 s.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Tautological checks.** An independent forward that every candidate key reproduces (200/200 random wrong keys did, because the forward algebra cancels the key identically) certifies only that a per-residue quantity is constant; the only discriminating gate on the plant was the comparison with the known latent, which does not exist on a target. The lane was blocked for global use.
+- **Tests that bypass production.** The parser self-test called a helper by name; swapping the guard used by the real parser left the tests green. Repair: the suite calls the production function and a discrimination probe names exactly the three in-range cases that distinguish a correct integer guard from one that accepts booleans.
+- **Misread exit codes.** The first draft treated the deliberate exit 3 of an incomplete search as a crash, so the sentinel could not pass.
+- **Wrong reference in the KAT itself.** A sparse-identity KAT compared each of two positions in a chunk separately against the whole tensor slice and falsely failed; the corrected reference sums both positions.
+- **Suites that never ran.** A KAT count absent from the transcript is a KAT that did not run.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Recorded suites: piecewise-key core 2,725,632 schedule checks and 52,416 alias checks; anchored-residue core 3 KATs (brute force, cyclic DP), 2 flat-tie, 1 sentinel, 12/12 strict-type rejections, 6/6 mutations, 5/5 structured negatives, 7/7 forced-failure mutants exit non-zero; rank-sharded selector 2,129 reduced-union vectors, 8/8 DP-vs-brute, 12 independent forwards, 4 scalar scores, 136 monogram-collapse classes, 23/23 transcript mutations, 4/4 poison injections; QTT constructor 3 parity cases and 1,092 identity cells; Z3 toy language 254/207/0; DFA-vs-traversal 12/12; corpus filter 256/256.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+A Vigenère core KAT: encrypt `ATTACKATDAWN` with key `LEMON` and require `LXFOPVEFRNHR` exactly (position 2: T + M $= 19 + 12 = 31 \equiv 5 =$ F); decrypt the result with the same key and require the plaintext back. Mutation: encrypt with key `LEMOM` and require a mismatch (position 4 becomes C + M $= 2 + 12 = 14 =$ O instead of C + N $= 15 =$ P), proving the comparison can fail. Sentinel: call the solver with a node cap of 1 and require STATUS INCOMPLETE with no key printed. Forced failure: temporarily invert the sign in the roundtrip check and require the suite to exit non-zero naming the roundtrip gate, then restore it. The [Vigenère lab](/labs/vigenere-lab) reproduces the first two lines interactively.
+'''
+
+[[provenance]]
+path = "withmath/wm_pk10_quarterpulse490_core.cpp"
+kind = "solver"
+note = "self_kat490: embedded engine self-test, exhaustive forward/deprogress roundtrip over all 5,408 schedules x 504 positions, constant-slope alias identity 26 x 504 x 4."
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Schedule KAT 2,725,632 coordinates; 5,251 observable classes; 4/4 controls."
+ref = "LOG490"
+
+[[provenance]]
+path = "withmath/PK9_STAGEB_EXACT_CERTIFIED_CLAUDE_AUDIT.md"
+kind = "audit"
+note = "KAT inventory (3 KATs, flat ties, sentinel, 12/12 type rejections, 6/6 mutations, 5/5 negatives), forced-failure table 7/7, ~1.9 s; defects: exit code 3 misread, parser tests bypassing production, isinstance(True, int) hazard; correction note: tautological forward 200/200."
+ref = "logs/353_pk9_stageb_exact_certified_claude.log"
+
+[[provenance]]
+path = "withmath/CROSSCHAIN_M13_RANKSHARD_VALIDATION288_AUDIT.md"
+kind = "audit"
+note = "Static suite: reduced union oracle 2,129 vectors; cyclic DP vs exhaustive width-2 8/8; 12 forwards; 4 scalar scores; 136 classes; 23/23 transcript mutations; 4/4 postcommit poison."
+
+[[provenance]]
+path = "withmath/QTT_RANK_CONSTRUCTOR_FEASIBILITY_AUDIT.md"
+kind = "audit"
+note = "Three compiled/Python parity cases; 1,092 score cells obeying the relabelling identity; rank 43 under all six fixtures."
+
+[[provenance]]
+path = "withmath/ELEMENT_CROSSCHAIN_COMPACT_Z3_AUDIT.md"
+kind = "audit"
+note = "Toy language equivalence: 254 strings, 207 accepted by both recognisers, 0 mismatches."
+
+[[provenance]]
+path = "withmath/OBJECT_VOCAB_EXACT_AUDIT.md"
+kind = "audit"
+note = "DFA languages compared with the literal traversal for lengths 1-3 on four banks, 12/12 exact."
+
+[[provenance]]
+path = "withmath/PK89_CHAIN_CORPUS407_AUDIT.md"
+kind = "audit"
+note = "Filter controls: 256 synthetic chains, 256/256 mutations rejected, 4,096-window scalar/vector agreement."
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Factorised feasibility vs brute force: 240 systems / 538,656 solutions / 0 mismatches."
+ref = "LOG409b"
+
+[[provenance]]
+path = "withmath/CROSS_PRESOURCE_TQ_BOUND_BENCH258_AUDIT.md"
+kind = "audit"
+note = "A KAT whose reference was wrong (per-position comparison against a summed slice) and its repair."
+
+[[references]]
+title = "Recommendation for Block Cipher Modes of Operation: Methods and Techniques (known-answer test vectors)"
+author = "National Institute of Standards and Technology"
+year = 2001

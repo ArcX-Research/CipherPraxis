@@ -1,0 +1,97 @@
+id = "corpus-bank-screen"
+section = "search"
+title = "Corpus bank screen"
+subtitle = "Every window of a large generic corpus as a proposal bank, filtered by alphabet-free pattern constraints and decided by an exact oracle"
+status = "CLOSED"
+status_note = "One complete screen is recorded: all 2,344,345 length-24 windows of a 2,344,368-letter pinned corpus were filtered to 39,528 unique prefixes by alphabet-free equality and inequality constraints and every survivor was decided by an exact chain oracle under all four sign pairs with zero endpoints. The closure is scoped to verbatim corpus windows under the declared chain; the filter's controls passed 256/256."
+family = "Enumeration strategies"
+tags = ["proposal bank", "corpus", "pattern filter", "exact oracle", "scoped closure"]
+related = ["exact-chain-oracle", "dictionary-attack", "word-prefix-csp", "all-different-enumeration", "isomorph-analysis", "segment-chain-analysis", "shared-cycle-attack", "target-absent-controls", "planted-controls", "g-certificate"]
+summary = "A corpus bank screen treats every fixed-length window of a large text corpus as a candidate plaintext opening. Necessary constraints that do not depend on the unknown alphabet or key (equal ciphertext pairs force equal plaintext letters; exactly one equal component forces unequal letters) are applied vectorially to all windows, survivors are deduplicated, and each is sent to an exact solver that either rejects it or returns every compatible key. A miss closes the bank, not the cipher family."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For a chained construction whose positions $i$ in one constant-key class satisfy $z(P_i) = e_8\, z(C_i) - e_8 e_9\, z(C'_i) + \text{const} \pmod{26}$ with $z$ an unknown bijection and $e_8, e_9 \in \{\pm 1\}$, injectivity of $z$ gives alphabet-free implications between positions $i, j$:
+
+- $(C_i, C'_i) = (C_j, C'_j) \Rightarrow P_i = P_j$;
+- exactly one of $C_i = C_j$, $C'_i = C'_j$ holds $\Rightarrow P_i \ne P_j$.
+
+```
+mask <- equality/inequality pairs implied by the two ciphertexts on positions 0..L-1
+for every window w of length L in the corpus (vectorised):
+    keep w iff w satisfies every pair in mask
+survivors <- deduplicate(kept windows)
+for each survivor, for each sign pair (e8, e9):
+    oracle(survivor) -> infeasible | list of compatible cycles; finish each cycle on the full text
+    require literal re-encryption of both ciphertexts for any endpoint
+```
+'''
+
+[[blocks]]
+kind = "equations"
+body = '''
+Number of windows: $N - L + 1 = 2{,}344{,}368 - 24 + 1 = 2{,}344{,}345$. The live mask on positions $0..23$ consisted of one forced equality ($P_2 = P_{19}$) and 23 forced inequalities; it reduced the windows to $40{,}331$ offsets and $39{,}528$ unique prefixes, a survival rate of about $1.7\%$. Over the whole 153-letter text the same rule yields 4 equalities and 108 inequalities inside the first 53 positions.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The implications are exact consequences of injectivity and hold for every alphabet, key value and sign pair; the filter can only remove windows that no key could explain.
+- The bank is finite and stated: verbatim windows of one pinned corpus (hash-recorded). A hit would be a candidate pending independent reproduction and null evidence; a miss says only that the opening is not a verbatim window of that corpus under that chain.
+- The oracle is exact (GF(2) and GF(13) null spaces with all-different enumeration) and returns every compatible cycle, not a best guess.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+The screen extends a word-prefix constraint solver whose earlier proposal banks sampled complete openings from a language model; the corpus screen instead enumerates every opening the corpus contains. The pattern mask is derived before any expensive algebra and was handed to the prefix solver as a free pre-filter for its own proposals. Each survivor is passed to the exact oracle as a black box (a prefix file), under all four sign pairs; any endpoint would be finished on all 153 letters and both ciphertexts re-encrypted literally.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The vector filter is $O(N \cdot |\text{mask}|)$ over the corpus; the oracle cost is dominated by survivors with large GF(13) nullity (each exact decision costs $2^{d_2} + 13^{d_{13}}$ combinations). With 39,528 unique prefixes and four sign pairs the whole screen ran to completion in one recorded session.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Bank coverage.** A text whose opening is a new sentence never appears verbatim in any corpus; the negative is uninformative about the family.
+- **Model dependence.** The mask assumes the chain relation and the constant-key class boundary; if either is wrong the filter removes the truth.
+- **Pattern is a speed-up, not an identifier.** The same equality/inequality pattern on the first 53 positions admits enormous numbers of English strings; only the exact oracle decides.
+- **Homogeneous systems.** A single window's equations are always linearly consistent; rejection comes solely from the all-different enumeration of a small null space, so long windows (here 24 letters) are needed for decisions to be cheap.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Standalone filter controls on 256 synthetic arbitrary-permutation chains across all four sign pairs: every planted opening survived its own mask and 256/256 deliberately violated mutations were rejected; the scalar and vectorised implementations agreed on 4,096 test windows. The oracle's own controls belong to the [exact chain oracle](/exact/exact-chain-oracle) entry (control gate 1/1 in this deployment). Live result: zero exact endpoints from 39,528 unique survivors under all four sign pairs.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Corpus `THEREISATREEBYTHERIVERANDAHILL` (30 letters), window length 5, mask $\{P_0 = P_3,\ P_1 \ne P_2\}$. The 26 windows are checked in turn; only window 22, `ANDAH`, satisfies $P_0 = P_3$ (A = A) and $P_1 \ne P_2$ (N $\ne$ D). Every other window fails the equality (for example `THERE`: T $\ne$ R; `RIVER`: R $\ne$ E). The survivor is then handed to the exact oracle, which tests whether some bijection $z$ and constant satisfy the five chain equations with all letter positions distinct; an infeasible answer closes the bank for this mask.
+'''
+
+[[provenance]]
+path = "withmath/PK89_CHAIN_CORPUS407_AUDIT.md"
+kind = "audit"
+note = "Collision implications; 2,344,368-letter corpus; live mask P[2]=P[19] plus 23 inequalities; 2,344,345 windows -> 40,331 offsets / 39,528 unique prefixes; zero endpoints under four sign pairs; controls 256 chains, 256/256 mutations rejected, 4,096-window scalar/vector agreement."
+ref = "logs/407_pk89_chain_corpus_live_20260902T111015Z.log"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Reservation and completion entries for the corpus screen; the pattern handed to the prefix solver as a free filter (4 equal and 108 unequal pairs inside the first 53 positions); control gate 1/1 for the oracle deployment."
+ref = "LOG407"
+
+[[provenance]]
+path = "withmath/PK89_CHAIN_WORDPAIR406_AUDIT.md"
+kind = "audit"
+note = "Cycle-free pre-filter KAT: 0/27,544 violations on a plant; the pattern reported as a speed-up for proposal banks."

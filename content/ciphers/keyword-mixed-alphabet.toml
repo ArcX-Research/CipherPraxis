@@ -1,0 +1,128 @@
+id = "keyword-mixed-alphabet"
+section = "ciphers"
+title = "Keyword-mixed alphabet"
+subtitle = "Simple substitution whose alphabet is generated from a keyword or phrase"
+status = "VERIFIED"
+status_note = "Keyed-alphabet generators (six keying styles) and the phrase-keyed search passed their planted control at 100% over 202,504 alphabets; the general arbitrary-substitution solver recovered all six hidden 504-letter positives."
+family = "Monoalphabetic substitution"
+tags = ["monoalphabetic", "keyword", "mixed alphabet", "structured key"]
+related = ["caesar-shift", "quagmire-i", "quagmire-iii", "phrase-keyed-alphabet-attack", "dictionary-attack", "simulated-annealing", "frequency-analysis", "g-keyed-alphabet", "g-mixed-alphabet"]
+summary = "A keyword-mixed alphabet writes the distinct letters of a keyword first and then the unused letters in some fixed order; the plaintext alphabet is mapped onto it position by position. As a cipher it is a simple substitution with a small structured key space. Its importance in the program was as the alphabet inside Quagmire ciphers: a search over every phrase-keyed alphabet is cheap, whereas a blind search over all 26! alphabets is not."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $w$ be a keyword with repeated letters removed and let $R$ be the remaining letters in a base order. The keyed alphabet is $K = w \,\|\, R$, a permutation of the 26 letters. Simple substitution then maps
+
+$$c_i = K[\operatorname{pos}(p_i)], \qquad p_i = \operatorname{pos}^{-1}\!\big(\operatorname{pos}_K(c_i)\big),$$
+
+where $\operatorname{pos}$ is the index in the straight alphabet and $\operatorname{pos}_K$ the index in $K$.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Keying styles"
+body = '''
+The program's generator produces six alphabets from one word: keyword plus the straight remainder; keyword plus a keyword-mixed remainder; keyword plus the reversed remainder; keyword continued from its last letter; and two columnar styles in which the keyword heads a block of the remaining letters that is read off by columns (with straight or mixed remainder). A related "K2M" style, used by Gromark, deduplicates the keyword, fills rows of keyword width and reads the columns in the alphabetical order of the keyword letters.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Dictionary keyword**: one word from a word list; a bank of tens of thousands of alphabets.
+- **Phrase-keyed**: every 4 to 60-letter substring of a long text, in six styles; the program built 202,504 such alphabets from its own solved texts.
+- **Text-keyed**: the first-appearance order of the letters of a ciphertext or plaintext (140 alphabets in one sweep, 87 in another).
+- **Two-keyword**: word one followed by a keyed remainder generated from word two (425,000 alphabets).
+- **Arbitrary alphabet**: no structure; only a heuristic substitution solver applies.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The cipher is a bijection, so the ciphertext keeps the plaintext's index of coincidence, repeat pattern and word-length pattern; only letter identities change.
+- Structured alphabets are enumerable; an arbitrary alphabet is not. This is why the status of a Quagmire attack depends on whether its alphabet is keyed.
+- The base order for the remainder (straight or keyword-mixed) is itself a modelling choice.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. **Structured bank.** Generate every alphabet from the bank in every style, decrypt, and rank by quadgram rate. The true alphabet reads as English at once; the wrong ones sit near $-6$ per letter.
+2. **Blind substitution.** Frequency initialisation followed by simulated annealing over letter swaps with a quadgram objective and a steepest pair-swap finish. At 504 letters this is reliable; the program's frozen schedule is 3 restarts of 10,000 steps over all cells, then 5 of 30,000 and 11 of 80,000 over the leaders.
+3. **Gauge.** Rotations or reflections of the alphabet that leave the ciphertext unchanged are reported as one class, not as separate keys.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Bank search: one decrypt and quadgram score per alphabet, about 200,000 alphabets in ten minutes on twelve cores. Blind annealing: each swap is scored incrementally; the frozen 52-cell schedule ran in 106 seconds for six positives, three negatives and nineteen nulls at 504 letters.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Wrong style.** A keyword alphabet generated in a style outside the bank is missed entirely; the bank is a hypothesis, not a proof.
+- **Short texts.** Below about 100 letters the blind annealer's quadgram landscape has spurious optima; readability plus round-trip is not evidence.
+- **Partial alphabets.** A plaintext that exposes only $m$ letters leaves $(26-m)!$ completions of the alphabet unresolved; the program reports the observed map and the completion count separately.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Phrase-keyed Quagmire sweep: the planted control (a 31-letter phrase in the keyword-mixed style) was recovered at 100% match, rate $-4.34$, and the two live texts scored $-6.54$ and $-6.35$, i.e. noise (logs/07_phrase.log). General arbitrary-substitution solver: six hidden 504-letter positives recovered exactly (observed alphabet sizes 20, 22, 24, 25, 26, 26), three random-latent negatives scored $-15.06$ to $-15.01$ and nineteen shuffled-prose nulls $-13.96$ to $-13.50$ against a frozen gate of $-10.0$ (logs/327_pk10_alberti_monosub_controls.log; the slope-0 cell of that lane is a plain substitution).
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Keyword `ZEBRAS`, straight remainder:
+
+```
+plain  ABCDEFGHIJKLMNOPQRSTUVWXYZ
+keyed  ZEBRASCDFGHIJKLMNOPQTUVWXY
+```
+
+Plaintext `CIPHER`: C is position 2 of the straight alphabet, so it becomes the third keyed letter `B`; I (8) becomes `F`; P (15) becomes `M`; H (7) becomes `D`; E (4) becomes `A`; R (17) becomes `O`. Ciphertext `BFMDAO`.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+In the corpus the keyed alphabet is rarely the whole cipher; it is the alphabet inside a period-7 Quagmire. The program's finding was that every enumerable keying style over its available vocabulary and texts is excluded for the two short ciphertexts, which leaves an unstructured alphabet, and an unstructured alphabet under a Quagmire is exactly the case its solvers cannot reach (see [Quagmire III](/ciphers/quagmire-iii)).
+'''
+
+[[provenance]]
+path = "withmath/wm_phrase.py"
+kind = "solver"
+note = "Quagmire I/II/III under a period-7 key with phrase-keyed alphabets: six keying styles, 202,504 alphabets, planted control first."
+ref = "logs/07_phrase.log"
+
+[[provenance]]
+path = "withmath/wm_rounds4.py"
+kind = "solver"
+note = "Keyed-alphabet generator with the six styles (std, kry, rev, cont, col, kcol)."
+
+[[provenance]]
+path = "ck_lib.py"
+kind = "library"
+note = "keyed_alphabet(word): keyword followed by the unused letters."
+
+[[provenance]]
+path = "withmath/PK10_ALBERTI_MONOSUB_CONTROL327_AUDIT.md"
+kind = "audit"
+note = "Frozen arbitrary-substitution solver: 6/6 hidden positives, 3/3 negatives, 19/19 nulls at n=504; slope-0 cell is plain substitution."
+ref = "LOG327"
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Round 2 and Step 3 summaries: phrase, text-keyed, prefix-keyed and two-keyword alphabet sweeps and their control results."
+
+[[references]]
+title = "Elementary Cryptanalysis"
+author = "Abraham Sinkov"
+year = 1966

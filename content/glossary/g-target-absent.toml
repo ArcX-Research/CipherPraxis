@@ -1,0 +1,10 @@
+id = "g-target-absent"
+section = "glossary"
+title = "Target-absent"
+status = "VERIFIED"
+status_note = "Term as used in the research program's sealed designs and audits."
+family = "Validation vocabulary"
+tags = ["controls", "isolation"]
+related = ["target-absent-controls", "seal-and-audit-protocol"]
+summary = "Describes a lane, run or audit that has no code path able to read the live ciphertext: no loader import, no ciphertext constant, no target mode, and a literal target = ABSENT field in its records. Target-absent work can be developed, sealed, audited and published without any risk of tuning on the target."
+updated = "2026-09-04"

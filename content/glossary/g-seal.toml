@@ -1,0 +1,10 @@
+id = "g-seal"
+section = "glossary"
+title = "Seal"
+status = "VERIFIED"
+status_note = "Term as used in the research program's ledger."
+family = "Validation vocabulary"
+tags = ["audit", "release"]
+related = ["seal-and-audit-protocol", "ledger-reservations", "g-independent-audit"]
+summary = "The act of freezing an implementation's exact bytes (source, parser, runner, manifest) by SHA-256 and recording them in the ledger together with the creator's own audit, so that a different agent can audit precisely those bytes. Sealed bytes are never edited; a defect produces a new-only successor under a fresh log number."
+updated = "2026-09-04"

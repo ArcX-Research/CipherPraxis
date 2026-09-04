@@ -1,0 +1,142 @@
+id = "bound-benchmarks-and-certificates"
+section = "exact"
+title = "Bound benchmarks and certificates"
+subtitle = "Admissible upper bounds that prune exactly, benchmarks that decide feasibility before compute is spent, and replayable certificates of what an exact search concluded"
+status = "VERIFIED"
+status_note = "A branch-and-bound core proves global maxima over 26^7 keys with tie counts (6/6 plants, ties = 1, about 50 ms each); a compiled whole-cell bound passed every algebra and parity gate and met its frozen CPU ceilings (2.506529 and 5.837933 CPU-hours against 4.0 and 12.0); a proposed relaxation was proved identically zero and rejected; three invalid benchmark attempts are preserved with their defects named; a read-only certificate route re-derives a no-candidate conclusion from a frozen transcript with 8/8 and 4/4 mutation rejections."
+family = "Exactness guarantees"
+tags = ["branch and bound", "admissible bound", "majorant", "benchmark", "certificate", "replay"]
+related = ["rank-sharding", "exhaustive-enumeration", "known-answer-tests", "exact-dynamic-programming", "cp-sat-and-smt-solvers", "reproducibility-receipts", "seal-and-audit-protocol", "hash-chained-transcripts", "throughput-fail", "correction-and-retraction", "g-certificate", "g-drainability"]
+summary = "An exact search over a large key space is only as trustworthy as three things: the bound that lets it skip states (which must be a true upper bound, and not vacuous), the benchmark that showed the whole run fits its declared budget (measured in the right clock), and the certificate that lets a reader replay the conclusion from frozen inputs. The corpus records all three, including the failed attempts, because a bound that is identically zero, a wall clock read as CPU time, or a memory parameter that is not a limit each produced a run that had to be thrown away."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+**Admissible bound.** $U(i) \ge F(i)$ for every state $i$; a state with $U(i) < \text{incumbent} - \text{TOL}$ cannot be optimal or tied and is skipped. Branch and bound explores partial keys depth-first, bounding each subtree by the best completion its remaining coordinates could add.
+
+```
+best <- -inf; ties <- 0; nodes <- 0
+search(partial):
+    nodes += 1
+    if bound(partial) < best - TOL: pruned += 1; return
+    if complete: score <- F(partial)
+        if score > best + TOL: best <- score; ties <- 1; witness <- partial
+        elif |score - best| <= TOL: ties += 1
+        return
+    for each extension: search(partial + extension)
+report STATUS COMPLETE with best, ties, witness, nodes, pruned, leaves   (or INCOMPLETE if a node cap hit; no key leaked)
+```
+
+**Benchmark.** Measure the kernel's process-CPU time on the frozen representative inputs (warm-up, 16 repetitions, median), project over the declared number of cells, and compare with a ceiling frozen before the measurement.
+
+**Certificate.** A transcript with pinned input hashes, the exact winner (cell, orders, key, plaintext), tie count, independent scalar forwards and recomputed scores, replayed by a second process before commit.
+'''
+
+[[blocks]]
+kind = "equations"
+body = '''
+Block-coupled whole-cell bound for a partition $\Pi$ of nine chunks into blocks $G$, with $\phi$ a phase assignment drawn from a fixed multiset and $C$ a monogram tensor:
+
+$$B_\Pi[a, c] = \max_{\phi} \sum_{G \in \Pi} \sum_{b} \max_{k} \sum_{h \in G} C[a, c, h, \phi(h), b, k] \;\ge\; \max_\phi \sum_b \max_k \sum_h C[\dots],$$
+
+because moving the maximum over $k$ inside each block can only increase the value; the minimum over several valid partitions is still an upper bound. The fully relaxed proposal $J[a, c] = \sum_b \max_k \max_\phi \sum_h C$ is identically zero: every tensor entry is non-positive, entries for residues a chunk never hits are exactly zero, and for each residue a perfect assignment of chunks to labels avoiding that residue exists, so the maximum selects nine zeros. Exhausting all $2 \times 9 \times 7 = 126$ geometry cases with an exact assignment DP proves it.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Per-state values depend only on the immutable input and the state, so pruning decisions taken in one traversal order equal those of any other.
+- Feasibility limits are frozen before the number is seen and are permission to design, not to spend: passing 4.0 CPU-hours authorises only a separately sealed selector with its own caps.
+- A benchmark clock is process CPU time; wall time under contention is not interchangeable (one run projected 4.842 h in the canonical transcript and 2.334 h in a replay of the same kernel).
+- A backend's memory parameter is not a process limit; an outer measurement is the contract.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Use in an attack programme"
+body = '''
+- **Global key optimum with a tie count.** An anchored-residue reduction turns a three-text system into one periodic-key problem; the branch-and-bound core returns the proved global maximum over $26^7 = 8{,}031{,}810{,}176$ keys with $\text{ties} = 1$ on every plant (nodes 8, pruned 17,675, leaves 1, about 50 ms), and its incomplete sentinel (node cap 1) returns STATUS INCOMPLETE with exit code 3 and no key.
+- **Whole-cell bounds for a two-transposition family.** 185,088 cells each with 90,720 phase roots; the compiled kernel evaluates 81 edge bounds per cell and one exact 9x9 source assignment; whole-cell bounds strictly improve the singleton relaxation on both test tensors ($-129.24 \to -131.07 \to -133.26$ and $-137.32 \to -140.49 \to -142.47$ for singleton, 5+4 and 6+3 ensembles).
+- **Shard-local pruning.** Two majorants $U_3, U_4$ with $F \le U_3, U_4$ within $10^{-8}$ justify local gates inside index shards (see [rank sharding](/search/rank-sharding)).
+- **No-candidate certificate.** A completed target attempt whose terminal line was malformed is re-admitted by a read-only route that translates exactly one literal, re-parses with the frozen semantic parser, reconstructs the derived stream and plaintext, recomputes both scores, and requires ties = 1 and the no-candidate verdict, without any rescan.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Bound kernel medians: 5+4 ensemble 2.506529 CPU-hours projected over 185,088 cells, 6+3 ensemble 5.837933; the benchmark itself ran in 9.952 s wall with 302.5 MiB in-process peak (317,227,008 bytes outer). A competing direct exact core projected 1,023.224 s against a 900 s ceiling and was closed as infeasible. The branch-and-bound plants finish in about 50 ms because the bound prunes 17,675 of 17,684 nodes.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Vacuous bound.** The relaxed $J$ above is $0$ everywhere and cannot rank cells; admissible but useless.
+- **Wrong geometry or identity in the harness.** Two attempts aborted before any bound value: one listed the row-count multisets of the 144- and 153-letter rectangles in reverse ($[1,1,2,2,2,2,2,2,2]$ and $[1,2,2,2,2,2,2,2,2]$ are correct), one compared each of two positions in a chunk separately against the whole slice. Both transcripts are kept under names that state the defect.
+- **Wrong clock.** Wall seconds multiplied by 185,088 and labelled CPU-hours; the run is algebra evidence and no performance verdict.
+- **Certificate that cannot fail.** A forward check that every key reproduces (200/200 wrong keys did) certifies nothing; the discriminating gate on a plant is the comparison with the planted latent, which does not exist on a target.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Branch and bound: core self-test 3 KATs against direct brute force and cyclic DP, 2 flat-tie cases, 1 sentinel; 6/6 plants EXACT-GLOBAL with ties = 1; incomplete sentinel PASS; 6/6 single-coordinate mutations and 5/5 structured negatives rejected. Bound kernel: sparse identities on all 81 edges of both tensors, dense Python parity for both ensembles and the exact 90,720-phase maximum at four edges per tensor, $\text{exact} \le \text{block} \le \text{singleton}$ everywhere, exact final assignment parity, all 17 repeated matrices byte-identical, RSS below 900 MB. Certificate route: 8/8 structural mutations of the frozen attempt rejected, 4/4 certificate mutations rejected, 4/4 post-write failure injections leave parser-invalid poison, 1/1 clean commit.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Maximise $F(k_0, k_1)$ with $k_0, k_1 \in \{0, 1, 2\}$, $F = g_0(k_0) + g_1(k_1) + h(k_0, k_1)$ where $g_0 = (4, 1, 0)$, $g_1 = (3, 2, 0)$ and the interaction $h \le 0$ is $h(0,0) = -6$, $h(0,1) = 0$, $h(1,0) = -1$, all other $h = -2$. Bound for a partial key with $k_0$ fixed: $U(k_0) = g_0(k_0) + \max g_1 = g_0(k_0) + 3$ (admissible since $h \le 0$).
+
+Depth-first: $k_0 = 0$: complete keys $(0,0) = 4 + 3 - 6 = 1$, $(0,1) = 4 + 2 + 0 = 6$, $(0,2) = 4 + 0 - 2 = 2$; incumbent $6$. $k_0 = 1$: $U = 1 + 3 = 4 < 6$, pruned. $k_0 = 2$: $U = 0 + 3 = 3 < 6$, pruned. Result: best $6$ at $(0, 1)$, ties $1$, nodes $7$ (root, three branches, three leaves), pruned $2$, leaves $3$, and the pruning is exact because no pruned subtree could exceed its bound.
+'''
+
+[[provenance]]
+path = "withmath/PK9_STAGEB_EXACT_CERTIFIED_CLAUDE_AUDIT.md"
+kind = "audit"
+note = "Branch-and-bound core: proved global maximum over 26^7 = 8,031,810,176 keys with ties; 6/6 plants ties=1 nodes=8 pruned=17675 leaves=1 ~50 ms; incomplete sentinel exit 3; KATs, mutations 6/6, structured negatives 5/5; correction note on the tautological forward (200/200)."
+ref = "logs/353_pk9_stageb_exact_certified_claude.log"
+
+[[provenance]]
+path = "withmath/CROSS_PRESOURCE_TQ_BOUND_BENCH_AUDIT.md"
+kind = "audit"
+note = "Jrel identically zero (126 geometry cases); block-coupled bound definition and inequality; 5+4 and 6+3 ensembles; frozen 4.0 / 12.0 CPU-hour limits; invalid geometry assertion of the first attempt."
+
+[[provenance]]
+path = "withmath/CROSS_PRESOURCE_TQ_BOUND_BENCH258_AUDIT.md"
+kind = "audit"
+note = "Corrected row-count multisets; sparse-identity KAT defect (per-position comparison) preserved as an invalid attempt."
+
+[[provenance]]
+path = "withmath/CROSS_PRESOURCE_TQ_BOUND_BENCH259_AUDIT.md"
+kind = "audit"
+note = "Algebra and parity pass; wall clock mislabelled as CPU (4.842 h canonical vs 2.334 h replay); performance verdict invalid."
+
+[[provenance]]
+path = "withmath/CROSS_PRESOURCE_TQ_BOUND_BENCH260_AUDIT.md"
+kind = "audit"
+note = "Process-CPU benchmark: whole-cell bounds -129.239599 / -131.073283 / -133.256120 and -137.317073 / -140.493078 / -142.467708; projections 2.506529 and 5.837933 CPU-hours; 9.952 s wall; 302.5 MiB; outer RSS 317,227,008 bytes."
+ref = "logs/260_cross_presource_tq_bound_bench.log"
+
+[[provenance]]
+path = "withmath/QTT_RANGE_SHARD_ENGINEERING_AUDIT.md"
+kind = "audit"
+note = "Majorants F <= U3, U4 within 1e-8 and the exactness argument for shard-local pruning; tie-row certificate design."
+
+[[provenance]]
+path = "withmath/CROSS_PRESOURCE_QT_CERTIFICATE285_AUDIT.md"
+kind = "audit"
+note = "Read-only no-candidate certificate: one-literal adapter repair, frozen parser, reconstruction and recomputation gates, ties=1; mutations 8/8 and 4/4 rejected; retained-inode transaction with 4/4 poison injections."
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Direct exact core feasibility failure: 1,018.994 + 4.230 = 1,023.224 s projected over 185,088 cells against a 900 s ceiling."
+ref = "LOG238"
+
+[[references]]
+title = "An Automatic Method of Solving Discrete Programming Problems"
+author = "A. H. Land, A. G. Doig"
+year = 1960

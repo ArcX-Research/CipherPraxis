@@ -1,0 +1,10 @@
+id = "g-z-score"
+section = "glossary"
+title = "z-score"
+status = "VERIFIED"
+status_note = "Standard term."
+family = "Statistics"
+tags = ["standardised statistic", "calibration"]
+related = ["shuffled-null-z-score", "estimator-standard-error", "family-wise-null", "g-null-distribution"]
+summary = "The observed value of a statistic minus the mean of its null distribution, divided by the null standard deviation: z = (T - mean)/sd. A z of +2 means two null standard deviations above what shuffled or simulated texts give. It is meaningful only when the null is roughly symmetric and was computed for the same statistic, including any maximisation over a search family; the maximum of many draws sits several standard deviations above the mean by construction, so a large z for a best-of-many is reported together with its empirical rank rather than on its own."
+updated = "2026-09-04"

@@ -1,0 +1,10 @@
+id = "g-search-basin"
+section = "glossary"
+title = "Basin of attraction (of a polish)"
+status = "VERIFIED"
+status_note = "Measured in the corpus by the polish-basin protocol."
+family = "Search and optimisation"
+tags = ["landscape", "local search"]
+related = ["polish-basin-measurement", "hill-climbing", "simulated-annealing", "parallel-tempering", "g-move-set"]
+summary = "The set of states from which a deterministic descent (polish) reaches the true key; its radius is the largest number of random moves away from the truth that is still reliably recovered. For a keyed substitution whose unknown alphabet acts on both sides, the measured radius is about three swaps (3/4 recovered at three swaps, 0/4 at five or more), while stochastic searches plateau about ten swaps away; when the search's reach and the basin's radius do not meet, extra budget cannot help and an exact method is required."
+updated = "2026-09-04"

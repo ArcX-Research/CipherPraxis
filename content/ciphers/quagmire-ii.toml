@@ -1,0 +1,122 @@
+id = "quagmire-ii"
+section = "ciphers"
+title = "Quagmire II"
+subtitle = "Periodic shifts from a straight plaintext alphabet into a keyed ciphertext alphabet"
+status = "VERIFIED"
+status_note = "The crib-driven solver recovered planted Quagmire II ciphers in 12 of 21 seed-by-crib-length cases at 153 letters (all three seeds at a 25-letter crib), so the family is solvable with moderate power; blind unknown-alphabet search is not."
+family = "Polyalphabetic substitution"
+tags = ["periodic", "keyed alphabet", "polyalphabetic", "quagmire"]
+related = ["vigenere", "quagmire-i", "quagmire-iii", "quagmire-iv", "keyword-mixed-alphabet", "crib-driven-alphabet-recovery", "exact-period-alignment", "quagmire-lab", "g-keyed-alphabet"]
+summary = "Quagmire II keeps the plaintext alphabet straight and writes the ciphertext in a mixed alphabet, so the period-alignment signature that a straight-order Vigenère shows disappears from the ciphertext index space. Cosets remain simple substitutions, and a crib still fixes the shifts, but each alphabet swap now re-slots ciphertext letters rather than plaintext letters, which makes the crib search noticeably harder than for Quagmire I."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+With $P$ the straight alphabet, $C$ a mixed ciphertext alphabet and shifts $k$,
+
+$$\operatorname{pos}_C(c_i) \equiv \operatorname{pos}_P(p_i) + k_{i \bmod m} \pmod{26}, \qquad c_i = C\big[(\operatorname{pos}(p_i) + k_{i \bmod m}) \bmod 26\big].$$
+
+Decryption reads the ciphertext letter's index in $C$, subtracts the coset shift and looks up the straight alphabet.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Alignment signature"
+body = '''
+In the index space of the *true* $C$, the cosets align by additive shifts exactly as in Vigenère. In any other index space the rotations become unrelated permutations, so an alignment statistic computed in a guessed order shows nothing. This asymmetry is diagnostic: a text whose cosets align in a known order is consistent with Quagmire I in that order and inconsistent with Quagmire II in it. Reversing $C$ converts the Beaufort relation into the Vigenère one, so only one relation needs to be searched.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- [Quagmire I](/ciphers/quagmire-i): mixed plaintext alphabet, straight ciphertext alphabet.
+- [Quagmire III](/ciphers/quagmire-iii): the same mixed alphabet on both sides.
+- [Quagmire IV](/ciphers/quagmire-iv): two different mixed alphabets.
+- **Structured $C$**: keyword, phrase or text-keyed ciphertext alphabets are enumerable and were swept as a bank.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Periodic shifts; one ciphertext alphabet for the whole text.
+- Invariant: within-coset equalities of ciphertext letters are equalities of plaintext letters.
+- The straight plaintext side means the plaintext histogram is known exactly; only the ciphertext labelling is unknown.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Recover the period from coincidence statistics (alignment in a guessed order is uninformative here).
+2. **Bank**: decrypt with every structured ciphertext alphabet, fit the shifts, rank by quadgrams.
+3. **Crib**: derive the shifts from the crib votes for each candidate alphabet and anneal the alphabet with the batched annealer; a Quagmire II swap changes two ciphertext slots, so more restarts are needed than for Quagmire I.
+4. Compare against the wrong-placement null of the same sweep.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Same machinery as Quagmire I: one chain per (crib, offset, relation, restart) with 16 restarts of 40,000 steps in calibration; the three calibration seeds took 301, 377 and 457 seconds each at seven crib lengths.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Seed dependence.** One of three planted seeds failed at most crib lengths while the other two solved from 7-letter cribs; the number of converging restarts was 0 to 7 of 16, against 9 to 16 for Quagmire I. Power per crib is moderate, so a negative sweep excludes the family only moderately.
+- **No crib.** Blind alphabet search fails for the same reasons as for Quagmire III.
+- **Wrong period or key change.** As for Quagmire I.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Crib calibration (planted ciphers, random ciphertext alphabet, random shifts, 153 letters of English): Quagmire II solved 2/3, 1/3, 1/3, 2/3, 2/3, 2/3 and 3/3 seeds at crib lengths 7, 9, 11, 13, 16, 20 and 25, always at 100% match when it solved; wrong placements averaged $-6.01 \pm 0.18$ (logs/22_crib_smoke.log). The live sweep over both short texts found nothing above the wrong-placement null (logs/23_crib_pk8_pk9.log), and the phrase-keyed bank of 202,504 ciphertext alphabets was likewise negative with its control at 100% (logs/07_phrase.log).
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Plaintext alphabet straight, ciphertext alphabet keyed by `ZEBRAS` ($C$ = `ZEBRASCDFGHIJKLMNOPQTUVWXY`), shifts $(3, 7, 12)$. Plaintext `QUAGMIRE`:
+
+```
+plain    Q   U   A   G   M   I   R   E
+pos      16  20   0   6  12   8  17   4
++shift   19  27  12   9  19  20  20  11
+mod 26   19   1  12   9  19  20  20  11
+C[...]   Q   E   J   G   Q   T   T   I
+```
+
+Check position 2: A is 0, plus 12 gives 12, and letter 12 of $C$ is `J`. Ciphertext `QEJGQTTI`.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Quagmire II was the long shot in the program's reading of the two short texts because their cosets did align in a fixed order; it was swept anyway because the crib attack was cheap once built, and the moderate control power is reported so that the negative is weighted accordingly.
+'''
+
+[[provenance]]
+path = "withmath/wm_crib.py"
+kind = "solver"
+note = "Crib attack; q2K/q2S families (known plaintext alphabet, unknown ciphertext alphabet)."
+ref = "logs/22_crib_smoke.log"
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Round 4: q2K solved 12/21 seed-by-length cases with 0-7 of 16 restarts; live texts negative."
+ref = "logs/23_crib_pk8_pk9.log"
+
+[[provenance]]
+path = "withmath/wm_phrase.py"
+kind = "solver"
+note = "Variant II (keyed ciphertext side) of the phrase-keyed sweep."
+ref = "logs/07_phrase.log"
+
+[[references]]
+title = "The ACA and You"
+author = "American Cryptogram Association"
+year = 2005

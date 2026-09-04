@@ -1,0 +1,131 @@
+id = "exact-dynamic-programming"
+section = "exact"
+title = "Exact dynamic programming"
+subtitle = "Optimal substructure in cipher objectives: layouts of long and short columns, order-three key chains, assignment tables and mixed-radix counts"
+status = "VERIFIED"
+status_note = "Four DP formulations are implemented and checked: the long/short column layout DP behind the order-free width statistic (four planted sandwiches solve at 100%), the cyclic order-three key chain (three blind controls at 100%; KAT against exhaustive width-2 enumeration 8/8), the exact 9x9 assignment DP used in bound geometry proofs (126 cases), and an exact inner-subset DP in a two-transposition selector (development control at exact tuple rank 1 of 4,096)."
+family = "Dynamic programming"
+tags = ["dynamic programming", "optimal substructure", "column layout", "chain objective", "assignment"]
+related = ["viterbi-decoding", "periodic-substitution-dp", "order-free-width-statistic", "mixture-inference-under-transposition", "expectation-maximisation", "k-best-lists", "columnar-transposition", "sandwich-construction", "transposition-width-recovery", "known-answer-tests", "g-objective-function"]
+summary = "Dynamic programming computes an exact optimum over an exponential family by exploiting optimal substructure: the best way to lay out a ragged columnar grid, the best periodic key under a chain of overlapping quadgram terms, the best assignment of column chunks to labels. The corpus uses it where enumeration would be wasteful but the objective decomposes, and pairs every DP with a brute-force check at a size where enumeration is affordable."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+**Long/short column layout.** A text of $n$ letters written in $w$ columns has $\text{rows} = \lceil n/w \rceil$ and $\text{extra} = n \bmod w$ long columns; in the unpadded convention the first $\text{extra}$ column indices are long. A block score $B(\text{start}, \text{len})$ is the best class-pattern score of a contiguous block of positions (best over the pattern phase). The best total over all $\binom{w}{\text{extra}}$ placements of long columns:
+
+```
+dp[0][0] <- 0
+for j in 0 .. w-1:                       # columns in read-out order
+    for l in 0 .. extra:                 # long columns used so far
+        pos <- l*rows + (j-l)*(rows-1)   # start of column j
+        if l < extra:            dp[j+1][l+1] <- max(dp[j+1][l+1], dp[j][l] + B(pos, rows))
+        if j-l < w-extra:        dp[j+1][l]   <- max(dp[j+1][l],   dp[j][l] + B(pos, rows-1))
+answer dp[w][extra]; trace back the long/short choices
+```
+
+**Order-three key chain.** See [Viterbi decoding](/search/viterbi-decoding): $V_t(b,c,d) = \max_a [V_{t-1}(a,b,c) + \Phi_{t-3}(a,b,c,d)]$ with cyclic closure by enumerating the first three states.
+
+**Assignment DP.** For a fixed source column, the best matching of nine endpoint chunks to nine literal labels with a capacity multiset is solved exactly by a mixed-radix state over the label counts (288 states for the capacities $\{0,0,1,1,2,3,4,5,6\}$ used in the bound proofs).
+'''
+
+[[blocks]]
+kind = "equations"
+body = '''
+Class prefix sums make block scores $O(1)$: with $Q_t[i] = \sum_{j < i} P_c[j, (t + \text{step}\cdot j) \bmod k]$ for centred posteriors $P_c$, the score of a block starting at $a$ of length $L$ under phase $t$ is $Q_t[a + L] - Q_t[a]$, and $B(a, L) = \max_t (Q_t[a+L] - Q_t[a])$. Centring per class is what makes the all-one-class configuration score zero. Complexity of the layout DP: $O(w \cdot \text{extra})$ block evaluations after $O(k n)$ prefix sums.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The objective decomposes over the DP's stages (blocks, consecutive key positions, chunks); cross terms that violate this must be enumerated outside the DP (the three cyclic closure terms).
+- A DP is exact only inside its stated family and shortlist; its optimum under a wrong model is a confident wrong answer that only a null or a readability verdict exposes.
+- Every DP in the corpus has a brute-force twin at small size: cyclic DP versus exhaustive width-2 enumeration (8/8), layout DP versus all $\binom{w}{\text{extra}}$ layouts (the top-$k$ layouts routine enumerates them when there are at most 2,000).
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+The layout DP measures, for every width $w$, how well the class posteriors of a mixture form the block pattern a columnar transposition would imprint (constant per column for even $w$, alternating for odd $w$) without knowing the column order; the resulting $z$ against shuffled ciphertexts pushed through the same DP selects the widths to hand to the order solver. The key-chain DP finishes periodic keys exactly inside a shortlist. The assignment DP proves properties of relaxations (that a proposed bound is identically zero) by exhausting all $2 \times 9 \times 7 = 126$ geometry cases.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Layout DP: $O(w \cdot \text{extra})$ per width and phase, negligible next to the 60 shuffled nulls that calibrate it. Key chain: $O(p \cdot W^4)$ per starting triple. Assignment DP: 288 states joined with per-block enumerations; the compiled bound kernel that uses it evaluates 81 edges per cell with a median projection of 2.506529 CPU-hours over 185,088 cells for one partition ensemble.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Degenerate objective.** Without per-class centring, every even width is maximised by calling all letters one class; the DP faithfully returns that useless optimum.
+- **Wrong convention.** A DP over long/short columns assumes the unpadded convention (long columns first); an exact grid has no long columns and a padded grid has none either, so the model of the grid must be stated.
+- **Stage boundaries.** The open-chain key DP ignores the three closing quadgrams; the polish repairs them but does not guarantee the global optimum, which is why the cyclic variant enumerates starts.
+- **Optimum under the wrong family.** Measured zones finished at $-6.037$, $-6.290$ and $-5.107$ by the exact key DP, at or below their conditional null maxima: exact, and meaningless.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Layout DP inside the mixture pipeline: planted sandwiches at width 9 ($z = +12.8$), width 8 ($z = +11.3$) and width 12 ($z = +4.3$) all polish to $-4.34$ with 100% match; a planted Bifid, a plain periodic layer and a double columnar show no width. Key-chain DP: three blind controls 100% (63 and 95 letters at period 7, 126 at period 26), KAT 8/8 against brute force. Inner-subset DP in the sandwich selector: development control D8 at exact tuple rank 1 of 4,096 starts after the k-best repair.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+$n = 8$, $w = 3$: rows $= 3$, extra $= 2$, so two columns are long (length 3) and one short (length 2); the three layouts are LLS, LSL, SLL with blocks starting at $0, 3, 6$ / $0, 3, 5$ / $0, 2, 5$. Toy block scores: $B(0,3) = 2.0$, $B(3,3) = 1.5$, $B(2,3) = 0.5$, $B(5,3) = 1.0$, $B(6,2) = 0.8$, $B(3,2) = 0.2$, $B(0,2) = 0.3$.
+
+DP: $dp[1][1] = 2.0$ (long at 0), $dp[1][0] = 0.3$ (short at 0); $dp[2][2] = 2.0 + 1.5 = 3.5$, $dp[2][1] = \max(2.0 + 0.2,\ 0.3 + 0.5) = 2.2$; $dp[3][2] = \max(3.5 + 0.8,\ 2.2 + 1.0) = 4.3$. The optimum $4.3$ is layout LLS, and the direct sums confirm it: LLS $= 4.3$, LSL $= 3.2$, SLL $= 1.8$.
+'''
+
+[[provenance]]
+path = "withmath/wm_mix.py"
+kind = "solver"
+note = "class_prefix (centred per-class prefix sums), block_score, pattern_dp (long/short column DP, unpadded convention), layouts_topk (enumeration when at most 2,000 layouts)."
+
+[[provenance]]
+path = "withmath/logs/05_mix.log"
+kind = "log"
+note = "Planted widths 9 / 8 / 12 at z +12.8 / +11.3 / +4.3, each polishing to -4.34 with 100% match."
+ref = "logs/05_mix.log"
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Order-free width statistic via a DP over long/short columns; centring so that the all-one-class configuration scores zero; controls solved 100% from cold; 60 shuffles; negative signatures of Bifid, plain periodic and double columnar."
+
+[[provenance]]
+path = "withmath/wm_periodic_dp.py"
+kind = "solver"
+note = "Cyclic order-three key-chain DP with exact closure."
+
+[[provenance]]
+path = "withmath/PK8_PK10_HINTFREE.md"
+kind = "note"
+note = "Three blind controls at 100%; measured-zone finishes -6.037 / -6.290 / -5.107 at or below conditional null maxima."
+ref = "logs/148_periodic_dp.log"
+
+[[provenance]]
+path = "withmath/CROSSCHAIN_M13_RANKSHARD_VALIDATION291_AUDIT.md"
+kind = "audit"
+note = "Static KAT: cyclic DP versus exhaustive width-2 brute force 8/8."
+
+[[provenance]]
+path = "withmath/CROSS_PRESOURCE_TQ_BOUND_BENCH260_AUDIT.md"
+kind = "audit"
+note = "Exact 9x9 assignment DP over 126 geometry cases proving a relaxation identically zero; 288-state mixed-radix count table; 2.506529 CPU-hour projection over 185,088 cells."
+ref = "logs/260_cross_presource_tq_bound_bench.log"
+
+[[provenance]]
+path = "withmath/CROSS_SANDWICH9_KBEST_AUDIT.md"
+kind = "audit"
+note = "Exact inner-order subset DP after k-best keys; D8 exact tuple rank 1 of 4,096."
+
+[[references]]
+title = "Dynamic Programming"
+author = "R. Bellman"
+year = 1957

@@ -1,0 +1,145 @@
+id = "dihedral-group"
+section = "algebra"
+title = "Dihedral group"
+subtitle = "Rotations and reflections of a block of positions, and of a 26-letter cycle"
+status = "CLOSED"
+status_note = "The dihedral algebra is exact and independently reproduced (96 elements of D48, 9,216 ordered pairs, component census matched term for term by two implementations) and its solver passed 7/7 hidden positive controls with matched nulls at rank 1/100. The one-shot target measurements of the positional-dihedral family and of the aligned-thirds family both returned exact structural zeros, so those finite families are excluded in their declared scope."
+family = "Group theory"
+tags = ["dihedral", "rotation", "reflection", "position maps", "residue graph"]
+related = ["group-actions-on-alphabets", "permutation-cycles", "units-mod-26", "residue-class-graphs", "all-different-constraints", "conjugacy-and-gauge", "beaufort", "isomorph-analysis", "family-wise-null", "dihedral-lab", "g-cycle-type", "g-invariant"]
+summary = "The dihedral group D_n consists of the n rotations and n reflections of a cycle of n points. It models two things at once: the ways a block of n ciphertext positions can be re-read (rotate or reverse), and the ways a 26-letter cycle can be shifted or reflected, which is exactly the difference between Vigenère-type and Beaufort-type classes. Enumerating D_48 on three 48-letter blocks gives a finite family of 9,216 position hypotheses whose key equations collapse onto a small graph."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+$$D_n = \langle r, s \mid r^n = s^2 = 1,\; s r s = r^{-1} \rangle, \qquad |D_n| = 2n.$$
+As maps on $\mathbb{Z}_n$, write $g_{\varepsilon,\rho}(j) = \varepsilon j + \rho \pmod n$ with $\varepsilon \in \{+1, -1\}$: the $n$ rotations ($\varepsilon = +1$) and $n$ reflections ($\varepsilon = -1$). Composition and inverse:
+$$(\varepsilon_1, \rho_1) \circ (\varepsilon_2, \rho_2) = (\varepsilon_1 \varepsilon_2,\; \varepsilon_1 \rho_2 + \rho_1), \qquad (\varepsilon, \rho)^{-1} = (\varepsilon, -\varepsilon \rho).$$
+Every reflection is an involution. $D_{48}$ has 96 elements, all distinct as permutations of the 48 indices; $D_{26}$ acting on a letter cycle contains the Vigenère-type class maps (rotations) and the Beaufort-type class maps (reflections).
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Positional-dihedral family"
+body = '''
+Three 48-letter rows $C_0, C_1, C_2$ read from one latent stream $L$ through position maps $g_t$, unit coefficients and period-7 keys in physical index:
+$$z(C_t[g_t(j)]) \equiv a_t\, b\, z(L[j]) + K_t[g_t(j) \bmod 7], \qquad g_0 = \mathrm{id},\; g_1, g_2 \in D_{48},\; a_0 = 1,\; a_1, a_2, b \in U(\mathbb{Z}_{26}).$$
+Relabelling the latent $L \to L \circ h$ sends $g_t \to h^{-1} g_t$, so $g_0 = \mathrm{id}$ is a lossless normalisation and the $96^2 = 9{,}216$ ordered pairs $(g_1, g_2)$ are not an overcount.
+
+Because $g_t \ne g_u$ mixes residues, the aligned elimination through a common anchor is invalid; eliminating through row 0 instead gives
+$$z(C_t[j]) - r_t\, z(C_0[g_t(j)]) \equiv k_t[j \bmod 7] - r_t\, k_0[g_t(j) \bmod 7],$$
+constant on the **fibres** of $j \mapsto (j \bmod 7,\; g_t(j) \bmod 7)$. Build the graph on 21 vertices $(t, r)$ with an edge $(0, j \bmod 7) - (t, g_t(j) \bmod 7)$ for every $j$ and $t \in \{1,2\}$: 96 edges, $c$ components, $21 - c$ tree edges, $75 + c$ exact cycle equations, and only $c$ free key offsets. Note $48 = 6 \cdot 7 + 6$: residues 0 to 5 carry seven indices, residue 6 carries six.
+
+Aligned thirds ($g_t = \mathrm{id}$): $z(C_t[j]) - s_t s_u\, z(C_u[j]) \equiv h_{tu}[j \bmod 7]$, and bijectivity forces $C_t[j] = C_t[k] \Leftrightarrow C_u[j] = C_u[k]$ within a residue: $3\,(6\binom{7}{2} + \binom{6}{2}) = 423$ exact equality clauses.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- Position maps are dihedral (a rotation or reversal of the block), not arbitrary permutations of 48 positions.
+- One shared latent stream, one cycle, independent unit coefficient and period-7 key per row.
+- Equality-partition matching is a necessary condition only; arbitrary independent relabelings can preserve equality partitions, so a pass is not evidence for the family.
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+1. Enumerate all 9,216 ordered pairs; apply the exact all-pairs equality gate within every joint fibre (key-free); keep survivors.
+2. For each survivor and each of the 144 unit pairs, solve the $75 + c$ cycle equations over $\mathrm{GF}(2)$ and $\mathrm{GF}(13)$, lift by CRT, keep permutations, partition into affine orbits of 312.
+3. Score each orbit representative at all 12 absolute orientations with a compiled core that searches only the $26^c$ graph-consistent key offsets.
+4. Matched nulls permute the latent only within blocks of $(j \bmod 7, g_1(j) \bmod 7, g_2(j) \bmod 7)$, preserving every row histogram and the hidden equations, and rerun the complete selector per replicate.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Component census over all 9,216 cells: $c = 1$: 8,852; $c = 2$: 120; $c = 3$: 96; $c = 4$: 72; $c = 5$: 48; $c = 6$: 24; $c = 7$: 4. Constrained key work $\sum 26^c$ over cells is 40,146,426,216 against $9{,}216 \cdot 26^7 = 74{,}021{,}162{,}582{,}016$ unconstrained, a 1,844-fold reduction; 96 % of cells need only 26 keys. The four $c = 7$ cells are exactly $g_1, g_2 \in \{\mathrm{id},\, j \mapsto 47 - j\}$, the only elements that induce a bijection on residues. Residue-edge signatures: 40 (26 singletons and 14 classes of size 5), hence 1,600 pair signatures and a maximum alias class of 25. Singleton fibres, which contribute no equation, occur in 52 of the 96 elements.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- Porting the aligned anchored elimination to a reindexed row is silently wrong, not merely weaker.
+- Searching an unconstrained $26^7$ on a $c = 1$ cell admits $26^6$ keys that contradict the data; the graph constraint is a correctness requirement.
+- The null is heteroscedastic in $c$: internal maximisation over $26^c$ keys inflates a cell's null by roughly $\sigma\sqrt{2c\ln 26}$, from $2.553\sigma$ at $c = 1$ to $6.754\sigma$ at $c = 7$ (spread $4.20\sigma$). A threshold pooled over cells under-estimates the tail precisely at the four highest-freedom cells.
+- Multiplicity: a maximum over $M \approx 1.6 \times 10^7$ cells inflates the null by about $\sigma\sqrt{2 \ln M} \approx 5.76\sigma$, consuming most of a measured 13.63 sd aligned-cell separation.
+- Convention hazard: two implementations used transposed edge conventions; census and exceptional set agree, per-cell $c$ does not.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Seven frozen positive geometries with $c = 1..7$ recovered the exact held-out plaintext, raw positional pair, unit cell, orientation, affine gauge and independent forward (one raw survivor and 12 core calls each). An alias control with a repeated 24-letter latent half produced four raw survivors that selected one identical plaintext. Matched 100-replicate nulls: English $c = 1$ observed $-4{,}461{,}501$ against a null maximum of $-5{,}518{,}172$, rank 1/100; an IID latent ranked 83/100 and was rejected. A $q = 6$ graph KAT matched the CRT/null-space cycle set against all $6!$ cycles, 8/8. Aligned-thirds controls: one synthetic plant per sign partition satisfied all 423 clauses, one-coordinate edits rejected, 256 random profiles rejected.
+
+Target measurements: every one of the 9,216 raw positional pairs failed the equality gate (structural zero, terminal `POSITIONAL-DIHEDRAL UNIT FAMILY REJECTED`); the aligned-thirds necessary invariant failed (`ALIGNED-THIRDS FAMILY REJECTED`); the unit-ratio family gave zero cycles in all 144 cells. Each rejects only its declared finite family.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+In $D_{48}$ let $g_1 = (-1, 47)$, the reflection $j \mapsto 47 - j$, and $g_2 = (1, 7)$, rotation by 7. Then $g_1 \circ g_2 = (-1, (-1)\cdot 7 + 47) = (-1, 40)$ and $g_2 \circ g_1 = (-1, 47 + 7) = (-1, 6)$. Check $j = 10$: $g_1(g_2(10)) = 47 - 17 = 30 = -10 + 40$; $g_2(g_1(10)) = 37 + 7 = 44 \equiv -10 + 6$. The two products differ, as $s r \ne r s$.
+
+On a 26-letter cycle, Beaufort-type maps $\rho_k(x) = k - x$ are reflections and $\rho_k \rho_h(x) = k - (h - x) = x + (k - h)$ is the rotation by $k - h$.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The rotation/reflection distinction is the algebraic content of "Vigenère versus Beaufort" for classes sharing one cycle; see [Permutation cycles](/algebra/permutation-cycles). The key graph construction generalises to any two periods; see [Residue-class graphs](/algebra/residue-class-graphs).
+'''
+
+[[provenance]]
+path = "withmath/PK9_POSDIHEDRAL_D48_INDEPENDENT_REVIEW_CLAUDE.md"
+kind = "audit"
+note = "|D48| = 96, 9,216 ordered pairs, lossless g_0 = id, fibre elimination, 21-vertex key graph, component census, 1,844x reduction, 40/1,600 signatures, heteroscedastic null (R6), multiplicity (R5), convention hazard (P1)."
+
+[[provenance]]
+path = "withmath/PK9_POSDIHEDRAL_UNIT_CONTROL_AUDIT.md"
+kind = "audit"
+note = "Sealed controls: physical-index equation, 75 + c equations, 7/7 positives, alias control, matched nulls rank 1/100 and 83/100, q = 6 graph KAT 8/8."
+ref = "logs/pk9_posdihedral_unit_control.log"
+
+[[provenance]]
+path = "withmath/PK9_POSDIHEDRAL_NECESSARY_TARGET358_AUDIT.md"
+kind = "audit"
+note = "Target successor: equality-first transcript, resource certificates, structural terminals."
+
+[[provenance]]
+path = "withmath/logs/358_pk9_posdihedral_necessary_target.log"
+kind = "log"
+note = "All 9,216 raw pairs failed the equality gate; STRUCTURAL_ZERO; POSITIONAL-DIHEDRAL UNIT FAMILY REJECTED."
+ref = "LOG358"
+
+[[provenance]]
+path = "withmath/PK9_THIRDS_DIHEDRAL_CONTROL297_AUDIT.md"
+kind = "audit"
+note = "Aligned thirds: 423 equality clauses, four sign partitions, 256 random profiles rejected; necessary prefilter only."
+
+[[provenance]]
+path = "withmath/logs/306_pk9_thirds_dihedral_target.log"
+kind = "log"
+note = "NECESSARY INVARIANT FAIL; FROZEN ALIGNED-THIRDS FAMILY REJECTED."
+ref = "LOG306"
+
+[[provenance]]
+path = "withmath/logs/308_pk9_unitratio_necessary_target.log"
+kind = "log"
+note = "Unit-ratio family: zero cycles in all 144 cells."
+ref = "LOG308"
+
+[[provenance]]
+path = "withmath/PK9_PIECECYCLE_BEAU_CONTROL_AUDIT.md"
+kind = "audit"
+note = "Reflections as Beaufort-type class maps; products of reflections are rotations of one cycle."
+
+[[references]]
+title = "Groups and Symmetry"
+author = "M. A. Armstrong"
+year = 1988
+
+[[references]]
+title = "Abstract Algebra"
+author = "David S. Dummit and Richard M. Foote"
+year = 2004

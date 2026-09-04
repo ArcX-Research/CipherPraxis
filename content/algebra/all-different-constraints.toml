@@ -1,0 +1,143 @@
+id = "all-different-constraints"
+section = "algebra"
+title = "All-different constraints"
+subtitle = "The bijection requirement on an unknown alphabet as the decisive constraint of exact solvers"
+status = "VERIFIED"
+status_note = "The bijection constraint is what turns a linear system over Z26 into a decision. Rank consistency never rejects a guess (0/40 wrong crib pairs were linearly inconsistent); the CRT factorisation of all-different is verified against brute force (0 mismatches over 538,656 solutions); exact solvers built on it pass planted controls (32/32) and produced scoped exact negatives."
+family = "Combinatorial constraints"
+tags = ["all-different", "bijection", "CSP", "forward checking", "enumeration"]
+related = ["modular-inverse-and-crt", "finite-field-linear-algebra", "permutation-cycles", "residue-class-graphs", "all-different-enumeration", "constraint-satisfaction-forward-checking", "exact-chain-oracle", "word-prefix-csp", "corpus-bank-screen", "crib-driven-alphabet-recovery", "g-all-different", "g-nullity"]
+summary = "An unknown cipher alphabet assigns each of 26 letters a distinct position, so any candidate solution must satisfy AllDifferent over the 26 coordinates. Linear cipher relations alone almost never contradict a wrong guess; the contradiction appears only when the linear solutions are required to be permutations. The corpus enforces the constraint incrementally in search, exactly through a CRT factorisation, and always keeps every distinct permutation read of a system rather than the best-scoring one."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For a coordinate function $z$ on the alphabet, $\mathrm{AllDifferent}(z(A), \dots, z(Z))$ requires $z$ to be injective, hence a bijection onto $\mathbb{Z}_{26}$. In a search, a **partial assignment** must be injective on the letters assigned so far and extendable; in an exact solver the constraint is imposed on the full solution set of the linear relations. Unobserved letters are free: the constraint ranges over the letters that occur in the crib and at the relevant ciphertext positions.
+'''
+
+[[blocks]]
+kind = "equations"
+body = '''
+- **CRT form.** $z$ is a permutation of $0..25$ iff each residue modulo 13 occurs exactly twice and the two carriers have opposite parity; the parity requirements are linear in the $\mathrm{GF}(2)$ null-space coefficients once the $\mathrm{GF}(13)$ vector is fixed.
+- **Potential form (union-find).** Maintaining $z(x) = s\, z(\mathrm{root}) + t$ with $s = \pm 1$ along accepted edges, a new edge is rejected if it forces two letters equal; a sign-mismatch cycle pins the root to a solution of $2z = c$, and a pinned root must admit a collision-free value.
+- **Key-free shadow.** Bijectivity of $z$ implies, within one key class, $C_i = C_j \Leftrightarrow P_i = P_j$; the equality partitions of ciphertext and plaintext must agree. This is the necessary condition tested before any algebra.
+- **Cycle-type shadow.** A single 26-cycle solution must have no closed sub-cycle in any partial map (see [Permutation cycles](/algebra/permutation-cycles)).
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- One alphabet; with several unrelated alphabets the constraint applies per alphabet and is much weaker.
+- The linear relations are exact; a single wrong crib letter turns a feasible system into an infeasible one, which is the point.
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+1. Solve the linear relations over $\mathrm{GF}(2)$ and $\mathrm{GF}(13)$ and enumerate only permutation lifts; a guess whose null space admits no permutation is rejected exactly.
+2. Retain **every** distinct all-different read of a system for later ranking.
+3. In depth-first word or block assignment, check injectivity of each observed residue map after every assignment, run the CRT feasibility test on the incremental echelon bases, and defer (never reject) a branch whose test exceeds its cap.
+4. Use the equality-partition gate and the collision implications as free pre-filters on candidate texts.
+5. Score survivors by language only after the exact stage, and require independent forwards.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Exact crib-pair solver: 245,766 pairs, all linearly consistent, resolved only by enumeration; its $f_{13} = 5$ tail processed 8,851 systems at $13^7$ each. Shift-free crib solver: 52,100 exact solves at about $0.01$ s each. Corpus screen: 40,331 offsets (39,528 unique prefixes) passed through the exact oracle under all four sign pairs. Depth-first shared-cycle solver on a 96-letter zone: 73,528 tasks and 793,712,197 nodes (Vigenère-type), 33,540 tasks and 47,310,816 nodes (Beaufort-type), both complete.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Non-injective potentials pass every linear check.** Without the all-different test the potential $z' = 2z$ with keys $k' = 2k$ was fully consistent with the relations; only injectivity exposed it.
+- **Keeping only the best partial read.** A planted system whose true read ranked 2nd of 6 all-different reads was lost under that rule; the corrected rule retains all reads.
+- **Rejecting on cap exhaustion** instead of deferring the branch.
+- **Single-word guesses.** One English word of up to about 20 letters leaves nullities far too large to enumerate; exact rejection needs two long cribs or one crib plus enough fixed letters.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+CRT factorisation set-identical to full-product enumeration and to brute force over 240 systems / 538,656 solutions. Exact crib solver 32/32 at crib length 26; live screen of 26,050 corpus openings under both signs yielded 0 feasible prefixes (a scoped negative for verbatim openings). Tail-continuation KAT: planted $f_{13} = 5$ pair recovered at index 1,459 of 3,482 systems; target: 8,851 systems, zero all-different reads, no candidate. Depth-first solver: identity-permutation positive KAT, differential enumeration KAT, two blind planted endpoints found after 27,361 of 63,629 and 110 of 78,002 tasks; live traversals complete with zero endpoints and zero over-cap terminals in both relations.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Gauge $z(A) = 0$. Relations $z(B) - z(A) \equiv 13$ and $z(C) - z(B) \equiv 13$ give $z(B) = 13$ and $z(C) = 26 \equiv 0 = z(A)$: linearly consistent, but $A$ and $C$ collide, so the system has no permutation solution and is rejected. In CRT terms $z(A) = (0, 0)$ and $z(B) = (1, 0)$ share residue 0 modulo 13 with opposite parities (allowed), while $z(C) = (0, 0)$ duplicates $z(A)$ (forbidden). Replacing the second relation by $z(C) - z(B) \equiv 5$ gives $z(C) = 18 = (0, 5)$, and all three coexist.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The corpus's rule of thumb: rank guesses by enumeration cost ($f_{13}$), never by consistency; require at least two cribs before calling a rejection exact; keep every read. The exact machinery is described under [All-different enumeration](/exact/all-different-enumeration) and [Exact chain oracle](/exact/exact-chain-oracle).
+'''
+
+[[provenance]]
+path = "withmath/SHARED_CYCLE_CHAIN_EQUATION_AUDIT_CLAUDE.md"
+kind = "audit"
+note = "Ranks alone never reject; 0/40 wrong pairs linearly inconsistent; all-different must range over letters occurring in crib and ciphertext positions; keep every read."
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "245,766 pairs all linearly consistent; rejection only from all-different."
+ref = "LOG387"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "KAT: true read ranked 2nd of 6 under the best-read rule; corrected to retain every read; planted pair recovered at index 1,459; target 8,851 systems, zero all-different reads."
+ref = "LOG390"
+
+[[provenance]]
+path = "withmath/logs/390_instructioncrib_tail.log"
+kind = "log"
+note = "Tail continuation transcript."
+ref = "LOG390"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Brute-force verification 240 systems / 538,656 solutions; 32/32 controls; 26,050 windows, 52,100 exact solves, 0 feasible prefixes."
+ref = "LOG409"
+
+[[provenance]]
+path = "withmath/logs/409b_c9key_exact_live.log"
+kind = "log"
+note = "Gated exact crib CSP live pass."
+ref = "LOG409"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Corpus screen: 40,331 offsets / 39,528 unique prefixes through the exact oracle under all four sign pairs; zero endpoints."
+ref = "LOG407"
+
+[[provenance]]
+path = "withmath/PK9_BIP39_CRT445_NOTE.md"
+kind = "note"
+note = "Incremental injectivity and CRT feasibility in DFS, exact_deferred branches, task and node censuses of the blind controls and the complete live traversals."
+
+[[provenance]]
+path = "withmath/PK9_BLINDEXPONENT443_NOTE.md"
+kind = "note"
+note = "Affine union-find with all-different after every accepted edge; the non-injective potential z' = 2z lesson."
+
+[[provenance]]
+path = "withmath/PK9_POSDIHEDRAL_D48_INDEPENDENT_REVIEW_CLAUDE.md"
+kind = "audit"
+note = "All-different factorises through CRT; set-identical to full-product enumeration."
+
+[[references]]
+title = "A filtering algorithm for constraints of difference in CSPs"
+author = "Jean-Charles Régin"
+year = 1994
+
+[[references]]
+title = "Constraint Processing"
+author = "Rina Dechter"
+year = 2003

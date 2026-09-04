@@ -1,0 +1,139 @@
+id = "modular-inverse-and-crt"
+section = "algebra"
+title = "Modular inverses and the Chinese remainder theorem"
+subtitle = "Extended Euclid, the splitting Z26 ≅ Z2 × Z13, and the CRT factorisation of the bijection constraint"
+status = "VERIFIED"
+status_note = "Inverses and the two-prime decomposition are the working representation of every exact cycle solver in the corpus; the CRT factorisation of the all-different constraint was verified set-identical to brute-force enumeration (240 systems, 538,656 solutions, 0 mismatches), and solvers built on it pass planted controls (32/32 exact crib solves; 4/4 lagged-recurrence primers)."
+family = "Number theory"
+tags = ["inverse", "CRT", "extended Euclid", "lift", "GF(13)"]
+related = ["modular-arithmetic-z26", "units-mod-26", "finite-field-linear-algebra", "all-different-constraints", "matrix-invertibility-mod-26", "linear-recurrences-lcg", "all-different-enumeration", "exact-chain-oracle", "crt-lab", "gromark", "g-residue-class", "g-nullity"]
+summary = "An element of Z26 is invertible exactly when it is coprime to 26, and the extended Euclidean algorithm produces the inverse. The Chinese remainder theorem identifies Z26 with pairs (residue mod 2, residue mod 13), so a linear system over Z26 is solved over the two fields GF(2) and GF(13) and lifted back. The same splitting turns the requirement that 26 unknown positions form a permutation into a cheap test on the two factors, which is what makes exact alphabet enumeration feasible."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+$a$ has an inverse modulo $n$ iff $\gcd(a, n) = 1$; the extended Euclidean algorithm finds $x, y$ with $ax + ny = 1$, and $a^{-1} \equiv x$. For coprime $m, q$ the **Chinese remainder theorem** says that $x \mapsto (x \bmod m,\; x \bmod q)$ is a ring isomorphism $\mathbb{Z}_{mq} \cong \mathbb{Z}_m \times \mathbb{Z}_q$. For $26 = 2 \cdot 13$ the lift is explicit:
+$$z \equiv 13\,z_2 + 14\,z_{13} \pmod{26},$$
+because $13 \equiv 1 \pmod 2$, $13 \equiv 0 \pmod{13}$, $14 \equiv 0 \pmod 2$ and $14 \equiv 1 \pmod{13}$.
+'''
+
+[[blocks]]
+kind = "equations"
+body = '''
+**Linear systems.** The solutions of $M z \equiv 0 \pmod{26}$ are exactly the CRT lifts of pairs of solutions over $\mathrm{GF}(2)$ and $\mathrm{GF}(13)$. With nullities $d_2$ and $d_{13}$ the solution count is $2^{d_2} \cdot 13^{d_{13}}$.
+
+**All-different through CRT.** A vector $z \in \mathbb{Z}_{26}^{26}$ is a permutation of $0..25$ iff $x \mapsto (z_x \bmod 2, z_x \bmod 13)$ is a bijection onto $\mathbb{Z}_2 \times \mathbb{Z}_{13}$, iff
+(a) every residue modulo 13 occurs exactly twice, and
+(b) the two indices carrying each residue have opposite parity.
+Condition (a) filters the $\mathrm{GF}(13)$ factor alone; condition (b) joins the factors and, for a fixed $\mathrm{GF}(13)$ vector, is a set of linear equations on the $\mathrm{GF}(2)$ null-space coefficients. The work is $2^{d_2} + 13^{d_{13}}$ rather than the product.
+
+**Projective enumeration.** Non-zero $\mathrm{GF}(13)$ null vectors can be enumerated up to scalar multiples: multiplying all coordinates by a non-zero scalar preserves residue-pair equality, the parity equations and permutation feasibility.
+
+**Decimal running keys.** $\mathbb{Z}_{10} \cong \mathbb{Z}_2 \times \mathbb{Z}_5$ splits a lagged-Fibonacci digit recurrence into two independent recurrences, which allows a meet-in-the-middle over primer halves.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The modulus is squarefree with known factorisation ($26$, $10$); the CRT needs coprime factors. Prime-power moduli need Hensel lifting instead.
+- Inverses exist only for units; equations with non-unit coefficients (for example $2x \equiv c$) are handled by the two-factor view, not by division.
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+1. Fix the translation gauge $z(A) = 0$ (when it is a symmetry of the model), leaving 25 unknown positions.
+2. Row-reduce the homogeneous system over $\mathrm{GF}(2)$ and, independently, over $\mathrm{GF}(13)$.
+3. Enumerate the $\mathrm{GF}(13)$ null space projectively and keep vectors with each residue exactly twice.
+4. For each survivor solve the parity conditions in the $\mathrm{GF}(2)$ null space; lift; verify a literal permutation of $0..25$; canonicalise over the 12 units; re-check every original equation.
+5. Rank crib guesses by $d_{13}$, which is the search cost, never by consistency, which is automatic for a homogeneous system.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+$2^{d_2} + 13^{d_{13}}$ instead of $2^{d_2} \cdot 13^{d_{13}}$: a $2^5 \cdot 13^5 = 11{,}881{,}376$ geometry was resolved in 371,325 units of work, about $0.1$ s. Budgets seen in practice: $13^5 = 371{,}293$ vectors per system as an enumeration cap, $13^7 = 62{,}748{,}517$ as the per-system budget of an exact crib-pair solver. Caps of $2^{18}$ $\mathrm{GF}(2)$ vectors, $13^5$ $\mathrm{GF}(13)$ vectors and 1,500,000 CRT pairs are declared boundaries that return INCOMPLETE, never a negative.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- Forming the raw Cartesian product of the two null spaces and filtering afterwards.
+- Reading rank consistency as evidence: with a gauge row the system is homogeneous and always consistent; only the nullities carry information.
+- Silently turning a cap exhaustion into a zero. In depth-first solvers a branch whose partial all-different test exceeds its cap must be retained (deferred), not rejected.
+- Counting residues without first restoring the fixed coordinate $z(A) = 0$.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Known-answer tests enumerate all $2 \times 3$ matrices over $\mathrm{GF}(2)$ (64 complete null spaces), all $1 \times 2$ rows over $\mathrm{GF}(13)$ (169), 64 literal 26-position CRT permutations and 1,248 independent forwards. The CRT factorisation was cross-checked against brute force over 240 systems and 538,656 solutions with 0 mismatches. A shift-free exact crib solver recovered 32/32 planted alphabets at crib length 26, about $0.01$ s per solve with typical $d_2, d_{13}$ of 2 to 4 and 12 to 24 solutions per crib. A depth-first shared-cycle solver carries a differential KAT of its projective enumeration against all $13^d$ vectors and recovered two blind planted endpoints. The decimal-recurrence meet-in-the-middle recovered 4/4 exact primers.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Inverse of 7 modulo 26: $26 = 3 \cdot 7 + 5$, $7 = 1 \cdot 5 + 2$, $5 = 2 \cdot 2 + 1$; back-substituting, $1 = 5 - 2 \cdot 2 = 5 - 2(7 - 5) = 3 \cdot 5 - 2 \cdot 7 = 3(26 - 3 \cdot 7) - 2 \cdot 7 = 3 \cdot 26 - 11 \cdot 7$, so $7^{-1} \equiv -11 \equiv 15$. Check: $7 \cdot 15 = 105 = 4 \cdot 26 + 1$.
+
+CRT: $x \equiv 2 \pmod 3$ and $x \equiv 3 \pmod 5$ give $x \equiv 8 \pmod{15}$; indeed $8 = 2 \cdot 3 + 2$ and $8 = 5 + 3$.
+
+Lift in $\mathbb{Z}_{26}$: $(z_2, z_{13}) = (1, 4)$ gives $13 \cdot 1 + 14 \cdot 4 = 69 \equiv 17$; check $17 \bmod 2 = 1$ and $17 \bmod 13 = 4$.
+
+All-different check: positions $4$ and $17$ share the residue $4$ modulo 13 and have parities $0$ and $1$, so they may coexist in a permutation; positions $4$ and $30 \equiv 4$ would collide.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Because every unit is odd, the $\mathrm{GF}(2)$ part of a unit-ratio system is identical across all unit hypotheses; the CRT view is what makes that observation exact. See [Finite-field linear algebra](/algebra/finite-field-linear-algebra) for the row reduction and [All-different constraints](/algebra/all-different-constraints) for the enumeration discipline.
+'''
+
+[[provenance]]
+path = "withmath/PK9_POSDIHEDRAL_D48_INDEPENDENT_REVIEW_CLAUDE.md"
+kind = "audit"
+note = "R4: all-different factorises through CRT; work 2^d2 + 13^d13; a 2^5 x 13^5 = 11,881,376 geometry resolved in 371,325 units of work (~0.1 s); verified set-identical to full-product enumeration."
+
+[[provenance]]
+path = "withmath/PK9_UNITRATIO_NECESSARY_TARGET308_AUDIT.md"
+kind = "audit"
+note = "Explicit lift z = 13 z2 + 14 z13; F2 RREF identical across all unit cells."
+
+[[provenance]]
+path = "withmath/PK9_BIP39_CRT445_NOTE.md"
+kind = "note"
+note = "Incremental GF(2)/GF(13) echelon bases, parity conditions as linear equations on GF(2) coefficients, projective enumeration with a differential KAT against all 13^d vectors, exact_deferred branches, two blind planted recoveries."
+
+[[provenance]]
+path = "withmath/PK89_COMMONPLAIN_INVARIANT_CONTROL_AUDIT.md"
+kind = "audit"
+note = "KAT counts: 64 GF(2) matrices, 169 GF(13) rows, 64 literal CRT permutations, 1,248 forwards; caps 2^18, 13^5, 1,500,000 as INCOMPLETE boundaries."
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Exact crib CSP: CRT all-different factorisation checked against brute force over 240 systems / 538,656 solutions, 0 mismatches; 32/32 exact recoveries at crib length 26, ~0.01 s per solve."
+ref = "LOG409"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Per-system enumeration budget 13^7 in the exact crib-pair tail continuation."
+ref = "LOG390"
+
+[[provenance]]
+path = "withmath/GROMARK67_RECURRENCE_AUDIT.md"
+kind = "audit"
+note = "Z/10Z = Z/2Z x Z/5Z split of the lagged digit recurrence; meet-in-the-middle over primer halves; 4/4 controls with exact primers."
+ref = "logs/212_gromark67_recurrence.log"
+
+[[references]]
+title = "The Art of Computer Programming, Volume 2: Seminumerical Algorithms"
+author = "Donald E. Knuth"
+year = 1997
+
+[[references]]
+title = "Chinese Remainder Theorem: Applications in Computing, Coding, Cryptography"
+author = "C. Ding, D. Pei and A. Salomaa"
+year = 1996

@@ -1,0 +1,133 @@
+id = "autokey"
+section = "ciphers"
+title = "Autokey cipher"
+subtitle = "A primer followed by the plaintext (or ciphertext) itself as the running key"
+status = "CLOSED"
+status_note = "Straight-alphabet plaintext autokey (Vigenère and Beaufort) was control-qualified at 153, 144 and 504 letters with exact primer recovery and excluded on all three texts; the ciphertext-autokey variant with an unknown alphabet failed every 504-letter control (10-13% plaintext) and is power-limited."
+family = "Stream and machine ciphers"
+tags = ["autokey", "feedback", "primer", "aperiodic"]
+related = ["vigenere", "beaufort", "porta", "running-key", "condi", "autokey-difference-periodicity", "key-cancellation", "beam-search", "g-autokey-primer"]
+summary = "An autokey removes the period of a Vigenère by continuing the key with the message itself. In the plaintext-fed form each primer letter seeds one chain of letters spaced by the primer length, so a wrong primer letter alternates its whole chain between two shifts; in the ciphertext-fed form the plaintext is a lag difference of the ciphertext and the primer drops out entirely. The program audited both forms with target-length controls and independent forward implementations."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For a primer $R$ of length $m$ the key stream is $K_i = R_i$ for $i < m$ and $K_i = p_{i-m}$ for $i \ge m$. The three audited relations in a straight alphabet are
+
+$$\text{Vigenère: } c_i \equiv p_i + K_i, \qquad \text{Beaufort: } c_i \equiv K_i - p_i, \qquad \text{Porta: rows selected by } \lfloor K_i / 2 \rfloor,$$
+
+all modulo 26. Ciphertext autokey instead uses $K_i = c_{i-m}$, so that in an index order $a$: $a(p_i) = x_i - x_{i-m}$ (Vigenère), $x_i + x_{i-m}$ (Variant) or $x_{i-m} - x_i$ (Beaufort) with $x = a(c)$.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Chains and the primer-free difference"
+body = '''
+In plaintext autokey, position $i$ belongs to chain $i \bmod m$; decrypting chain $r$ with the wrong primer letter $R_r + \delta$ gives plaintext letters alternately shifted by $-\delta$ and $+\delta$, so a half-right primer yields an intermediate index of coincidence rather than gibberish. In ciphertext autokey the difference text $x_i - x_{i-m}$ is the plaintext from position $m$ onward for the true $m$, independent of the primer; the primer prefix is unidentifiable and is never scored. For Porta the primer is identifiable only up to the pair classes A/B, C/D, and so on.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Plaintext-fed** Vigenère, Beaufort or Porta with a primer of length 1 to 40.
+- **Ciphertext-fed** with a straight or arbitrary 26-cycle order.
+- **Autokey under a periodic layer**: $c_i = A[p_i + p_{i-7} + u_b]$, a period-7 outer key over a plaintext autokey with a seven-letter primer (14 parameters).
+- **Interrupted key** and [Condi](/ciphers/condi) are neighbouring feedback constructions.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- One alphabet order and one relation for the whole text.
+- Invariant: plaintext autokey has no period, but the chains of spacing $m$ have the coincidence statistics of a shifted text, so $m$ is visible as a lag.
+- Invariant: ciphertext autokey makes the lag-$m$ difference text periodic-free plaintext; a difference-text periodicity scan finds $m$ without any key (see [Autokey difference periodicity](/cryptanalysis/autokey-difference-periodicity)).
+- Any fitted primer round-trips; only control recovery counts.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Scan primer lengths 1 to 40 (6 to 20 in the earlier lane), both alphabets and relations, scoring each chain's best shift, confidence gap, index of coincidence and monogram likelihood against 100 shuffled runs per length.
+2. Search the primer with an external proposal generator and re-solve chains by coordinate descent on quadgrams of the un-transposed text; for ciphertext autokey jointly select $m$, the cycle and the relation on the common suffix with 960 chains of 2,500 steps plus exact-neighbour polish.
+3. Require the control to recover 100% plaintext, the primer (modulo Porta's pair equivalence) and an independent forward reconstruction before the same-length live text is run; require an English verdict before any null.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Primer scan: $40 \times 2 \times 3$ configurations, each a vectorised chain fit. Ciphertext-autokey with an unknown cycle: the joint state has a 26-cycle, $m$ and a relation; 960 chains of 2,500 steps per 504-letter control.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Partial-language overfit.** The plaintext-autokey endpoints on the two short texts scored $-5.37$ / $-5.03$ (Vigenère) and $-5.51$ / $-5.27$ (Beaufort): selected fragments, not English, and the 504-letter text was a hard no at $-6.93$ / $-6.89$.
+- **Porta power.** The Porta autokey controls at 144 and 504 letters reached only 97.22% and 99.21% plaintext (99.60% after a deeper rerun) with the wrong primer class, so those targets stayed locked.
+- **Unknown cycle.** The ciphertext-autokey screen recovered only 10.46%, 9.24% and 13.32% of hidden suffixes on its three 504-letter controls and was never run on the live text.
+- **Under a periodic layer.** The 14-parameter coordinate-descent control reached 86% match (Vigenère-type) but 1-8% for the other three sign combinations at 153 letters.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Plaintext autokey (log 185): Vigenère and Beaufort controls at 153, 144 and 504 letters recovered 100% plaintext, the hidden 17- and 19-letter primers and independent forward ciphertexts; Porta at 153 letters exact, at 144 and 504 letters locked as above. Ciphertext autokey with an unknown cycle (log 189): 0/3 controls. Periodic layer over plaintext autokey (logs/11_misc.log): control 86% for the additive case. Earlier lane (ck_pk9_autokey.py): the flagged 12-letter-primer configuration on one text (IC 0.0557 against a null maximum of 0.0478) was re-tested against 100 shuffled runs per primer length.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Plaintext autokey, Vigenère relation, primer `QUEEN`, plaintext `ATTACKATDAWN`:
+
+```
+plain   A T T A C K A T D A W N
+key     Q U E E N A T T A C K A
+cipher  Q N X E P K T M D C G N
+```
+
+Check position 5: key is $p_0$ = `A`, so $K + A = K$. Position 7: $T + T = 38 \equiv 12 = M$. Decryption recovers the first five letters with the primer and then feeds each recovered letter forward as key.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The closure covers straight-alphabet plaintext autokey with Vigenère and Beaufort relations on three texts of 153, 144 and 504 letters at the demonstrated control power; Porta autokey is closed only at 153 letters; ciphertext autokey with an unknown order is a decoder-power result only.
+'''
+
+[[provenance]]
+path = "withmath/AUTOKEY_AUDIT.md"
+kind = "audit"
+note = "Log 185: plaintext autokey audit design; Vigenère, Beaufort and Porta relations; controls at exact target lengths."
+ref = "logs/185_autokey_audit.log"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Log 185 RESULT: V/B controls 100% with 17/19-letter primers; live rates -5.373/-5.026, -5.509/-5.268, -6.934/-6.885; Porta 97.22%/99.21%."
+ref = "LOG185"
+
+[[provenance]]
+path = "withmath/wm_ctautokey_cycle.py"
+kind = "solver"
+note = "Unknown-cycle ciphertext autokey: 0/3 controls at 10.46%, 9.24%, 13.32%."
+ref = "logs/189_ctautokey_cycle.log"
+
+[[provenance]]
+path = "withmath/wm_misc.py"
+kind = "solver"
+note = "Test B: period-7 layer over a plaintext autokey with a 7-letter primer; control 86%."
+ref = "logs/11_misc.log"
+
+[[provenance]]
+path = "ck_pk9_autokey.py"
+kind = "solver"
+note = "Primer-length scan 6-20, chain statistics, ciphertext-fed difference test, dictionary primers, columnar follow-up."
+ref = "ck_logs/42_pk9_autokey.log"
+
+[[references]]
+title = "Military Cryptanalysis, Part II"
+author = "William F. Friedman"
+year = 1938

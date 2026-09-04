@@ -1,0 +1,114 @@
+id = "literature-classical-ciphers"
+section = "references"
+title = "Classical cipher literature"
+subtitle = "Primary and standard secondary sources for the cipher models in the taxonomy"
+status = "VERIFIED"
+status_note = "Bibliographic entry: the works listed are the standard sources for the constructions described in the cipher taxonomy; no experimental claim is made here."
+family = "Literature"
+tags = ["bibliography", "classical ciphers", "history"]
+related = ["vigenere", "beaufort", "porta", "quagmire-iii", "alberti-progressive", "chaocipher", "bifid", "trifid", "hill-cipher", "playfair", "gromark", "condi", "columnar-transposition", "literature-cryptanalysis-statistics"]
+summary = "The sources behind the cipher taxonomy: Alberti's disc and the sixteenth-century polyalphabetic tradition, the nineteenth-century field ciphers and their fractionating descendants, Hill's algebraic cipher, the recreational cipher types standardised by the American Cryptogram Association, and the one twentieth-century hand cipher whose mechanism stayed secret for six decades. Kahn and Bauer are the surveys; Friedman's Military Cryptanalysis is the reference for how each was attacked."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "notes"
+body = '''
+Reading order for a newcomer: Kahn for the history and vocabulary; Friedman's four parts for the systematic treatment of monoalphabetic, periodic, aperiodic and transposition/fractionation systems; the ACA type descriptions for the exact conventions (keyed alphabets, Quagmire numbering, Gromark and Condi key streams) used by recreational solvers and by this atlas; then the primary sources for the constructions themselves. Rubin's disclosure of the Chaocipher mechanism is the reference for that model, since Byrne's own book describes the cipher's history but not its algorithm.
+'''
+
+[[references]]
+title = "The Codebreakers: The Story of Secret Writing"
+author = "David Kahn"
+year = 1967
+
+[[references]]
+title = "Decrypted Secrets: Methods and Maxims of Cryptology"
+author = "Friedrich L. Bauer"
+year = 1997
+
+[[references]]
+title = "Military Cryptanalysis, Part I: Monoalphabetic Substitution Systems"
+author = "William F. Friedman"
+year = 1938
+
+[[references]]
+title = "Military Cryptanalysis, Part II: Simpler Varieties of Polyalphabetic Substitution Systems"
+author = "William F. Friedman"
+year = 1938
+
+[[references]]
+title = "Military Cryptanalysis, Part III: Simpler Varieties of Aperiodic Substitution Systems"
+author = "William F. Friedman"
+year = 1939
+
+[[references]]
+title = "Military Cryptanalysis, Part IV: Transposition and Fractionating Systems"
+author = "William F. Friedman"
+year = 1941
+
+[[references]]
+title = "Cryptanalysis: A Study of Ciphers and Their Solution"
+author = "Helen Fouché Gaines"
+year = 1939
+
+[[references]]
+title = "De componendis cifris"
+author = "Leon Battista Alberti"
+year = 1467
+
+[[references]]
+title = "La cifra del Sig. Giovan Battista Bellaso"
+author = "Giovan Battista Bellaso"
+year = 1553
+
+[[references]]
+title = "De Furtivis Literarum Notis"
+author = "Giovanni Battista della Porta"
+year = 1563
+
+[[references]]
+title = "Traicté des chiffres, ou secrètes manières d'escrire"
+author = "Blaise de Vigenère"
+year = 1586
+
+[[references]]
+title = "Die Geheimschriften und die Dechiffrir-Kunst"
+author = "Friedrich W. Kasiski"
+year = 1863
+
+[[references]]
+title = "Traité Élémentaire de Cryptographie"
+author = "Félix Delastelle"
+year = 1902
+
+[[references]]
+title = "Cryptography in an Algebraic Alphabet"
+author = "Lester S. Hill"
+year = 1929
+
+[[references]]
+title = "Concerning Certain Linear Transformation Apparatus of Cryptography"
+author = "Lester S. Hill"
+year = 1931
+
+[[references]]
+title = "Silent Years: An Autobiography with Memoirs of James Joyce and Our Ireland"
+author = "John F. Byrne"
+year = 1953
+
+[[references]]
+title = "Chaocipher Revealed: The Algorithm"
+author = "Moshe Rubin"
+year = 2010
+url = "https://www.mountainvistasoft.com/chaocipher/ActualChaocipher/Chaocipher-Revealed-Algorithm.pdf"
+
+[[references]]
+title = "John F. Byrne's Chaocipher Revealed: An Historical and Technical Appraisal (Cryptologia 35:4)"
+author = "Moshe Rubin"
+year = 2011
+
+[[references]]
+title = "The ACA and You: Handbook of the American Cryptogram Association (cipher type descriptions)"
+author = "American Cryptogram Association"
+year = 2005
+url = "https://www.cryptogram.org/resource-area/cipher-types/"

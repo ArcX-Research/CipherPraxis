@@ -1,0 +1,108 @@
+id = "one-time-pad"
+section = "ciphers"
+title = "One-time pad"
+subtitle = "Additive cipher with a uniformly random key used once"
+status = "UNTESTED"
+status_note = "The corpus contains an encryption utility (a 153-letter pad from a fixed key text, plain or keyed tableau, with a decryption check) but no cryptanalytic lane, because a genuinely random single-use key admits none; the entry documents the model and its role as the limit of the running-key family."
+family = "Stream and machine ciphers"
+tags = ["additive", "random key", "perfect secrecy", "unbreakable"]
+related = ["vigenere", "running-key", "book-cipher", "autokey", "index-of-coincidence", "g-tabula-recta"]
+summary = "A one-time pad adds a key letter to each plaintext letter where the key is uniformly random, as long as the message, and never reused. Every plaintext of the same length is then equally consistent with the ciphertext, so no statistic can decide between them. It is the reference point against which running-key and book ciphers are understood: those are pads whose key has structure, and structure is all a cryptanalyst has."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+With a key $k_0 \dots k_{n-1}$ drawn uniformly and independently from $\mathbb{Z}_{26}$,
+
+$$c_i \equiv p_i + k_i \pmod{26}, \qquad p_i \equiv c_i - k_i \pmod{26}.$$
+
+For any fixed plaintext the ciphertext is uniform over $\mathbb{Z}_{26}^n$, and for any ciphertext every plaintext has exactly one key that produces it.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Perfect secrecy and its failure modes"
+body = '''
+$\Pr[c \mid p] = 26^{-n}$ for every $p$, so $\Pr[p \mid c] = \Pr[p]$: the ciphertext carries no information. The guarantee depends on all three conditions. A reused pad leaks $c^{(1)} - c^{(2)} = p^{(1)} - p^{(2)}$, the same relation the program's cross-text tests look for between two ciphertexts; a key drawn from language is a [running key](/ciphers/running-key); a key shorter than the message is a Vigenère. In a keyed tableau the same arithmetic runs on $\operatorname{pos}_A$.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Plain tableau** (straight alphabet) or **keyed tableau** (the key text and message indexed in a mixed order).
+- **Word-initial pads**: the corpus utility derives its 153-letter key from the initial letters of the words of a fixed text; such a key is not uniformly random and is only as secret as the text.
+- **Reused pad**: two messages under one key, which reduces to a two-plaintext running-key problem.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Uniform, independent key letters; single use; key length at least the message length.
+- Invariant: the ciphertext index of coincidence is at the uniform level $1/26 \approx 0.038$ and no lag shows a coincidence peak; a ciphertext with a period signature is not a one-time pad.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+There is none against a correctly used pad. What can be tested is whether a ciphertext *is* one: a flat histogram, uniform-level index of coincidence and an empty lag profile are consistent with a pad (and with any strong cipher), and any departure from them is evidence of structure. Between two ciphertexts, the difference test above detects a reused key.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Encryption and decryption are $O(n)$. The information-theoretic cost of an attack is infinite: all $26^n$ keys are equally likely.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Key reuse** turns two pads into one running-key problem with two language streams.
+- **Structured key** (text initials, a book passage) makes the pad a book cipher; the key is recoverable once the source is guessed.
+- **Key transmission**: the pad must reach the recipient, which in practice means the key must be stored or hidden somewhere.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+No planted-control receipt exists for this entry; the corpus utility only verifies that its own panel decrypts back to the message. The uniform-level statistics that a pad would produce (index of coincidence 0.037-0.051 and 21-22 distinct letters per 26-letter window in the random-looking segments of the corpus texts) are reported by the measurement lanes but were not attributed to a pad.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Plaintext `HELLO`, key `XMCKL` (used once):
+
+```
+plain   H  E  L  L  O
+key     X  M  C  K  L
+sum     30 16 13 21 25
+cipher  E  Q  N  V  Z
+```
+
+Check: $H + X = 7 + 23 = 30 \equiv 4 = E$. With key `TQURI` instead, `EQNVZ` would decrypt to `LATER`; both keys are equally likely a priori.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The entry exists so that the running-key and book-cipher pages have their theoretical limit stated: an attack on those ciphers is exactly an attack on the structure of their keys.
+'''
+
+[[provenance]]
+path = "poem_pad.py"
+kind = "script"
+note = "Encryption utility: a 153-letter pad from word initials, plain or keyed tableau, panel output and decryption check; no cryptanalysis."
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Step 3 facts: random-looking segments with IC 0.037-0.051 and 21-22 distinct letters of 26, consistent with uniform draws."
+
+[[references]]
+title = "Communication Theory of Secrecy Systems"
+author = "Claude E. Shannon"
+year = 1949

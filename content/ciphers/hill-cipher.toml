@@ -1,0 +1,135 @@
+id = "hill-cipher"
+section = "ciphers"
+title = "Hill cipher"
+subtitle = "Linear block substitution by an invertible matrix over Z26"
+status = "VERIFIED"
+status_note = "Arbitrary-matrix attacks are control-qualified at every tested size: Hill-2 over a periodic layer (96- and 126-letter controls exact), Hill-3 with 15,372 primitive rows (controls at 153, 144 and 504 letters), and direct Hill-4 (two random GL(4) controls exact); the dictionary-matrix screen in the recipe-free cascade recovered a solved corpus text."
+family = "Polygraphic substitution"
+tags = ["polygraphic", "linear", "matrix", "block"]
+related = ["affine-cipher", "playfair", "matrix-invertibility-mod-26", "finite-field-linear-algebra", "units-mod-26", "periodic-substitution-dp", "meet-in-the-middle", "family-wise-null", "hill-lab", "g-polygraphic"]
+summary = "The Hill cipher multiplies each block of d letters by an invertible d x d matrix modulo 26. Decryption separates by row: each row of the inverse matrix produces every d-th plaintext letter on its own, so rows can be scored independently on their decimated streams and joined only when the assembled matrix is invertible. The program used this row separability to attack arbitrary matrices of sizes 2, 3 and 4, alone and over a periodic additive layer."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For a block $\mathbf{p}_j \in \mathbb{Z}_{26}^d$ and a matrix $E \in \mathrm{GL}(d, \mathbb{Z}_{26})$,
+
+$$\mathbf{c}_j \equiv E\,\mathbf{p}_j \pmod{26}, \qquad \mathbf{p}_j \equiv D\,\mathbf{c}_j \pmod{26}, \quad D = E^{-1}.$$
+
+$E$ is invertible exactly when $\det E$ is a unit modulo 26, i.e. odd and not divisible by 13 (see [Matrix invertibility mod 26](/algebra/matrix-invertibility-mod-26)).
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Row separability and decimated periods"
+body = '''
+Row $r$ of $D$ gives the stream $y_{r,j} = r \cdot \mathbf{c}_j$, which is plaintext position $jd + (\text{row index})$. A row can belong to an invertible matrix only if it is non-zero modulo 2 and modulo 13; for $d = 3$ there are 15,372 such primitive rows, for $d = 2$ 504, for $d = 4$ 428,400. If the Hill layer sits over a period-$p$ additive layer, each row stream is periodic with the decimated period $q = p / \gcd(p, d)$, and the shifts can be marginalised rather than maximised:
+
+$$Z_b(r) = \frac{1}{26}\sum_s \prod_x E[x - s]^{F_{b,x}(r)},$$
+
+with $F_{b,x}(r)$ the count of letter $x$ in coset $b$ of the row stream. Rows are joined only when they share $q$, model and orientation and their determinant is a unit.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Direct Hill** of size 2, 3 or 4 on the whole text.
+- **Hill over a periodic layer** (Hill-3 and Hill-2 lanes): the inner additive key is finished with the exact cyclic quadgram DP after the matrix is chosen.
+- **Keyword matrices**: a $d^2$-letter word read into the matrix in one of four conventions; screened by dictionary and by the cascade's decision D4.
+- **Padding**: an odd-length text cannot be split into digraphs without a convention; the program refused to truncate or pad silently.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Block boundaries are aligned with the start of the text; the matrix is constant.
+- Invariant: whole-block permutation of the ciphertext preserves every within-block linear combination, which is the null the program used for the periodic variants.
+- Invariant: a Hill layer destroys single-letter frequencies but not the periodicity of a layer beneath it, seen through the decimated period $q$.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Enumerate every primitive row of $D$ and score its decimated stream (monogram likelihood for direct Hill; shift-marginalised periodic likelihood for Hill over a periodic layer; a lag-$d$ trigram likelihood for $d = 4$).
+2. Join the top rows into unit-determinant matrices in every row order; rescore the full decrypt with quadgrams.
+3. For periodic variants, finish the inner key with the exact cyclic DP and check the independent forward equations $\mathbf{h}_j = D\mathbf{c}_j$, $\mathbf{c}_j = E\mathbf{h}_j$.
+4. Compare any English-looking endpoint against whole-block permutation nulls run through the same selector.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Rows: 504, 15,372 and 428,400 for $d = 2, 3, 4$. Hill-2 periodic: top 192 rows, 400 unordered pairs per cell, 6,400 matrices screened by a width-4 DP, then width-8 DP on the global top 64. Hill-3: production matrix budget 24 (set by a control whose true row triple ranked 13th). Hill-4 direct: top 16 rows joined through every unit-determinant four-row subset and all 24 row orders, then the full 504-letter quadgram score.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Shortlist too narrow.** The first Hill-2 preflight kept eight pairs per cell and failed because the planted pairs ranked 256 and 319; the repaired selector ranks the hidden matrix first on both controls.
+- **Periodic overfit.** The 126-letter period-26 Hill-2 endpoint scored $-4.87$, but the selected-family block-shuffled null panel contained $-4.74$, so it was ordinary overfit; the 144-letter Hill-3 statistic was ordering-dependent yet its reconstructions stayed near $-6.2$.
+- **Odd lengths.** A 153-letter text is out of scope for unpadded Hill-2.
+- **Word-keyed matrices** cover a tiny fraction of $\mathrm{GL}(d, \mathbb{Z}_{26})$; the arbitrary-row lanes exist for that reason.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Hill-3 free rows (log 149): controls matched to target lengths and decimated periods (direct Hill at 153 letters; Hill over period 9 at 153 and 144; Hill over period 33 at 504) all recovered their hidden text after the exact periodic finish; live bests $-5.72$, $-5.29$, $-6.52$, none English. Hill-2 over a periodic layer (log 206): 96 letters/period 7 and 126 letters/period 26 controls recovered 96/96 and 126/126 letters, the hidden matrices, keys, orders and independent forwards; live endpoints $-6.06$ (no) and $-4.87$ beaten by its null panel. Direct Hill-4 (log 171): two random $\mathrm{GL}(4, \mathbb{Z}_{26})$ controls recovered the four hidden inverse rows at ranks 1-4, the exact matrix and 100% plaintext; live best $-7.28$ inside nine permutation-null maxima (mean $-7.29$, $p = 0.40$). Cascade decision D4 recovered the keyword-matrix Hill layer of a solved corpus text (logs/145_infer.log).
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+$d = 2$, $E = \begin{pmatrix} 3 & 3 \\ 2 & 5 \end{pmatrix}$, $\det E = 15 - 6 = 9$, a unit ($9 \times 3 = 27 \equiv 1$). Plaintext `HELP`:
+
+```
+HE = (7, 4):   3*7 + 3*4 = 33 = 7 (H);  2*7 + 5*4 = 34 = 8 (I)
+LP = (11, 15): 3*11 + 3*15 = 78 = 0 (A); 2*11 + 5*15 = 97 = 19 (T)
+```
+
+Ciphertext `HIAT`. The inverse is $D = 3 \begin{pmatrix} 5 & -3 \\ -2 & 3 \end{pmatrix} = \begin{pmatrix} 15 & 17 \\ 20 & 9 \end{pmatrix}$; row $(15, 17)$ applied to `HI` $= (7, 8)$ gives $105 + 136 = 241 \equiv 7 = H$. The [Hill lab](/labs/hill-lab) enumerates invertible matrices.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Row separability is what turns a $26^{d^2}$ key space into $26^d$ independent row scores plus a cheap join; it is exact for direct Hill and remains exact for Hill over a periodic layer because the periodic structure survives decimation.
+'''
+
+[[provenance]]
+path = "withmath/wm_hillfree.py"
+kind = "solver"
+note = "Arbitrary Hill-3: 15,372 primitive rows, shift-marginalised periodic likelihood, unit-determinant joins, exact cyclic-DP finish; letter and block nulls."
+ref = "logs/149_hillfree.log"
+
+[[provenance]]
+path = "withmath/HILL2_PERIODIC_AUDIT.md"
+kind = "audit"
+note = "Log 206: Hill-2 over a periodic layer; repaired two-stage selector; n96/p7 and n126/p26 controls exact; live endpoints and null panel."
+ref = "logs/206_hill2_periodic.log"
+
+[[provenance]]
+path = "withmath/wm_hill4_direct.py"
+kind = "solver"
+note = "Direct arbitrary Hill-4: 428,400 primitive rows ranked by lag-4 trigram likelihood; two random GL(4) controls exact; live p = .40."
+ref = "LOG171"
+
+[[provenance]]
+path = "ck_runkey.py"
+kind = "solver"
+note = "Mode H: row-separable Hill decryption scored by monogram likelihood and periodic IC per row."
+ref = "ck_logs/43_runkey.log"
+
+[[provenance]]
+path = "withmath/PK8_PK10_HINTFREE.md"
+kind = "note"
+note = "Hill-3 algebra: primitive rows, decimated period q = p / gcd(p, 3), marginalised shifts, control ranks."
+
+[[references]]
+title = "Cryptography in an Algebraic Alphabet"
+author = "Lester S. Hill"
+year = 1929

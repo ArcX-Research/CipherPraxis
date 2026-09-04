@@ -1,0 +1,104 @@
+id = "seed-determinism"
+section = "engineering"
+title = "Seed determinism"
+subtitle = "Domain-separated, hash-derived seeds that make every fixture, null and search a pure function of pinned inputs"
+status = "VERIFIED"
+status_note = "The research program's sealed designs derive all randomness from labelled SHA-256 streams with rejection sampling; an independent auditor reproduced a 68-seed, 34-case bank from the design text alone, and a fresh re-execution of a sealed run reproduced every semantic record."
+family = "Reproducibility"
+tags = ["seeds", "determinism", "randomness", "replay"]
+related = ["blind-controls", "reproducibility-receipts", "hash-chained-transcripts", "valid-model-nulls", "compiled-hot-cores", "state-checkpoints"]
+summary = "Reproducibility of a randomised experiment is a property of how its randomness is derived. The program fixes one root value, derives every fixture, permutation and search seed from a labelled hash stream with a private counter per label, forbids rerolls and stream switching, and feeds the same selector seed to the observation and to every null so that a heuristic search becomes a deterministic statistic of its input. Language, scores, wall-clock values and implementation RNG state never enter the derivation."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Given a root reveal $r$ (32 bytes) and a label $L$ (an ASCII string such as `SEED/CONSTRUCTION/HP01_M20_BETA0`), the stream is
+
+$$W(L, c) = \operatorname{SHA256}(r \,\|\, \operatorname{EL}(L) \,\|\, \operatorname{uint64be}(c)), \qquad c = 0, 1, 2, \dots$$
+
+with $\operatorname{EL}$ a length-prefixed encoding. Unsigned 64-bit words are consumed in order; a uniform draw in $[0, n)$ takes the next word $x$ and **rejects** it when $x \ge \lfloor 2^{64}/n \rfloor \cdot n$, otherwise returns $x \bmod n$. A seed is $1 + \operatorname{draw}(L, 2^{63}-1)$; if it duplicates an accepted seed, consumption continues on the **same** label's stream at its next unused counter. Construction and selector seeds use distinct label prefixes and are processed in fixed case order.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Unbiased permutations"
+body = '''
+A null permutation of $n$ positions is a descending Fisher-Yates shuffle: for $i = n-1, \dots, 1$ draw $j$ uniformly in $[0, i]$ by the rejection rule above and swap $i, j$. The proposal key for permutation $k$ is $\operatorname{SHA256}$ of a literal domain string with $k$ formatted as `%04d`, and blocks are $\operatorname{SHA256}(\text{key} \,\|\, \operatorname{uint64be}(\text{counter}))$. The first 99 *eligible* proposals in index order form the bank; eligibility may depend only on identity and invariants (histogram, class census), never on a score.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- Labels are exact bytes. The auditor checked that lowercase kinds, a NUL suffix, doubled slashes or a shared counter all diverge at the first seed (four negative spellings, each giving a different integer).
+- More than $2^{32}$ consumed words for one seed is a derivation failure that retires the reveal; there is no fallback stream.
+- Compiled cores derive per-work-unit seeds from the request seed by mixing in the unit's coordinates, so results do not depend on thread scheduling.
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+Determinism is what makes the null valid and the audit possible. With the same selector seed in the observation and in every replicate, the finite annealer is a fixed function and the randomisation test compares like with like; with a candidate-specific seed the observation could be searched harder than its nulls. The auditor's replay of the public bank (68 seeds, 34 maps and map hashes, 19 full 504-index permutations, every plaintext and ciphertext hash) from the design text, without importing the implementation, is the strongest form of the check: two independent implementations agree on every field.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Hash-based derivation is negligible in cost. Rejection sampling wastes at most a fraction $n / 2^{64}$ of words. The cost is in writing the contract precisely enough that a second implementer reproduces it; one design was blocked for an ambiguous seed-label clause and its successor spelled out the exact bytes.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Ambiguous label grammar.** A design that wrote `<kind>` where the stored case kind and the seed kind could be confused was blocked; the successor enumerated the two uppercase seed kinds and the exact label bytes.
+- **Reroll after observation.** Replacing or extending seeds once a score is known invalidates the bank; designs state that seeds cannot be replaced after the observation is known and that a derivation failure retires the reveal rather than permitting search.
+- **Seeds in the clear.** The hidden seed appears in the attempt record only as its hash and is revealed only in the final transcript; a reveal in the environment at admission time is refused.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Derivation primitive KATs check the published first seeds, the same-stream continuation vectors after a forced duplicate, and the four negative spellings; the public bank hash is a KAT vector for the whole derivation.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Seed derivation sketch"
+body = '''
+```python
+def word(r, label, c):  return int.from_bytes(sha256(r + EL(label) + c.to_bytes(8, "big")).digest()[:8], "big")
+def draw(r, label, n, state):
+    while True:
+        x = word(r, label, state[label]); state[label] += 1
+        if x < (2**64 // n) * n: return x % n
+seed = 1 + draw(r, b"SEED/SELECTOR/" + case_label, 2**63 - 1, counters)
+# published vector for the all-zero test reveal: construction 4844331123840797721, selector 3391159140334670312
+```
+'''
+
+[[provenance]]
+path = "withmath/PK10_ALBERTI_ACCEL13_VALIDATION381_DESIGN.md"
+kind = "design"
+note = "Section 3: exact seed-stream repair with two uppercase seed kinds, private counter per label, same-stream duplicate continuation, no reroll; published first pair for the public reveal."
+
+[[provenance]]
+path = "withmath/PK10_ALBERTI_ACCEL13_VALIDATION381_DESIGN_INDEPENDENT_AUDIT.md"
+kind = "audit"
+note = "Independent reveal-to-bank replay from the design text; duplicate-continuation vectors; four negative spellings diverge at the first seed."
+ref = "LOG381"
+
+[[provenance]]
+path = "withmath/PK10_CHAOCIPHER_FOURCLASS_CANDIDATE_NULL_CERTIFICATION_DESIGN.md"
+kind = "design"
+note = "Permutation seed schedule: SHA-256 of a literal domain with %04d index, counter blocks, rejection sampling with x >= floor(2^64/(i+1))*(i+1), descending Fisher-Yates; first 99 eligible proposals; seeds cannot be replaced after observation."
+
+[[provenance]]
+path = "withmath/wm_pk10_quarterpulse490_core.cpp"
+kind = "solver"
+note = "Per-cell seed = request seed XOR shifted cell coordinates, so a work-stealing pool gives scheduling-independent results."
+
+[[provenance]]
+path = "withmath/PK9_STRUCTURED_P7_CHAIN383_INDEPENDENT_AUDIT391.md"
+kind = "audit"
+note = "Fresh re-execution reproduced all 24 fixture records byte-identically; only elapsed and memory fields differed."
+ref = "LOG391"

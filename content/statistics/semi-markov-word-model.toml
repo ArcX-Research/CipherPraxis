@@ -1,0 +1,126 @@
+id = "semi-markov-word-model"
+section = "statistics"
+title = "Semi-Markov word model"
+subtitle = "Scoring letter strings as sequences of whole words with explicit lengths, and decoding under it with exact completion bounds"
+status = "POWER-LIMITED"
+status_note = "Implemented as a dictionary segmentation DP for display and as a complete-token decoder with an exact trie completion bound; on a held-out 95-letter word-aligned control the decoder kept the truth at ranks 3 to 42,571 through the first word at beam 8,192 and lost it at position 10, a quantified decoder-power failure, so it is not yet a selector."
+family = "Language priors"
+tags = ["semi-Markov", "word model", "segmentation", "lexicon", "beam"]
+related = ["quadgram-log-likelihood", "local-language-model-prior", "beam-search", "viterbi-decoding", "word-prefix-csp", "dictionary-attack", "shared-cycle-attack", "power-analysis", "g-quadgram"]
+summary = "A semi-Markov (segmental) language model treats a letter string as a sequence of words of variable length and scores it by the words rather than by overlapping n-grams. It captures what quadgrams cannot: that a candidate decrypt is a concatenation of real words. Two uses appear in the evidence corpus, a cheap segmentation for human inspection of candidates, and a decoder in which every retained hypothesis declares a complete token length at each word boundary and competes under an exact completion bound; the second is elegant but, at 63-95 letters under shared-alphabet constraints, has so far lost the planted truth before the constraints become selective."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+A segmentation of $x_0 \dots x_{n-1}$ is a sequence of words $w_1 \dots w_k$ with lengths $L_1 + \dots + L_k = n$. The model assigns
+
+$$\log P(x) = \max_{w_1 \dots w_k} \sum_{j=1}^{k} \phi(w_j),$$
+
+with $\phi(w) = \log P_{\text{lex}}(w)$ for lexicon words and a fragment cost for out-of-vocabulary pieces. The maximisation is a dynamic programme over end positions,
+
+$$\text{best}[i] = \max_{i - L_{\max} \le j < i} \big(\text{best}[j] + \phi(x_{j:i})\big),$$
+
+$O(n L_{\max})$ for a lexicon lookup per span. The display segmenter uses $\phi(w) = -(1 - 0.15\,|w|)$ for dictionary words (long words preferred) and a cost of $3$ per unmatched letter, $L_{\max} = 16$; the frozen lattice used in the neural-control audits uses a top-100,000 word list with fragment score $-3 - 1.55L$ for fragments of length $L \le 8$.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Complete-token decoding with an exact completion bound"
+body = '''
+When the plaintext is unknown and constrained by a cipher model, the decoder extends hypotheses letter by letter through a lexicon trie. Earlier decoders pruned after every letter, so an eight-letter word competed at its four-letter prefix against complete four-letter words and was discarded. The semi-Markov decoder declares the token length at each boundary and bounds every partial word by the best completion of that exact length:
+
+$$U(q, 0) = \text{terminal}(q), \qquad U(q, r) = \max_{q \to q'} U(q', r - 1),$$
+
+over trie edges from node $q$ with $r$ letters remaining. A candidate is compared only with candidates of the same declared length, and every literal extension still updates the injective per-class maps and passes the cipher-model predicate (a shared-cycle rotation or reflection constraint, an all-different constraint on the alphabet) before it is retained.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The plaintext is a concatenation of lexicon words; proper names, numbers spelled out, or deliberate misspellings fall outside the model and are charged as fragments.
+- The lexicon is generic and frozen (a published frequency list), with no puzzle-specific vocabulary, so that a hit cannot be an artefact of the word list.
+- The beam retains enough hypotheses to keep the truth alive until the cipher constraints bite; the measurements below say when it does not.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Use in an attack pipeline"
+body = '''
+1. **Display.** Print the segmentation of every candidate that passes a score gate; fluent segments at a rate of $-5$ are common on nulls and are not evidence.
+2. **Secondary scorer.** Combine with a character model, e.g. $S = S_{\text{reverse GRU}} + 0.55\,S_{\text{word lattice}}$, to re-rank shortlisted orders.
+3. **Decoder.** Extend hypotheses by complete tokens under the cipher constraints; require two frozen planted controls to be recovered before a target is admitted, and run a null bank through the same decoder.
+4. **Exact alternative.** Where the vocabulary is small and closed, replace the beam by an exact [word-prefix CSP](/exact/word-prefix-csp): a parse is a crib, and all-different constraints prune exactly.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Segmentation is $O(n L_{\max})$ with hashed lookups. The decoder's cost is beam width times token extensions times the constraint check; a beam of 8,192 on a 95-letter control reached a resident set of about 1.08 GB before the run was stopped to avoid a multi-gigabyte widening.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Early language valley.** The first letters open free residues before any modular constraint bites, so the truth's rank collapses in the first word: ranks $3$, $1{,}068$, $1{,}212$, $29{,}892$, $27{,}125$, $42{,}571$, $26{,}415$, $11{,}761$ through the first eight letters of a 95-letter control at beam $8{,}192$, then loss at position 10 (rank above $113{,}351$ at position 9).
+- **Closed-vocabulary parses.** An exact parse that admits no mismatch is voided by a single null letter, transposition or typo in the ciphertext; one-error-tolerant runs are needed before a parse negative is cited.
+- **Peaked plaintext.** A small-vocabulary plaintext defeats generic-English word scores in both directions: a correct parse scores poorly and a wrong one may segment fluently.
+- **Capped searches.** A search stopped at a node cap is undecided, not negative; the audit ledger lists several parse families that were reported as negative while capped.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Complete-token decoder: one real held-out 95-letter word-aligned plant after a corpus-boundary defect in the control generator was fixed; truth ranks as above; classified as a quantified decoder-power failure rather than evidence about the cipher family. Secondary word-lattice scorer on 40 planted nine-chunk orderings: ranks within the pair cap had median 1–2 and worst 1,339. Exact-parse solvers with closed vocabularies recovered planted strings uniquely (a planted 95-letter digit string among survivors; a unique recovery in 6,000 nodes) where the search completed.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+Segment `ATTACKATDAWN` with the display costs $\phi(w) = 1 - 0.15\,|w|$ (lower is better) and $3$ per unmatched letter:
+
+- `ATTACK AT DAWN`: $(1 - 0.9) + (1 - 0.3) + (1 - 0.6) = 0.1 + 0.7 + 0.4 = 1.2$;
+- `AT TACK AT DAWN`: $0.7 + 0.4 + 0.7 + 0.4 = 2.2$;
+- `A T T A C K A T D A W N` as unmatched letters: $12 \times 3 = 36$.
+
+The DP returns the first. Under the completion bound, a hypothesis that has read `ATTA` and declared a six-letter token is bounded by the best six-letter completion of the trie node `ATTA` (`ATTACK`, `ATTAIN`, …), not compared with the complete four-letter word `ATTA` would have to be.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The semi-Markov formulation is the right one for the word-level question; its present status reflects decoder power at short lengths under cipher constraints, not a defect of the model. The successor design branches on high-information (class, cipher-letter) cells instead of text position and keeps exact cycle feasibility inside every partial assignment.
+'''
+
+[[provenance]]
+path = "withmath/CYCLEWORD_SEMIMARKOV_AUDIT.md"
+kind = "audit"
+note = "Exact trie completion bound U(q,r), complete-token declaration at word boundaries, injective per-class maps, frozen top-300,000 generic lexicon, two frozen n = 63 controls required before target access."
+ref = "LOG215"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Complete-token control: held-out 95-letter word-aligned plant; truth ranks 3, 1,068, 1,212, 29,892, 27,125, 42,571, 26,415, 11,761 at beam 8,192, lost at position 10 (rank > 113,351 at position 9); peak RSS about 1.08 GB; quantified decoder-power failure."
+ref = "LOG438"
+
+[[provenance]]
+path = "ck_lib.py"
+kind = "library"
+note = "segment(text, maxw=16): dictionary DP with word cost 1 - 0.15*len and 3.0 per unmatched letter; used for display of candidates."
+
+[[provenance]]
+path = "withmath/ROW_SEMANTIC_CONTROLS_AUDIT.md"
+kind = "audit"
+note = "Frozen unigram lattice (top-100,000 list, fragment score -3 - 1.55L, max fragment 8); secondary score S_reverse_GRU + 0.55 S_word_lattice; ranks on 40 planted orderings (median 1-2, worst 1,339)."
+
+[[provenance]]
+path = "withmath/REVIEW_A.md"
+kind = "audit"
+note = "Sections 2.7-2.8 and 6: exhaustive vs capped parse negatives; zero-mismatch parses are voided by a single error; 'a parse is a crib'."
+
+[[references]]
+title = "Segmental hidden Markov models"
+author = "Mari Ostendorf, Vassilios Digalakis, Owen Kimball"
+year = 1996

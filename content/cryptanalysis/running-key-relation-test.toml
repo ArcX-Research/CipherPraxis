@@ -1,0 +1,123 @@
+id = "running-key-relation-test"
+section = "cryptanalysis"
+title = "Running-key relation test"
+subtitle = "Testing whether a ciphertext is keyed by a known text, or whether two ciphertexts share a running key"
+status = "POWER-LIMITED"
+status_note = "Against a known key text the exact window solver has full power: a planted window is found (5 solutions in 255 nodes) while a wrong window dies in 26 nodes, and in the solved part of the series the relation between two texts was recovered this way; against an unknown shared running key the difference of two 144- to 153-letter ciphertexts carries too little signal: the IC test sits inside its family-wise null and a language-model beam on the two-plaintext difference failed 3/3 hidden controls (logs/60, 63, 03, 166)."
+family = "Relations between ciphertexts"
+tags = ["running key", "known text", "difference text", "family-wise null", "constraint satisfaction"]
+related = ["running-key", "book-cipher", "one-time-pad", "key-cancellation", "autokey-difference-periodicity", "family-wise-null", "index-of-coincidence", "constraint-satisfaction-forward-checking", "beam-search", "power-measurement", "g-key-cancellation", "g-selection-freedom"]
+summary = "A running key is a long text added to the plaintext. Two questions follow: is this ciphertext keyed by some text we possess, and are these two ciphertexts keyed by the same unknown text? The first is answered exactly, by solving for a free alphabet under each candidate window and watching wrong windows die; the second reduces to the difference of the two plaintexts, whose signal at 150 letters is small enough that the corpus measured it as a power failure. Both tests need family-wise nulls, because offsets, orientations, signs and orders multiply the trials."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Running-key encryption: $c_i = p_i + t_{i+o}$ for a key text $t$ at offset $o$ (with a keyed-alphabet variant $c = A[\operatorname{idx}_A(p) + \operatorname{idx}_A(t) + k_{i \bmod m}]$). Two relations are testable:
+
+- **Known text as key.** For a candidate window $t_{o}, \dots, t_{o+n-1}$ the unknowns are the alphabet (and a short periodic key); each position gives one linear equation over $\mathbb{Z}_{26}$ in the alphabet positions of two letters, $\operatorname{idx}(c_i) - \operatorname{idx}(t_{o+i}) - k_{i \bmod m} \equiv 0$, with the positions all different and one fixed. Sixty to ninety equations on 25 unknowns make a wrong window infeasible within a few nodes and a right window consistent.
+- **Two ciphertexts, one key.** $c_i - c'_{i+o} = p_i - p'_{i+o}$: the key cancels and the difference of two plaintexts remains. Its letter distribution is the autocorrelation of the language distribution, with mass $\sum_x E(x)^2 \approx 0.066$ at zero and near-uniform mass elsewhere, so its index of coincidence is only slightly above $1/26$.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Statistics and their nulls"
+body = '''
+Difference-text index of coincidence over all offsets $o$, both orientations of the second text and both signs: the corpus's best values were $0.0455$ to $0.0468$ against a random-pairing level of $0.0383 \pm 0.0017$; with 324 trials the expected maximum is about $+3$ standard deviations above the mean, so the observed maxima are chance (logs/03). The family-wise null shuffles the second text and repeats the full maximisation; a per-trial null had made the same maximum look like $+5.7\sigma$ across 1,296 trials in all index-space pairs (logs/11).
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The key text is one of the candidates (for the exact test) or is shared at a fixed offset and orientation (for the difference test).
+- The addition is in a common index order; a keyed alphabet on one text only breaks the cancellation (see [Key cancellation](/cryptanalysis/key-cancellation)).
+- For the difference test the two plaintexts are language; for a structured second plaintext the difference statistics change.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Known-text test: for every candidate text and window, solve the free-alphabet CSP with a node cap; report consistent windows, capped windows (undecided) and dead windows; re-run capped windows with a larger cap.
+2. Difference test: compute $c \pm c'$ at every offset and orientation in each common order; score by IC and by a language model; compare the maximum with the family-wise null.
+3. If a relation is found, hand the difference text to a two-plaintext solver (an exact running-key Viterbi with backtracking over a language model, or a beam), and require a control at the same length to recover both hidden texts before reading a target.
+4. In a series of related texts, test earlier recovered plaintexts as keys of later texts as part of the standard cascade; this is where the relation was found in the solved part of the corpus's series.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Difference scan: $O(n)$ per trial, $\approx 10^3$ trials per order pair. Exact window CSP: 3,590 to 4,065 windows per zone with a cap of 3,000 nodes in seconds to minutes; capped windows re-run at 300,000 nodes in about two to six minutes per zone (logs/63).
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Low signal in the difference.** The two-plaintext difference has an IC barely above uniform; at 144 to 153 letters the corpus's best difference IC never left the family-wise null band.
+- **Solver power.** A language-model beam on planted two-plaintext differences recovered 41%, 50% and 26% of the hidden pairs, with the truth leaving the beam every time (3/3 FAIL, logs/166); an unknown-shared-key negative on the real texts would therefore be meaningless and was not claimed.
+- **Undecided windows.** With a small node cap, 166 windows of one zone stayed capped; at 300,000 nodes 16 remained undecided for that zone and none for the others (logs/63). Capped is not consistent.
+- **Multiplicity.** Offsets, orientations, signs and two orders give hundreds of trials per pair; only family-wise nulls are valid.
+- **Necessary-condition violation.** A running key added letter-wise destroys periodic coset structure; a text with a strong period-7 alignment cannot have been produced that way (predicted $z \approx +0.1$ against measured $+4.2$).
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+- Exact window test (logs/60): planted 63-letter window under a random alphabet and random period-7 shifts: 5 consistent solutions in 255 nodes; wrong window: 0 solutions in 26 nodes. Zones of the corpus texts against all known texts: 0 solutions (logs/63).
+- Difference scan (logs/03, 11): best IC $0.0455$ to $0.0468$ against $0.0383 \pm 0.0017$ over 324 trials; mixed-order pairs at $z +0.8$ against the family-wise null.
+- Two-plaintext beam (logs/166): hidden-pair match 41.3%, 49.5%, 26.2%; control gate FAIL.
+- Cascade on the solved series (logs/145): the running-key link between two consecutive texts was recovered from the earlier text's plaintext with 100% match to the published solution.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Key text `LEMONLEMONLE`; two plaintexts `ATTACKATDAWN` and `HOLDTHEGATES`:
+
+```
+c   L X F O P V E F R N H R
+c'  S S X R G S I S O G P W
+c-c'  T F I X J D W N D H S V   =  p - p'
+```
+
+The key has cancelled: `TFIXJDWNDHSV` is exactly the letter-wise difference of the two plaintexts (A$-$H $= -7 \equiv 19 = $ T, and so on). Reading it requires guessing pairs of words whose difference matches, a search whose power at 150 letters the corpus measured as insufficient. Had the key text been known, each position would instead give a linear equation on the alphabet, and a wrong key window would be contradicted after a handful of letters.
+'''
+
+[[provenance]]
+path = "withmath/wm_knowntext.py"
+kind = "solver"
+note = "Exact free-alphabet CSP over every window of every known text; planted-window control."
+ref = "logs/60_knowntext.log"
+
+[[provenance]]
+path = "withmath/logs/63_knowntext2.log"
+kind = "log"
+note = "Re-run of capped windows at 300,000 nodes: no solutions; residual undecided counts per zone."
+
+[[provenance]]
+path = "withmath/wm_algebra.py"
+kind = "solver"
+note = "Test D running-key relations between the two texts: IC and language score at all offsets, both orientations and signs, with the family-wise null."
+ref = "logs/03_algebra.log"
+
+[[provenance]]
+path = "withmath/wm_misc.py"
+kind = "solver"
+note = "Test C: mixed-index-space relations at all offsets with a family-wise null (per-trial +5.7 sigma became +0.8)."
+ref = "logs/11_misc.log"
+
+[[provenance]]
+path = "withmath/logs/166_runkeybeam.log"
+kind = "log"
+note = "Language-model beam over two-plaintext differences: 3/3 hidden controls fail."
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Recipe-free cascade (D3 running-key links over plaintexts recovered earlier in the run) with 100% published match on the solved series."
+
+[[provenance]]
+path = "withmath/PK89_SHARED_STREAM_COUPLING375_DESIGN.md"
+kind = "design"
+note = "Section 5: letter-wise running-key chains predict no periodic alignment; section 8: the identity-aligned shared key reduces to the two-plaintext difference (log 166 power failure)."

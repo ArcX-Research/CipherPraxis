@@ -1,0 +1,127 @@
+id = "quagmire-iv"
+section = "ciphers"
+title = "Quagmire IV"
+subtitle = "Periodic shifts between two different mixed alphabets"
+status = "POWER-LIMITED"
+status_note = "Blind annealing over two unknown alphabets recovered 0% of planted controls at 153 letters; with both alphabets drawn from a vocabulary bank (7,438 x 7,438 pairs) or from the two fixed orders, the search is exact and control-verified, and those structured readings were excluded for the corpus texts."
+family = "Polyalphabetic substitution"
+tags = ["periodic", "keyed alphabet", "polyalphabetic", "quagmire", "power limit"]
+related = ["quagmire-i", "quagmire-ii", "quagmire-iii", "keyword-mixed-alphabet", "dictionary-attack", "simulated-annealing", "exact-period-alignment", "conjugacy-and-gauge", "quagmire-lab"]
+summary = "Quagmire IV indexes the plaintext in one mixed alphabet and the ciphertext in another, with a periodic shift between the two index spaces. It is the most general periodic additive cipher: every Quagmire and Vigenère is a special case. Two free alphabets are hopeless to search blind at short lengths, but when each alphabet comes from a bank the problem is a large exact enumeration, which the program ran with planted controls."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+With plaintext alphabet $P$, ciphertext alphabet $C$ and shifts $k$,
+
+$$\operatorname{pos}_C(c_i) \equiv \operatorname{pos}_P(p_i) + k_{i \bmod m} \pmod{26}.$$
+
+Quagmire I is $C$ straight, Quagmire II is $P$ straight, Quagmire III is $P = C$, and Vigenère is both straight.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Gauge and equivalent descriptions"
+body = '''
+Rotating $C$ by $r$ and adding $r$ to every shift leaves the cipher unchanged, as does rotating $P$ and subtracting; reversing both alphabets swaps the Vigenère and Beaufort relations. The identifiable object is therefore the pair $(P, C)$ up to a common rotation and reflection together with the shift vector modulo that gauge, and a solver must compare recovered and planted keys modulo this class rather than literally (see [Conjugacy and gauge](/algebra/conjugacy-and-gauge)). Seen from the ciphertext, coset $b$ applies the substitution $C \circ \rho_{k_b} \circ P^{-1}$; if the $k_b$ are unrelated these are seven unrelated substitutions, which is why "seven independent alphabets" and Quagmire IV are indistinguishable by alphabet-free statistics.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Vocabulary-by-vocabulary**: both alphabets keyed by words from a bank of 7,438 candidates, both relations, i.e. 55 million alphabet pairs per text.
+- **Fixed-order pairs**: $(P, C)$ from the straight order and one keyword-mixed order in all four combinations, with free shifts; this is the index-alphabet grid used by many of the program's exact lanes.
+- **Keyed plaintext side over a known ciphertext order** with a transposition underneath: the reading the program's first Quagmire IV solver was built for, with an exhaustive columnar stage for widths 3 to 9.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Periodic shifts; both alphabets constant over the text.
+- Invariant: the within-coset equality pattern is alphabet-free and shared with every other Quagmire.
+- The relation and the two alphabets are jointly identifiable only up to the gauge above.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. **Alignment in a candidate ciphertext order.** Score the aligned index of coincidence of the seven cosets in the straight order, a keyword-mixed order and every keyword alphabet in six keying styles against the same maximum on shuffled ciphertext; refine the ciphertext alphabet greedily under the aligned-IC objective.
+2. **Cryptogram stage.** With a ciphertext order fixed, the aligned index text is a simple substitution of the plaintext; anneal the plaintext alphabet and the shifts jointly under quadgrams, restarting from every combination of near-tie coset shifts.
+3. **Bank stage.** Keyword plaintext alphabets times 26 offsets times two relations, scored by an order-free monogram likelihood and by quadgrams.
+4. **Transposition stage.** Exhaustive columnar widths 3 to 9 (annealed 10 to 20) on the order-free hits.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Vocabulary pairs: $7{,}438^2 \approx 5.5 \times 10^7$ pairs times two relations per text; the sweep ran as a subsampled batch with shuffled tops as the null. Blind two-alphabet annealing: the state has two permutations and $m$ shifts, about $26! \cdot 26! \cdot 26^m$ raw states; no budget the program tried made a dent at 153 letters.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Blind search.** The Quagmire IV relaxation of the blind Quagmire III solver reached 0% success on four planted controls (best rates $-5.48$ to $-5.73$, 1-18% match); it finds alphabets with higher monogram evidence than the truth.
+- **Selection over a huge bank.** 55 million pairs per text produce top scores that sit exactly at the subsampled shuffled maximum; without that null the best pair would look like a lead.
+- **Misaligned coset.** The first solver version pinned one coset and left a control coset misaligned, blocking exact recovery; the repaired version moves every coset and polishes pairwise.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Vocabulary-by-vocabulary Quagmire IV (both relations) on the 95-letter zone, the whole 144-letter text and the 153-letter text: best rates $-5.71$, $-6.25$ and $-6.22$, at the subsampled shuffled tops (logs/28_q4vocab.log, per the program's README). The first Quagmire IV solver's planted control (keyed plaintext alphabet, keyword-mixed ciphertext order, with and without a columnar transposition underneath) reached 100% anneal match on the plain case and read English through the columnar stage on the transposed case (ck_qiv_report.txt). Blind two-alphabet annealing: 0% on four planted controls (logs/08_q3.log). Full-spelling wordlist search under the four fixed-order alphabet pairs recovered all eight planted controls exactly before its live run (logs/472_pk9_bip39_fullwords_20260903T154646Z_30660.log).
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+$P$ keyed by `ZEBRAS` (`ZEBRASCDFGHIJKLMNOPQTUVWXY`), $C$ keyed by `QUIET` (`QUIETABCDFGHJKLMNOPRSVWXYZ`), shifts $(3, 7, 12)$. Plaintext `QUAGMIRE`:
+
+```
+plain    Q   U   A   G   M   I   R   E
+pos_P   19  21   4   9  15  11   3   1
++shift  22  28  16  12  22  23   6   8
+mod 26  22   2  16  12  22  23   6   8
+C[...]   W   I   N   J   W   X   B   D
+```
+
+Check position 6: R is letter 3 of $P$; $3 + 3 = 6$, and letter 6 of $C$ is `B`. Ciphertext `WINJWXBD`.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+For the corpus texts the program's conclusion was that every structured $(P, C)$ pair it could enumerate is excluded and the unstructured pair is unreachable; the alphabet-free class structure of one text (three cosets sharing one substitution) is the only Quagmire IV-compatible fact that survived, and it constrains key words rather than alphabets.
+'''
+
+[[provenance]]
+path = "ck_qiv.py"
+kind = "solver"
+note = "Period-7 Quagmire IV over an unknown fixed substitution, possibly over a columnar transposition: alignment, cryptogram anneal, keyword bank, columnar stage; planted controls."
+ref = "ck_qiv_report.txt"
+
+[[provenance]]
+path = "withmath/wm_q3.py"
+kind = "solver"
+note = "Q-IV annealing calibration: success 0% on four planted 153-letter controls."
+ref = "logs/08_q3.log"
+
+[[provenance]]
+path = "withmath/wm_pk9.py"
+kind = "solver"
+note = "--q4 mode: both alphabets from a 7,438-word vocabulary, vig/beau, subsampled shuffled tops."
+ref = "logs/28_q4vocab.log"
+
+[[provenance]]
+path = "withmath/wm_pk9_bip39_fullwords472.py"
+kind = "solver"
+note = "Exact word-list search under the four fixed-order plaintext/ciphertext alphabet pairs with seven free shifts; 8/8 planted controls."
+ref = "logs/472_pk9_bip39_fullwords_20260903T154646Z_30660.log"
+
+[[references]]
+title = "The ACA and You"
+author = "American Cryptogram Association"
+year = 2005

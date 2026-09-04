@@ -1,0 +1,135 @@
+id = "alberti-progressive"
+section = "ciphers"
+title = "Alberti disc and progressive keys"
+subtitle = "A fixed outer disc against an arbitrary inner disc that advances by a schedule"
+status = "CLOSED"
+status_note = "Constant-advance, unit-acceleration and constant-acceleration schedules were all reduced to one substitution problem per schedule cell and control-qualified (6/6, 30/30 and 4/4 hidden cases); on the 504-letter text the constant-advance parent was ambiguous at a random-like level and all 1,352 constant-acceleration schedules were non-English. Irregular, key-driven or piecewise advances are outside this closure."
+family = "Stream and machine ciphers"
+tags = ["disc", "progressive key", "polyalphabetic", "schedule", "monoalphabetic reduction"]
+related = ["vigenere", "keyword-mixed-alphabet", "chaocipher", "conjugacy-and-gauge", "permutation-cycles", "simulated-annealing", "shuffled-null-z-score", "g-progressive-key", "g-gauge-class"]
+summary = "An Alberti-style cipher reads the plaintext on one disc and the ciphertext on another, turning the inner disc by a schedule as the message proceeds. When the schedule is a known function of position, subtracting it from the ciphertext index leaves a single monoalphabetic substitution, so the whole family collapses to a handful of substitution problems. The program enumerated constant advance, constant acceleration and their unit cases, each with a fixed outer order and an arbitrary inner order."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $B$ be the outer (ciphertext) order, either straight or keyword-mixed, and $M$ an arbitrary inner permutation. For a schedule $a_i$,
+
+$$\operatorname{pos}_B(c_i) \equiv \operatorname{pos}_M(p_i) + a_i \pmod{26}, \qquad p_i = M\big[\operatorname{pos}_B(c_i) - a_i\big].$$
+
+Constant advance: $a_i = d\,i$. Constant acceleration: $a_i = \beta i + \alpha\, i(i-1)/2$ with the triangular number formed as an integer before reduction; $\alpha = \pm 1$ is the unit-acceleration case.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Reduction and gauges"
+body = '''
+For a proposed $(B, a)$ define $U_i = \operatorname{pos}_B(c_i) - a_i$. Then $p_i = M(U_i)$ is one monoalphabetic substitution of the stream $U$, so the restricted-growth string of $U$ equals that of $p$: $\operatorname{RGS}(U) = \operatorname{RGS}(P)$. This is the exact test used with a finite plaintext prior and the reduction used with a heuristic substitution solver. The initial phase is a translation of $M$, never a separate parameter; reversing the outer order maps $(B, \sigma, \beta)$ to $(\operatorname{rev} B, -\sigma, -\beta)$; rotations and reflections of the inner disc are gauges. The literal cell counts are $2 \times 26 = 52$ for constant advance, $2 \times 2 \times 26 = 104$ for unit acceleration and $2 \times 26 \times 26 = 1{,}352$ for the full constant-acceleration parent.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Constant advance** (classical progressive key): 52 cells.
+- **Unit acceleration**: velocity changes by $\pm 1$ per letter, 104 cells.
+- **Constant acceleration**: any $\alpha$, 1,352 cells, containing the slices above.
+- **Finite plaintext prior**: instead of solving the substitution, test $\operatorname{RGS}(U)$ against every 504-letter window of a corpus.
+- Not covered: key-driven or irregular advance, disc mutation, an unknown outer disc, piecewise schedules.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The outer order is one of two fixed orders; the schedule is a fixed function of position.
+- Invariant: under the true schedule the deprogressed stream has the plaintext's equality pattern; under a wrong one it is a scrambled stream that a substitution solver still fits, but at a random-like rate.
+- Invariant: a plaintext exposing $m$ symbols leaves $(26-m)!$ completions of $M$; the observed map is what is identifiable.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. For every cell, deprogress the ciphertext and solve the resulting substitution with the frozen annealer (3 restarts of 10,000 steps for all cells, 5 of 30,000 for the top 12, 11 of 80,000 for the top 4, steepest pair-swap finish).
+2. Group cells into exact RGS classes; rank distinct classes globally, never aliases.
+3. Decide with frozen gates: an English rate threshold and a minimum gap between the best and second distinct classes; a tie is AMBIGUOUS.
+4. Any candidate would still need 99 full-selector nulls; none was ever reached.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The 52-cell selector ran in 106 seconds for 28 fixtures; the 1,352-cell parent runs in a multithreaded compiled core with a first stage over all cells and refinement of the best 64 then 12. The finite-prior exact meet evaluated 520 schedule cells in 0.24 seconds.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Random-like ambiguity.** On the live text the constant-advance selector's four RGS classes scored within 0.02 of each other, far below the English gate, so the decision was AMBIGUOUS rather than a candidate.
+- **Hidden-bank power failure.** A frozen hidden validation of the $\alpha = 13$ slice ended POWER_BLOCKED on its first case and the bank was burned; the later complete parent re-covered that slice with fresh controls.
+- **Finite prior is only a prior.** A structural zero against corpus windows says nothing about a plaintext outside the prior.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Finite-prior constant advance (log 295): 6/6 positives recovered the exact passage, outer order, slope and canonical inner cycle with one and only one hit; 3/3 valid-family latent negatives and 1/1 decoy returned zero hits. General constant advance (log 327): 6/6 hidden positives (alphabet sizes 20-26) exact, 3/3 IID negatives at $-15.06$ to $-15.01$, 19/19 shuffled nulls at $-13.96$ to $-13.50$ against the frozen gate $-10.0$; the live one-shot (log 357) was AMBIGUOUS with nulls not authorised. Unit acceleration (log 368): 30/30 hidden cases, positives 6/6 with weakest rate $-10.45$ against gate $-12.76$, sentinels 2/2, negatives 3/3, nulls 19/19. Full constant acceleration (log 408): 4/4 held-out controls at rank 1 with exact forward; all three live seeds non-English at $-14.93$ to $-14.97$ against gate $-12.5$, with no cell consensus.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Outer order straight, inner order $M$ keyed by `ZEBRAS` (`ZEBRASCDFGHIJKLMNOPQTUVWXY`), constant advance $d = 1$. Plaintext `ALBERTI`:
+
+```
+i        0   1   2   3   4   5   6
+plain    A   L   B   E   R   T   I
+pos_M    4  14   2   1   3  20  11
++ i      4  15   4   4   7  25  17
+cipher   E   P   E   E   H   Z   R
+```
+
+Ciphertext `EPEEHZR`. Deprogressing (`pos - i`) restores the stream $4, 14, 2, 1, 3, 20, 11$, which is a fixed substitution of the plaintext.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The Alberti work is the corpus's cleanest example of reducing a machine-like cipher to substitution problems and of one-shot target discipline: every live run was preceded by a hidden validation bank, a frozen gate, an independent audit and a durable attempt marker, and the closure is stated as family-scoped.
+'''
+
+[[provenance]]
+path = "withmath/PK10_ALBERTI_PROGRESSIVE_CONTROL295_AUDIT.md"
+kind = "audit"
+note = "Finite-prior exact meet: RGS(U)=RGS(P), 52 cells, 6/6 positives, 3/3 latent negatives, 1/1 decoy."
+ref = "logs/295_pk10_alberti_progressive_controls.log"
+
+[[provenance]]
+path = "withmath/PK10_ALBERTI_MONOSUB_CONTROL327_AUDIT.md"
+kind = "audit"
+note = "General constant-advance selector with arbitrary inner substitution: 6/6, 3/3, 19/19; frozen gates rate >= -10.0, gap >= 0.25."
+ref = "logs/327_pk10_alberti_monosub_controls.log"
+
+[[provenance]]
+path = "withmath/PK10_ALBERTI_UNITACCEL_CONTROL367_CREATOR_AUDIT.md"
+kind = "audit"
+note = "104-cell unit-acceleration algebra, reversal alias, disclosed calibration D1/D2 exact."
+ref = "LOG367"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "LOG357 live one-shot AMBIGUOUS; LOG368 hidden validation 30/30; LOG381 alpha=13 hidden bank POWER_BLOCKED."
+ref = "logs/368_pk10_alberti_unitaccel_validation.log"
+
+[[provenance]]
+path = "withmath/PK10_ALBERTI_ALLACCEL408_AUDIT.md"
+kind = "audit"
+note = "Complete constant-acceleration parent: 1,352 schedules, 4/4 controls, live non-English (-14.97, -14.93, -14.93 vs gate -12.5)."
+ref = "logs/408_pk10_alberti_allaccel_live_20260902T113052Z.log"
+
+[[references]]
+title = "De componendis cifris"
+author = "Leon Battista Alberti"
+year = 1467

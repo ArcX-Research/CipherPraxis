@@ -1,0 +1,138 @@
+id = "exact-period-alignment"
+section = "cryptanalysis"
+title = "Exact period alignment"
+subtitle = "Bringing the cosets of a periodic substitution into register by exhaustive maximisation of pairwise coincidences"
+status = "VERIFIED"
+status_note = "Exact maximisation over all 26^6 relative shift vectors of a period-7 layer is implemented with a closed-form pairwise objective; on a planted period-7 substitution over 153 letters of English it recovers the shift vector at z +9.6 against 200 position-shuffles, and a planted substitution over a transposed inner text sits at z +4.0 (logs/01)."
+family = "Period and structure recovery"
+tags = ["periodic", "coincidence", "exact", "alignment", "shift vector"]
+related = ["vigenere", "quagmire-iii", "coset-shift-recovery", "index-of-coincidence", "shuffled-null-z-score", "within-coset-null", "exhaustive-enumeration", "conjugacy-and-gauge", "family-identification", "g-coset", "g-inner-and-outer-layer"]
+summary = "Under a periodic additive layer every coset is a rotation of the same inner letter distribution. Exact period alignment finds the relative rotations that bring all cosets into register by maximising the total pairwise coincidence between shifted coset histograms over every relative shift vector. It needs no reference distribution, no word order and no key: it measures how strongly a periodic additive layer is present and which cosets are ambiguous, and it is the first instrument the corpus applies to any suspected periodic text."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let the ciphertext $c_0 c_1 \dots c_{n-1}$ be written as indices in a chosen alphabet order and let $m$ be the period. Coset $b$ is the set of positions $i \equiv b \pmod m$ and $F_b(x)$ is its letter histogram. If the layer is additive, $F_b$ is the inner distribution rotated by the coset's key element $k_b$, so the histograms of two cosets $a, b$ agree after a relative rotation of $k_b - k_a$.
+
+Alignment recovers the vector of **relative** shifts $s = (0, s_1, \dots, s_{m-1})$, $s_b \equiv k_b - k_0$, that makes all $m$ histograms coincide. The absolute rotation $k_0$ is unobservable at this stage (a gauge): it is fixed later by a reference distribution, see [Coset shift recovery](/cryptanalysis/coset-shift-recovery).
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Pairwise objective and union index of coincidence"
+body = '''
+Precompute the cross tables $C[a,b,d] = \sum_x F_a(x)\,F_b(x+d)$ for every ordered coset pair and every rotation $d$. The objective is the total coincidence between cosets shifted into register,
+
+$$J(s) = \sum_{a<b} C\big[a,\,b,\,(s_b - s_a) \bmod 26\big],$$
+
+and the index of coincidence of the aligned text follows in closed form:
+
+$$\operatorname{IC}_{\text{union}}(s) = \frac{\sum_b \sum_x F_b(x)^2 + 2J(s) - n}{n(n-1)}.$$
+
+Maximising $J$ is therefore the same as maximising the coincidence rate of the whole text after the layer is removed. For $m = 7$ the $26^6 \approx 3.1 \times 10^8$ relative vectors are enumerated exactly by fixing $(s_1, s_2, s_3)$ in batches and maximising the remaining three jointly from precomputed partial sums; the run takes under a second on the corpus texts. The **near-optimal set** $\{s : J(s) \ge J^* - \delta\}$ and the per-coset **margin** (best minus runner-up gain when one coset is moved alone) say which cosets are pinned and which are ambiguous.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The layer is additive in the tested index order, i.e. the cosets are rotations of one histogram. In an unknown mixed alphabet the alignment still exists but is measured in the wrong coordinates and weakens.
+- The inner distribution is peaked. A flat inner (fractionation, random letters, a second substitution layer with many alphabets) gives histograms with nothing to align.
+- Invariant: the statistic depends only on the coset histograms, so it is unchanged by any transposition applied *before* the periodic layer. This is what makes it usable while a transposition is still in place (see [Order-free width statistic](/cryptanalysis/order-free-width-statistic)).
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Choose a period (from a period scan or by trying each candidate) and an index order; build $F_b$ and the cross tables.
+2. Maximise $J(s)$ exactly (or, for simulations and nulls, by multi-seed greedy assignment followed by single- and pair-move polish, which agreed with the exact optimum on every corpus text).
+3. Calibrate: run the identical maximisation on $N$ position-shuffles of the text. The shuffle keeps the letter multiset and destroys the coset structure, so the $z$-score of the observed $\operatorname{IC}_{\text{union}}$ against the shuffles measures the presence of a periodic additive layer.
+4. Read the near-optimal set and margins: cosets with several near-tied shifts are treated as votes, not facts, in later stages.
+5. Compare the $z$ with planted references of the same length to read *what kind* of inner sits under the layer: on 153 letters a plain periodic substitution over English gave $z +9.6$ and a periodic substitution over a transposed inner gave $z +4.0$ (logs/01).
+6. Hand the aligned text to shift recovery, residual-periodicity tests (a second period surviving the alignment signals a compound key) and language scoring.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Cross tables: $O(m^2 \cdot 26^2)$. Exact enumeration: $26^{m-1}$ evaluations organised so that the last three shifts are maximised by array operations; for $m = 7$ the corpus implementation reports about 0.4 s per text and 90 s for 200 shuffle nulls (logs/01). The heuristic alignment is $O(m^2 \cdot 26)$ per polish sweep.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Diluted inner.** When the inner text has index of coincidence $\kappa$ instead of the English $0.0665$, the alignment signal scales roughly as $(\kappa - 1/26)/(0.0665 - 1/26)$; an inner at $\kappa = 0.054$ keeps only about 55% of a clean signal. The 153-letter corpus text showed exactly this: a real period-7 alignment ($z +4.2$ in one order, $+3.3$ in the other) at the level of the transposed-inner reference rather than the plain reference (logs/01, logs/312).
+- **Zoned text.** If the key changes inside the text, each coset mixes two keys. A constant drift of all key elements leaves the relative shifts unchanged (the alignment survives), while an unrelated re-keying dilutes it; neither case is visible from the alignment alone, see [Change-point and zone detection](/cryptanalysis/change-point-zone-detection).
+- **Wrong index order.** Both candidate orders can show a significant alignment; the statistic ranks orders weakly and cannot identify an unknown mixed alphabet.
+- **Selection over periods.** Scanning many periods and reporting the best $z$ needs a family-wise null; a genuine period also shows inherited peaks at its multiples (a period-7 planted layer gave $z +7.4$ at 7, $+4.9$ at 14 and $+3.1$ at 21, logs/312).
+- **Small effect claims.** The within-coset index of coincidence of a 22-letter coset has an exact standard deviation of about $0.021$ and its 7-coset mean about $0.008$; a "cosets are not monoalphabetic" verdict on the 153-letter text was a $1.5\sigma$ statement once the error bar was computed (logs/01).
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Planted references audited with the same code and 200 shuffles each (logs/01): a plain period-7 substitution over 153 letters of English aligned at union IC $0.0778$ against a shuffle null of $0.0535 \pm 0.0025$ ($z +9.6$, exact and heuristic agree); a period-7 substitution over a width-9 columnar transposition of a period-2 substituted text aligned at $0.0617$ against $0.0521 \pm 0.0024$ ($z +4.0$). The two unsolved corpus texts gave $z +4.2$ / $+3.3$ (153 letters) and $+2.9$ / $+3.4$ (144 letters) in the two orders.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Three cosets of four letters each, produced from the plaintext letters E,E,T,A by rotations $k = (0, 3, 10)$:
+
+```
+coset 0  (k=0)   E E T A     F_0 = {E:2, T:1, A:1}
+coset 1  (k=3)   H H W D     F_1 = {H:2, W:1, D:1}
+coset 2  (k=10)  O O D K     F_2 = {O:2, D:1, K:1}
+```
+
+Cross tables: $C[0,1,d]$ is $6$ at $d = 3$ (E$\to$H gives $2 \cdot 2$, T$\to$W and A$\to$D give $1$ each) and at most $2$ elsewhere; likewise $C[0,2,10] = 6$ and $C[1,2,7] = 6$. The maximum $J(0,3,10) = 18$ is unique. Aligning gives the union histogram $\{E:6, T:3, A:3\}$ and
+
+$$\operatorname{IC}_{\text{union}} = \frac{18 + 2 \cdot 18 - 12}{12 \cdot 11} = \frac{42}{132} = 0.318,$$
+
+against $8/132 = 0.061$ for the unaligned twelve letters. The absolute rotation ($k_0 = 0$ here) is not determined by this step.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Classical repeat-distance (Kasiski) analysis is the coincidence-based ancestor of this method. On the corpus's 504-letter text it had nothing to work with: 5 repeated trigrams against about 7.2 expected for random text and no repeated tetragram (logs/109), so period evidence there came from periodic coincidence scans instead. The exact alignment is the reference measurement that the mixture, width and family instruments of this atlas build on.
+'''
+
+[[provenance]]
+path = "withmath/wm_core.py"
+kind = "library"
+note = "align_exact: all 26^6 relative shift vectors with the closed-form pairwise objective, near-optimal set and coset margins; align_heuristic for nulls and simulations."
+
+[[provenance]]
+path = "withmath/wm_audit.py"
+kind = "solver"
+note = "Exact alignment, 200-shuffle nulls, within-coset IC with exact standard deviation, planted plain and transposed-inner references."
+ref = "logs/01_audit.log"
+
+[[provenance]]
+path = "withmath/logs/312_grammar_fingerprint.log"
+kind = "log"
+note = "Alignment z-profile at periods 3-21 for planted families and the targets; inheritance at multiples of the true period."
+
+[[provenance]]
+path = "withmath/logs/109_misc_tests.log"
+kind = "log"
+note = "Kasiski repeat counts on the 504-letter text: 5 repeated trigrams (random expectation about 7.2), no tetragrams."
+
+[[provenance]]
+path = "withmath/GRAMMAR_SOLVER.md"
+kind = "note"
+note = "Dilution formula (0.054 - 1/26)/(0.0665 - 1/26) = 0.55 for a period-7 layer over an inner of IC 0.054."
+
+[[references]]
+title = "Military Cryptanalysis, Part II"
+author = "William F. Friedman"
+year = 1938
+
+[[references]]
+title = "The Index of Coincidence and Its Applications in Cryptanalysis"
+author = "William F. Friedman"
+year = 1922

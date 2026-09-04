@@ -1,0 +1,140 @@
+id = "bayesian-evidence-model-selection"
+section = "statistics"
+title = "Bayesian evidence and model selection"
+subtitle = "Marginal likelihood of coset histograms with the key shifts integrated out, compared across model families"
+status = "VERIFIED"
+status_note = "Implemented for one-, two- and three-rotation inner models with all coset shifts marginalised under a uniform prior; on planted controls the single-rotation family wins on a plain periodic substitution (z +12.3 against shuffles), the two-rotation family wins on planted sandwiches (z +5.6 to +8.5), the inner spacing is read off the delta-marginal evidence on 7 of 8 planted seeds, and a fractionated inner text leaves every family at z about 0."
+family = "Bayesian evidence and model selection"
+tags = ["evidence", "marginal likelihood", "model comparison", "Bayes factor", "shift marginalisation"]
+related = ["quadgram-log-likelihood", "index-of-coincidence", "family-wise-null", "selection-overfit-diagnostic", "mixture-inference-under-transposition", "order-free-width-statistic", "expectation-maximisation", "exact-period-alignment", "g-evidence", "g-marginal-likelihood", "g-nats-per-letter"]
+summary = "Instead of fitting the seven shifts of a periodic key and reporting the best likelihood, the evidence integrates the likelihood over every shift with a uniform prior. On a 153-letter text the profiled fit buys about 0.15 nats per letter of pure selection freedom, enough for wrong models to win; the marginalised evidence removes that freedom and, because bank members are averaged rather than maximised, it penalises larger model families automatically. Families such as 'inner text is rotated English', 'inner text is a mixture of two rotations' and 'of three rotations' are then compared by their evidence, and each is judged against the same computation on shuffled texts."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Split the ciphertext into $p$ cosets with letter counts $F_b(x)$, $b = 0 \dots p-1$. A model of the inner text is a 26-vector $f$ (a probability distribution in the alphabet order of the outer layer). Under an unknown shift $s_b$ the coset is drawn from $f(x - s_b)$, so
+
+$$Z_b(f) = \frac{1}{26}\sum_{s=0}^{25} \prod_x f(x - s)^{F_b(x)}, \qquad \log Z(f) = \sum_{b} \log Z_b(f).$$
+
+The **gain** is the evidence per letter over the uniform model, $g(f) = \big(\log Z(f) + n \ln 26\big)/n$ in nats per letter. A *family* is a bank of models $\{f_1, \dots, f_M\}$ with a uniform prior; its evidence is the log-mean-exp
+
+$$\log Z_{\text{fam}} = \log \frac{1}{M}\sum_{m=1}^{M} Z(f_m),$$
+
+so that a bank with more members is charged $\ln M$ nats for the choice it is allowed to make.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Banks, delta-marginal and posteriors"
+body = '''
+With $E$ the English monogram distribution and $E_g$ its rotation by $g$:
+
+- **M1** (rotated English): $\{E_g\}$, $M = 26$.
+- **M2** (two-rotation mixture): $\{w E_{g_1} + (1-w) E_{g_2}\}$ over $g_1 < g_2$ and a weight grid, $M = 325$ at $w = 1/2$.
+- **M3** (three-rotation mixture): $\{(E_{g_1} + E_{g_2} + E_{g_3})/3\}$, $M = 2{,}600$.
+
+For M2 the **delta-marginal** evidence groups members by the inner spacing $\delta = \min(g_2 - g_1,\ g_1 - g_2) \bmod 26$ and reports $\log Z$ per group; a real two-rotation inner shows one $\delta$ well above the rest. Per coset, the shift posterior is $\Pr(s_b \mid F_b) \propto \prod_x f(x - s_b)^{F_b(x)}$; per letter, the class posterior $\Pr(\text{component} \mid \text{letter})$ under the MAP member feeds the [order-free width statistic](/cryptanalysis/order-free-width-statistic).
+
+**Profiling versus marginalising.** Replacing $\frac{1}{26}\sum_s$ by $\max_s$ in $Z_b$ gives the profile likelihood; at $n = 153$ it exceeds the evidence by about $0.15$ nats per letter on average, which is why the profile picks wrong families on shuffled texts.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- Letters inside a coset are exchangeable draws from one rotated distribution; the model is therefore valid under *any* transposition below the periodic layer, since a transposition only decides which positions land in which coset.
+- The outer layer is additive in a known alphabet order (or in each of a small set of orders tried separately).
+- A uniform prior over shifts and over bank members; the evidence differences quoted are sensitive to the bank definition, so families are compared against nulls computed with the identical banks.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. **Periodic gate.** In the cascade solver the best M1 gain over periods $2 \dots p_{\max}$, two alphabet orders and both relations is compared with the family-wise maximum of the same scan over shuffled texts; the decision fires when the gain clears that maximum by $0.02$ nats per letter. On the solved references the gains were $+0.255$, $+0.216$, $+0.229$ and $+0.080$ against shuffled maxima of $+0.024$, $+0.005$, $+0.010$ and $-0.015$.
+2. **Family comparison.** Compute the M1, M2, M3 family evidences and their differences; read the $\delta$-marginal; carry the top three $\delta$ forward.
+3. **Class posteriors and EM.** Assign each letter a component; test transposition widths order-free; re-estimate each coset's shift from the class-conditional likelihood (class-EM), which corrected the one or two wrong cosets on controls (7 of 7 after EM).
+4. **Nulls.** Push shuffled ciphertexts through the identical fit, $\delta$ selection, EM and width scan, so every reported $z$ is a complete-pipeline null.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+For a bank of $M$ members the coset log-likelihood table is $M \times p \times 26$ and is computed as one tensor contraction with the $p \times 26$ count matrix (chunked over members); a full run of the mixture pipeline with 60 null pipelines and widths up to 25 took 17–28 s per control at 153 letters.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Evidence differences have their own null.** On shuffled texts the mixture family beats the single-rotation family by $+0.13$ to $+0.17$ nats per letter, because a shuffle flattens every coset and a mixture fits a flat histogram better. Judge each family against its own shuffled distribution; on a plain periodic substitution $M2 - M1 = -0.080$ against a shuffled $+0.131 \pm 0.027$ is the decisive reading, not the sign of the raw difference.
+- **Flat inner text.** A fractionated inner (a bifid-like layer under the periodic key) leaves all three families at $z \approx 0$: the instrument says "not rotated English and not a small mixture", nothing more.
+- **Pure transposition.** The shuffle preserves the letter multiset, so on an untransposed-substitution-free text the observed gain and the null saturate together and the gate stays quiet, correctly.
+- **Largest-period artefact.** A scan whose best gain sits at the largest period tried, in every text, is selection, not signal (see the [selection-overfit diagnostic](/statistics/selection-overfit-diagnostic)).
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+At 153 letters, 60 null pipelines each: plain periodic substitution, M1 gain $+0.2849$ (shuffled $-0.1412 \pm 0.0347$, $z = +12.3$); planted sandwich with an exact $17 \times 9$ grid, M2 $+0.0510$ ($z = +5.6$) with M1 $-0.0840$ ($z = +2.4$); ragged width 8, M2 $+0.0471$ ($z = +4.7$); width 12 with the inner in the other alphabet order, M2 $+0.0802$ ($z = +8.5$); period-3 inner, M3 $+0.0231$ ($z = +3.3$); bifid inner, all families $|z| \le 0.3$. All four solvable controls were solved from cold with the true width on top ($z$ from $+4.3$ to $+12.8$) and 100% plaintext match at rate $-4.34$.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example: comparing two families"
+body = '''
+On the plain periodic-substitution control the family evidences per letter were $g_{M1} = +0.2849$ and $g_{M2} = +0.2050$ nats. Over $n = 153$ letters the log Bayes factor is
+
+$$153 \times (0.2849 - 0.2050) = 12.2 \text{ nats}, \qquad B_{12} = e^{12.2} \approx 2 \times 10^{5}$$
+
+in favour of "rotated English", even though M2 contains M1 as a limiting case: the bank charge does the work. The size of that charge is easy to see: if one member of a bank of $M$ fits far better than the rest, $\log Z_{\text{fam}} \approx \log Z_{\text{best}} - \ln M$; for M2 at $w = 1/2$, $\ln 325 = 5.78$ nats, i.e. $0.038$ nats per letter at $n = 153$, and for M3 $\ln 2{,}600 = 7.86$ nats, $0.051$ per letter.
+
+A shift-marginalised coset evidence in miniature: a coset of three identical letters under the English model has $Z_b = \frac{1}{26}\sum_s E(x - s)^3 = \frac{1}{26}\sum_y p_y^3 = 0.00535/26 = 2.1 \times 10^{-4}$, whatever the letter is, against the uniform $(1/26)^3 = 5.7 \times 10^{-5}$: a gain of $\ln(3.6)/3 \approx 0.43$ nats per letter. The evidence depends only on the shape of the coset histogram (three equal letters), never on which letter, which is exactly the invariance that makes it order-free and free of the rotation gauge.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The design principle is *evidence, not likelihood*: every parameter that the analyst would otherwise tune by hand (shift, spacing, weight) is integrated out, and what remains is compared with the same integration on nulls. The word "gain" in the transcripts means evidence per letter over the uniform model.
+'''
+
+[[provenance]]
+path = "withmath/wm_core.py"
+kind = "library"
+note = "fit_inner (shifts marginalised under a uniform prior, family evidence as log-mean-exp over the bank), delta_marginal, shift_candidates, membership; docstring records the ~0.15 nats/letter profile-likelihood overfit at n = 153."
+
+[[provenance]]
+path = "withmath/wm_mix.py"
+kind = "solver"
+note = "M1/M2/M3 comparison, delta candidates, class posteriors, class-EM refinement, complete-pipeline shuffled nulls and planted sandwich controls."
+
+[[provenance]]
+path = "withmath/logs/05_mix.log"
+kind = "log"
+note = "Control evidences: plain periodic M1 +0.2849 (z +12.3), M2 - M1 -0.0799 vs shuffled +0.1310 +- 0.0267; sandwiches M2 +0.0510/+0.0471/+0.0802 (z +5.6/+4.7/+8.5); period-3 inner M3 +0.0231 (z +3.3); bifid inner all |z| <= 0.3; width solves z +12.8, +11.3, +4.3, +5.1 at -4.34 and 100% match."
+ref = "logs/05_mix.log"
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "'The mathematics in wm_mix': evidence not likelihood, delta-marginal correct on 7/8 planted seeds, class-EM 7/7, nulls through the identical pipeline."
+
+[[provenance]]
+path = "withmath/wm_infer.py"
+kind = "solver"
+note = "D2 periodic gate: shift-marginalised M1 evidence over periods, orders and relations against the shuffled family-wise maximum with GAIN_MARGIN 0.02."
+
+[[provenance]]
+path = "withmath/logs/145_infer.log"
+kind = "log"
+note = "D2 readings on solved references: gains +0.255/+0.216/+0.229/+0.080 vs shuffled family-wise maxima +0.024/+0.005/+0.010/-0.015."
+ref = "logs/145_infer.log"
+
+[[references]]
+title = "Probability Theory: The Logic of Science"
+author = "E. T. Jaynes"
+year = 2003
+
+[[references]]
+title = "Information Theory, Inference, and Learning Algorithms"
+author = "David J. C. MacKay"
+year = 2003

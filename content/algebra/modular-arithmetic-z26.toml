@@ -1,0 +1,145 @@
+id = "modular-arithmetic-z26"
+section = "algebra"
+title = "Modular arithmetic in Z26"
+subtitle = "The ring Z/26Z as the coordinate system of letter ciphers"
+status = "VERIFIED"
+status_note = "Every additive cipher model and exact solver in the corpus is written in this ring, and its identities are exercised by known-answer tests before any target use: derived-stream, inverse and independent-forward checks 32/32 over random cycles and sign cells, and chain-equation plants 50/50."
+family = "Modular arithmetic"
+tags = ["ring", "residues", "coordinates", "additive", "zero divisors"]
+related = ["units-mod-26", "modular-inverse-and-crt", "affine-maps-mod-26", "conjugacy-and-gauge", "difference-operators", "vigenere", "beaufort", "caesar-shift", "exact-period-alignment", "g-residue-class", "g-coset"]
+summary = "Letters are identified with the residues 0 to 25 and every additive cipher relation becomes a congruence modulo 26. Because 26 = 2 times 13 the ring has zero divisors and only twelve invertible elements, which is why exact solvers work over the two prime components and lift back. A mixed alphabet only changes the coordinate function z that sends each letter to its position, so one formula covers straight and keyed alphabets alike."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Identify the alphabet with $\mathbb{Z}_{26} = \mathbb{Z}/26\mathbb{Z}$ by $A \mapsto 0, \dots, Z \mapsto 25$. Addition, subtraction and multiplication are taken modulo 26. Because $26 = 2 \cdot 13$ is composite, $\mathbb{Z}_{26}$ is a commutative ring but not a field: $2 \cdot 13 \equiv 0$, so 2 and 13 are zero divisors, and only the twelve residues coprime to 26 have multiplicative inverses (see [Units mod 26](/algebra/units-mod-26)).
+
+A **mixed alphabet** is handled by a coordinate function $z : \{A,\dots,Z\} \to \mathbb{Z}_{26}$, the position of each letter in the cipher's ordering. For the straight alphabet $z$ is the identity; for a keyed order it is an arbitrary bijection. Every additive relation is then written in $z$-coordinates, and "solving the alphabet" means recovering $z$.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Additive relations in one formula"
+body = '''
+With a sign $e \in \{+1,-1\}$ ($+1$ Vigenère-type, $-1$ Beaufort-type) and key value $k_i$ at position $i$:
+
+$$z(c_i) \equiv e\,z(p_i) + k_i \pmod{26}, \qquad z(p_i) \equiv e\,\bigl(z(c_i) - k_i\bigr) \pmod{26},$$
+
+the second line because $e^2 = 1$. Two relations that share an unknown subtract to eliminate it: if $k_i = k_j$ then $z(c_i) - z(c_j) \equiv e\,(z(p_i) - z(p_j))$, and if a running key is shared between two texts the difference of the two ciphertext coordinates removes the key letter entirely.
+
+Consequences of the zero divisors: $2x \equiv c$ has two solutions when $c$ is even and none when $c$ is odd; $13x$ is $0$ or $13$ according to the parity of $x$. The ring splits as $\mathbb{Z}_{26} \cong \mathbb{Z}_2 \times \mathbb{Z}_{13}$ ([CRT](/algebra/modular-inverse-and-crt)), so a linear system modulo 26 is solved over $\mathrm{GF}(2)$ and $\mathrm{GF}(13)$ and recombined.
+
+For a strictly periodic key of period $m$ the aligned text is $u_i - s_{i \bmod m}$, and the exact alignment objective over relative shift vectors is
+$$J(s) = \sum_{a<b} C\bigl[a, b, (s_b - s_a) \bmod 26\bigr], \qquad C[a,b,d] = \sum_x F[a,x]\,F[b,(x+d) \bmod 26],$$
+where $F[b,\cdot]$ is the letter histogram of coset $b$.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The alphabet has exactly 26 symbols; digraphic constructions (Playfair over 25 cells, Hill over vectors) use other moduli or vector spaces.
+- A keyed alphabet changes coordinates only; the cipher relations stay linear in $z$.
+- Convention: $z(\text{letter}) = \text{position}$. The inverse convention (array position $\to$ letter) is equivalent, but the two must not be mixed. The ledger records one case where two independent implementations used transposed conventions: their aggregate censuses agreed exactly while per-cell values were not portable between them.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How the ring is used"
+body = '''
+1. Write each cipher relation as a congruence in the unknown coordinates and keys.
+2. Eliminate shared unknowns by subtraction (derived streams; see [Difference operators](/algebra/difference-operators)).
+3. Fix the gauge: in most models a translation $z \to z + b$ leaves the relations invariant, so one letter is pinned to 0 (see [Conjugacy and gauge](/algebra/conjugacy-and-gauge)).
+4. Solve the remaining linear system over the two prime components, lift, and impose the bijection constraint ([All-different](/algebra/all-different-constraints)).
+5. For a purely periodic additive layer, maximise $J(s)$ over all $26^{m-1}$ relative shift vectors after fixing $s_0 = 0$ ([Exact period alignment](/cryptanalysis/exact-period-alignment)).
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+$26^{m-1}$ relative shift vectors after the gauge; $26^6 = 308{,}915{,}776$ for $m = 7$, enumerated exactly in a vectorised core. A full alphabet has $26! \approx 2^{88.4}$ descriptions; the unit gauge alone leaves $26!/12 \approx 3.36 \times 10^{25}$ (about $84.8$ bits), the unit-plus-translation gauge $26!/312 \approx 2^{80}$.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- Dividing by 2 or 13, or cancelling a factor of 2 from both sides of a congruence.
+- Assuming translation is always a gauge. In the shift-free model where the key stream is the coordinate of another text's letters, $z(P_i) - e\,z(C_i) + e\,z(K_i) \equiv 0$, the constant cancels inside the difference but not in the inverse lookup, so only the twelve unit multiples remain a symmetry.
+- Mixing the two coordinate conventions between components of one pipeline.
+- Overflow: an early engine formed base-26 quadgram indices in 16-bit integers; the known-answer test exposed it and letters are now promoted to 64-bit before indexing.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Eight random cycles times four sign cells: derived stream, both inverses and two independently written scalar forwards agree 32/32. Fifty random plants of the two-text chain equation across all four sign cells reproduce the eliminated equation 50/50. Every exact solver prints its inverse equations and an independently implemented forward reconstruction; a round trip alone is never accepted as evidence because any invertible guess round-trips.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Straight alphabet, plaintext letter $T = 19$, key $9$. Vigenère-type: $19 + 9 = 28 \equiv 2 = C$. Beaufort-type: $9 - 19 = -10 \equiv 16 = Q$; decrypting, $9 - 16 = -7 \equiv 19 = T$.
+
+Zero divisors: $2 \cdot 13 = 26 \equiv 0$. The congruence $2x \equiv 4$ has the two solutions $x = 2$ and $x = 15$ (since $2 \cdot 15 = 30 \equiv 4$), while $2x \equiv 5$ has none.
+
+Keyed alphabet `QWERTYUIOPASDFGHJKLZXCVBNM`: $z(T) = 4$ and the letter at position 13 is $F$. The same key $9$ now sends $T$ to $z^{-1}(4 + 9) = z^{-1}(13) = F$ instead of $C$: the relation is unchanged, only the coordinates differ.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The ring viewpoint explains three habits of the corpus: solvers pass through $\mathrm{GF}(2)$ and $\mathrm{GF}(13)$ rather than working in $\mathbb{Z}_{26}$ directly; Beaufort is the sign $e = -1$ of the same formula rather than a separate cipher; and the bijection constraint on $z$ factorises through the parity and the residue modulo 13.
+'''
+
+[[provenance]]
+path = "withmath/wm_core.py"
+kind = "library"
+note = "Alphabet orders and index conversion, coset arithmetic, aligned text u minus s, and the exact alignment objective J(s) over all 26^6 relative shift vectors."
+
+[[provenance]]
+path = "withmath/PK89_SHARED_CYCLE_BANK380_AUDIT.md"
+kind = "audit"
+note = "Static KAT: derived stream, both inverses and two independent scalar forwards 32/32 (8 random cycles x 4 sign cells); unit gauge 48/48; translation gauge 16/16."
+
+[[provenance]]
+path = "withmath/SHARED_CYCLE_CHAIN_EQUATION_AUDIT_CLAUDE.md"
+kind = "audit"
+note = "Signs of the eliminated chain equation verified numerically on 50/50 random plants in all four sign cells."
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Shift-free ciphertext-keyed model: translation is not a symmetry, unit scaling only; 26!/12 = 3.36e25, 84.8 bits."
+ref = "LOG409"
+
+[[provenance]]
+path = "withmath/PK9_BLINDEXPONENT443_NOTE.md"
+kind = "note"
+note = "A sign-mismatch cycle pins a root to the two solutions of 2z = c; odd c rejects."
+
+[[provenance]]
+path = "withmath/PK9_POSDIHEDRAL_D48_INDEPENDENT_REVIEW_CLAUDE.md"
+kind = "audit"
+note = "Two coordinate conventions, inverse to each other: identical census, per-cell values not portable (section P1)."
+
+[[provenance]]
+path = "withmath/PK89_COMMONPLAIN_INVARIANT_CONTROL_AUDIT.md"
+kind = "audit"
+note = "An int16 base-26 index overflow was exposed and fixed by the exhaustive KAT; letters promoted to int64."
+
+[[references]]
+title = "A Course in Number Theory and Cryptography"
+author = "Neal Koblitz"
+year = 1994
+
+[[references]]
+title = "Cryptography: Theory and Practice"
+author = "Douglas R. Stinson"
+year = 2005
+
+[[references]]
+title = "The Codebreakers"
+author = "David Kahn"
+year = 1967

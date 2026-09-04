@@ -1,0 +1,10 @@
+id = "g-linear-congruential-generator"
+section = "glossary"
+title = "Linear congruential generator (LCG)"
+status = "CLOSED"
+status_note = "Standard term; LCG-type running keys were screened on the corpus texts with a family-wise null and showed no excess."
+family = "Algebra"
+tags = ["recurrence", "running key"]
+related = ["linear-recurrences-lcg", "affine-maps-mod-26", "difference-operators", "running-key"]
+summary = "A sequence defined by the affine recurrence k_i = a k_(i-1) + b modulo M from a seed k_0; more generally an order-one recurrence with a lag L. Used as a running key it leaves an algebraic fingerprint: subtracting a times the ciphertext at lag L cancels the key and leaves the scaled self-difference of the plaintext plus a constant, which can be scored against the scaled self-convolution of the language."
+updated = "2026-09-04"

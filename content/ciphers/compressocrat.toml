@@ -1,0 +1,115 @@
+id = "compressocrat"
+section = "ciphers"
+title = "Compressocrat"
+subtitle = "Variable-length ternary letter codes regrouped into trigraphs and substituted"
+status = "CLOSED"
+status_note = "Two independent 504-letter controls with keyed alphabets were recovered exactly (527/527 and 520/520 letters, forward PASS) and byte-matched a separately compiled generator; the live 504-letter text failed both the language gate and the forward replay, so the direct family is excluded there."
+family = "Fractionation"
+tags = ["fractionation", "variable-length code", "trigraph", "prefix-free"]
+related = ["trifid", "bifid", "keyword-mixed-alphabet", "simulated-annealing", "known-answer-tests", "g-fractionation"]
+summary = "Compressocrat gives each plaintext letter a fixed prefix-free code over the digits 1, 2, 3, concatenates the codes, pads with at most two 1s to a multiple of three, and replaces each digit trigraph by a ciphertext letter through a keyed alphabet. Since the code never produces the trigraph 333, exactly 26 trigraphs occur and the substitution is a bijection. It is a fractionation like Trifid but with variable-length codes, so ciphertext and plaintext lengths differ."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $h(\ell) \in \{1, 2, 3\}^{+}$ be the prefix-free code of letter $\ell$. Concatenate $h(p_0) h(p_1) \dots$, append at most two `1` digits to reach a multiple of three, and split into trigraphs $(a, b, c)$. Each trigraph has rank
+
+$$r = 9(a - 1) + 3(b - 1) + (c - 1) \in \{0, \dots, 25\}, \qquad c_j = \sigma[r],$$
+
+with $\sigma$ a keyed permutation of the alphabet; the rank 26 (trigraph 333) never occurs. Decryption inverts $\sigma$, re-expands the digits and parses the prefix-free stream greedily.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Length and validity"
+body = '''
+Ciphertext length is $\lceil (\sum_i |h(p_i)|) / 3 \rceil$, so a 504-letter ciphertext corresponds to a plaintext of about 520-530 letters under the standard code, and a control must be chosen by plaintext prefix to hit the target length exactly. A candidate $\sigma$ is *valid* only if the re-expanded digit stream parses into codes; the program counted valid tokens as a diagnostic (559 of 581 for the live endpoint) and rendered unparseable runs as filler, which loses their digit content and makes a literal forward impossible.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Fractionated Morse**: dots, dashes and separators as the three digits with a fixed Morse code; a neighbouring family whose control passed only under an observable-alphabet quotient (unused trigraph ranks leave alphabet cells unidentifiable).
+- **Trifid**: fixed-length three-coordinate fractionation; see [Trifid](/ciphers/trifid).
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The code table is the standard one and fixed; only $\sigma$ is secret.
+- Invariant: the ciphertext letter for rank 26 never appears, so one alphabet letter is absent from a direct Compressocrat ciphertext unless $\sigma$ maps only the 26 used ranks (the standard convention).
+- A fitted $\sigma$ that leaves invalid runs cannot re-encrypt to the ciphertext; forward replay is a real gate here, not a tautology.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Anneal $\sigma$ with an external search whose objective parses the digit stream and scores the resulting text (three predeclared seeds, best score selected).
+2. Independently re-implement encryption and decryption; require each control to byte-match a separately compiled generator before it counts.
+3. Gate a live result on the independent language verdict *and* an exact independent forward reconstruction; only then would a shuffled null be run.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Key space $26!$ over the used ranks; the external annealer solved each 504-letter control from three seeds within the audit's standard budget, with all six control searches selecting the exact hidden endpoint.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Invalid runs.** The live endpoint had 22 invalid tokens out of 581; the displayed text could not re-encrypt to the ciphertext (forward FAIL) and scored $-6.29$ per letter (no).
+- **Length mismatch.** A wrong assumption about the code table changes the implied plaintext length and every parse.
+- **Scope.** A different code table, a bespoke padding rule, or Compressocrat inside a composite is untested.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Two generic-corpus controls chosen to produce exactly 504 ciphertext letters (plaintexts of 527 and 520 letters) with keyed alphabets: both recovered exactly with all tokens valid and forward PASS in every one of the three seeds, and both matched the independent generator byte for byte (logs/199_compressocrat.log). The live text: 559/581 valid tokens, rate $-6.29$ (no), independent forward FAIL; no null run and no candidate.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+A small prefix-free code that never creates `333`: `E=1, T=2, A=31, O=32, N=331, S=332`. Plaintext `NOTES` encodes as `331 32 2 1 332` $=$ `3313221332` (10 digits); pad with `11` to 12 digits and split: `331 322 133 211`.
+
+```
+trigraph  331  322  133  211
+rank      24   22    8    9
+```
+
+With $\sigma$ the straight alphabet the ciphertext is `YWIJ`. Decryption re-expands `331322133211` and parses greedily: `331`=N, `32`=O, `2`=T, `1`=E, `332`=S, `11` = padding.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Compressocrat matters to the corpus less as a hypothesis than as a demonstration that forward replay can be a genuine gate: unlike invertible feedback or substitution ciphers, a wrong key here usually cannot reproduce the ciphertext at all.
+'''
+
+[[provenance]]
+path = "withmath/COMPRESSOCRAT_AUDIT.md"
+kind = "audit"
+note = "Log 199: algebra, control gate (527/527 and 520/520, forward PASS, generator byte-match), live endpoint 559/581 valid, -6.2908, forward FAIL."
+ref = "logs/199_compressocrat.log"
+
+[[provenance]]
+path = "withmath/wm_compressocrat_audit.py"
+kind = "solver"
+note = "Independent encryption/decryption, control generation, external search wrapper."
+
+[[provenance]]
+path = "withmath/COLOSSUS_DYNAMIC_AUDIT.md"
+kind = "audit"
+note = "Log 186/186b: Fractionated Morse control passes only under the observable-rank quotient; live non-English and forward FAIL."
+ref = "logs/186_colossus_dynamic_fracmorse.log"
+
+[[references]]
+title = "The ACA and You"
+author = "American Cryptogram Association"
+year = 2005

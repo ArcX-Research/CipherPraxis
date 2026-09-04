@@ -1,0 +1,100 @@
+id = "selection-overfit-check"
+section = "validation"
+title = "Selection overfit check"
+subtitle = "A score chosen as the best of many candidates is compared with a null that repeats the whole selection"
+status = "VERIFIED"
+status_note = "Applied as a ledger rule and executed in the research program: a ciphertext-derived cycle bank's best target score was beaten by 8 of 9 complete-pipeline null maxima and rejected as overfit; a cross-text maximum fell from +5.7 sigma to +0.8 sigma under the family-wise null."
+family = "Power and calibration"
+tags = ["selection", "overfitting", "multiplicity", "nulls"]
+related = ["selection-overfit-diagnostic", "family-wise-null", "within-coset-null", "shuffled-null-z-score", "valid-model-nulls", "tautological-gate-rule", "quadgram-log-likelihood", "bayesian-evidence-model-selection"]
+summary = "Every attack selects: the best key of a bank, the best placement of a crib, the best of several widths. The maximum of many noisy scores is not distributed like one score, so a target's best must be compared with the maximum the same selection produces on data known to contain nothing. The program's rule is that the null repeats the full selection, including every stage that follows the first screen; where that was done, several attractive target scores turned out to sit inside the null."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let a pipeline produce $S^\ast(c) = \max_{\theta \in \Theta} S(c, \theta)$ over a candidate set $\Theta$ (keys, cycles, placements, widths, relations), possibly followed by refinement of the top $k$. The **selection overfit check** compares $S^\ast(c_{\text{obs}})$ with the distribution of $S^\ast(c_b)$ over nulls $c_b$, $b = 1..B$, where each $c_b$ passes through the *identical* pipeline: the same $\Theta$, the same top-$k$ refinement, the same polish. The empirical exceedance
+
+$$p = \frac{1 + \#\{b : S^\ast(c_b) \ge S^\ast(c_{\text{obs}})\}}{B+1}$$
+
+is the only admissible measure of surprise. A per-candidate null ("how often does one random key score this well") understates the surprise by a factor that grows with $|\Theta|$.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "How much selection buys"
+body = '''
+Profiling $m$ free shifts of 26 values each on $n$ letters buys spurious fit. The program measured about $0.15$ nats per letter at $n = 153$ for $m = 7$, enough to make wrong models win a likelihood comparison, which is why its evidence-based instruments marginalise the shifts under a uniform prior instead of maximising them. For extreme-value intuition, the maximum of $M$ independent standard normals grows like $\sqrt{2\ln M}$: $M = 1{,}296$ trials gives about $3.8$, so a per-trial "$+5.7\sigma$" contains roughly $3.8\sigma$ of pure selection.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The nulls preserve what the pipeline is allowed to exploit and destroy what it claims to detect (within-coset shuffles for a periodic model; whole-text shuffles for a transposition-invariant one).
+- The nulls go through **every** stage. A null that stops at the screening statistic cannot bound a score produced after refinement.
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+Three recorded applications:
+
+- **Ciphertext-derived cycle bank.** 66,628 mechanically derived cycles were screened; the target's best at depth top-128 was $-4.869$ per letter. Nine complete-pipeline within-coset nulls were run through the same screen, depth and refinement; eight of nine null maxima beat the target (mean $-4.836$, empirical upper tail $p = 0.90$). Rejected as selection overfit, and the bank at that depth was closed.
+- **Cross-text relations.** The best coincidence rate over all index-space pairs and offsets was $0.0495$; against a per-trial null it looked like $+5.7\sigma$, against the family-wise null over the 1,296 trials it was $+0.8\sigma$.
+- **Frozen 100-cycle bank on a live text.** Best rate $-6.70$, rank 16 of 20 in each of two independently declared null families ($p = 0.8$); a clean negative for the bank only.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The null multiplies the pipeline's cost by $B + 1$. The program uses $B = 9$ for expensive complete pipelines, $B = 19$ per family in mid-cost lanes and $B = 99$ in sealed certificates, and it reports the resolution limit $1/(B+1)$ with the result.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Nulls that skip refinement.** The first screen is nulled, the top-$k$ polish is not; the polished target score then exceeds every null trivially.
+- **Selecting the more favourable statistic.** Reporting whichever of two statistics gives the smaller $p$ is itself a selection; sealed designs declare one primary statistic and treat the second as a conjunctive guard that cannot rescue a failure.
+- **Fluent overfits.** Language-model beams produce fluent strings on any input; the ledger forbids promoting one unless the full selected-family null is lower.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Run the identical check on a planted control: the plant's score should exceed all $B$ null maxima (rank 1) with a stated margin, which calibrates what a real recovery looks like under the same selection. The program's sealed suites require strict rank one for every positive and report the margin in rate units.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Check layout"
+body = '''
+```
+SELECTION  bank=66,628 cycles  screen=top-128  refine=quadgram polish  (identical pipeline for every null)
+  observed best        -4.869 per letter
+  null maxima (B = 9)  <one value per complete-pipeline null; recorded mean -4.836>
+  exceedances          8/9  ->  p = (1 + 8)/(9 + 1) = 0.90
+VERDICT selection overfit; bank/depth closed; no candidate
+```
+'''
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Cycle bank: target best -4.869 at top-128, eight of nine complete-pipeline within-coset null maxima beat it (mean -4.836, p = 0.90), rejected as selection overfit; cross-text relation +0.8 sigma family-wise versus +5.7 per-trial over 1,296 trials; 0.15 nats per letter of selection freedom from profiling seven shifts."
+ref = "logs/152_crosscycle_full.log"
+
+[[provenance]]
+path = "withmath/LOG_AUDIT.md"
+kind = "audit"
+note = "Evidence rule 4: scores selected from many keys, cycles or placements are compared with a null that repeats that full selection; the apparent window-key z-scores were selection effects."
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Frozen 100-cycle bank: target rate -6.70, rank 16/20 in each null family, p = 0.8, clean negative for the bank only."
+ref = "LOG402"
+
+[[provenance]]
+path = "withmath/PK10_CHAOCIPHER_FOURCLASS_CANDIDATE_NULL_CERTIFICATION_DESIGN.md"
+kind = "design"
+note = "One primary statistic already maximised over classes inside every replicate; the gap is a conjunctive guard, not a second route to significance; no choice of the more favourable statistic."

@@ -1,0 +1,146 @@
+id = "constraint-satisfaction-forward-checking"
+section = "exact"
+title = "Constraint satisfaction with forward checking"
+subtitle = "Backtracking search over discrete variables that filters the domains of unassigned neighbours after every assignment and orders variables by minimum remaining values"
+status = "VERIFIED"
+status_note = "Implemented for word-row assignment under fixed column substitutions (planted control found in 244 nodes), for crib plus key-word linear systems over letter positions (planted completions read at -4.12 to -4.27 with 100% match from 13-20-letter cribs), and for token tilings of finite vocabularies; every instrument prints its control before any target row."
+family = "Constraint programming"
+tags = ["CSP", "forward checking", "backtracking", "MRV", "node budget", "all-different"]
+related = ["word-prefix-csp", "all-different-enumeration", "cp-sat-and-smt-solvers", "exhaustive-enumeration", "all-different-constraints", "crib-driven-alphabet-recovery", "crib-dragging", "quagmire-iii", "dictionary-attack", "planted-controls", "g-forward-checking"]
+summary = "A constraint satisfaction problem assigns values from finite domains to variables so that all constraints hold. Forward checking makes backtracking practical: after each assignment the domains of the still-unassigned variables are filtered by the constraints they share with the new value, and an emptied domain triggers an immediate backtrack. Ordering variables by the smallest remaining domain keeps the search tree narrow. In classical cryptanalysis the variables are words on rows, letter positions in an unknown alphabet, or tokens in a tiling, and the constraints come from the cipher's equalities and injectivity."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Variables $X_1 \dots X_n$ with domains $D_i$, constraints $C_{ij}$ between pairs (and the global all-different where the values are alphabet positions).
+
+```
+solve(assignment, domains):
+    if all assigned: record solution; return
+    pick unassigned X with the smallest |D_X|               # minimum remaining values
+    for v in D_X:
+        nodes += 1; if nodes > budget: return                 # honest cap: "none within budget"
+        assignment[X] <- v
+        for each unassigned Y sharing a constraint with X:    # forward checking
+            D'_Y <- { u in D_Y : C_XY(v, u) holds }
+            if D'_Y is empty: dead; break
+        if not dead: solve(assignment, domains with D'_Y)
+        unassign X
+```
+
+For linear systems over $\mathbb{Z}_{26}$ (crib letters give $\text{idx}(c) - \text{idx}(p) - k_b \equiv 0$), unit equations are propagated first, the branch is on the most constrained letter, and the all-different constraint on positions is enforced at every assignment.
+'''
+
+[[blocks]]
+kind = "equations"
+body = '''
+Row-word CSP under seven fixed column substitutions. For rows $r, q$ with ciphertext rows $c_r, c_q$ and candidate words $w_r, w_q$, for every column $b$:
+
+$$[\,c_r[b] = c_q[b]\,] \iff [\,w_r[b] = w_q[b]\,],$$
+
+which is injectivity of each column map expressed pairwise; the same test filters a row's domain against every assigned row in one vectorised comparison.
+
+Crib CSP. With one alphabet $A$ acting on both sides and key shifts $k_b$, a crib letter $p$ at position $i$ under ciphertext $c$ gives the linear equation $\operatorname{idx}_A(c) - \operatorname{idx}_A(p) - k_{i \bmod 7} \equiv 0 \pmod{26}$; with a key word $W$, $k_b = \operatorname{idx}_A(W_b)$ makes it an equation in three letter positions.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The constraints are exact consequences of the cipher model; a solution is a proof of consistency, not of correctness, and is finished (completion of free letters) and read.
+- A node budget converts an open search into an honest "none within budget"; only an exhausted search supports a negative.
+- Spurious solutions scale with the bank: a 704-word bank has an expected spurious count near $10^{-28}$ for nine rows, while an unconstrained dictionary bank finds spurious assignments within a few nodes and is uninformative by design.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+- **Rows of words.** A period-7 zone read as a list of 7-letter words under seven fixed substitutions; families of 704 (four words with one-letter variations), about 52,000 (two-letter variations) and about 25,000 (all 7-letter dictionary words); every phase of the period; budgets of 2,000,000 and 150,000 nodes; solutions capped at three.
+- **Crib plus key word.** Cribs of 7-20 letters at every offset for each candidate key word; consistent assignments are ranked by the quadgrams of their pinned letters and completed by a quadgram climb over the free letters; wrong placements die in tens to hundreds of nodes when the key word is right.
+- **Token tilings.** A window is parsed left to right into tokens of a frozen vocabulary while five partial maps (with tied residues) stay consistent; each complete tiling is then checked against the modular position system with all-different positions.
+- **Direct letter-guess CSP.** In a chain without a free constant, every guessed plaintext letter is one homogeneous equation; GF(2) and GF(13) null spaces plus the CRT all-different factorisation decide feasibility in about 0.01 s per solve at crib length 26.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Worst case exponential in the number of variables; forward checking and MRV make the recorded instances small: control 244 nodes (nine rows, 704 candidates), wrong phases exhausted in 704-705 nodes; crib CSP wrong placements typically 27-677 nodes with the key word; exhaustive object tilings of a 95-letter window from 1,453 nodes (32 compass names) to 1,668,079 (note names), with short-token banks hitting a 2,000,001-node cap.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Underdetermined systems.** Without the key word ("free" shifts) the crib CSP never pins the alphabet: completion reads 0% at every crib length 7-20. With the key word, 13- and 15-letter cribs pinned it in 1 of 3 seeds, 17 letters in 2 of 3, and 20 letters read 100% even where the enumeration hit its 300,000-node cap.
+- **Caps hit by short tokens.** Banks of one- and two-letter tokens (element symbols, note names, compass abbreviations, glyph strings) exceeded 2,000,001 nodes because every ambiguous tokenisation is visited separately; the exact closure came from compiling the bank to a DFA and using SAT (see [CP-SAT and SMT solvers](/exact/cp-sat-and-smt-solvers)).
+- **Homogeneous systems.** A single word guess is always linearly consistent; rejection comes only from the all-different constraint once the null space is small, so single short cribs cannot be refuted exactly.
+- **Spurious solutions.** Large banks produce consistent assignments that are not the plaintext; the solution count within budget is the statistic, and any hit is a candidate until read and reproduced.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Word rows: planted nine rows (four words with one-letter variations) under seven random substitutions solved in 244 nodes (3 solutions found at the cap of 3, the truth among them); wrong phases of the same control exhausted with no solution in 704-705 nodes. Crib plus key word (96-letter planted zone, random alphabet, node cap 300,000): completions at $-4.12$, $-4.12$, $-4.27$ and $-4.10$ with 100% match for the solving seeds at 13, 15, 17 and 20 letters; wrong offsets 0 solutions in 27-677 nodes in most rows. Direct letter-guess CSP: 32/32 exact plaintext recovery at crib length 26 (power 1.000).
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Three ciphertext rows of length 3 under three unknown column substitutions: `XYZ`, `XQZ`, `PYW`. Word bank $\{$CAT, COT, DOG, CAR, BAT, BAR, RAT$\}$. Pairwise constraints: rows 1,2 must agree in columns 0 and 2 and differ in column 1; rows 1,3 must agree only in column 1; rows 2,3 must differ everywhere.
+
+Assign row 1 = CAT. Forward check row 2: needs $w[0] = $ C, $w[1] \ne$ A, $w[2] = $ T, leaving $\{$COT$\}$. Row 3: needs $w[0] \ne$ C, $w[1] = $ A, $w[2] \ne$ T, leaving $\{$BAR$\}$. Assign COT, check BAR against it: C$\ne$B, O$\ne$A, T$\ne$R, all required inequalities hold. Solution CAT / COT / BAR with column maps C$\to$X, B$\to$P; A$\to$Y, O$\to$Q; T$\to$Z, R$\to$W, each injective.
+
+Had row 1 been CAR, forward checking of row 2 (needs C, $\ne$A, R) empties its domain at once and the branch is abandoned without touching row 3. The mirrored solution COT / CAT / DOG also exists, which is why solution counts, not existence, are the statistic for large banks.
+'''
+
+[[provenance]]
+path = "withmath/wm_wordlist.py"
+kind = "solver"
+note = "Forward-checking CSP with MRV ordering over word rows; pairwise equality-pattern filter; families 704 / ~52k / ~25k; budgets 2,000,000 and 150,000 nodes; expected spurious count ~1e-28 for the four-word family."
+
+[[provenance]]
+path = "withmath/logs/31_wordlist.log"
+kind = "log"
+note = "CONTROL: 3 solutions in 244 nodes; wrong phases none (exhausted) in 704-705 nodes."
+ref = "logs/31_wordlist.log"
+
+[[provenance]]
+path = "withmath/probes/step3_cribcsp.py"
+kind = "solver"
+note = "Crib plus key-word CSP: propagate unit equations, branch on the most constrained letter, all-different on positions, quadgram completion of free letters; calibration over crib lengths 7-20 and three seeds."
+
+[[provenance]]
+path = "withmath/logs/42_cribcsp_calibration.log"
+kind = "log"
+note = "Calibration table: with the key word, truth pinned and completion 100% at m=13 (seed 3), 15 (seed 3), 17 (seeds 2,3), 20 (seed 1); free shifts 0% at every length; wrong offsets 0 solutions in 27-677 nodes in most rows, some at the 300,000 cap."
+ref = "logs/42_cribcsp_calibration.log"
+
+[[provenance]]
+path = "withmath/wm_cribcsp.py"
+kind = "solver"
+note = "Sweep of key words x cribs x offsets on two zones: 14,336 placements, 244 consistent, best -5.42 (noise); planted control reads at -4.14."
+ref = "logs/43_cribcsp_zones.log"
+
+[[provenance]]
+path = "withmath/wm_digits.py"
+kind = "solver"
+note = "Token-tiling CSP with five tied partial maps followed by the exact modular position CSP."
+
+[[provenance]]
+path = "withmath/OBJECT_VOCAB_AUDIT.md"
+kind = "audit"
+note = "Exhaustive tilings with node counts (1,453 to 1,668,079) and capped cells at 2,000,001 nodes for short-token banks."
+ref = "logs/160_objectvocab_fast.log"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Direct letter-guess CSP: 32/32 exact recovery at crib length 26, ~0.01 s per solve, power 1.000."
+ref = "LOG409b"
+
+[[references]]
+title = "Artificial Intelligence: A Modern Approach (constraint satisfaction, forward checking)"
+author = "S. Russell, P. Norvig"
+year = 2020

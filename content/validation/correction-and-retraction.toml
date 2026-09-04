@@ -1,0 +1,112 @@
+id = "correction-and-retraction"
+section = "validation"
+title = "Correction and retraction"
+subtitle = "Wrong claims are withdrawn in a dated entry that names the defect and its consequences"
+status = "VERIFIED"
+status_note = "The research program's ledger contains explicit retractions (a novelty claim found false by source inspection), reclassifications (a power pass downgraded to a wiring test), voided collisions and corrections of record carried in receipts; each names the earlier entry, the defect and what still stands."
+family = "Audit and release governance"
+tags = ["retraction", "correction", "ledger", "integrity"]
+related = ["ledger-reservations", "seal-and-audit-protocol", "reproducibility-receipts", "gauge-defect-invalidation", "selection-overfit-check", "power-measurement"]
+summary = "A research program that runs hundreds of negative experiments will make wrong claims, and its credibility rests on how it withdraws them. The practice here is a dated correction entry that quotes the false statement, states the evidence that refutes it, says which conclusions fall and which stand, and leaves the original untouched. Retractions in the program came from source audits (a 'never tested' family had been swept generically), from auditors (a power pass that was really a wiring test), and from arithmetic (a gate count of 17 that was 16)."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+A **correction** entry has five parts:
+
+1. the earlier entry it corrects, by log number and quoted claim;
+2. the defect, stated so that it can be checked (file and line, transcript hash, recount);
+3. the refuting evidence, with its receipt;
+4. the consequences: which results are withdrawn, which are reclassified, which stand unchanged;
+5. a rule, when the defect is a method error, that prevents the repetition.
+
+A **retraction** is a correction whose consequence is "the claim is false and withdrawn". A **reclassification** keeps the transcript but changes its evidentiary status (for example from `POWER_PASS` to `PIPELINE_CORRECTNESS_PASS`). A **void** is a correction of the ledger's own bookkeeping (a collided number) under which no artefact existed.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The corrected entry stays as written. Sealed bytes and their hashes remain valid; the correction is carried forward in later receipts.
+- Corrections are dated and attributed to a role, and where a different agent found the defect the entry says so.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Cases"
+body = '''
+- **False novelty.** A lane claimed that square routes on a 144-letter text were "genuinely untested". A source audit found that an existing route generator built spirals, boustrophedon and diagonal orders for *every* width from 2 to 24, so width 12 had been covered; the ledger had never named it because the code was generic. Retracted, with the rule that a keyword search over prose is not a source audit. Two genuinely new sub-families (composed write/read routes, triangular lattices) were identified in the same entry and kept open pending durable source and nulls.
+- **Power that was wiring.** Two blind controls recovered their truths at pairs 150 and 17 of 1.6 million because the fixture had been chosen with its truth at the front of the task order; reclassified to a wiring test, and the unreached random fixture remained the power measurement.
+- **Selection mistaken for signal.** A cross-text coincidence maximum looked like $+5.7\sigma$ against a per-trial null and was $+0.8\sigma$ against the family-wise null over 1,296 trials; the ledger records the per-trial figure as the error.
+- **Working memory versus logs.** Two earlier jobs were believed to have excluded a shared-square family; the audit found one had failed its own controls and the other had crashed, and the family was reopened.
+- **Arithmetic.** An audit terminal said "17/17 gates"; the receipt recounted 16 gate records and recorded the miscount without editing the sealed note.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Cheap to write, expensive to omit: an unretracted "closed" family is never revisited. The program's negative-results audit exists largely to find such omissions, and it classified every log in the directory before the next attack was designed.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Silent edits.** Rewriting the earlier entry destroys the record of what was believed when later decisions were made; the ledger forbids it.
+- **Over-retraction.** A correction that withdraws more than the defect warrants is also an error; the route retraction explicitly kept the lane's own sweep result (control power 1.000 per boundary, live feasibility 0 of 10,944) because the defect did not touch it.
+- **Corrections that do not propagate.** A receipt that restates an audit must carry the audit's corrections forward, or a reader of the receipt alone inherits the mistake.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Independent auditors disclose their own errors in the same form: one recorded that its first replica of a runner normalisation blanked one line instead of three, disagreed with the pin, and was wrong, "rather than quietly fixing it".
+'''
+
+[[blocks]]
+kind = "example"
+title = "Correction entry"
+body = '''
+```
+## 2026-09-04 CORRECTION TO LOG NNN (creator; defect found by the auditor) — THE "FAMILY X UNTESTED" CLAIM IS FALSE; RETRACTED
+Retraction. LOG NNN claimed … That is false and is withdrawn. Verified in the sources, not the ledger:
+  * generator.py:88 builds … for ANY width w; sweep.py:37 iterates w in 2..24.
+What is actually new: (i) …; (ii) …  (kept OPEN pending durable source and nulls)
+Unaffected: the LOG NNN sweep result (control power 1.000 per t, live 0/10,944) stands as recorded.
+Rule: novelty claims must inspect the implementations, not the narrative.
+```
+'''
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Retraction of the 12x12 route novelty claim after source inspection; rule that a keyword search over prose is not a source audit; unaffected sweep result kept."
+ref = "LOG410"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Ledger amendment reclassifying two front-loaded blind controls from POWER_PASS to PIPELINE_CORRECTNESS_PASS / WIRING_KAT; the random fixture remains the power measurement."
+ref = "LOG503"
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Cross-text relation maximum: z +0.8 against the family-wise null where the per-trial null had suggested +5.7 sigma over 1,296 trials; two earlier jobs found not to have excluded the shared-square family."
+
+[[provenance]]
+path = "withmath/PK10_ALBERTI_ACCEL13_VALIDATION381_INDEPENDENT_AUDIT.md"
+kind = "audit"
+note = "Correction carried forward in the binding receipt: 16 gate records, not 17; sealed bytes deliberately unmodified."
+ref = "LOG389"
+
+[[provenance]]
+path = "withmath/PK9_STRUCTURED_P7_CHAIN383_INDEPENDENT_AUDIT391.md"
+kind = "audit"
+note = "Auditor's disclosure of its own incomplete runner-normalisation replica."
+ref = "LOG391"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Mis-filed pilot transcript restored to its correct path with hash."
+ref = "LOG429"

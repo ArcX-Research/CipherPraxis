@@ -1,0 +1,111 @@
+id = "rail-fence"
+section = "ciphers"
+title = "Rail-fence transposition"
+subtitle = "Zigzag over r rails, read rail by rail"
+status = "VERIFIED"
+status_note = "The transposition sweep's planted control, a five-rail fence with offset 2 under a period-7 keyed layer with a key change, was recovered at 100% match (rate -4.17) among 192,853 permutations; the live 144-letter text was negative at every rail count 2-40 and offset."
+family = "Transposition"
+tags = ["transposition", "zigzag", "rails", "offset"]
+related = ["route-transposition", "columnar-transposition", "myszkowski", "transposition-width-recovery", "exhaustive-enumeration", "g-transposition-grid"]
+summary = "A rail fence writes the message in a zigzag across r rails and reads the rails one after another. With the rail count and the starting offset as the only key it has a tiny key space, and the position permutation is fixed once those two numbers are chosen, so the cipher is enumerated rather than searched. The program included every rail count from 2 to 40 and every offset in its transposition sweeps under a periodic layer."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For $r$ rails the zigzag has period $2(r - 1)$. Position $i$ (after an offset $o$) lies on rail
+
+$$\rho(i) = (r-1) - \big|\,\big((i+o) \bmod 2(r-1)\big) - (r-1)\,\big|,$$
+
+counted from the top rail. For $r = 3$ the rails of positions $0, 1, 2, 3, 4, \dots$ are $0, 1, 2, 1, 0, \dots$
+
+The ciphertext lists all positions on rail 0 in order, then rail 1, and so on; the permutation $q$ with $c_j = p_{q[j]}$ depends only on $(n, r, o)$.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Key space and structure"
+body = '''
+For a text of $n$ letters there are at most $\sum_{r=2}^{r_{\max}} 2(r-1)$ distinct $(r, o)$ pairs, 1,560 for $r \le 40$; each is a fixed permutation that can be precomputed. Under a period-$m$ additive layer applied after the fence, the coset residue of ciphertext position $j$ is $j \bmod m$, while the plaintext neighbour structure is recovered by undoing $q$; the sweep therefore decrypts the periodic layer first for each candidate $q$ and scores the un-fenced text.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Offset rail fence**: the zigzag starts partway through its period.
+- **Redefence**: rails read in a keyed order rather than top to bottom (a columnar-like key on the rails).
+- Combined with block reversal, whole-text reversal, routes and Myszkowski read-outs in the same sweep.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Histogram and index of coincidence are preserved; only positions move.
+- Invariant: rail lengths are fixed by $(n, r, o)$, so a candidate $(r, o)$ is either exactly right or wrong; there is no partial credit.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Precompute the permutation for every $(r, o)$.
+2. For each, undo the fence (and, in the layered model, fit the periodic key on the un-fenced text in both alphabet orders and relations), score by quadgrams, and polish the best few.
+3. Compare the best rate against the sweep's own distribution; a real solution reads as English at once.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+1,560 permutations for rails 2-40, each requiring one decrypt and score (or a small periodic fit); the whole family costs seconds and was run alongside 192,853 permutations of other types in about ten minutes.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Wrong offset.** A neighbouring offset yields a nearly right but unreadable text (the control's second-best entries at offsets 3 and 7 matched only 4-6%); the exact $(r, o)$ must be in the enumeration.
+- **Layered keys.** With a key change inside the periodic layer, the fit of the layer dominates the cost and its own polish is required.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Transposition sweep control (logs/29_pk9x.log): a planted five-rail fence with offset 2 under a period-7 keyed layer with a prefix key change was recovered at polished rate $-4.169$ with 100% match at both tested drift values, while the closest wrong offsets reached 4-6% match; CONTROL PASSED. The live 144-letter text and its 96-letter suffix were negative over rails 2-40 and every offset (whole $-6.00$, suffix $-5.71$).
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Three rails, no offset, plaintext `WEAREDISCOVEREDFLEEATONCE`:
+
+```
+rail 0: W . . . E . . . C . . . R . . . L . . . T . . . E
+rail 1: . E . R . D . S . O . E . E . F . E . A . O . C .
+rail 2: . . A . . . I . . . V . . . D . . . E . . . N . .
+```
+
+Rails read in order: `WECRLTE`, `ERDSOEEFEAOC`, `AIVDEN`. Ciphertext `WECRLTEERDSOEEFEAOCAIVDEN`.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The rail fence is the simplest member of the enumerable-transposition vocabulary; its control served to validate the whole sweep pipeline (permutation library, layered decrypt, quadgram polish) rather than to test a serious hypothesis about the corpus texts.
+'''
+
+[[provenance]]
+path = "withmath/wm_pk9x.py"
+kind = "solver"
+note = "Rail fences 2-40 rails with every offset, routes, block reversals, reversal and Myszkowski read-outs under a period-7 layer with key change; planted rail-fence control."
+ref = "logs/29_pk9x.log"
+
+[[provenance]]
+path = "ck_lib.py"
+kind = "library"
+note = "railfence_decrypt(ct, rails, offset)."
+
+[[references]]
+title = "Elementary Cryptanalysis"
+author = "Helen Fouché Gaines"
+year = 1939

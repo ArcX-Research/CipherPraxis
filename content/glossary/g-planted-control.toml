@@ -1,0 +1,10 @@
+id = "g-planted-control"
+section = "glossary"
+title = "Planted control"
+status = "VERIFIED"
+status_note = "Term as used throughout the validation section."
+family = "Validation vocabulary"
+tags = ["controls"]
+related = ["planted-controls", "blind-controls", "power-measurement"]
+summary = "A synthetic ciphertext made from a plaintext and key the experimenter chose, using the exact construction under test at the target's length, and run through the identical pipeline before the target. It passes when the plaintext and key are recovered exactly (up to declared gauge) and the recovered construction re-encrypts to the ciphertext. A control that fails means the instrument is broken, not that the target is closed."
+updated = "2026-09-04"

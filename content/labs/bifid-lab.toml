@@ -1,0 +1,21 @@
+id = "bifid-lab"
+section = "labs"
+title = "Bifid lab"
+subtitle = "Polybius-square fractionation with a period, coordinates written out and re-paired"
+status = "VERIFIED"
+status_note = "Unit-tested against Delastelle's published example (FLEEATONCE → UAEOLWRINS with the BGWKZQPNDSIOAXEFCLUMTHYVR square) and periodic round trips."
+family = "Fractionation labs"
+tags = ["bifid", "fractionation", "polybius"]
+related = ["bifid", "trifid", "polybius-square", "family-identification"]
+summary = "Bifid replaces each letter by its row and column in a 5×5 square, writes all rows of a block followed by all columns, and re-pairs the digit stream into letters. Each ciphertext letter mixes two plaintext letters up to a period apart, which is why single-letter statistics see a flat text and the period is the first parameter to recover."
+updated = "2026-09-04"
+lab = "bifid"
+
+[[blocks]]
+kind = "notes"
+title = "What to try"
+body = '''
+- Set the period to 0 (one block for the whole text) and to 1: with period 1 every letter maps to itself through its own coordinates, so the cipher degenerates.
+- Change one plaintext letter and watch which two ciphertext letters change: that is the fractionation footprint an attack exploits.
+- Compare the letter histogram of the ciphertext in the [coincidence lab](/labs/coincidence-lab) with the plaintext's: the index of coincidence drops toward the uniform value.
+'''

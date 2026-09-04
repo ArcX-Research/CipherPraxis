@@ -1,0 +1,142 @@
+id = "finite-field-linear-algebra"
+section = "algebra"
+title = "Linear algebra over GF(2) and GF(13)"
+subtitle = "Row reduction, rank and nullity as the engine of exact alphabet solvers"
+status = "VERIFIED"
+status_note = "Row reduction over the two prime fields with CRT recombination is the exact engine of every cycle solver in the corpus. Nullities, not consistency, carry the information: a homogeneous system with a gauge row is always consistent, and controls show that rejection comes only from the bijection constraint. Engines pass exhaustive known-answer tests and planted controls (4/4 hidden common-plaintext fixtures, 32/32 exact crib solves)."
+family = "Linear algebra over finite rings and fields"
+tags = ["GF(2)", "GF(13)", "rank", "nullity", "null space", "row reduction"]
+related = ["modular-inverse-and-crt", "all-different-constraints", "modular-arithmetic-z26", "units-mod-26", "residue-class-graphs", "matrix-invertibility-mod-26", "constraint-satisfaction-forward-checking", "word-prefix-csp", "exact-chain-oracle", "g-nullity", "g-all-different"]
+summary = "Cipher relations that are linear in the unknown alphabet coordinates form a system over Z26, which is not a field. Reducing the same system over GF(2) and over GF(13) gives two null spaces whose dimensions determine how many candidate alphabets remain. Ranks never reject a guess on their own; they price the enumeration, and small nullities are what make exact crib solving possible."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+A homogeneous linear system $M z \equiv 0 \pmod{26}$ in the 25 free coordinates (after the gauge row $z(A) = 0$) is solved by row-reducing $M$ over $\mathrm{GF}(2)$ and, independently, over $\mathrm{GF}(13)$. Each reduction yields a reduced row echelon form, a rank, and a null space of dimension $d_2$ or $d_{13}$ (also written $f_2, f_{13}$). The solution set modulo 26 is the CRT lift of the product of the two null spaces, with $2^{d_2} \cdot 13^{d_{13}}$ elements.
+'''
+
+[[blocks]]
+kind = "equations"
+body = '''
+- Common plaintext, two additive layers, one cycle: $z(L_i) - \varepsilon\, z(R_i) \equiv h_{i \bmod 7}$; subtracting the first equation of each residue removes $h$ and leaves homogeneous four-letter rows in $z$.
+- Shift-free key stream: each guessed plaintext letter gives one homogeneous row directly.
+- Chain with an unknown constant: pairs in the same key class give rows $[z(P_i) - z(P_r)] - e_A[z(C^A_i) - z(C^A_r)] + e_A e_B [z(C^B_j) - z(C^B_s)] \equiv 0$.
+- Unit-ratio cells: all units are $\equiv 1 \pmod 2$, so the $\mathrm{GF}(2)$ echelon form is identical across all 144 cells; the multiplier acts only in $\mathrm{GF}(13)$.
+- Residue graphs: the incidence matrix of $K_{7,9}$ has rank 15 over both fields, and its 48 rectangle rows have rank 48 over both fields.
+
+Measured nullity of the chain system versus crib length (1,500-pair development shard, no length minimum): $P(f_{13} \le 5) = 0.14$ at 14 letters, $0.34$ at 16, $0.54$ at 17, $0.74$ at 18, $0.90$ at 19, $0.99$ at 20; nullity histogram 0..8 = 26 / 85 / 163 / 297 / 406 / 320 / 147 / 45 / 11 with 22.7 observed letters against 19 equations on average.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- Relations are linear in the cycle coordinates (additive layers). Non-additive layers (fractionation, transposition after substitution) do not yield rows.
+- Unknown per-class constants are eliminated by differencing or carried as variables; either way the system stays homogeneous once a gauge row is added.
+- Ranks are computed exactly; floating-point elimination is never used.
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+1. Assemble rows from the cipher relations and one gauge row.
+2. Reduce over $\mathrm{GF}(2)$ and $\mathrm{GF}(13)$; record $(d_2, d_{13})$.
+3. If $d_{13}$ is small enough (in practice $\lesssim 7$), enumerate the $\mathrm{GF}(13)$ null space (projectively), apply the residue-twice filter, solve the parity conditions in the $\mathrm{GF}(2)$ null space, lift, and test all-different.
+4. Rank crib guesses by $d_{13}$ (their enumeration cost); require two long cribs, or one crib plus already-fixed letters, before calling a rejection exact.
+5. Keep every distinct all-different read of a system, not only the best-scoring one.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Reduction is negligible; enumeration is $13^{d_{13}}$: $13^5 = 371{,}293$, $13^7 = 62{,}748{,}517$. On a target-absent plant: one 10-letter word in a constant-key region gives $(f_2, f_{13}) = (24, 24)$ true crib and $(23, 23)$ wrong crib — $13^{23}$ solutions, nothing to enumerate; one 18-letter word in a period-7 region $(15, 15)$; two words of 15 and 18 letters $(3, 3)$ true and $(2, 2)$ wrong — enumerable. An exact crib-pair solver left 976 systems of one text unresolved by dimension ($f_{13} = 5$: 781, 6: 174, 7: 19, 8: 2) and 261 of another ($f_{13} = 5$: 160, 6: 95, 7: 6); its continuation processed all 8,851 $f_{13} = 5$ systems at $13^7$ each.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Ranks alone never reject.** 40 random wrong crib pairs were 0/40 linearly inconsistent; all 245,766 pairs of an exact pair solver were "linearly consistent". Rejection comes from all-different enumeration only.
+- Vacuous tests: a KAT that enumerated length-six inputs at period 7 made every equality residue a singleton, so its 4,096 checks tested nothing; it was labelled REJECTED_VACUOUS and replaced by a nonvacuous KAT (65,536 binary pairs, 175 restricted-growth pairs).
+- Keeping only the best partial read per system: a KAT planted a system whose true read ranked 2nd of 6 all-different reads and was lost; the rule was corrected to retain every read.
+- Integer overflow in index arithmetic (int16) exposed by exhaustive KAT.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Exhaustive small KATs: all $2 \times 3$ matrices over $\mathrm{GF}(2)$ with complete null spaces (64), all $1 \times 2$ rows over $\mathrm{GF}(13)$ (169), 64 literal CRT permutations. Four hidden common-plaintext controls with true-cell nullities $(1, 1)$ each yielded exactly one structural class and exact plaintext, cycle, keys and three forwards; a 132-cell scan took 1.484 s. The shift-free exact crib solver: 32/32 exact recoveries at crib length 26. The tail-continuation KAT recovered a planted $f_{13} = 5$ pair at index 1,459 of 3,482 large systems exactly, and proved its skip boundary.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Unknowns $x_1, x_2, x_3$ (positions of three letters; a fourth letter is fixed at 0 by the gauge). Rows: $x_1 + x_2 + x_3 \equiv 0$ and $x_1 - x_2 \equiv 0 \pmod{26}$.
+
+Over $\mathrm{GF}(13)$: $x_1 = x_2 = t$, $x_3 = -2t = 11t$; nullity 1, thirteen solutions. Over $\mathrm{GF}(2)$: $x_1 = x_2 = s$, $x_3 = 0$; nullity 1, two solutions. Combined: $2 \cdot 13 = 26$ solutions modulo 26, namely $x_1 = x_2$, $x_3 = -2x_1$. Every one of them has $x_1 = x_2$, so **no** solution is injective: the system is rejected by all-different, although it is consistent and has 26 linear solutions. Check one: $x_1 = x_2 = 5$, $x_3 = -10 \equiv 16$; $5 + 5 + 16 = 26 \equiv 0$.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The nullity table above is why exact word-guess rejection needs two long cribs: a single English word of up to about 20 letters leaves a null space far too large to enumerate, whatever its rank. See [Modular inverses and CRT](/algebra/modular-inverse-and-crt) and [All-different constraints](/algebra/all-different-constraints).
+'''
+
+[[provenance]]
+path = "withmath/SHARED_CYCLE_CHAIN_EQUATION_AUDIT_CLAUDE.md"
+kind = "audit"
+note = "Nullity table for word guesses (24,24), (15,15), (3,3); 0/40 wrong pairs linearly inconsistent; ranks never reject; practical rules."
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Exact crib-pair CSP: 245,766 pairs linearly consistent; unresolved systems by dimension f13 = 5:781, 6:174, 7:19, 8:2 and 5:160, 6:95, 7:6."
+ref = "LOG387"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Tail continuation: 8,851 f13 = 5 systems at 13^7; KAT planted pair recovered at index 1,459 of 3,482; true read ranked 2nd of 6 under the old rule."
+ref = "LOG390"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Nullity histogram 0-8 = 26/85/163/297/406/320/147/45/11; P(f13 <= 5) by pair length 0.14 (14) to 0.99 (20)."
+ref = "LOG406"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Shift-free exact crib CSP: 32/32 exact recoveries at crib length 26; typical d2/d13 = 2-4."
+ref = "LOG409"
+
+[[provenance]]
+path = "withmath/PK89_COMMONPLAIN_INVARIANT_CONTROL_AUDIT.md"
+kind = "audit"
+note = "KAT counts (64, 169, 64), four hidden (1,1) controls, 1.484 s, int16 overflow fix."
+
+[[provenance]]
+path = "withmath/PK89_COMMONPLAIN_INVARIANT_VALIDATION_AUDIT.md"
+kind = "audit"
+note = "Vacuous n6-at-p7 equality KAT rejected and replaced (65,536 binary pairs, 175 RGS pairs)."
+
+[[provenance]]
+path = "withmath/PK89_MIXED_P7_P9_RESIDUE_GRAPH_REVIEW.md"
+kind = "design"
+note = "K_(7,9) incidence rank 15 and 48 rectangle rows of rank 48 over both fields."
+
+[[provenance]]
+path = "withmath/PK9_UNITRATIO_NECESSARY_TARGET308_AUDIT.md"
+kind = "audit"
+note = "Identical GF(2) RREF across all 144 unit cells."
+
+[[references]]
+title = "Finite Fields"
+author = "Rudolf Lidl and Harald Niederreiter"
+year = 1997
+
+[[references]]
+title = "Linear Algebra"
+author = "Kenneth Hoffman and Ray Kunze"
+year = 1971

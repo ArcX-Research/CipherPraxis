@@ -1,0 +1,121 @@
+id = "trifid"
+section = "ciphers"
+title = "Trifid cipher"
+subtitle = "Three-coordinate fractionation on a 27-cell cube"
+status = "CLOSED"
+status_note = "Whole-message Trifid over periods 2-40 at 504 letters (2/2 arbitrary-cube controls exact) and a cube shared by two 153- and 144-letter texts (3/3 fixed-period and 3/3 period-selection controls exact) were excluded on the corpus texts; Trifid under an additional periodic layer failed all four controls and is power-limited."
+family = "Fractionation"
+tags = ["fractionation", "cube", "27 symbols", "period"]
+related = ["bifid", "playfair", "polybius-square", "simulated-annealing", "known-answer-tests", "conjugacy-and-gauge", "g-fractionation", "g-period"]
+summary = "Trifid writes each letter of a block as three ternary coordinates in a 3 x 3 x 3 cube of 26 letters plus one extra symbol, transcribes all first coordinates, then all second, then all third, and regroups the stream in threes. It is Bifid in three dimensions with a 27-symbol alphabet. The program verified a two-block known-answer vector, byte-matched a source generator, and ran controls-first audits of the direct, shared-cube and layered forms."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $Q$ be a cell-major permutation of the 27 symbols and let letter $x$ in cell $u$ have coordinates $\operatorname{coord}(x) = (\lfloor u/9 \rfloor,\ \lfloor u/3 \rfloor \bmod 3,\ u \bmod 3)$. For a block $x_0 \dots x_{L-1}$ with $\operatorname{coord}(x_i) = (a_i, b_i, c_i)$ form
+
+$$s = (a_0, \dots, a_{L-1},\ b_0, \dots, b_{L-1},\ c_0, \dots, c_{L-1}), \qquad y_k = Q\big[9 s_{3k} + 3 s_{3k+1} + s_{3k+2}\big].$$
+
+The inverse expands each ciphertext letter into three coordinates and reads $x_i$ from $(s_i, s_{L+i}, s_{2L+i})$. The final block is short and unpadded.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Gauge and the 27th symbol"
+body = '''
+Applying one permutation $\pi \in S_3$ to all three coordinates of every cell, $(a, b, c) \mapsto (\pi(a), \pi(b), \pi(c))$, commutes with the scalar regrouping, so a cube is identified only modulo this six-element class; the audits enumerate the orbit and check ciphertext equality before any search. An arbitrary cube emits its 27th symbol, so a 26-letter outer layer is not closed over the Trifid output; the program instead used explicit 27-symbol orders with arithmetic modulo 27 for the layered variant, and read the absence of the extra symbol from a ciphertext as data rather than a reason to change the model.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Whole-message Trifid** with period 2 to 40.
+- **Twin Trifid**: one cube shared by two messages with periods $(7, 7)$, or the unequal-period pairs $(7, 8)$ and $(8, 7)$ selected by score.
+- **Trifid plus an outer periodic layer** over $\mathbb{Z}_{27}$ with period $q \in \{6, 7, 9, 26\}$ and a Vigenère or Beaufort relation.
+- **Bifid** is the two-dimensional case; see [Bifid](/ciphers/bifid).
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- A 27-symbol alphabet; a plaintext restricted to 26 letters may still produce the extra symbol in the ciphertext.
+- Invariant: each ciphertext letter depends on three plaintext letters of the same block, so block boundaries carry a periodic signature.
+- Invariant: a fitted cube always round-trips its own decryption.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Pin the implementation: independent forward and inverse, a two-block known-answer vector, and byte-match against a separately compiled source generator.
+2. For every period in the declared range, anneal the cube (cell and plane moves) under a quadgram objective; 6 restarts of 300,000 proposals per period in the direct audit.
+3. Select the period by score; require the controls to recover exact plaintext, period and cube modulo the six-way gauge.
+4. For the shared-cube case, anneal one cube against the combined objective of both texts; for the layered case, anneal cube and outer key jointly with algebraically coherent global rotations.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Direct: 39 periods times 6 restarts times 300,000 proposals, about 70 million proposals per ciphertext, 55-58 seconds per 504-letter control. Twin: 24 restarts of 500,000 iterations on six threads. Layered: 624 fixed configuration cells (4 outer periods, 2 orders, 2 relations, 39 Trifid periods) screened at 25,000 proposals each before refinement of a predeclared top set.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Layered Trifid is not identifiable by this selector.** The hidden configuration cells ranked 456, 220, 147 and 123 of 624 against a top-set cap of 48, so no control reached refinement; even with the correct configuration disclosed and 14.4 million proposals, only 18/504 letters were recovered.
+- **Flat middle stream.** An alphabet-free periodic alignment instrument applied to the 16 outer configurations ranked the truth 13, 6, 5 and 2 of 16 and recovered none of the relative keys; the flat Trifid stream lets a period-26 alternative overfit.
+- **27th symbol in the output.** The selected live decrypts contained the extra symbol, failing the letters-only language contract before any rate was compared.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Direct (log 191): known-answer vector reproduced; two disjoint 504-letter controls with random cubes and hidden periods 17 and 26 recovered 504/504, the exact period and the cube class, at rates $-4.17$ and $-4.25$; the live text selected period 2 at $-6.95$ with two extra symbols, not English. Twin (log 207): three planted $(7, 7)$ pairs recovered 297/297 letters, periods and cube class (winner scores $-5.17$, $-4.98$, $-4.95$); three unequal-period controls selected the correct orientation each time; live winners $-8.83$ and $-8.78$, non-alphabetic. Layered (log 196): strict gate 0/4, live text never read.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Cube (cell-major) `FELIXMARDSTBCGHJKNOPQUVWYZ+`, period 5, plaintext `AIDETOILEC`.
+
+Block `AIDET`: A is cell 6 $\to (0,2,0)$, I cell 3 $\to (0,1,0)$, D cell 8 $\to (0,2,2)$, E cell 1 $\to (0,0,1)$, T cell 10 $\to (1,0,1)$. Stream $s = 0\,0\,0\,0\,1\ \ 2\,1\,2\,0\,0\ \ 0\,0\,2\,1\,1$; triples $(0,0,0) \to$ cell 0 `F`, $(0,1,2) \to 5$ `M`, $(1,2,0) \to 15$ `J`, $(0,0,0) \to$ `F`, $(2,1,1) \to 22$ `V`.
+
+Block `OILEC` gives `OISSU`; ciphertext `FMJFVOISSU`, which is the known-answer vector the program's independent implementation reproduces.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The closures are precise: whole-message classic Trifid at 504 letters over periods 2-40 at the demonstrated power, and a direct common cube at $(7,7)$ plus the smallest unequal-period repair at 153 + 144 letters. Interrupted or keyed advances, preprocessing, and a Trifid layer on part of a text are not covered.
+'''
+
+[[provenance]]
+path = "withmath/TRIFID_AUDIT.md"
+kind = "audit"
+note = "Log 191: coordinate algebra, six-way gauge, known-answer vector, 2/2 controls at n=504 over periods 2-40, live negative."
+ref = "logs/191_trifid_audit_20260831T183227Z.json"
+
+[[provenance]]
+path = "withmath/TRIFID_Q_AUDIT.md"
+kind = "audit"
+note = "Log 196: Trifid plus outer Z27 layer; 624-cell selector; hidden ranks 456/220/147/123; gate 0/4."
+ref = "logs/196_trifid_q_20260831T192238Z.log"
+
+[[provenance]]
+path = "withmath/TWIN_TRIFID_AUDIT.md"
+kind = "audit"
+note = "Log 207: shared cube for 153+144 letters; 3/3 p7/p7 and 3/3 orientation controls; live winners -8.83/-8.78."
+ref = "logs/207_twin_trifid_audit.json"
+
+[[provenance]]
+path = "withmath/wm_trifid_audit.py"
+kind = "solver"
+note = "Independent forward/inverse Trifid, gauge orbit enumeration, source-generator byte-match, control generation."
+
+[[references]]
+title = "Traité Élémentaire de Cryptographie"
+author = "Félix Delastelle"
+year = 1902

@@ -1,0 +1,120 @@
+id = "chaocipher"
+section = "ciphers"
+title = "Chaocipher"
+subtitle = "Two mutually permuting wheels; ciphertext fixes the left wheel's path"
+status = "CLOSED"
+status_note = "A keyed-wheel bank (156,816 ordered pairs) and the one-wheel-free reduction (left wheel in one of 104 dihedral states, right wheel arbitrary) were both control-qualified and both excluded on the 504-letter text; the result with both wheels arbitrary is untested."
+family = "Stream and machine ciphers"
+tags = ["machine", "wheels", "state mutation", "dihedral", "monoalphabetic reduction"]
+related = ["alberti-progressive", "keyword-mixed-alphabet", "dihedral-group", "permutation-cycles", "simulated-annealing", "known-answer-tests", "shuffled-null-z-score", "g-gauge-class"]
+summary = "Chaocipher enciphers with two alphabets on wheels that are permuted after every letter, so the substitution changes with the message. Its key observation for cryptanalysis is that, once the left (ciphertext) wheel's initial state is fixed, the ciphertext alone determines every subsequent wheel motion, and the unknown right wheel collapses to one monoalphabetic substitution of a computable position stream. The program exploited this to make the cipher searchable with a substitution solver."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Two 26-letter wheels $L$ (ciphertext) and $R$ (plaintext) start in secret states. To encipher $p_i$: find $j_i = \operatorname{pos}_{R_i}(p_i)$ and output $c_i = L_i[j_i]$. Then permute: rotate $L$ so that $c_i$ is at position 0, extract the letter at position 1 and reinsert it at position 13; rotate $R$ so that $p_i$ is at position 0, rotate once more, extract the letter at position 2 and reinsert it at position 13. Decryption locates $c_i$ in $L_i$ and reads $R_i$ at the same position, applying the same permutations.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "One-wheel reduction"
+body = '''
+For a candidate initial left wheel, the ciphertext fixes $j_i = \operatorname{pos}_{L_i}(c_i)$ and therefore every left state. The right wheel's permutations depend only on the $j_i$, so applying them to the identity positional array $\rho_0 = (0, \dots, 25)$ gives $q_i = \rho_i(j_i)$ and
+
+$$p_i = R_0[q_i],$$
+
+one arbitrary substitution of the computable stream $q$. The program's literal family for the left wheel was the 104 dihedral states $L_0(B, s, t)[r] = B[(sr + t) \bmod 26]$ over two base orders $B$, sign $s$ and rotation $t$; on every fixture these collapsed to exactly four distinct RGS classes with 26 rotational aliases each, an observed structural fact rather than 104 independent trials.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Keyed wheels from a vocabulary**: both wheels drawn from a bank of 396 keyed alphabets ($396^2 = 156{,}816$ ordered pairs).
+- **One wheel free**: left wheel dihedral, right wheel arbitrary (the reduction above).
+- **Both wheels free**: not searched; no validated decoder exists for it in the corpus.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The classic permutation rule is used unchanged; no interruptor or extra step.
+- Invariant: the ciphertext determines the left wheel's trajectory once its initial state is known, so a wrong initial state produces a wrong but self-consistent trajectory that still round-trips.
+- Invariant: for a plaintext exposing $m$ right-wheel coordinates, $(26 - m)!$ completions of $R_0$ are unobservable.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Verify the implementation against a published test vector and against an independently written string-wheel forward; exhaust all $5!^2$ wheel pairs and $5^2$ plaintexts on a five-letter reduced alphabet as a mechanics KAT.
+2. For each raw left state, derive $q$, and solve $p = R_0[q]$ with the frozen substitution annealer; share the solve across states with equal RGS.
+3. Gate on an English rate and a distinct-class gap frozen before the fixtures were opened; require exact plaintext, class, observed map and a literal forward on every positive control.
+4. Only an English-gated candidate would proceed to a predeclared 99-null certification.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Bank: 156,816 pairs, each a full decrypt and score. One-wheel-free: four distinct substitution problems per text under the frozen schedule; 28 fixtures (6 positives, 3 negatives, 19 nulls) took 54 seconds of selector time. The live one-shot ran in 27.9 seconds.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Tautological round-trip.** Every fitted state re-encrypts the ciphertext exactly.
+- **Bank limitation.** A negative over keyed wheels excludes only those wheels; the live bank winner scored $-7.59$ with visibly random output.
+- **Random-level ambiguity.** On the live text all four one-wheel-free classes scored $-15.23$ to $-15.31$ (the random-negative level) with a class gap of 0.02, so the decision was AMBIGUOUS, which the audit reads as rejection of the family, not as a lead.
+- **Both wheels free** is a genuinely open problem for which readability plus round-trip cannot be evidence.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Keyed-wheel bank (log 182): the published test vector passed; the 504-letter hidden-bank control selected its planted wheel pair at rank 1 of 156,816, recovered 100% plaintext and forward-encrypted exactly; live winner $-7.5867$, not English. One-wheel-free (log 359): 6/6 prose fixtures recovered exact plaintext, RGS class, generating alias, observed map and $(26-m)!$ count, rates $-9.96$ to $-9.37$ with class gaps above 5.3; 3/3 valid-family random negatives at $-15.20$ to $-15.17$; 19/19 shuffled-prose nulls at $-13.83$ to $-13.39$ against the frozen gate $-10.0$. Fresh validation (log 361): 2/2 unseen fixtures. Live one-shot (log 363): AMBIGUOUS at $-15.23$ to $-15.31$; no candidate.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+The published test vector (Rubin, 2010) uses left wheel `HXUCZVAMDSLKPEFJRIGTWOBNYQ` and right wheel `PTLNBQDEOYSFAVZKGJRIHWXUMC`. Plaintext `WELLDONEISBETTERTHANWELLSAID` gives ciphertext `OAHQHCNYNXTSZJRRHJBYHQKSOUJY`.
+
+First letter: `W` is at position 21 of the right wheel and position 21 of the left wheel holds `O`, so $c_0$ = `O`. After the two permutations the second letter `E` yields `A`. The program's independent integer-wheel and string-wheel forwards, its decrypt and its $q$-reduction all agree on this vector.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The one-wheel reduction is what makes the classic Chaocipher tractable: the cipher's state mutation is deterministic given the ciphertext and one wheel, so the "chaos" is entirely in one unknown substitution. The corpus closes the dihedral-left-wheel family on one 504-letter text and explicitly leaves the two-free-wheel family open.
+'''
+
+[[provenance]]
+path = "withmath/wm_chaocipher.py"
+kind = "solver"
+note = "Classic Chaocipher with a keyed-wheel bank; published vector KAT; hidden-bank control rank 1 of 156,816."
+ref = "logs/182_chaocipher.log"
+
+[[provenance]]
+path = "withmath/PK10_CHAOCIPHER_ONEWHEEL_CONTROL359_AUDIT.md"
+kind = "audit"
+note = "One-wheel reduction algebra, 104 dihedral left states collapsing to four RGS classes, 6/6 + 3/3 + 19/19 disclosed calibration."
+ref = "logs/359_pk10_chaocipher_onewheel_controls.log"
+
+[[provenance]]
+path = "withmath/PK10_CHAOCIPHER_ONEWHEEL_TARGET363_AUDIT.md"
+kind = "audit"
+note = "Target-unread static seal and replacement seal; one-shot transaction design."
+ref = "logs/363_pk10_chaocipher_onewheel_target.log"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "LOG361 fresh validation 2/2; LOG363 live result AMBIGUOUS at -15.23..-15.31 with gap 0.02; family rejected, not cracked."
+ref = "LOG363"
+
+[[references]]
+title = "Chaocipher Revealed: The Algorithm"
+author = "Moshe Rubin"
+year = 2010

@@ -1,0 +1,115 @@
+id = "order-free-width-statistic"
+section = "cryptanalysis"
+title = "Order-free width statistic"
+subtitle = "Scoring a transposition width from class structure alone, before any column order is known"
+status = "VERIFIED"
+status_note = "The residue-pattern reduction and the class-posterior block statistic are implemented; the reduction ranks the true residue pattern first on a 153-letter planted control (reported at z +9.4 against the familywise null) and the block statistic puts the true width on top at z 4 to 13 on four planted sandwiches, with shuffled ciphertexts pushed through the identical pipeline as the null (logs/300, 05)."
+family = "Layered-construction inference"
+tags = ["order-free", "transposition", "width", "residue pattern", "class posterior", "dynamic programming"]
+related = ["transposition-width-recovery", "mixture-inference-under-transposition", "sandwich-construction", "columnar-transposition", "exact-period-alignment", "bayesian-evidence-model-selection", "shuffled-null-z-score", "exact-dynamic-programming", "conjugacy-and-gauge", "g-order-free-statistic", "g-residue-pattern", "g-selection-freedom"]
+summary = "When a transposition is still in place, any statistic that depends on letter order is blind: the correct configuration scores like noise on quadgrams. Order-free width statistics score a width from quantities the transposition cannot touch, the multiset of letters in each coset, the inner class of each position, and the block structure those classes must show if the width is right. The corpus formulates the rule that governs the choice of statistic and two order-free instruments that reach widths an annealer could not."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+The rule: **while any transposition remains unstripped, score order-free (shift-marginalised monogram evidence, class patterns); only once every transposition is stripped, score with quadgrams.** The reason is exact: a transposition preserves the letter multiset, so the correct outer key leaves a residue whose monogram distribution is exactly the language's, while the same residue has a quadgram rate indistinguishable from noise.
+
+Two order-free width statistics follow. Given an inner period $k$ and a hypothesised width $w$, the **residue pattern** is the sequence $\sigma(s) \bmod k$ over read-out columns; the **block pattern** is the predicted class of every output position under $w$, constant per column if $k \mid w$ and alternating otherwise.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Pattern statistic and residue-pattern fit"
+body = '''
+Let $P_i(\gamma)$ be the posterior that position $i$ belongs to inner class $\gamma \in \{0,\dots,k-1\}$ (from a mixture fit with the outer shifts marginalised), centred per class so that the degenerate assignment "every letter is class 0" scores zero. For a width $w$ with $h = \lceil n/w \rceil$ rows and $e = n \bmod w$ long columns, a block is a run of $h$ or $h-1$ output positions with a phase $t$:
+
+$$S(w) = \max_{\text{layout}} \sum_{\text{blocks } B} \max_t \sum_{i \in B} \big[P_i\big((t + \text{step}\cdot i) \bmod k\big) - \bar P\big], \qquad \text{step} = (\pm w) \bmod k,$$
+
+where the layout (which $e$ of the $w$ blocks are long) is optimised by a dynamic programme over the columns, or enumerated when $\binom{w}{e}$ is small. The null pushes shuffled ciphertexts through the identical pipeline (fit, spacing candidates, class-EM, DP), so $z(w)$ is honest; widths with $z \ge 3$ go to the column solver.
+
+For the residue-pattern fit, the outer shifts $u$ (period $p$) and inner shifts $v$ (period $k$) are fitted per pattern by alternating exact monogram maximisation. Both coordinates stay free during the iteration and the gauge (a common rotation of $v$) is fixed only after convergence: pinning $v_0 = 0$ mid-iteration destroys the monotone ascent and collapses every fit onto $v = 0$.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The inner layer has a short period $k$ so that classes exist; a plain (period-1) inner gives no class structure and no width signal, which is the correct negative.
+- The transposition is columnar with the unpadded long/short convention; other transposition types need their own position map.
+- The outer layer is additive in a known order so that class posteriors can be formed; the posteriors are only as good as the inner model.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Fit the inner mixture with the outer shifts marginalised; keep the top spacings $\delta$ and per-letter class posteriors (see [Mixture inference under transposition](/cryptanalysis/mixture-inference-under-transposition)).
+2. For every width $2 \le w \le w_{\max}$ and orientation, compute $S(w)$ with the layout DP; refine the outer shifts by class-EM for that width and keep the better statistic.
+3. Repeat on shuffled ciphertexts to obtain $z(w)$.
+4. Alternatively, for an exact grid, enumerate residue patterns and fit $(u, v)$ per pattern by evidence; rank patterns against a familywise shuffle null.
+5. Hand widths with $z \ge 3$ (smallest first; odd widths share the alternation signal and even widths the constancy signal) to the column solver, which fixes residue classes from the block phases and orders the rest by quadgrams.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Pattern statistic: $O(k\,n)$ prefix sums, then $O(w \cdot e)$ DP per width; sixty null pipelines over widths 2 to 25 run in tens of minutes per text. Residue-pattern fit: $w!/\prod(\text{mult}!)$ patterns, each an alternating exact maximisation over $26(p + k)$ values; width 17 with $k \le 2$ is exhaustive at 153 letters.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Using quadgrams too early.** The verify demonstration: correct inner, monogram log-likelihood $-2.83$ per letter, quadgram rate $-6.95$; after stripping, $-4.38$ (logs/301).
+- **Uncentred posteriors.** Without centring, the all-one-class configuration maximises every even width.
+- **Gauge collapse.** Fixing $v_0 = 0$ during the alternating fit returns nothing while looking like a working solver.
+- **Shared signals across widths.** Several widths respond to the same alternation or constancy; the statistic ranks, the plaintext decides.
+- **Non-single transpositions.** A double columnar shows the inner mixture ($M_2$ at $z +5.8$) but no single width; fractionation shows weak mixture and no width. On the two unsolved corpus texts no width reached $z \ge 3$ in any combination of orders (logs/05).
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+- Block statistic (logs/05): planted period-7 over width-9 over period-2 (exact grid) $z +12.8$; width 8 ragged $+11.3$; width 12 with a different inner alphabet $+4.3$; width 9 with a period-3 inner $+5.1$; each then solved at 100% match and rate $-4.34$. Controls printed alongside showed the negative signatures: a fractionated inner, a plain periodic substitution, a double columnar.
+- Residue-pattern fit (logs/300, 303): planted period-7 over width-9 over period-2 at 153 letters, CONTROL PASS with the true pattern first; the design note reports rank 1 of 504 at evidence $-2.9776$ against $-3.3739$ for the runner-up ($z +9.4$ familywise) with the inner shifts recovered exactly and the outer up to the gauge.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Continue the width-4 example of [Transposition width recovery](/cryptanalysis/transposition-width-recovery): output `TAWACDATNTKA` from `ATTACKATDAWN` with $\sigma = (2,0,3,1)$. With a period-2 inner, position $j$ has class $\tau(j) \bmod 2 = \sigma(s) \bmod 2$, so the twelve output positions carry the classes
+
+```
+output   T A W | A C D | A T N | T K A
+class    0 0 0 | 0 0 0 | 1 1 1 | 1 1 1
+```
+
+With centred class scores ($+\tfrac12$ for a position whose class matches the block's predicted class, $-\tfrac12$ otherwise) width 4 predicts a constant class per block and scores $S(4) = 4 \times 1.5 = 6$. Width 3 is odd, so it predicts an *alternating* class down each column of four; the actual classes in blocks of four are `0000 | 0011 | 1111`, which match an alternating pattern in exactly two positions of every block, giving $S(3) = 0$. In a real run the classes are posteriors rather than labels, and the counts are $\binom{9}{4} = 126$ residue patterns for width 9, $1{,}680$ for period 3 and $24{,}310$ for width 17 with period 2.
+'''
+
+[[provenance]]
+path = "withmath/wm_mix.py"
+kind = "solver"
+note = "class_prefix / pattern_dp / layouts_topk: centred class-posterior block statistic with long/short-column DP; refine (class-EM); shuffled-pipeline nulls."
+ref = "logs/05_mix.log"
+
+[[provenance]]
+path = "withmath/wm_grammar.py"
+kind = "solver"
+note = "Residue-pattern sandwich fit with alternating exact monogram maximisation and gauge fixed after convergence; statistic-discipline demonstration."
+ref = "logs/300_grammar_sandwich_pk89.log"
+
+[[provenance]]
+path = "withmath/logs/301_grammar_verify.log"
+kind = "log"
+note = "Correct inner: monogram -2.8297 per letter, quadgram -6.9464; after stripping -4.3830."
+
+[[provenance]]
+path = "withmath/GRAMMAR_SOLVER.md"
+kind = "note"
+note = "The order-free rule, residue-pattern counts, control rank 1 of 504 at z +9.4, and the gauge-collapse remark."
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Mathematics of the mixture attack: transposition invariance, centred posteriors, class-EM, honest nulls."

@@ -1,0 +1,127 @@
+id = "porta"
+section = "ciphers"
+title = "Porta cipher"
+subtitle = "Reciprocal periodic cipher with 13 half-alphabet tables selected by key-letter pairs"
+status = "CLOSED"
+status_note = "The free periodic Porta solver passed all three target-length controls (63, 95 and 126 letters) exactly; on the three measured zones every endpoint failed the language gate, closing free periodic Porta in the two fixed orders at those lengths. The Porta autokey variant is control-locked at 144 and 504 letters."
+family = "Polyalphabetic substitution"
+tags = ["periodic", "reciprocal", "polyalphabetic", "half-alphabet"]
+related = ["beaufort", "vigenere", "autokey", "digraphic-slide", "periodic-substitution-dp", "exact-dynamic-programming", "g-reciprocal-cipher", "g-period"]
+summary = "Porta splits the alphabet into two halves of 13 and, for each key letter, exchanges the halves with a rotation chosen by the key letter's pair (AB, CD, ...). Only 13 distinct tables exist, the cipher is its own inverse, and letters never map into their own half. The program attacked it with a free effective key in Z13 per coset, solved exactly by the same cyclic dynamic programme as the additive ciphers, and separately tested word keys and a plaintext-fed autokey version."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Index the alphabet $0 \dots 25$ in a fixed order $A$ and let $x = \operatorname{pos}_A(p_i)$. The key letter at position $i$ has pair index $t = \lfloor \operatorname{pos}(k_{i \bmod m}) / 2 \rfloor \in \mathbb{Z}_{13}$. Then
+
+$$\operatorname{pos}_A(c_i) = \begin{cases} 13 + (x + t) \bmod 13 & x < 13 \\ (x - 13 - t) \bmod 13 & x \ge 13. \end{cases}$$
+
+The same formula decrypts: the map is an involution, and a letter of the top half always goes to the bottom half and vice versa.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Key classes and invariants"
+body = '''
+Key letters in the same pair (A/B, C/D, ...) select the same table, so the observable key is the vector $(t_0, \dots, t_{m-1}) \in \mathbb{Z}_{13}^m$ rather than a word. A sign-reversed tableau ($t \mapsto -t$) is absorbed into the free-key family, so it is not a separate trial. Because a letter never encrypts within its own half, a plaintext letter and its ciphertext differ in half at every position: $\lfloor x/13 \rfloor \ne \lfloor \operatorname{pos}_A(c_i)/13 \rfloor$. In a word-keyed Porta an ordinary word can produce only two or three distinct tables, which gives a period-7 text an unusually small number of substitution classes.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Free periodic Porta**: every coset chooses any of the 13 tables, in the straight or a keyword-mixed order.
+- **Word-keyed Porta**: seven-letter dictionary keys at every phase, both directions, two tableaux.
+- **Porta autokey**: the key stream is a primer followed by the plaintext; the pair equivalence makes the primer identifiable only up to A/B, C/D, ... classes.
+- **Portax**: the digraphic slide built from the Porta rectangle; see [Digraphic slide](/ciphers/digraphic-slide).
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Periodic key and one index order; natural-language plaintext.
+- Invariant: reciprocity, so a fitted state always round-trips and round-trip is not evidence.
+- Invariant: the half-swap. If ciphertext and plaintext ever share a half at the same position in the assumed order, that order is wrong.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. For each coset rank the 13 tables by monogram likelihood of the decrypted coset; keep the best eight.
+2. Solve the shortlisted product exactly with the cyclic order-three quadgram dynamic programme, then let all 13 tables enter through coordinate and adjacent-pair polish (see [Periodic substitution DP](/exact/periodic-substitution-dp)).
+3. Require the planted controls to recover every letter and the exact order and key before any live zone is scored; give any English endpoint a within-coset shuffled null that repeats the full order/key selection.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Free key: $13^m$ raw keys ($13^7 \approx 6.3 \times 10^7$, $13^{26} \approx 9 \times 10^{28}$); the DP makes the shortlisted product exact at $8^3$ states per step. Word keys: every seven-letter dictionary word times seven phases, batched, in one to two minutes.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Partial-language endpoints.** The 126-letter period-26 zone reached $-5.73$ per letter ("partial"): a free 26-table key on five letters per coset fits fragments of language without being plaintext.
+- **Autokey power.** The plaintext-fed Porta autokey solver reached only 97.22% and 99.21% plaintext on its 144- and 504-letter controls, with the wrong primer class despite exact false-state round-trips, so those targets were never run.
+- **Unknown order.** Only two fixed orders were tried; an arbitrary mixed order under a Porta layer is outside the tested scope.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Free periodic Porta (log 204): three blind controls at 63 letters/period 7 (straight order), 95 letters/period 7 and 126 letters/period 26 (keyword-mixed order) each recovered 100% plaintext, the exact order and effective key, and the forward ciphertext. The three admitted zones then scored $-6.25$ (no), $-6.36$ (no) and $-5.73$ (partial); none reached the predeclared English gate, so no null budget was spent and no candidate followed. Word-keyed Porta (logs/55_porta.log): controls ranked the planted key first; both zones negative. Porta autokey (log 185): the 153-letter control passed exactly; the 144- and 504-letter controls failed as above.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Straight order, key `KEY`: K is letter 10, pair index $t = 5$; E gives $t = 2$; Y gives $t = 12$. Plaintext `HELLO`:
+
+```
+plain   H   E   L   L   O
+x       7   4  11  11  14
+t       5   2  12   5   2
+result  13+12=25  13+6=19  13+(23 mod 13)=23  13+(16 mod 13)=16  (14-13-2) mod 13=12
+cipher  Z   T   X   Q   M
+```
+
+Applying the same tables to `ZTXQM` returns `HELLO`; every plaintext letter changed half.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The closure is scoped: free periodic Porta in the straight and one keyword-mixed order on three measured zones of 63, 95 and 126 letters, with a demonstrated control power of 3/3. It says nothing about Porta over an arbitrary order or a Porta layer inside a composite.
+'''
+
+[[provenance]]
+path = "withmath/wm_periodic_porta_dp.py"
+kind = "solver"
+note = "Free periodic Porta by cyclic DP; three target-length controls; within-coset nulls."
+ref = "logs/204_periodic_porta.log"
+
+[[provenance]]
+path = "withmath/PERIODIC_PORTA_DP_AUDIT.md"
+kind = "audit"
+note = "Log 204 production result: 3/3 controls exact; zone endpoints -6.2479, -6.3562, -5.7315."
+ref = "LOG204"
+
+[[provenance]]
+path = "withmath/wm_porta.py"
+kind = "solver"
+note = "Word-keyed Porta on both zones, straight and keyword-mixed tableaux, both directions, planted prose controls."
+ref = "logs/55_porta.log"
+
+[[provenance]]
+path = "withmath/AUTOKEY_AUDIT.md"
+kind = "audit"
+note = "Porta plaintext-autokey: n153 control PASS; n144/n504 controls reached 97.22%/99.21% and were locked."
+ref = "logs/185_autokey_audit.log"
+
+[[references]]
+title = "De Furtivis Literarum Notis"
+author = "Giovanni Battista della Porta"
+year = 1563

@@ -1,0 +1,10 @@
+id = "g-period"
+section = "glossary"
+title = "Period (of a cipher)"
+status = "VERIFIED"
+status_note = "Standard term."
+family = "Cipher structure"
+tags = ["periodic"]
+related = ["vigenere", "compound-periodic-key", "bifid", "kasiski-examination", "coincidence-lag-profile", "lcm-of-periods", "g-coset"]
+summary = "The length m after which a cipher's key repeats (Vigenère, Quagmire, Porta, Slidefair) or the block length over which a fractionation regroups coordinates (Bifid, Trifid). A periodic key makes positions i and i + m behave alike, which shows as a coincidence excess at lag m and its multiples; two periodic layers in one alphabet combine to period lcm(m, q); an autokey or running key has no period."
+updated = "2026-09-04"

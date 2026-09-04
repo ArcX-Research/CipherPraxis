@@ -1,0 +1,10 @@
+id = "g-all-different"
+section = "glossary"
+title = "AllDifferent constraint"
+status = "VERIFIED"
+status_note = "Standard constraint-programming term; the CRT factorisation used to enforce it is verified against brute force."
+family = "Algebra"
+tags = ["CSP", "bijection"]
+related = ["all-different-constraints", "modular-inverse-and-crt", "all-different-enumeration", "g-nullity"]
+summary = "The constraint that a set of variables take pairwise distinct values. For an unknown cipher alphabet it states that the 26 letter coordinates form a permutation of 0 to 25. Linear cipher relations rarely contradict a wrong guess on their own; the contradiction appears when their solutions are required to be permutations. Over Z26 the constraint factorises: each residue modulo 13 must occur exactly twice and its two carriers must have opposite parity."
+updated = "2026-09-04"

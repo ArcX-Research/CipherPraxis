@@ -1,0 +1,21 @@
+id = "columnar-lab"
+section = "labs"
+title = "Columnar transposition lab"
+subtitle = "Keyword-ordered columns, regular or irregular, with the grid drawn out"
+status = "VERIFIED"
+status_note = "Unit-tested against the standard irregular columnar vector (keyword ZEBRAS on WE ARE DISCOVERED FLEE AT ONCE → EVLNACDTESEAROFODEECWIREE) and regular-padding round trips."
+family = "Transposition labs"
+tags = ["transposition", "columnar", "grid"]
+related = ["columnar-transposition", "transposition-width-recovery", "order-free-width-statistic", "myszkowski"]
+summary = "A columnar transposition writes the text into rows under a keyword and reads the columns out in alphabetical order of the keyword letters. With an unpadded last row the leftmost columns are one letter longer, which the decryptor must reconstruct from the length alone. The lab shows the grid, the read-out order and both ciphertext variants."
+updated = "2026-09-04"
+lab = "columnar"
+
+[[blocks]]
+kind = "notes"
+title = "What to try"
+body = '''
+- Toggle padding: the ciphertext changes only by the padding letters, but the column lengths become uniform and the decryption ambiguity disappears.
+- Use a keyword with repeated letters (`BANANA`): ties are broken left to right, and the small ranks under the keyword show the resulting order.
+- Make the text length a multiple of the keyword length: the irregular and regular ciphertexts coincide.
+'''

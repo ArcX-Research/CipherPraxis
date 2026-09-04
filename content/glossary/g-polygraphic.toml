@@ -1,0 +1,10 @@
+id = "g-polygraphic"
+section = "glossary"
+title = "Polygraphic substitution"
+status = "VERIFIED"
+status_note = "Standard term."
+family = "Cipher structure"
+tags = ["digraphic", "block"]
+related = ["hill-cipher", "playfair", "two-square-four-square", "digraphic-slide", "g-fractionation"]
+summary = "A substitution acting on groups of letters at once (digraphs for Playfair, two-square, four-square and slide ciphers; d-letter blocks for Hill). Single-letter frequencies are destroyed but block-level statistics survive, and linear polygraphic ciphers separate by row so that each output position can be attacked on its own decimated stream."
+updated = "2026-09-04"

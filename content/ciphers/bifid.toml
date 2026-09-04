@@ -1,0 +1,129 @@
+id = "bifid"
+section = "ciphers"
+title = "Bifid cipher"
+subtitle = "Polybius coordinates written out by rows, then regrouped: fractionation with a period"
+status = "VERIFIED"
+status_note = "A direct 504-letter Bifid control with an arbitrary square and a hidden period among the estimated candidates was recovered 504/504 with the period selected correctly; for a Bifid square shared by two 153- and 144-letter texts under a period-7 outer key, the outer key was enumerated exhaustively from an omission constraint and fixed-key square recovery measured 100/100, while the joint annealer of an earlier lane failed 0/4."
+family = "Fractionation"
+tags = ["fractionation", "polybius square", "period", "5x5"]
+related = ["trifid", "playfair", "two-square-four-square", "polybius-square", "sandwich-construction", "family-identification", "simulated-annealing", "exhaustive-enumeration", "bifid-lab", "g-fractionation", "g-period"]
+summary = "Bifid replaces each letter of a block by its row and column in a 5 x 5 square, writes all the rows and then all the columns, and reads the resulting digit string back in pairs. Each ciphertext letter mixes coordinates of two plaintext letters up to a period apart, which flattens single-letter statistics and removes digram structure while keeping the block boundary. The program treated Bifid both directly and as the inner layer under a periodic key shared between two texts."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $S$ be a $5 \times 5$ square (25 letters) and let $(r(x), c(x))$ be the coordinates of $x$. For a block $x_0 \dots x_{m-1}$ of period $m$ form the sequence
+
+$$\gamma = \big(r(x_0), \dots, r(x_{m-1}),\ c(x_0), \dots, c(x_{m-1})\big)$$
+
+and output $y_j = S[\gamma_{2j}, \gamma_{2j+1}]$ for $j = 0 \dots m-1$. Decryption expands each ciphertext letter to two coordinates, refills $\gamma$, and reads $x_j = S[\gamma_j, \gamma_{m+j}]$. A short final block uses its true length.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Coordinate roles and the omission constraint"
+body = '''
+Within a full block of period 7 the two coordinates of $y_j$ come from fixed plaintext positions: the roles by output position are $(RR, RR, RR, RC, CC, CC, CC)$, i.e. the first three ciphertext letters are made of rows only, the middle one of the last row and first column, the last three of columns only. Under an outer period-7 additive layer in a 26-letter order $B$, the one letter absent from the square can never be emitted by the inner cipher, so each outer shift $k_b$ must keep the omitted symbol out of coset $b$ of the ciphertext; for the two corpus texts this reduces the $26^7$ outer keys to exactly $5 \times 5 \times 4 \times 5 \times 5 \times 7 \times 6 = 105{,}000$ admissible vectors per convention, which can be enumerated completely.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Direct Bifid** with an arbitrary or keyword square and period 2 to 40.
+- **Conjugated-matrix Bifid**: coordinates read from one square, letters written from another.
+- **Bifid under a periodic key**, one square shared by two texts, each with its own or a rotated outer key.
+- **Trifid**: the three-dimensional analogue on a 27-cell cube; see [Trifid](/ciphers/trifid).
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- 25-symbol alphabet; a direct Bifid ciphertext cannot contain all 26 letters, so an outer layer is required for the corpus texts.
+- Invariant: ciphertext letters inside a block depend only on that block; block boundaries at multiples of the period are recoverable by period estimation.
+- Invariant: coordinate roles fix which plaintext positions feed each output, so histograms of decoded symbols inside the three row-only and three column-only residues align when the outer key is right.
+- Round-trip of a fitted square is tautological.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Estimate the period from the block structure (candidate periods are those at which within-block statistics are distinctive).
+2. Anneal the square under a quadgram objective for each candidate period; select the period by score.
+3. With an outer layer shared across two texts, enumerate every admissible outer key from the omission constraint, order them by a coordinate-role histogram statistic without truncating, and run the square search for every key (512-state beam, then 64 restarts of 80,000 deep solves).
+4. Gate on both texts reading as English with a joint rate above $-5.0$ and two independent literal forwards; a crossing is only a preliminary candidate until a phase-aware selected-family null re-maximises over all arms.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Square space $25!$ up to gauge. Direct 504-letter annealing selects the period among the estimated candidates inside the external engine's standard budget. Shared square under a period-7 key: 105,000 keys per cell times a 512-state beam, then deep solves; 8 cells (two orders, two relations, omitted J or X) were completed for the aligned-key case, and 40,500 and 43,200 keys per cell for the two length-predicted relative phases.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Joint annealing of square and 14 free shifts** at 153 + 144 letters stops at n-gram local optima (rates $-6.49$ to $-6.64$) and recovered none of four planted pairs; the key had to be enumerated, not annealed.
+- **Ordering statistic with a heavy tail.** A 300-control audit found the coordinate-role histogram statistic can rank the true key low, so it may order the search but never truncate it.
+- **Underpowered square panel.** A 24 x 40,000 fixed-key panel recovered 94/100 and was rejected; 64 x 80,000 gave 100/100.
+- **Unmotivated phases.** The relative-phase lane closed only phases 0, 3 and 6; phases 1, 2, 4, 5 are not silently claimed.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Direct Bifid (log 184): 504-letter control, arbitrary square, hidden period 7 among the estimated periods, 504/504 plaintext and exact forward. Tied-key twin Bifid annealer (log 491): 0/4 controls, family left open. Exhaustive outer key (log 492): the all-key timing control evaluated 112,000/112,000 keys and recovered the shared key and both plaintexts at rank 1; fixed-key square recovery 100/100 across both orders, both relations and both omitted letters. Aligned live run (log 493): all 840,000 outer keys across eight cells, best joint rates $-6.46$ to $-6.59$, all sixteen English verdicts no. Relative phase (logs 494-495): controls 144/144, 56/56 and 2/2 end-to-end; live phases 6 and 3 non-English (best $-6.52$ and $-6.48$).
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Square (rows) `BGWKZ / QPNDS / IOAXE / FCLUM / THYVR`, period 5, plaintext `FLEEATONCE`.
+
+Block `FLEEA`: rows $3,3,2,2,2$, columns $0,2,4,4,2$ (0-based). $\gamma = 3\,3\,2\,2\,2\,0\,2\,4\,4\,2$, read in pairs: $(3,3) = U$, $(2,2) = A$, $(2,0) = I$, $(2,4) = E$, $(4,2) = Y$.
+Block `TONCE`: rows $4,2,1,3,2$, columns $0,1,2,1,4$; pairs $(4,2) = Y$, $(1,3) = D$, $(2,0) = I$, $(1,2) = N$, $(1,4) = S$.
+
+Ciphertext `UAIEYYDINS`. The [Bifid lab](/labs/bifid-lab) shows the coordinate roles per block.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Family-identification statistics cannot separate Bifid from a Quagmire with an unstructured alphabet or from seven independent substitutions at 153 letters (self-classification 8-40%), which is why the program's Bifid work relied on structural constraints such as the omitted symbol rather than on distributional fingerprints.
+'''
+
+[[provenance]]
+path = "withmath/COLOSSUS_AUDIT.md"
+kind = "audit"
+note = "Log 184: Bifid n=504 control 504/504 with hidden period 7 selected; forward exact."
+ref = "logs/184_colossus_audit.log"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "LOG491 tied-key annealer 0/4; LOG492 exhaustive 105,000-key census and 100/100 fixed-key panel; LOG493 aligned live negative; LOG494 controls 144/144, 56/56, 2/2; LOG495 phases 6/3 negative."
+ref = "LOG493"
+
+[[provenance]]
+path = "withmath/wm_twin_bifid_q7.py"
+kind = "solver"
+note = "Shared 25-cell square under two period-7 outer keys; compiled joint annealer (log 209 design)."
+
+[[provenance]]
+path = "withmath/wm_abc.py"
+kind = "solver"
+note = "Likelihood-free family identification: Bifid sits in one cluster with unstructured Quagmire III and independent substitutions at n=153."
+ref = "logs/04_abc.log"
+
+[[provenance]]
+path = "ck_lib.py"
+kind = "library"
+note = "bifid_encrypt / bifid_decrypt with period handling."
+
+[[references]]
+title = "Traité Élémentaire de Cryptographie"
+author = "Félix Delastelle"
+year = 1902

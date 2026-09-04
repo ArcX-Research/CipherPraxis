@@ -1,0 +1,126 @@
+id = "beaufort"
+section = "ciphers"
+title = "Beaufort cipher"
+subtitle = "Reciprocal periodic substitution: ciphertext = key minus plaintext"
+status = "VERIFIED"
+status_note = "Every periodic solver in the program runs both the Vigenère and the Beaufort orientation; the exact periodic DP recovered 100% of three blind controls (63, 95 and 126 letters) in both orientations, and the plaintext-autokey audit recovered its Beaufort controls at 153, 144 and 504 letters."
+family = "Polyalphabetic substitution"
+tags = ["periodic", "reciprocal", "polyalphabetic", "tabula recta"]
+related = ["vigenere", "variant-beaufort", "porta", "autokey", "exact-period-alignment", "periodic-substitution-dp", "g-reciprocal-cipher", "g-tabula-recta"]
+summary = "The Beaufort cipher subtracts the plaintext from a repeating key modulo 26. Encryption and decryption are the same operation, and the coset structure is identical to Vigenère's, so a Beaufort is attacked with the same alignment and shift-recovery tools with the sign of the plaintext reversed. In every periodic lane of the program the relation (Vigenère or Beaufort) is a selected parameter rather than an assumption."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+With key $k = (k_0, \dots, k_{m-1})$,
+
+$$c_i \equiv k_{i \bmod m} - p_i \pmod{26}.$$
+
+The map $p \mapsto k - p$ is an involution, so applying the cipher to the ciphertext with the same key returns the plaintext. In a keyed order $A$ the relation is $\operatorname{pos}_A(c_i) = k_b - \operatorname{pos}_A(p_i)$.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Coset structure and sign"
+body = '''
+Coset $b$ sees the plaintext histogram **reflected** and then rotated: $\Pr[c = x \mid i \in C_b] = E(k_b - x)$. Coincidence counts and the index of coincidence are unchanged, so period detection is identical to Vigenère's. For a free key the two relations are related by negating the alphabet: $-Q_V(P, k) = Q_B(P, -k)$, which is why a shared solver can carry the relation as a two-valued parameter and why reversing the alphabet order absorbs the sign in Quagmire I and II (see [Quagmire I](/ciphers/quagmire-i)).
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Variant Beaufort**: $c = p - k$, which is Vigenère decryption; see [Variant Beaufort](/ciphers/variant-beaufort).
+- **Beaufort autokey**: $c_i = K_i - p_i$ with $K$ continued by the plaintext itself; see [Autokey](/ciphers/autokey).
+- **Keyed-alphabet Beaufort**: the same relation in a mixed order, i.e. the Beaufort orientation of the Quagmire family.
+- **Porta**: a different reciprocal construction with 13 rather than 26 alphabets; see [Porta](/ciphers/porta).
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Strict periodicity and a single alphabet order, exactly as for Vigenère.
+- Invariant: reciprocity. A fitted state always round-trips, so a round-trip proves nothing; only planted-control recovery and language evidence count.
+- Invariant: coset histograms are reflections of one distribution; a mixture of two inner alphabets under the same key is still a reflection of a mixture.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+1. Find the period with coincidence statistics or the exact alignment objective.
+2. For each coset compute the correlation with the reflected reference $E(k - x)$ over 26 values of $k$; compare the best Vigenère and Beaufort fits by their total evidence rather than by one profiled likelihood.
+3. Finish with the exact cyclic quadgram DP over the shortlisted shifts, then a within-coset shuffled null that repeats the same relation selection (see [Periodic substitution DP](/exact/periodic-substitution-dp)).
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Identical to Vigenère: $O(26\,m)$ correlations per relation, $26^{m-1}$ shift vectors for the exact alignment after fixing one gauge shift, and $8^3$ DP states per step for the order-three quadgram chain over an eight-way shortlist. Testing both relations doubles the work.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Sign ambiguity with free alphabets.** When the alphabet order is itself unknown, reversing the order converts a Beaufort into a Vigenère, so the relation is not separately identifiable; the program reports one canonical class.
+- **Selection freedom.** Choosing the better of two relations and $m$ free shifts on a short text adds spurious fit; the within-coset null must repeat that choice.
+- **Flat inner text.** A fractionated or transposed inner stream leaves nothing to reflect.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Exact periodic DP: three blind controls at 63, 95 and 126 letters (periods 7, 7 and 26) recovered 100% of their hidden plaintext and reproduced their ciphertext exactly, with the relation selected blind (logs/148_periodic_dp.log). Plaintext-autokey audit: Beaufort controls at 153, 144 and 504 letters recovered 100% plaintext and the hidden 17- and 19-letter primers (logs/185_autokey_audit.log). Slidefair-Beaufort control at 504 letters: exact recovery at rate $-4.01$ (logs/200_digraphic_slides.log).
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Plaintext `ATTACK`, key `CIPHER` ($m = 6$):
+
+```
+plain    A  T  T  A  C  K
+key      C  I  P  H  E  R
+k - p    2 -11 -4  7  2  7
+mod 26   2 15 22  7  2  7
+cipher   C  P  W  H  C  H
+```
+
+Check position 1: $I - T = 8 - 19 = -11 \equiv 15 = P$. Applying the same table to `CPWHCH` with key `CIPHER` gives `ATTACK` back.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+For comparison, the same plaintext and key give Vigenère `CBIHGB` and Variant Beaufort `YLETYT`. The three relations differ only in signs, which is why the program's solvers enumerate the relation instead of assuming it.
+'''
+
+[[provenance]]
+path = "withmath/wm_periodic_dp.py"
+kind = "solver"
+note = "Exact cyclic periodic solver in both Vigenère and Beaufort orientations and both fixed orders; blind controls at 63/95/126 letters."
+ref = "logs/148_periodic_dp.log"
+
+[[provenance]]
+path = "withmath/PK8_PK10_HINTFREE.md"
+kind = "note"
+note = "Algebra of the two orientations, the within-coset null, and the three control results."
+
+[[provenance]]
+path = "withmath/wm_autokey_audit.py"
+kind = "solver"
+note = "Beaufort plaintext-autokey controls at n=153/144/504."
+ref = "logs/185_autokey_audit.log"
+
+[[provenance]]
+path = "withmath/DIGRAPHIC_SLIDES_AUDIT.md"
+kind = "audit"
+note = "Slidefair Beaufort control PASS at rate -4.0054."
+ref = "LOG200"
+
+[[references]]
+title = "Military Cryptanalysis, Part II"
+author = "William F. Friedman"
+year = 1938

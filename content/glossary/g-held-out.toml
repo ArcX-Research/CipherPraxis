@@ -1,0 +1,10 @@
+id = "g-held-out"
+section = "glossary"
+title = "Held-out (data, controls, gates)"
+status = "VERIFIED"
+status_note = "Standard term; the audited lanes pin three disjoint corpus ranges."
+family = "Validation"
+tags = ["calibration", "contamination", "corpus"]
+related = ["english-gate-calibration", "power-analysis", "local-language-model-prior", "held-out-gates", "g-power"]
+summary = "Text that was not used to build the model being evaluated. A language table trained on one corpus range must be calibrated (thresholds, prose tails) on a second, disjoint range, and planted controls must be drawn from a third; a gate whose calibration windows overlap the training data is optimistic, and a control found verbatim in the training data (as happened with duplicated boilerplate in a concatenated corpus) demonstrates nothing about decoder power. Held-out also describes validation controls that are declared but left unopened until a development gate has passed."
+updated = "2026-09-04"

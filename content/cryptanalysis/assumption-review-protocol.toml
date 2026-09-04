@@ -1,0 +1,156 @@
+id = "assumption-review-protocol"
+section = "cryptanalysis"
+title = "Assumption review protocol"
+subtitle = "How to stop a campaign of negative results from compounding: facts with nulls, assumptions with verdicts, constructions ranked, corrections recorded"
+status = "VERIFIED"
+status_note = "The protocol (facts with nulls, assumptions with keep/drop/undecidable verdicts, ranked constructions, decisive tests, recorded corrections) was run as two independent passes on the same brief and reconciled by data; it produced recorded corrections, including the withdrawal of a statistic biased by fitting on the whole text and the reclassification of earlier whole-text verdicts as zone artefacts, and it feeds the successor-review method used for later families (STEP3 notes, logs/38, 58)."
+family = "Method governance"
+tags = ["governance", "assumptions", "review", "selection bias", "successor review", "hint-free"]
+related = ["control-first-policy", "tautological-gate-rule", "valid-model-nulls", "seal-and-audit-protocol", "correction-and-retraction", "selection-overfit-check", "change-point-zone-detection", "family-identification", "segment-chain-analysis", "g-successor-review", "g-family-sweep", "g-selection-freedom", "g-zone"]
+summary = "A long cryptanalytic campaign accumulates negatives that all rest on the same estimated facts. The assumption review protocol stops the sweep, lists every fact with the null it was measured against, names every assumption the negatives depend on, gives each a verdict with the test that decides it, ranks the constructions consistent with everything, and records corrections explicitly, with a second independent pass reconciled by data rather than argument. Its successor-review form governs each new family proposal: a duplicate audit, exact algebra, an alias census, a ranked decision table, a controls-first build plan and a stop rule."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+The protocol is a fixed sequence of documents and measurements:
+
+1. **Facts** $F_1 \dots F_k$: what is measured, model-free where possible, each with its null (shuffle type, replicate count) and $z$.
+2. **Assumptions** $A_1 \dots A_j$: what every negative so far silently required (the plaintext is prose; the layer is additive; the flat parts are noise; the alphabet is unstructured; the literal reading of external information).
+3. **Verdicts**: KEEP, DROP or UNDECIDABLE for each assumption, with the statistic that decides it and, for UNDECIDABLE, the proof that no alphabet-free statistic can.
+4. **Constructions** consistent with all kept facts, ranked, each with the test that would distinguish it and what each outcome buys.
+5. **Decisive tests** chosen by cost times decisiveness, then **corrections**: verdicts withdrawn, negatives reclassified, and why.
+
+The **hint-free policy** restricts the admitted inputs of any model selection to ciphertext, generic language statistics, modular algebra and prior instrument measurements; everything else is quarantined.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "The bias the protocol caught"
+body = '''
+A statistic $T$ computed with parameters $\hat\theta$ fitted on the whole text, then evaluated on a part of it, inherits selection from the fit. The corpus's alignment decomposition counted cross-coset coincidences between a text's middle and its ends at shifts fitted on the whole text, and read $z +2.3$ / $+2.1$ as "the ends cohere with the middle". Re-fitted on the middle only, the mid-to-end coincidences fell to $z +1.9$ (one order) and $+1.5$ (the other), and a *planted* language tail under the same shifts gave $z +1.4 \pm 1.8$ and $+1.5 \pm 2.3$: the statistic cannot separate "language ends" from "random ends" at this geometry, and the earlier DROP of the noise-ends assumption was withdrawn (logs/58).
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- Every claimed fact carries a receipt (log, replicate count, null type); facts without receipts are downgraded to conjectures.
+- Two reviewers work independently on the same brief before comparing; disagreements are settled by a new measurement, not by argument.
+- A negative binds only within the scope of its assumptions, its text length and its control power; the protocol makes that scope explicit.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Procedure"
+body = '''
+1. Write the fact table with nulls; recompute anything quoted from memory.
+2. For each assumption ask what negatives depend on it and what would change if it were false; classify negatives as still binding, void, or reinterpreted.
+3. Test the cheap decisive things first (a segment identity test, a windowed lag map, a coset-IC dispersion test), each with planted references at the text's own geometry.
+4. Rank constructions; propose at most a few tests with their expected outcomes written down beforehand.
+5. Record corrections in the same document that made the original claims; downstream documents cite the correction.
+6. **Successor review** for any new family after a negative: a duplicate audit table (what each prior lane covered exactly and why it does not cover the proposal), the exact algebra and reduction, an alias census (which raw cells are the same identifiable class, computed before any language score), a ranked decision table with raw-cell counts and resource cost, a controls-first build plan with boundary sentinels and a stop rule, and a claim grammar whose terminals cannot overclaim (a miss of an incomplete selector is INCOMPLETE, never a family rejection; a passed control is instrument power, never presence).
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Cheap in machine time, expensive in thought: the corpus's two passes plus probes took about 25 minutes of computation (five probes, logs/38 to 42) and a day of writing; the successor reviews are static documents with hash-pinned inputs and small scratch known-answer tests.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Compounding.** Twenty-one whole-text rounds of key search assumed facts estimated by heuristics at 153 letters (a period-7 outer layer; cosets not monoalphabetic; no digram structure; a mixed inner); once the text was found to be zoned, the "mixed inner" fact was an artefact and every family it motivated had been aimed at it.
+- **Wrong plaintext model.** Crib attacks, key-word sweeps and annealers aimed at prose on a 144-letter zone whose plaintext is a peaked small-vocabulary text produced negatives that carry no weight.
+- **Undecidable assumptions treated as decided.** Whether a periodic layer is additive (rotations of one alphabet) or seven unrelated substitutions is invisible to every same-coset statistic; the protocol records it as UNDECIDABLE with the reason, instead of assuming.
+- **Reading a change point as a key proof, or a peaked prefix as a Caesar proof.**
+- **Family sweeps as lottery tickets.** After the enumerable structured families are exhausted, further sweeps cost machine time and buy nothing; the protocol's recommendation was to stop them and look for the missing key material outside the ciphertexts.
+- **Unbacked rows.** A design note's table claimed a cross-text periodic-difference result for which no implementation or transcript existed; a later audit found it and it is not cited as evidence anywhere in this atlas.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The protocol's own controls are the planted references its probes carry: 100 planted texts per case for the segment identity test at each geometry (logs/38), 300 planted zones for the coset-IC dispersion and same-coset rate checks, a planted language tail for the alignment decomposition (logs/58), and a planted control for every solver a verdict rests on. Two independent passes agreed on the zone facts, the prose verdict for one zone, the undecidability of additivity and the surviving construction; their differences were settled by data (the constant-drift reading held for one text's prefix and not for the other's ends; the review's segment-histogram decider had no power on its own planted references; the crib-CSP calibration set the crib-length requirement at 15 to 17 letters with the key word known).
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible template"
+body = '''
+A minimal review sheet for a 150-letter ciphertext with a suspected period-7 layer:
+
+```
+FACT   statistic                      value   null (type, N)              z
+F1     exact period-7 alignment IC    ...     position shuffle, 200       ...
+F2     same-coset coincidence, lag 7  ...     within-coset shuffle, 200   ...
+F3     letter-set change over t       ...     max-over-t shuffle, 400     ...
+
+ASSUMPTION                                  verdict       decided by
+A1  plaintext is prose                      KEEP/DROP     zone prose checks vs 300 planted zones
+A2  layer is additive (one alphabet)        UNDECIDABLE   invariance of same-coset statistics
+A3  flat parts are noise                    OPEN          identity test with planted references
+A4  alphabet has enumerable structure       KEEP/DROP     the structured-family sweeps and their scope
+
+CONSTRUCTIONS consistent with kept facts, ranked, each with its decisive test and cost.
+CORRECTIONS: what was withdrawn, which negatives are void, which are reinterpreted.
+```
+
+Every number in the sheet points to a log; every verdict names the statistic and its null; a second reviewer fills the same sheet blind before the two are compared.
+'''
+
+[[provenance]]
+path = "withmath/STEP3_ANALYSIS.md"
+kind = "note"
+note = "First pass: new measurements T-A to T-D, verdicts on assumptions A1-A5, ranked constructions, what-if-nothing plan."
+
+[[provenance]]
+path = "withmath/STEP3_REVIEW.md"
+kind = "note"
+note = "Independent second pass: reconciliation with the whole-text rounds, assumption verdicts, probe outcomes, the crib-CSP plan."
+
+[[provenance]]
+path = "withmath/STEP3_FIRST_PRINCIPLES.md"
+kind = "note"
+note = "Facts table with logs, what the facts force, corrections to earlier verdicts (T-A withdrawn; prose verdict narrowed to one zone; crib negatives on the other zone carry no weight)."
+
+[[provenance]]
+path = "withmath/logs/58_TA_refit.log"
+kind = "log"
+note = "Alignment decomposition re-measured with middle-fitted shifts and a planted language tail: mid-tail z +1.9 / +1.5 against +1.4 +/- 1.8 / +1.5 +/- 2.3 planted."
+
+[[provenance]]
+path = "withmath/probes/step3_facts.py"
+kind = "script"
+note = "Model-free re-check of the facts with planted references at the texts' geometry."
+ref = "logs/38_step3_facts.log"
+
+[[provenance]]
+path = "withmath/PK8_PK10_HINTFREE.md"
+kind = "note"
+note = "The hint-free policy: admitted and excluded inputs; roundtrip never accepted as proof; controls and familywise nulls as separate mandatory gates."
+
+[[provenance]]
+path = "withmath/PK10_POST357_IRREGULAR_SUCCESSOR_REVIEW.md"
+kind = "design"
+note = "Successor-review method: duplicate audit table, exact reduction with proof, alias (RGS) census, ranked decision table, controls-first contract, resource estimate."
+
+[[provenance]]
+path = "withmath/PK10_POST363_CONSTRAINED_SUCCESSOR_REVIEW.md"
+kind = "design"
+note = "Read-only alias census before any language scoring; smallest symmetry-complete successor; boundary sentinels and stop rule."
+
+[[provenance]]
+path = "withmath/PK10_POST_UNITACCEL_SUCCESSOR_REVIEW.md"
+kind = "design"
+note = "Conditional successor derived as an exact intersection of declared parents rather than selected from a target score."
+
+[[provenance]]
+path = "withmath/PK89_SEGMENT_CANCELLATION_REVIEW.md"
+kind = "audit"
+note = "Section 3.2: a design note's cross-periodic-difference row had no implementation or transcript; section 4: confounders and the falsifiability boundary."
+
+[[provenance]]
+path = "withmath/README.md"
+kind = "note"
+note = "Step 3 assumption review: facts, exclusions with scope, assumption status, the recommendation to stop family sweeps."

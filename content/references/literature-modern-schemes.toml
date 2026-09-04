@@ -1,0 +1,76 @@
+id = "literature-modern-schemes"
+section = "references"
+title = "Modern scheme literature"
+subtitle = "Textbook RSA and its attacks, mnemonic word-list key encodings, the one-time pad, and the general references"
+status = "VERIFIED"
+status_note = "Bibliographic entry: standard sources for the modern constructions that appear in the taxonomy as hypotheses; no experimental claim is made here."
+family = "Literature"
+tags = ["bibliography", "rsa", "mnemonic encoding", "one-time pad"]
+related = ["rsa-textbook", "mnemonic-wordlist-encoding", "one-time-pad", "modular-inverse-and-crt", "units-mod-26", "literature-search-and-exact-solvers"]
+summary = "Modern schemes enter a classical-cipher atlas as hypotheses about how a setter might have produced a text: a textbook RSA transform of letter blocks, a checksummed mnemonic word list spelled into letters, a genuinely random pad. The sources here define those constructions exactly, which is what a controls-first test of the hypothesis needs: the RSA paper and its attack survey, the BIP-39 specification with its checksum rule and 2,048-word list, Vernam and Shannon for the pad, and the two standard handbooks."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "notes"
+body = '''
+When a modern scheme is tested against a short classical-looking text, the specification is the control generator: plants must use the exact word list, checksum and padding conventions of the standard, or the negative closes a construction nobody would have used. The atlas entries for these hypotheses record which conventions their controls followed.
+'''
+
+[[references]]
+title = "A Method for Obtaining Digital Signatures and Public-Key Cryptosystems (Communications of the ACM 21:2)"
+author = "Ronald L. Rivest, Adi Shamir and Leonard Adleman"
+year = 1978
+
+[[references]]
+title = "Twenty Years of Attacks on the RSA Cryptosystem (Notices of the AMS 46:2)"
+author = "Dan Boneh"
+year = 1999
+
+[[references]]
+title = "Small Solutions to Polynomial Equations, and Low Exponent RSA Vulnerabilities (Journal of Cryptology 10:4)"
+author = "Don Coppersmith"
+year = 1997
+
+[[references]]
+title = "Solving Simultaneous Modular Equations of Low Degree (SIAM Journal on Computing 17:2)"
+author = "Johan Håstad"
+year = 1988
+
+[[references]]
+title = "BIP-39: Mnemonic Code for Generating Deterministic Keys"
+author = "Marek Palatinus, Pavol Rusnak, Aaron Voisine and Sean Bowe"
+year = 2013
+url = "https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki"
+
+[[references]]
+title = "BIP-32: Hierarchical Deterministic Wallets"
+author = "Pieter Wuille"
+year = 2012
+url = "https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki"
+
+[[references]]
+title = "Cipher Printing Telegraph Systems for Secret Wire and Radio Telegraphic Communications (Journal of the AIEE 45)"
+author = "Gilbert S. Vernam"
+year = 1926
+
+[[references]]
+title = "Communication Theory of Secrecy Systems (Bell System Technical Journal 28:4)"
+author = "Claude E. Shannon"
+year = 1949
+
+[[references]]
+title = "Handbook of Applied Cryptography"
+author = "Alfred J. Menezes, Paul C. van Oorschot and Scott A. Vanstone"
+year = 1996
+url = "https://cacr.uwaterloo.ca/hac/"
+
+[[references]]
+title = "Introduction to Modern Cryptography (2nd edition)"
+author = "Jonathan Katz and Yehuda Lindell"
+year = 2014
+
+[[references]]
+title = "FIPS PUB 180-4: Secure Hash Standard (SHS)"
+author = "National Institute of Standards and Technology"
+year = 2015
+url = "https://doi.org/10.6028/NIST.FIPS.180-4"

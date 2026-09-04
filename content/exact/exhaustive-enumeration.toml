@@ -1,0 +1,123 @@
+id = "exhaustive-enumeration"
+section = "exact"
+title = "Exhaustive enumeration"
+subtitle = "Scoring every element of an explicitly counted finite space, with completeness certified by census and no early stopping"
+status = "VERIFIED"
+status_note = "Complete enumerations are implemented in Python and compiled cores with printed counts and planted controls found at rank 1: 1-4 keyed rounds (up to 1,572,864 combinations), all 5,408 schedules of a piecewise progressive-key family (4/4 controls, live result non-English), all 26^6 shift vectors of a period-7 alignment, and stage-one families whose provenance counts are bound to a structural identity (26,624 = 104 x 256 rows)."
+family = "Enumeration strategies"
+tags = ["brute force", "census", "completeness", "scoped closure", "compiled core"]
+related = ["dictionary-attack", "rank-sharding", "all-different-enumeration", "known-answer-tests", "bound-benchmarks-and-certificates", "exact-period-alignment", "multiple-rounds-analysis", "alberti-progressive", "compiled-hot-cores", "seed-determinism", "g-certificate", "g-shard"]
+summary = "Exhaustive enumeration decrypts and scores every key in a stated finite space. Its value is not speed but certainty: a planted key inside the space is found with probability one, and a miss is a closure of exactly that space. The corpus enforces the discipline that makes the closure meaningful: the space is counted before the run, the count is checked by an independent census, every element is finished, nothing stops early on a hit, and a heuristic finisher inside an exhaustive outer loop is labelled as such."
+updated = "2026-09-04"
+
+[[blocks]]
+kind = "definition"
+body = '''
+```
+space <- explicit product of declared choices; print |space| and a structural identity it must satisfy
+control <- plant a key from the space on real text; require rank 1 before any target
+for every element e of space (no early exit):
+    p <- decrypt(c, e); s <- score(p); keep the top list and tie counts
+census: number of elements visited == |space|; provenance rows == identity; digests recorded
+verdict: ENGLISH only if the unique top reads and passes nulls; else NON-ENGLISH / STRUCTURAL ZERO / INCOMPLETE
+```
+
+Aliases: two descriptions that produce identical decrypts (a zero-width pulse equals a constant slope for every quarter) are counted as one observable class; the corpus records both the raw description count and the class count.
+'''
+
+[[blocks]]
+kind = "equations"
+body = '''
+Round enumeration: with four key words, $r$ rounds, 8 alphabets and 2 relations per round, $|S_r| = P(4, r) \cdot 16^r$, giving $64, 3{,}072, 98{,}304, 1{,}572{,}864$.
+
+Piecewise progressive key on a 504-letter text: outer order (2) $\times$ quarter (4) $\times$ two velocities ($26^2$) $= 5{,}408$ raw descriptions, of which 5,251 observable classes (5,200 singletons, 50 four-way constant-slope aliases, one eight-way zero-slope alias).
+
+Two-transposition constructor: $30 \times 32 \times 9! = 348{,}364{,}800$ declared triples; exact shift-vector alignment at period 7: $26^6 = 308{,}915{,}776$ after fixing one shift by gauge.
+
+Stage-one family identity: every canonical class yields exactly $2 \times 26 \times 2 = 104$ provenance rows (relation, lift, completion order), so the $256$ orientation classes of a $128$-forward-class family give $26{,}624$ rows; a census mismatch is `INCOMPLETE`, never a candidate.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The space is the right one: a closure is scoped to the declared choices (alphabet orders, relations, phases, banks) and says nothing outside them.
+- No adaptive widening after a near miss; a new space is a new sealed run.
+- If an inner step is heuristic (an annealed substitution per enumerated schedule), the outer enumeration is complete but the result is a high-power family-scoped negative, not a proof.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Attack strategy"
+body = '''
+- **Rounds.** Every ordered selection of $r$ distinct key words from four, each round in one of eight alphabets and two relations, undone last-first and scored by quadgrams; the true construction reads at once ($-4.34$) while everything else stays near $-7$.
+- **Progressive-key schedules.** For each of 5,408 (order, quarter, velocity pair) schedules, deprogress the ciphertext and hand the stream to a frozen substitution engine with top-192 / top-32 refinement stages; multithreaded compiled core; three seeds must agree.
+- **Shift vectors.** All $26^6$ shift vectors of a period-7 alignment evaluated with a closed-form pairwise objective in a compiled core, giving the exact alignment and its near-optimal set.
+- **Constructed fixtures.** A predeclared rectangle of (window, order, order) triples scanned in literal lexicographic order with a first-hit rule to construct a control whose truth rank lies in a declared interval; the first hit came after 812,617 of 348,364,800 triples in 5.18 s.
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Cost is $|S|$ times one decrypt-and-score: 1,572,864 four-round combinations in 33 s in numpy; $26^6$ alignments in seconds in a compiled core; 812,617 monogram-rank evaluations in 5.18 s with peak resident memory 169,607,168 bytes; 5,408 schedules each with an annealed substitution, on all hardware threads, in one recorded session.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Wrong space.** Every recorded exhaustive miss is exactly that: the four-round bank, the phrase bank, the schedule family; the construction may simply lie outside.
+- **Alias double counting.** Raw descriptions overstate the number of distinct hypotheses (5,408 versus 5,251); nulls and multiple-comparison arguments must use classes.
+- **Heuristic inside exhaustive.** A non-English verdict from an exhaustive outer loop with an annealed inner substitution is family-scoped power, not a mathematical proof over every substitution.
+- **Silent truncation.** An enumeration that stops at a time cap without recording its exact processed prefix is not a shard; see [rank sharding](/search/rank-sharding).
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Rounds: the planted three-round construction is the unique top of 98,304 combinations at $-4.34$ with 100% match; one- and two-round scans of the same text stay at $-7.64$ and $-7.50$. Progressive schedules: 4/4 full-length planted controls rank first (rates $-9.838511$, $-9.623188$, $-9.983940$, $-9.653042$) with independent scalar forwards reproducing each ciphertext; the exhaustive schedule KAT passed 2,725,632 coordinates and 52,416 constant-alias checks. Live result of that family: best rate $-14.898259$, visibly n-gram-optimised noise, far below the $-12.5$ trigger, recorded as NON-ENGLISH with no null spent. Constructor: three predeclared compiled/Python parity cases passed before the scan.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Reproducible example"
+body = '''
+Affine maps $x \mapsto ux + d \pmod{26}$: $u$ ranges over the 12 units $\{1, 3, 5, 7, 9, 11, 15, 17, 19, 21, 23, 25\}$ and $d$ over 26 offsets, so the space has $12 \times 26 = 312$ elements; a per-residue affine family at period 7 therefore has $312^7 \approx 2.9 \times 10^{17}$ keys, too many to enumerate, which is why that family is attacked by a shortlist plus DP instead. By contrast, two rounds from four words have $12 \times 256 = 3{,}072$ combinations and are enumerated in under a second. Counting the space first decides the method.
+'''
+
+[[provenance]]
+path = "withmath/wm_rounds4.py"
+kind = "solver"
+note = "Exact enumeration of 1-4 keyed rounds: permutations of four words x (8 alphabets x 2 relations)^r, scored by quadgrams, no search."
+
+[[provenance]]
+path = "withmath/logs/09_rounds4.log"
+kind = "log"
+note = "Counts 64 / 3,072 / 98,304 / 1,572,864; control found at -4.34 among 98,304; four rounds in 33 s."
+ref = "logs/09_rounds4.log"
+
+[[provenance]]
+path = "withmath/wm_pk10_quarterpulse490_core.cpp"
+kind = "solver"
+note = "Compiled core: 2 x 4 x 26 x 26 = 5,408 raw schedules, deprogression, embedded frozen substitution engine, top-192 / top-32 refinement stages, self-KAT over every schedule and the constant-slope alias."
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "5,251 observable classes; schedule KAT 2,725,632 coordinates; 4/4 controls with the quoted rates; live best -14.898259 NON_ENGLISH; heuristic inner substitution caveat."
+ref = "LOG490"
+
+[[provenance]]
+path = "withmath/QTT_RANK_CONSTRUCTOR_FEASIBILITY_AUDIT.md"
+kind = "audit"
+note = "Declared rectangle 30 x 32 x 9! = 348,364,800; first hit after 812,617 tested in 5.18 s; peak RSS 169,607,168 bytes; three parity cases."
+ref = "logs/unnumbered_qtt_rank_constructor.log"
+
+[[provenance]]
+path = "withmath/CROSSCHAIN_M13_TARGET286_AUDIT.md"
+kind = "audit"
+note = "Stage-one census: 104 provenance rows per canonical class; INCOMPLETE / STRUCTURAL ZERO / TIED BEST outcomes; 128 forward / 256 orientation classes -> 26,624 rows."
+
+[[provenance]]
+path = "withmath/wm_core.py"
+kind = "library"
+note = "Exact period-7 alignment over all 26^6 shift vectors with a closed-form pairwise objective."
