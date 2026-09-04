@@ -27,8 +27,12 @@ corpus. Read `../ARCHITECTURE.md` §1 and §4 first, then the exemplar `ciphers/
 6. One TOML file per entry at `content/<section>/<id>.toml`; the file name equals the id.
    Only write inside the directories assigned to you.
 7. Block `kind` values: `definition`, `equations`, `variants`, `assumptions`, `attack`,
-   `complexity`, `failure_modes`, `controls`, `example`, `notes`, `history`. Use the ones that
-   apply, in that order. Bodies are Markdown; math is LaTeX in `$…$` / `$$…$$` (keep to a
+   `pseudocode`, `complexity`, `failure_modes`, `controls`, `example`, `notes`, `history`. Use the
+   ones that apply, in that order. Every method entry carries a `pseudocode` block: one fenced
+   code block (```` ```text ````) of 8–30 lines of language-neutral pseudocode that restates the
+   entry's own definition or procedure (ENCRYPT/DECRYPT for ciphers, the estimator for statistics,
+   the search loop for algorithms, the protocol steps for validation and engineering practices).
+   Pseudocode introduces no numbers or claims that the surrounding blocks do not already make. Bodies are Markdown; math is LaTeX in `$…$` / `$$…$$` (keep to a
    standard subset: fractions, subscripts, superscripts, sums, `\bmod`, `\pmod`, `\equiv`,
    `\mathbb{Z}`, `\operatorname{}`, Greek letters, `\le`, `\ge`, `\ne`, `\cdot`, `\times`).
    Internal links use site routes: `[Beaufort](/ciphers/beaufort)`.

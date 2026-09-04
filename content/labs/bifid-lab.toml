@@ -12,10 +12,42 @@ updated = "2026-09-04"
 lab = "bifid"
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// 5 x 5 square: the keyed alphabet of the keyword with J merged into I; cell
+// q = 0..24 has coordinates (row, col) = (q div 5 + 1, q mod 5 + 1). ROW(x),
+// COL(x) look a letter up; LETTER(row, col) reads the square.
+function ENCRYPT(p, square, period):
+    t = LETTERS_ONLY(p) with J replaced by I
+    // one block for the whole text
+    if period == 0: period = length(t)
+    for each block of up to period letters in t:
+        rows = [ROW(x) for x in block]
+        cols = [COL(x) for x in block]
+        // all row digits, then all column digits
+        seq = rows followed by cols
+        for each consecutive pair (seq[2i], seq[2i+1]):
+            append LETTER(seq[2i], seq[2i+1]) to the ciphertext
+    return ciphertext
+
+function DECRYPT(c, square, period):
+    t = LETTERS_ONLY(c) with J replaced by I
+    if period == 0: period = length(t)
+    for each block of up to period letters in t:
+        L = length(block)
+        seq = ROW(x), COL(x) for each x in block, in order   // 2L digits
+        for i in 0..L-1:
+            append LETTER(seq[i], seq[L + i]) to the plaintext
+    return plaintext
+```
+'''
+
+[[blocks]]
 kind = "notes"
 title = "What to try"
 body = '''
-- Set the period to 0 (one block for the whole text) and to 1: with period 1 every letter maps to itself through its own coordinates, so the cipher degenerates.
-- Change one plaintext letter and watch which two ciphertext letters change: that is the fractionation footprint an attack exploits.
-- Compare the letter histogram of the ciphertext in the [coincidence lab](/labs/coincidence-lab) with the plaintext's: the index of coincidence drops toward the uniform value.
+- Set the period to 0 to use one block for all the text. Then set it to 1. At period 1, each letter keeps its own coordinates, so the cipher makes no useful change.
+- Change one plaintext letter and watch two ciphertext letters change. An attack can use this fractionation pattern.
+- Compare the ciphertext and plaintext letter counts in the [coincidence lab](/labs/coincidence-lab). The ciphertext's index of coincidence moves toward the uniform value.
 '''

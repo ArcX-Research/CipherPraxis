@@ -30,14 +30,14 @@ Families: additive ($P_i = A[(a(C_i) - k_b) \bmod 26]$ or $A[(k_b - a(C_i)) \bmo
 [[blocks]]
 kind = "equations"
 body = '''
-Monogram shortlist (Vigenère): $L_b(s) = \sum_{i \equiv b} \ln E\big(A[(a(C_i) - s) \bmod 26]\big)$; the eight highest $s$ per residue enter the DP. Within-coset null: shuffle positions inside each coset, which preserves every coset histogram, monogram posterior, index of coincidence and repeated-letter fact while destroying only adjacency, so the DP's exact optimum on the null measures pure selection freedom.
+Monogram shortlist (Vigenère): $L_b(s) = \sum_{i \equiv b} \ln E\big(A[(a(C_i) - s) \bmod 26]\big)$. The eight highest $s$ per residue enter the DP. Within-coset null: shuffle positions inside each coset, which preserves every coset histogram, monogram posterior, index of coincidence and repeated-letter fact while destroying only adjacency, so the DP's exact optimum on the null measures pure selection freedom.
 '''
 
 [[blocks]]
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- The zone and period are instrument readings (change points, periodic index of coincidence), not narrative inputs; the DP does not assume a word key.
+- The zone and period are test readings (change points, periodic index of coincidence), not narrative inputs. The DP does not assume a word key.
 - Config equality on controls is judged on observed coset symbols only, so unobserved affine actions that are equivalent on the data do not produce a false failure.
 - A roundtrip proves model consistency only: every state below reproduces its ciphertext exactly.
 '''
@@ -46,35 +46,77 @@ body = '''
 kind = "attack"
 title = "How to attack it"
 body = '''
-Run the three families on each measured zone (two zones of 63 and 95 letters at period 7; one of 126 letters at period 26), both alphabet orders, both relations. Any finish above the English gate receives a full within-coset familywise null; otherwise no null budget is spent. Recorded finishes: additive $-6.037$, $-6.290$, $-5.107$ against five-null maxima $-5.770$, $-6.185$, $-5.021$; Porta $-6.2479$, $-6.3562$, $-5.7315$ (verdicts no / no / partial); affine $-5.2552$ and $-5.7742$ on the period-7 zones (partial, roundtripping overfits). None reached the gate, so the zones are not standard periodic substitutions in the two tested orders; an unknown alphabet, a non-language inner stream or a non-additive construction remain open.
+Run the three families on each measured zone: 63 and 95 letters at period 7, and 126 letters at period 26. Test both alphabet orders and both relations. Any finish above the English gate receives a full within-coset familywise null. Otherwise no null budget is spent. Recorded finishes: additive $-6.037$, $-6.290$, $-5.107$ against five-null maxima $-5.770$, $-6.185$, $-5.021$; Porta $-6.2479$, $-6.3562$, $-5.7315$ (verdicts no / no / partial); affine $-5.2552$ and $-5.7742$ on the period-7 zones (partial, roundtripping overfits). None reached the gate, so the zones are not standard periodic substitutions in the two tested orders. An unknown alphabet, a non-language inner stream or a non-additive construction remain open.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Inputs: ciphertext zone C of n letters, period p, alphabet order A,
+// relation; shortlist width W = 8.
+function SHORTLIST(C, p, A, b):                      // residue b
+    for each candidate map s:
+        L_b(s) = sum over i with i mod p == b of ln E( A[ map_s^{-1}(a(C_i))
+                ] )
+    return the W maps s with the largest L_b(s)
+
+function PERIODIC_DP(C, p, A):
+    for b in 0..p-1: S[b] = SHORTLIST(C, p, A, b)
+    // quadgram tables over the shortlists, indices mod p
+    for r in 0..p-1:
+        for each (k_r, k_{r+1}, k_{r+2}, k_{r+3}) in S[r] x S[r+1] x S[r+2] x
+                S[r+3]:
+            Phi_r(k_r, ..., k_{r+3}) = sum over i with i mod p == r of log10
+                    Q4(P_i P_{i+1} P_{i+2} P_{i+3})
+    best = -inf
+    // exact cyclic closure
+    for each start (k_0, k_1, k_2) in S[0] x S[1] x S[2]:
+        V_2(k_0, k_1, k_2) = 0
+        for t in 3..p-1:
+            V_t(b, c, d) = max over a in S[t-3] of [ V_{t-1}(a, b, c) +
+                    Phi_{t-3}(a, b, c, d) ]
+        total = max over (k_{p-3}, k_{p-2}, k_{p-1}) of V_{p-1} plus the
+                closing tables Phi_{p-3}, Phi_{p-2}, Phi_{p-1} evaluated with
+                the fixed start
+                        (k_0, k_1, k_2)
+        if total > best: best = total; key = traceback of the argmax choices
+    // unrestricted coordinate and adjacent-pair pass
+    key = POLISH(C, p, A, key)
+    return (key, RATE(DECRYPT(C, key)))
+
+// Verdict: ENGLISH only above the pre-declared rate. Null: the same solve on
+// ciphertexts shuffled within each period coset, maximised over both alphabet
+// orders and relations.
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-Per (order, relation, family): $p \cdot 26$ shortlist sums, $p$ tables of $8^4$ entries, the DP over $8^3$ starting triples, and a polish of $p \times 26$ (additive), $p \times 13$ (Porta) or $p \times 312$ (affine) single-coordinate trials plus adjacent pairs. The fast run records five conditional nulls per zone; the full run 39.
+Per (order, relation, family): $p \cdot 26$ shortlist sums, $p$ tables of $8^4$ entries, the DP over $8^3$ starting triples, and a polish of $p \times 26$ (additive), $p \times 13$ (Porta) or $p \times 312$ (affine) single-coordinate trials plus adjacent pairs. The fast run records five conditional nulls per zone. The full run 39.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Wide family, few observations.** At period 26 on 126 letters the affine family (312 maps per residue) manufactured a false state scoring $-4.2767$ that reads as English and roundtrips but is neither the hidden plaintext nor the hidden maps; the additive and Porta families with 26 and 13 options recover the same control exactly. The DP is not at fault; the family is too wide for four to five letters per residue.
+- **Wide family, few observations.** At period 26 on 126 letters the affine family (312 maps per residue) manufactured a false state scoring $-4.2767$ that reads as English and roundtrips but is neither the hidden plaintext nor the hidden maps. The additive and Porta families with 26 and 13 options recover the same control exactly. The DP is not at fault. The family is too wide for four to five letters per residue.
 - **Attractive overfit.** The period-26 additive finish at $-5.107$ looks partial; its null maximum is $-5.021$. Without the within-coset null it would have been read as signal.
 - **Shortlist omission.** A map outside the eight best is unreachable except through the polish.
-- **Known order only.** The DP tests two alphabet orders; an unstructured alphabet is outside its scope and belongs to the constraint-programming entries.
+- **Known order only.** The DP tests two alphabet orders. An unstructured alphabet is outside its scope and belongs to the constraint-programming entries.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Additive: blind controls at 63 letters (period 7), 95 letters (period 7) and 126 letters (period 26) recover 100% of the hidden plaintext and reproduce the ciphertext; control gate PASS before any zone. Porta: n63/p7 straight order, n95/p7 keyword-mixed order, n126/p26 keyword-mixed order, each 100% with exact row keys and forward PASS. Affine: 63/63 and 95/95 at period 7 with exact observed maps and forwards; the n126/p26 control fails as described and its zone stayed locked. Planted controls are generated from a generic corpus and disclosed only after blind inference.
+Additive: blind controls at 63 letters (period 7), 95 letters (period 7) and 126 letters (period 26) recover 100% of the hidden plaintext and reproduce the ciphertext; control gate PASS before any zone. Porta: n63/p7 straight order, n95/p7 keyword-mixed order, n126/p26 keyword-mixed order, each 100% with exact row keys and forward PASS. Affine: 63/63 and 95/95 at period 7 with exact observed maps and forwards. The n126/p26 control fails as described and its zone stayed locked. Planted controls are generated from a generic corpus and disclosed only after blind inference.
 '''
 
 [[blocks]]
 kind = "example"
 title = "Worked example"
 body = '''
-Period 2 on an 8-letter toy, shortlist $W = 2$ per residue: residue 0 candidates $\{k_0 = 3, k_0 = 7\}$, residue 1 candidates $\{k_1 = 1, k_1 = 5\}$. The quadgram objective over the eight-letter decrypt depends on both shifts at every quadgram, so with $p = 2$ the chain has a single table $\Phi(k_0, k_1)$ and the exact maximum is the best of the $2 \times 2 = 4$ cells, say $\Phi(3, 1) = -22.0$, $\Phi(3, 5) = -25.5$, $\Phi(7, 1) = -24.1$, $\Phi(7, 5) = -19.8$: the DP returns $(7, 5)$. The coordinate pass then tries all 26 values of $k_0$ with $k_1 = 5$ and all 26 of $k_1$ with $k_0 = 7$; if the planted key were $(7, 9)$ with $9$ outside the shortlist, this pass is what recovers it. For $p \ge 4$ the same computation becomes a genuine chain with $8^3$ states per position instead of a single table.
+Period 2 on an 8-letter toy, shortlist $W = 2$ per residue: residue 0 candidates $\{k_0 = 3, k_0 = 7\}$, residue 1 candidates $\{k_1 = 1, k_1 = 5\}$. The quadgram objective over the eight-letter decrypt depends on both shifts at every quadgram, so with $p = 2$ the chain has a single table $\Phi(k_0, k_1)$ and the exact maximum is the best of the $2 \times 2 = 4$ cells, say $\Phi(3, 1) = -22.0$, $\Phi(3, 5) = -25.5$, $\Phi(7, 1) = -24.1$, $\Phi(7, 5) = -19.8$: the DP returns $(7, 5)$. The coordinate pass then tries all 26 values of $k_0$ with $k_1 = 5$ and all 26 of $k_1$ with $k_0 = 7$. If the planted key were $(7, 9)$ with $9$ outside the shortlist, this pass is what recovers it. For $p \ge 4$ the same computation becomes a genuine chain with $8^3$ states per position instead of a single table.
 '''
 
 [[provenance]]

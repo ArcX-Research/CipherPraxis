@@ -29,7 +29,7 @@ Gauges of this system:
 - **(G2) unit multiplication** $(z, \kappa) \to (u z, u \kappa)$: literally identical ciphertexts, 12-fold.
 - **(G3) unobserved letters** of $z$ are free until they occur.
 
-Valid fix: one linear row $z(X_0) = 0$ for any single letter $X_0$, with $\kappa$ left free (it absorbs the shift). Fixing $\kappa$ instead (for example $c = 0$) is invalid because $\kappa$ is a genuine unknown. Unit multiplication cannot be fixed by a linear row such as $z(X_1) = 1$, since the true position may be even, $0$ or $13$; it is removed after enumeration by canonicalising, $\min_u u\,(z - z(A))$, one representative per orbit $\{u z + b\}$ of size $312$.
+Valid fix: one linear row $z(X_0) = 0$ for any single letter $X_0$, with $\kappa$ left free (it absorbs the shift). Fixing $\kappa$ instead (for example $c = 0$) is invalid because $\kappa$ is a genuine unknown. Unit multiplication cannot be fixed by a linear row such as $z(X_1) = 1$, since the true position may be even, $0$ or $13$. It is removed after enumeration by canonicalising, $\min_u u\,(z - z(A))$, one representative per orbit $\{u z + b\}$ of size $312$.
 
 In a same-alphabet chain cell the additive gauge $(c + d, k + d)$ on the segmented key is a symmetry; in mixed-order cells it is not.
 '''
@@ -51,6 +51,43 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Gauge actions on a shared-cycle chain solution (z, P^B, kappa); both leave
+// the ciphertexts and P^A unchanged. Coordinates are mod 26 throughout.
+function TRANSLATE(z, zPB, kappa, b, e_A, e_B):    // (G1): z -> z + b
+    for each letter x: z'[x] = z[x] + b
+    // z(P^B') = z(P^B) - e_A b, old coordinates
+    for each j: zPB'[j] = zPB[j] - e_A*b
+    for each j: kappa'[j] = kappa[j] + b*(1 + e_A*e_B - e_B)
+    return (z', zPB', kappa')
+
+function UNIT_SCALE(z, kappa, u):                     // (G2): u a unit of Z26
+    for each letter x: z'[x] = u*z[x]
+    for each j: kappa'[j] = u*kappa[j]
+    return (z', kappa')
+
+// Gauge fixing: one linear row z(X0) = 0 with kappa left free removes (G1).
+// (G2) cannot be fixed by a linear row; remove it after enumeration by
+// canonicalising. representative of the orbit {u z + b}
+function CANONICAL(z):
+    // translation fixed by z(A) = 0
+    for each letter x: t[x] = z[x] - z[A]
+    best = none
+    for u in the 12 units of Z26:
+        cand = [u*t[x] for x in A..Z]
+        if best is none or cand < best (lexicographically): best = cand
+    return best
+
+// Controls compare recovered and planted cycles modulo the orbit, not
+// literally.
+function SAME_ORBIT(z_recovered, z_planted):
+    return CANONICAL(z_recovered) == CANONICAL(z_planted)
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
 Orbit size $12 \cdot 26 = 312$ (free action). The translation gauge reduces the shift-vector search of a period-$m$ layer from $26^m$ to $26^{m-1}$. Effective chain states $\approx 2^{113}$ as above.
@@ -60,7 +97,7 @@ Orbit size $12 \cdot 26 = 312$ (free action). The translation gauge reduces the 
 kind = "failure_modes"
 title = "The translation-gauge defect"
 body = '''
-A word-pair solver fixed the gauge $z(C^A_0) = 0$, decrypted text B's prefix in that gauge and, in its controls, demanded the planted prefix exactly. Under $z' = u z + b$ the class decrypt of text A is invariant, but $z(P^{B\prime}) = z(P^B) - u^{-1} b\, e_A$ and $c' = u c + b(1 + e_A e_B - e_B)$: the fixed-gauge decrypt of text B is a coordinate-space Caesar rotation of the physical text, so the true cycle misses "exact prefix" in about 25 of 26 plants and its combined score is depressed. A plant proof showed, for all four sign cells, text A match $1.0$ and text B match $0.0$, with single translations $[19, 5, 10, 16]$ recovering text B uniquely; an independent confirmation found shifts 4 and 18 on another plant. The run was killed, its header-only transcript kept under the failed-runs directory, never used as a gate, and the successor maximises the prefix rate over the 26 translation gauges and compares text B modulo the orbit.
+A word-pair solver fixed the gauge $z(C^A_0) = 0$, decrypted text B's prefix in that gauge and, in its controls, demanded the planted prefix exactly. Under $z' = u z + b$ the class decrypt of text A is invariant, but $z(P^{B\prime}) = z(P^B) - u^{-1} b\, e_A$ and $c' = u c + b(1 + e_A e_B - e_B)$: the fixed-gauge decrypt of text B is a coordinate-space Caesar rotation of the physical text, so the true cycle misses "exact prefix" in about 25 of 26 plants and its combined score is depressed. A plant proof showed, for all four sign cells, text A match $1.0$ and text B match $0.0$, with single translations $[19, 5, 10, 16]$ recovering text B uniquely. An independent confirmation found shifts 4 and 18 on another plant. The run was killed, its header-only transcript kept under the failed-runs directory, never used as a gate, and the successor maximises the prefix rate over the 26 translation gauges and compares text B modulo the orbit.
 
 Other defects: fixing $\kappa$ instead of a letter; applying the same-order additive gauge in a mixed-order cell (KAT: symmetry in 8/8 same-order cells, not a symmetry in 8/8 mixed cells); quotienting aliases that are not symmetries (a repeated 24-letter half of a latent stream makes two position maps indistinguishable — an alias to retain, not a gauge to remove).
 '''
@@ -68,7 +105,7 @@ Other defects: fixing $\kappa$ instead of a letter; applying the same-order addi
 [[blocks]]
 kind = "controls"
 body = '''
-Static known-answer tests: unit gauge produces identical ciphertexts 48/48 (12 units times 4 sign cells); translation gauge reproduces both ciphertexts with text A unchanged and the predicted key shift 16/16; orbit canonicalisation 312 to 1; in a later successor the exact translation gauge was tested 20/20. Chain plants: a bank member that is a rotation of the true cycle recovers text A exactly and text B up to the predicted shift (rotation $b = 5$ gives shift 5; $b = 9$ with $e_A = -1$ gives shift 17; a unit alias gives exact recovery), and the truth gate is defined accordingly.
+Static known-answer tests: unit gauge produces identical ciphertexts 48/48 (12 units times 4 sign cells); translation gauge reproduces both ciphertexts with text A unchanged and the predicted key shift 16/16; orbit canonicalisation 312 to 1; in a later successor the exact translation gauge was tested 20/20. Chain plants: a bank member that is a rotation of the true cycle recovers text A exactly and text B up to the predicted shift. Rotation $b = 5$ gives shift 5; $b = 9$ with $e_A = -1$ gives shift 17; a unit alias gives exact recovery. The truth gate follows this rule.
 '''
 
 [[blocks]]
@@ -81,7 +118,7 @@ Take $e_A = e_B = +1$, so $\kappa' = \kappa + b$ and $z(P^{B\prime}) = z(P^B) - 
 [[blocks]]
 kind = "notes"
 body = '''
-Gauge bookkeeping is a validation matter as much as an algebraic one; the invalidation protocol is described under [Gauge-defect invalidation](/validation/gauge-defect-invalidation). See [Group actions on alphabets](/algebra/group-actions-on-alphabets) for orbit counting.
+Gauge bookkeeping is a validation matter as much as an algebraic one. The invalidation protocol is described under [Gauge-defect invalidation](/validation/gauge-defect-invalidation). See [Group actions on alphabets](/algebra/group-actions-on-alphabets) for orbit counting.
 '''
 
 [[provenance]]

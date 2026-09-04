@@ -12,11 +12,51 @@ updated = "2026-09-04"
 lab = "vigenere"
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Letters are indices 0..25 (A = 0); non-letters are dropped; the key k has
+// length m.
+function ENCIPHER_LETTER(p, k, rule):
+    if rule == Vigenère:         return (p + k) mod 26
+    if rule == Beaufort:         return (k - p) mod 26
+    if rule == VariantBeaufort:  return (p - k) mod 26
+    // key pair AB, CD, ... selects a table
+    if rule == Porta:
+        r = k div 2
+        if p < 13: return 13 + (p + r) mod 13
+        else:      return (p - 13 - r) mod 13
+
+function DECIPHER_LETTER(c, k, rule):
+    if rule == Vigenère:         return (c - k) mod 26
+    // reciprocal: same as enciphering
+    if rule == Beaufort:         return (k - c) mod 26
+    if rule == VariantBeaufort:  return (c + k) mod 26
+    // reciprocal
+    if rule == Porta:            return ENCIPHER_LETTER(c, k, Porta)
+
+function ENCRYPT(p[0..n-1], k[0..m-1], rule):
+    for i in 0..n-1: c[i] = ENCIPHER_LETTER(p[i], k[i mod m], rule)
+    return c
+
+// Coset panel and blind key recovery (Vigenère rule, enough letters in every
+// coset).
+function COSET_PANEL(c[0..n-1], m):
+    for b in 0..m-1:
+        coset = [c[i] for i in 0..n-1 if i mod m == b]
+        show HISTOGRAM(coset) and IC(coset)
+        s[b] = argmin over t in 0..25 of CHI2(HISTOGRAM(coset) rotated back
+                by t, ENGLISH)
+    return the key letters A + s[b]
+```
+'''
+
+[[blocks]]
 kind = "notes"
 title = "What to try"
 body = '''
-- Shorten the plaintext until the blind recovery returns a wrong key letter: that is the "short coset" failure mode, and the histogram of the failing coset shows why.
-- Switch to **Beaufort** and encrypt the ciphertext again with the same key: the cipher is reciprocal, so the plaintext comes back.
-- Use a key with repeated letters (for example `PAPAYA`): cosets 0, 2 and 4 share one shift, and their histograms line up.
-- Under **Porta** the key letter selects one of thirteen reciprocal half-alphabet tables, so histograms are no longer plain rotations of English.
+- Shorten the plaintext until blind recovery gets a key letter wrong. This is the "short coset" failure mode. The letter counts for that coset show why it failed.
+- Switch to **Beaufort** and encrypt the ciphertext again with the same key. Beaufort is reciprocal, so this returns the plaintext.
+- Use a key with repeated letters, such as `PAPAYA`. Cosets 0, 2, and 4 use the same shift, so their letter counts line up.
+- Switch to **Porta**. Each key letter selects one of 13 reciprocal half-alphabet tables, so the letter counts are no longer simple rotations of English.
 '''

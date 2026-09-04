@@ -17,7 +17,7 @@ Work in $\mathbb{Z}_{26}$ with a primer of length $m$. **Plaintext autokey**: $c
 
 $$\text{ciphertext autokey:}\quad c_i - c_{i-m} = p_i, \qquad \text{plaintext autokey:}\quad c_i - c_{i-m} = p_i - p_{i-2m}.$$
 
-The first difference text *is* the plaintext from position $m$ on; the second is a difference of two independent language letters, whose distribution is the self-convolution of the language distribution (peaked at $0$ with mass $\sum_x E(x)^2 \approx 0.066$). If a periodic component $k_{i \bmod q}$ is added to a ciphertext autokey, $c_i - c_{i-m} = p_i + k_{i \bmod q}$ is an ordinary periodic cipher of the plaintext. For a key with an affine recurrence $k_i = a k_{i-L} + b$ ($a$ a unit) the filter $c_i - a c_{i-L}$ gives $p_i - a p_{i-L} + b$, whose distribution is the $a$-scaled self-convolution of the language distribution plus a constant.
+The first difference text *is* the plaintext from position $m$ on. The second is a difference of two independent language letters, whose distribution is the self-convolution of the language distribution (peaked at $0$ with mass $\sum_x E(x)^2 \approx 0.066$). If a periodic component $k_{i \bmod q}$ is added to a ciphertext autokey, $c_i - c_{i-m} = p_i + k_{i \bmod q}$ is an ordinary periodic cipher of the plaintext. For a key with an affine recurrence $k_i = a k_{i-L} + b$ ($a$ a unit) the filter $c_i - a c_{i-L}$ gives $p_i - a p_{i-L} + b$, whose distribution is the $a$-scaled self-convolution of the language distribution plus a constant.
 '''
 
 [[blocks]]
@@ -51,6 +51,52 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Ciphertext c[0..n-1] in a known index order; lags L = 1..20; both signs;
+// tested period q; units a; N shuffles.
+function LAG_SCREEN(c, q, N):
+    // the reciprocal relation needs the sum
+    for sign in {-, +}, L in 1..20:
+        // lag-L difference or sum text
+        v = [ (c[i] sign c[i-L]) mod 26 for i in L..n-1 ]
+        // heuristic period-q alignment of v
+        obs = ALIGNMENT_IC(v, q)
+        null = [ ALIGNMENT_IC(SHUFFLE_POSITIONS(v), q) for r in 1..N ]
+        // per-lag z: the expected extreme of many trials is not evidence
+        z[sign, L] = (obs - MEAN(null)) / SD(null)
+    family_max = max over (sign, L) of z
+    // family-wise null over all lags and signs
+    family_null = the same maximum over (sign, L) recomputed on shuffles of c
+    return (z, family_max against family_null)
+
+function AFFINE_FILTER_SCREEN(c, units, lags, N):
+    for a in units, L in lags:
+        // cancels a key with k_i = a k_{i-L} + b
+        D = [ (c[i] - a * c[i-L]) mod 26 for i in L..n-1 ]
+        // R_a: a-scaled self-convolution of E
+        Lambda[a, L] = max over d of sum over x of N_D(x) * log(26 * R_a((x -
+                d) mod 26))
+    observed = max over (a, L) of Lambda
+    null = [ the same maximum over (a, L) on SHUFFLE(c) for r in 1..N ]
+    return (observed, z of observed against null)
+
+// A family-wise significant lag: read v directly (ciphertext autokey) or
+// solve v as a periodic cipher (autokey plus periodic component).
+function DIRECT_AUTOKEY_SOLVER(c, primer_lengths, relations):
+    for m in primer_lengths, relation in relations:
+        primer[m, relation] = HILL_CLIMB over r[0..m-1] of
+                LANGUAGE_SCORE(DECRYPT_AUTOKEY(c, r, relation))
+    gate: planted controls must give the exact plaintext, the exact primer
+            and an independent forward encryption before any target is read
+    // and reject any text whose cosets are as peaked as monoalphabetic
+    // language
+    return best (m, relation, primer, rate)
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
 Screens: $O(n)$ per $(\pm, L)$ plus the alignment; $30$ to $100$ shuffles per configuration run in minutes. The direct solver used a budget of $500 \times 2000$ evaluations per primer length and took about 8 s per 153-letter text and 18 s per 504-letter text.
@@ -60,7 +106,7 @@ Screens: $O(n)$ per $(\pm, L)$ plus the alignment; $30$ to $100$ shuffles per co
 kind = "failure_modes"
 body = '''
 - **Selection over lags.** Per-lag maxima of $z +3.0$ to $+3.9$ appeared on every text (for example sum at lag 2, $z +3.0$; sum at lag 15, $z +3.9$) while the family-wise maxima of the affine filters sat at $z -0.1$ to $+0.3$ (logs/03).
-- **Failed controls void the row.** Of four planted "periodic layer over plaintext autokey" controls only the additive same-order case was read (86% match); the other three read 7%, 8% and 1%, so their target rows carry no information (logs/11).
+- **Failed controls void the row.** Of four planted "periodic layer over plaintext autokey" controls only the additive same-order case was read (86% match). The other three read 7%, 8% and 1%, so their target rows carry no information (logs/11).
 - **Exact-recovery gates.** The Porta-relation autokey solver reached 97.2% and 99.2% plaintext on 144- and 504-letter controls but not the exact primer, and was locked out of the target by the gate (logs/185).
 - **Alphabet.** None of the cancellations applies through an unknown keyed alphabet.
 '''

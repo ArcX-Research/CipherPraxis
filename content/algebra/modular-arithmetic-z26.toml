@@ -40,7 +40,7 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - The alphabet has exactly 26 symbols; digraphic constructions (Playfair over 25 cells, Hill over vectors) use other moduli or vector spaces.
-- A keyed alphabet changes coordinates only; the cipher relations stay linear in $z$.
+- A keyed alphabet changes coordinates only. The cipher relations stay linear in $z$.
 - Convention: $z(\text{letter}) = \text{position}$. The inverse convention (array position $\to$ letter) is equivalent, but the two must not be mixed. The ledger records one case where two independent implementations used transposed conventions: their aggregate censuses agreed exactly while per-cell values were not portable between them.
 '''
 
@@ -56,9 +56,46 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Letters as residues A -> 0, ..., Z -> 25; every operation is reduced mod
+// 26. non-negative representative
+function MOD26(x): return ((x mod 26) + 26) mod 26
+
+// Coordinate function of an alphabet order (a string of the 26 letters).
+function COORDINATES(order):
+    for pos in 0..25: z[order[pos]] = pos
+    // z(letter) = position; order[pos] inverts it
+    return z
+
+// One additive relation with sign e (+1 Vigenère-type, -1 Beaufort-type).
+function ENCRYPT_LETTER(z, order, p, k, e):
+    // z(c) = e z(p) + k
+    return order[ MOD26(e*z[p] + k) ]
+
+function DECRYPT_LETTER(z, order, c, k, e):
+    // z(p) = e (z(c) - k), since e^2 = 1
+    return order[ MOD26(e*(z[c] - k)) ]
+
+// Exact alignment objective for a period-m additive layer: u = coordinates of
+// the text, s = relative shift vector with s[0] = 0.
+function ALIGNMENT_OBJECTIVE(u[0..n-1], m, s[0..m-1]):
+    for b in 0..m-1, x in 0..25:
+        F[b][x] = number of i with i mod m == b and u[i] == x
+    for a in 0..m-1, b in 0..m-1, d in 0..25:
+        C[a][b][d] = sum over x in 0..25 of F[a][x] * F[b][(x + d) mod 26]
+    J = 0
+    for a in 0..m-1, b in a+1..m-1: J = J + C[a][b][ MOD26(s[b] - s[a]) ]
+    // maximise over the 26^(m-1) vectors s
+    return J
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-$26^{m-1}$ relative shift vectors after the gauge; $26^6 = 308{,}915{,}776$ for $m = 7$, enumerated exactly in a vectorised core. A full alphabet has $26! \approx 2^{88.4}$ descriptions; the unit gauge alone leaves $26!/12 \approx 3.36 \times 10^{25}$ (about $84.8$ bits), the unit-plus-translation gauge $26!/312 \approx 2^{80}$.
+$26^{m-1}$ relative shift vectors after the gauge; $26^6 = 308{,}915{,}776$ for $m = 7$, enumerated exactly in a vectorised core. A full alphabet has $26! \approx 2^{88.4}$ descriptions. The unit gauge alone leaves $26!/12 \approx 3.36 \times 10^{25}$ (about $84.8$ bits), the unit-plus-translation gauge $26!/312 \approx 2^{80}$.
 '''
 
 [[blocks]]
@@ -67,13 +104,13 @@ body = '''
 - Dividing by 2 or 13, or cancelling a factor of 2 from both sides of a congruence.
 - Assuming translation is always a gauge. In the shift-free model where the key stream is the coordinate of another text's letters, $z(P_i) - e\,z(C_i) + e\,z(K_i) \equiv 0$, the constant cancels inside the difference but not in the inverse lookup, so only the twelve unit multiples remain a symmetry.
 - Mixing the two coordinate conventions between components of one pipeline.
-- Overflow: an early engine formed base-26 quadgram indices in 16-bit integers; the known-answer test exposed it and letters are now promoted to 64-bit before indexing.
+- Overflow: an early engine formed base-26 quadgram indices in 16-bit integers. The known-answer test exposed it and letters are now promoted to 64-bit before indexing.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Eight random cycles times four sign cells: derived stream, both inverses and two independently written scalar forwards agree 32/32. Fifty random plants of the two-text chain equation across all four sign cells reproduce the eliminated equation 50/50. Every exact solver prints its inverse equations and an independently implemented forward reconstruction; a round trip alone is never accepted as evidence because any invertible guess round-trips.
+Eight random cycles times four sign cells: derived stream, both inverses and two independently written scalar forwards agree 32/32. Fifty random plants of the two-text chain equation across all four sign cells reproduce the eliminated equation 50/50. Every exact solver prints its inverse equations and an independently implemented forward reconstruction. A round trip alone is never accepted as evidence because any invertible guess round-trips.
 '''
 
 [[blocks]]

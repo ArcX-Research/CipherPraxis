@@ -38,7 +38,7 @@ body = '''
 kind = "assumptions"
 body = '''
 - The exact IC formula assumes independent letters; real prose (word repeats) scatters more, which is why simulated references on real text accompany it.
-- Simulated standard errors are only as good as the simulated plaintext and key distributions; a peaked non-prose plaintext or a structured key is outside them.
+- Simulated standard errors are only as good as the simulated plaintext and key distributions. A peaked non-prose plaintext or a structured key is outside them.
 - Held-out windows must not overlap the model's training data or the planted controls.
 '''
 
@@ -49,7 +49,46 @@ body = '''
 1. Print every measurement as value, expected value under the hypothesis, standard error and $z$.
 2. Treat $|z| < 2$ as "consistent", $2$–$3$ as "strained", and require $|z| \ge 3$ together with a matched null before calling anything a fact; with many readings, apply the [family-wise](/statistics/family-wise-null) correction.
 3. Use the error bar to size the next experiment: to turn a $1.5\sigma$ coset reading into a $3\sigma$ one at the same effect requires four times the letters.
-4. Prefer instruments with smaller standard errors for the same question: the aligned union IC and the aligned digram IC were sharper than the mean coset IC for the monoalphabetic question.
+4. Prefer tests with smaller standard errors for the same question: the aligned union IC and the aligned digram IC were sharper than the mean coset IC for the monoalphabetic question.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Three sources of sigma for an estimator theta_hat; the reading is z =
+// (theta_hat - theta_0)/sigma.
+function EXACT_IC_SD(p[0..25], n):
+    kappa2 = sum over x of p[x]^2;  kappa3 = sum over x of p[x]^3
+    P = n * (n - 1) / 2
+    return sqrt( P * kappa2 * (1 - kappa2) + 2 * P * (n - 2) * (kappa3 -
+            kappa2^2) ) / P
+
+// the hypothesised construction
+function SIMULATED_SD(STAT, windows, ENCRYPT_H, R, rng):
+    for i in 1..R:
+        value[i] = STAT(ENCRYPT_H(RANDOM_WINDOW(rng, windows),
+                RANDOM_KEY(rng)))
+    return MEAN(value), SD(value)
+
+function HELD_OUT_SD(STAT, windows_of_length_n):
+    for each window w: value[w] = STAT(w)
+    return MEAN(value), SD(value)
+
+function Z(theta_hat, theta_0, sigma):
+    return (theta_hat - theta_0) / sigma
+
+// Derived error bars. mean of m independent coset readings
+function SD_OF_MEAN(sigma, m):
+    return sigma / sqrt(m)
+
+// recovery rate k/N from planted trials
+function RATE_SE(k, N):
+    rho = k / N
+    return sqrt(rho * (1 - rho) / N)
+
+// An empirical p from N nulls resolves no finer than 1 / (N + 1).
+```
 '''
 
 [[blocks]]
@@ -61,16 +100,16 @@ Exact formulas are $O(26)$. Simulated errors cost $R$ encryptions and statistic 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Ignoring correlation.** The binomial guess $\sqrt{\kappa_2(1-\kappa_2)/P}$ is $0.016$ at $n = 22$; the exact value is $0.021$, 30% larger, because pairs sharing a position are positively correlated.
-- **Too few draws for a skewed maximum.** A change-point statistic reported at $z = +3.3$ rested on 60 null draws of a right-skewed maximum; the error bar of the error bar was not small.
-- **Ambiguity of the hypothesis.** An IC that matches one key geometry to $z = +0.38$ also matches 134 of 373 alternative geometries within one standard deviation; a small $z$ certifies consistency, not identification.
+- **Ignoring correlation.** The binomial guess $\sqrt{\kappa_2(1-\kappa_2)/P}$ is $0.016$ at $n = 22$. The exact value is $0.021$, 30% larger, because pairs sharing a position are positively correlated.
+- **Too few draws for a skewed maximum.** A change-point statistic reported at $z = +3.3$ rested on 60 null draws of a right-skewed maximum. The error bar of the error bar was not small.
+- **Ambiguity of the hypothesis.** An IC that matches one key geometry to $z = +0.38$ also matches 134 of 373 alternative geometries within one standard deviation. A small $z$ certifies consistency, not identification.
 - **Over-reading small z.** "Cosets are not monoalphabetic" was a $-1.5\sigma$ reading (mean coset IC $0.0536$ against $0.0652$ with standard error $0.0079$); several search rounds branched on it as if it were a fact.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-The exact IC error bar was checked on planted references: a plain periodic substitution of English gave a mean coset IC of $0.0713$, $z = +0.8$ against the monoalphabetic expectation $0.0652$; a fractionated inner text gave $0.0575$, $z = -1.0$; both inside the error bar as they should be. The digram IC of the aligned text was compared with 60 English windows ($0.0074 \pm 0.0014$) and with 200 shuffles ($0.0059 \pm 0.0008$) at the same time, so that "English-like" and "above random" are separate statements.
+The exact IC error bar was checked on planted references: a plain periodic substitution of English gave a mean coset IC of $0.0713$, $z = +0.8$ against the monoalphabetic expectation $0.0652$. A fractionated inner text gave $0.0575$, $z = -1.0$; both inside the error bar as they should be. The digram IC of the aligned text was compared with 60 English windows ($0.0074 \pm 0.0014$) and with 200 shuffles ($0.0059 \pm 0.0008$) at the same time, so that "English-like" and "above random" are separate statements.
 '''
 
 [[blocks]]

@@ -197,6 +197,7 @@ pub enum BlockKind {
     Variants,
     Assumptions,
     Attack,
+    Pseudocode,
     Complexity,
     FailureModes,
     Controls,
@@ -206,12 +207,13 @@ pub enum BlockKind {
 }
 
 impl BlockKind {
-    pub const ALL: [BlockKind; 11] = [
+    pub const ALL: [BlockKind; 12] = [
         BlockKind::Definition,
         BlockKind::Equations,
         BlockKind::Variants,
         BlockKind::Assumptions,
         BlockKind::Attack,
+        BlockKind::Pseudocode,
         BlockKind::Complexity,
         BlockKind::FailureModes,
         BlockKind::Controls,
@@ -227,6 +229,7 @@ impl BlockKind {
             BlockKind::Variants => "Types and variants",
             BlockKind::Assumptions => "Assumptions & invariants",
             BlockKind::Attack => "How to attack it",
+            BlockKind::Pseudocode => "Pseudocode",
             BlockKind::Complexity => "Cost and limits",
             BlockKind::FailureModes => "When it can fail",
             BlockKind::Controls => "Checks and controls",
@@ -243,6 +246,7 @@ impl BlockKind {
             BlockKind::Variants => "variants",
             BlockKind::Assumptions => "assumptions",
             BlockKind::Attack => "attack",
+            BlockKind::Pseudocode => "pseudocode",
             BlockKind::Complexity => "complexity",
             BlockKind::FailureModes => "failure-modes",
             BlockKind::Controls => "controls",

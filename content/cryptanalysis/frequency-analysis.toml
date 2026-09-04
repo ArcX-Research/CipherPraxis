@@ -27,7 +27,7 @@ kind = "equations"
 title = "Fits and alphabet-free comparisons"
 body = '''
 - Shift or relabelling fit against a reference $E$: correlation $\sum_x E(x-k)\hat h(x)$, chi-square $\sum_x (f_x - nE(x-k))^2/(nE(x-k))$, or log-likelihood $\sum_x f_x \log E(x-k)$ (see [Coset shift recovery](/cryptanalysis/coset-shift-recovery)).
-- Sorted profile: sort the histogram and compare with sorted profiles of language windows of the same length; this is invariant under any relabelling and tests "English letters under some substitution" without recovering it.
+- Sorted profile: sort the histogram and compare with sorted profiles of language windows of the same length. This is invariant under any relabelling and tests "English letters under some substitution" without recovering it.
 - Segment identity: the cosine between two segment histograms (or its maximum over rotations in a reference order) tests whether two parts of a text share one substitution.
 - Within-coset coincidences: adjacent-pair and triple coincidences within one coset stay at the language digram/trigram level under any per-coset substitution and fall toward the product of letter rates under any inner mixing.
 '''
@@ -35,7 +35,7 @@ body = '''
 [[blocks]]
 kind = "assumptions"
 body = '''
-- The plaintext is natural language with a known reference distribution; a list, a spelled-out number or a foreign language changes the reference and every fit built on it.
+- The plaintext is natural language with a known reference distribution. A list, a spelled-out number or a foreign language changes the reference and every fit built on it.
 - Statistics are compared at matched length: expectations and error bars depend strongly on $n$, so planted references are generated at the text's own length.
 - Histogram statistics see nothing of order: they are invariant under transposition, which is a strength (usable through a transposition) and a limitation (blind to word structure).
 '''
@@ -46,14 +46,60 @@ title = "How to attack it"
 body = '''
 1. Histogram, index of coincidence with error bar, number of distinct letters; compare with language, uniform and planted references at the same length.
 2. If the text is monoalphabetic ($\operatorname{IC}$ near the language value), map the most frequent ciphertext letters to the most frequent plaintext letters as a start and finish with a quadgram hill-climb over the substitution.
-3. If periodic, repeat per coset after the period is found; if the text is not homogeneous, repeat per zone.
+3. If periodic, repeat per coset after the period is found. If the text is not homogeneous, repeat per zone.
 4. Read the sorted profile and the within-coset pair coincidences to decide between "substitution of language" and "mixed inner" before committing to a key family.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Text c[0..n-1] (a whole text, one coset or one zone), reference
+// distribution E, planted references generated at length n. f[x] = count of
+// letter x
+function IC(f, n):
+    return sum over x of f[x] * (f[x] - 1) / (n * (n - 1))
+
+// exact standard deviation for n independent letters from h
+function IC_SD(h, n):
+    kappa_2 = sum over x of h[x]^2
+    kappa_3 = sum over x of h[x]^3
+    N = n * (n - 1) / 2
+    return sqrt( (N * kappa_2 * (1 - kappa_2) + 2 * N * (n - 2) * (kappa_3 -
+            kappa_2^2)) / N^2 )
+
+function FREQUENCY_ANALYSIS(c, E, references):
+    f = COUNTS(c);  h = f / n;  distinct = number of x with f[x] > 0
+    ic = IC(f, n);  sd = IC_SD(E, n)
+    // z = (ic - reference) / sd
+    compare (ic, distinct, SORTED(h)) with language, uniform and the planted
+            references of length n
+    // monoalphabetic
+    if ic is near the language value:
+        // a start, not an answer
+        sigma = map the most frequent ciphertext letters onto the most
+                frequent letters of E
+        sigma = HILL_CLIMB(sigma, QUADGRAM_SCORE(APPLY(sigma, c)))
+        return (sigma, the decrypt's quadgram rate against the planted
+                references)
+    if the text is periodic with period m:
+        repeat per coset b (shift by correlation, chi-square or likelihood
+                against E)
+    if the text is not homogeneous: repeat per zone
+    // invariant under relabelling
+    profile = SORTED(h) against the sorted profiles of language windows of
+            length n
+    pairs = adjacent-pair and triple coincidences within each coset against
+            planted per-coset-substitution and mixed-inner references
+    return the decision "substitution of language" or "mixed inner", with its
+            z against those references
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-All statistics are linear in $n$; the fits are $O(26)$ per candidate rotation and $O(26^2)$ per relabelling hypothesis. Simulated references cost one encryption and one statistic per replicate: 400 planted windows per model per text run in about a minute.
+All statistics are linear in $n$. The fits are $O(26)$ per candidate rotation and $O(26^2)$ per relabelling hypothesis. Simulated references cost one encryption and one statistic per replicate: 400 planted windows per model per text run in about a minute.
 '''
 
 [[blocks]]
@@ -62,7 +108,7 @@ body = '''
 - **Degenerate objectives.** Maximising the coincidence rate of a decrypt over a free alphabet is not a language objective: on a planted 95-letter control the search found decrypts with 593 to 601 coincidences against the truth's 383 by collapsing letters, with 0 to 5% of letters right (logs/81). Coincidence must stay a diagnostic, never the thing optimised.
 - **Short texts.** A monoalphabetic solver calibrated at 92 letters fails its own reference at 55 letters (logs/98 to 101); below that, frequency order is a weak prior.
 - **Rotations versus relabellings.** Every same-coset statistic is identical for "seven rotations of one alphabet" and "seven unrelated alphabets"; frequency analysis cannot decide whether a periodic layer is additive.
-- **Pooling across zones.** A whole-text coset index of coincidence of $0.054$ was read as a mixed inner; it was 63 monoalphabetic-coset letters pooled with 90 flat ones.
+- **Pooling across zones.** A whole-text coset index of coincidence of $0.054$ was read as a mixed inner. It was 63 monoalphabetic-coset letters pooled with 90 flat ones.
 - **Error bars.** "Not monoalphabetic" at coset IC $0.0536$ against $0.0652$ is $z -1.5$ once the standard deviation of the mean ($0.0079$) is used (logs/01).
 '''
 
@@ -73,7 +119,7 @@ body = '''
 - Chi-square shift fit plus polish (logs/07): planted phrase-keyed text read at $-4.34$, 100% match.
 - Exact IC standard deviations and 200-shuffle nulls on planted plain and transposed-inner references (logs/01).
 - Segment-identity references, 100 planted texts per case (logs/38); within-coset coincidence references, 400 planted windows per model at 153 and 144 letters (ck_diag_report.txt): a 153-letter text with 5 coincident adjacent pairs sits at $z -1.8$ against per-coset substitutions ($11.7 \pm 3.8$) and $z 0.0$ against a transposed period-2 inner ($4.9 \pm 2.3$).
-- A design note of the corpus also reports a shotgun quadgram hill-climb solving 5/5 planted 92-letter monoalphabetic controls at 93 to 100% match; no separate transcript of that run was located, so the figure is quoted from the note only.
+- A design note of the corpus also reports a shotgun quadgram hill-climb solving 5/5 planted 92-letter monoalphabetic controls at 93 to 100% match. No separate transcript of that run was located, so the figure is quoted from the note only.
 '''
 
 [[blocks]]
@@ -86,7 +132,7 @@ Plaintext (39 letters) `ATTACKTHEEASTGATEATDAWNANDHOLDTHEBRIDGE` has counts A 7,
 FYYFHPYMJJFXYLFYJFYIFBSFSIMTQIYMJGWNILJ
 ```
 
-with counts F 7, Y 7, J 5, I 4, M 3: the same frequency multiset, rotated. The index of coincidence of both texts is $\sum f_x(f_x-1)/(39 \cdot 38) = (42+42+20+12+6+2+2)/1482 = 0.085$ (G and N occur twice, every other letter once); only the labels moved. Mapping F$\to$A (or F$\to$T), Y$\to$T, J$\to$E already fixes the rotation $k = 5$, and the sorted profile $(7,7,5,4,3,2,\dots)$ is the same before and after encryption.
+with counts F 7, Y 7, J 5, I 4, M 3: the same frequency multiset, rotated. The index of coincidence of both texts is $\sum f_x(f_x-1)/(39 \cdot 38) = (42+42+20+12+6+2+2)/1482 = 0.085$ (G and N occur twice, every other letter once). Only the labels moved. Mapping F$\to$A (or F$\to$T), Y$\to$T, J$\to$E already fixes the rotation $k = 5$, and the sorted profile $(7,7,5,4,3,2,\dots)$ is the same before and after encryption.
 '''
 
 [[provenance]]

@@ -17,21 +17,21 @@ With a source text $t$ and a start offset $o$,
 
 $$a(c_i) \equiv a(p_i) + a(t_{o+i}) \pmod{26}$$
 
-(or the Beaufort and Variant forms), in a straight or keyed order $a$. The secret is the pair (text, $o$); a numeric locator such as page and line is one way to transmit $o$.
+(or the Beaufort and Variant forms), in a straight or keyed order $a$. The secret is the pair (text, $o$). A numeric locator such as page and line is one way to transmit $o$.
 '''
 
 [[blocks]]
 kind = "equations"
 title = "Sliding correlation"
 body = '''
-For every candidate text and offset, the trial decrypt $d_i = a^{-1}\big(a(c_i) - a(t_{o+i})\big)$ is scored by its monogram log-likelihood $\sum_i \log E(d_i)$, computed for all offsets at once as a correlation; the top offsets are re-scored by the index of coincidence and quadgrams. The same sweep on shuffled ciphertext gives the maximum reachable by chance: in the corpus runs the shuffled best monogram log-likelihood per letter was $-1.41$, $-1.44$ and $-1.54$ against an English reference of $-1.24$.
+For every candidate text and offset, the trial decrypt $d_i = a^{-1}\big(a(c_i) - a(t_{o+i})\big)$ is scored by its monogram log-likelihood $\sum_i \log E(d_i)$, computed for all offsets at once as a correlation. The top offsets are re-scored by the index of coincidence and quadgrams. The same sweep on shuffled ciphertext gives the maximum reachable by chance: in the corpus runs the shuffled best monogram log-likelihood per letter was $-1.41$, $-1.44$ and $-1.54$ against an English reference of $-1.24$.
 '''
 
 [[blocks]]
 kind = "variants"
 body = '''
 - **Book as running key** (the form treated here).
-- **Book as code**: words replaced by their locations in the book; a different, non-additive scheme not treated by the program.
+- **Book as code**: words replaced by their locations in the book. A different, non-additive scheme not treated by the program.
 - **Chained texts**: the previous message's plaintext as the key, which the recipe-free cascade handles as a running-key link.
 '''
 
@@ -39,7 +39,7 @@ body = '''
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- The key text is in the bank; a negative sweep says nothing about texts outside it.
+- The key text is in the bank. A negative sweep says nothing about texts outside it.
 - Invariant: a true window yields the plaintext's index of coincidence (about 0.066) and quadgram rate (near $-4.3$) far above the shuffled null; there is no partial credit for a nearly right offset except at the overlap.
 '''
 
@@ -53,17 +53,49 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// a is the index order (straight or keyed); t is the agreed source text and o
+// the start offset. The Vigenère relation is shown; the Beaufort and Variant
+// forms change the signs.
+function ENCRYPT(p[0..n-1], t, o, a):
+    for i in 0..n-1:
+        c[i] = a_inverse((a(p[i]) + a(t[o + i])) mod 26)
+    return c
+
+function DECRYPT(c[0..n-1], t, o, a):
+    for i in 0..n-1:
+        p[i] = a_inverse((a(c[i]) - a(t[o + i])) mod 26)
+    return p
+
+// Bank sweep: every text and offset scored by monogram log-likelihood, top
+// offsets re-scored.
+function BANK_SWEEP(c[0..n-1], bank, a, E):
+    for each text t in bank (forward and reversed):
+        for o in 0..len(t)-n:
+            d = DECRYPT(c, t, o, a)
+            // all offsets at once as a correlation
+            score[t, o] = sum over i of log E[d[i]]
+    top = the best (t, o) by score
+    re-score top by index of coincidence and quadgrams
+    // report only what exceeds the same sweep on shuffled c
+    return top
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-One vector correlation per (text, order, relation); four novels of several hundred thousand letters each, all offsets, three texts of 153, 144 and 504 letters, ran in three to six minutes single-threaded.
+One vector correlation per (text, order, relation). Four novels of several hundred thousand letters each, all offsets, three texts of 153, 144 and 504 letters, ran in three to six minutes single-threaded.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Bank coverage** is the whole question; every other failure is secondary.
-- **Multiple comparisons.** Across millions of offsets the best chance alignment reaches the shuffled maximum; a hit must exceed it clearly, not marginally.
-- **No planted positive.** The receipt shows what chance reaches but not that the sweep finds a planted window; a control should be planted before the sweep is cited as evidence.
+- **Bank coverage** is the whole question. Every other failure is secondary.
+- **Multiple comparisons.** Across millions of offsets the best chance alignment reaches the shuffled maximum. A hit must exceed it clearly, not marginally.
+- **No planted positive.** The receipt shows what chance reaches but not that the sweep finds a planted window. A control should be planted before the sweep is cited as evidence.
 '''
 
 [[blocks]]

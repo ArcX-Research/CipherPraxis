@@ -44,6 +44,45 @@ The per-task statistics of the live run carried information of their own. Agains
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Inputs: an exact search over a deterministically ordered frontier of F
+// tasks, the declared cap T, a planted truth whose task index t_star is
+// known, and the live text under the identical order. Output: CONTROL_GATE
+// PASS, or CONTROL_GATE FAIL (throughput) with (rho, F, t_star, T).
+function THROUGHPUT_CONTROL(search, F, T, t_star):
+    done = 0; START_CLOCK()
+    while done < F and ELAPSED() < T:
+        search.RUN_TASK(done); done += 1
+    // measured on this cell, not extrapolated from an easier one
+    rho = done / ELAPSED()
+    if search.found_truth: return PASS
+    // the truth was never scheduled
+    if t_star > rho * T:
+        // segment test: search the tasks around t_star to separate speed from
+        // pruning
+        if search.RUN_TASKS(SEGMENT_AROUND(t_star)) finds the truth:
+            report rho, F, t_star, T, T_drain = F / rho, coverage = MIN(1,
+                    rho * T / F)
+            // terminal: CONTROL_GATE FAIL (throughput); TARGET_REFUSED
+            return FAIL_THROUGHPUT
+    // scheduled and pruned away
+    return FAIL_POWER
+
+function LIVE_TERMINAL(search, F, T):
+    done = RUN_UNTIL(search, F, T)
+    // natural drain only
+    if done == F and search.complete: return EXACT_ZERO
+    return SCOPED_INCONCLUSIVE(tasks = done + "/" + F)     // never a negative
+
+// After a throughput fail, decide explicitly: accept a scoped run and report
+// its coverage, change the algorithm, accumulate ordered segments over idle
+// time, or declare the cell non-viable and do not run it.
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
 Measuring throughput costs the budget it measures. The economical form is the segment panel: locate each planted truth's index with a hash lookup, search ten tasks around it, and multiply recovery-when-scheduled by coverage (see [Power measurement](/validation/power-measurement)).
@@ -53,7 +92,7 @@ Measuring throughput costs the budget it measures. The economical form is the se
 kind = "failure_modes"
 body = '''
 - **Front-loaded controls.** A fixture whose truth sits at the start of the schedule "passes" at any throughput; reclassified as a wiring test.
-- **Extrapolating from an easy cell.** The three-shift cell's 308-second drain suggested feasibility; the two-extra-shift cell was 300 times slower per pair.
+- **Extrapolating from an easy cell.** The three-shift cell's 308-second drain suggested feasibility. The two-extra-shift cell was 300 times slower per pair.
 - **Reading a capped run as exhaustive.** The design rule is `EXACT_ZERO` only on natural drain (`complete=1`), otherwise `SCOPED_INCONCLUSIVE` with `pairs=done/total` recorded.
 '''
 

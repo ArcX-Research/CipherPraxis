@@ -46,7 +46,7 @@ title = "Assumptions and invariants"
 body = '''
 - The shape is fixed by the text length (153 is the 17th triangular number; 144 is a square) or by a chosen width.
 - Invariant: letter identities and histograms are preserved.
-- The vocabulary is finite by construction; an arbitrary keyed path is outside it.
+- The vocabulary is finite by construction. An arbitrary keyed path is outside it.
 '''
 
 [[blocks]]
@@ -54,9 +54,45 @@ kind = "attack"
 title = "How to attack it"
 body = '''
 1. Enumerate every route in the vocabulary and every inner period $k$, both alphabet orders and both relations.
-2. For each cell fit the outer and inner keys (exact per-residue maximisation for the shape routes; a cheap exact cyclic-cut stage for every offset $d$ in the affine family, followed by the validated quadgram periodic finish on the best 96 MAP endpoints).
+2. Fit the outer and inner keys for each cell. Shape routes use exact maximisation for every residue. The affine family uses a cheap exact cyclic-cut stage for each offset $d$, then applies the validated quadgram periodic finish to the best 96 MAP endpoints.
 3. Check every endpoint by an independent scalar decrypt and forward.
 4. Compare the live best with nulls that shuffle within the seven outer cosets and repeat the complete selector.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// A shape with n cells. The write path W lists the cells in the order the
+// plaintext is written in; the read path R lists them in the order the
+// ciphertext is read out. q[j] is the plaintext position found in the j-th
+// read cell, so c[j] = p[q[j]].
+function ROUTE_PERMUTATION(W[0..n-1], R[0..n-1]):
+    for i in 0..n-1: holds[W[i]] = i               // cell W[i] receives p[i]
+    for j in 0..n-1: q[j] = holds[R[j]]
+    return q
+
+function ENCRYPT(p[0..n-1], W, R):
+    q = ROUTE_PERMUTATION(W, R)
+    for j in 0..n-1: c[j] = p[q[j]]
+    return c
+
+function DECRYPT(c[0..n-1], W, R):
+    q = ROUTE_PERMUTATION(W, R)
+    for j in 0..n-1: p[q[j]] = c[j]
+    return p
+
+// Affine position route: a complete cyclic re-reading by a fixed stride u
+// (gcd(u, n) = 1) and offset d.
+function AFFINE_ROUTE(C[0..n-1], u, d):
+    for i in 0..n-1:
+        X[i] = C[(u * i + d) mod n]
+    return X
+
+// Attack: enumerate every write/read composition of the finite vocabulary
+// (and every unit stride and offset of the affine family), undo it, fit any
+// additive layer exactly, score by quadgrams.
+```
 '''
 
 [[blocks]]
@@ -69,7 +105,7 @@ Shape routes: 78 or 81 routes times 4 order pairs times 2 relations times $k = 1
 kind = "failure_modes"
 body = '''
 - **Selected-family overfit.** The affine-route endpoint on the 144-letter text scored $-4.82$, above the nominal English threshold, yet all three complete-pipeline shuffled maxima ($-4.74$, $-4.90$, $-4.88$) beat it: a high-parameter family manufactures fragmentary English.
-- **Finite vocabulary.** A negative closes only the enumerated paths; an unusual path or padding rule is untested.
+- **Finite vocabulary.** A negative closes only the enumerated paths. An unusual path or padding rule is untested.
 - **Unidentifiable cut.** Without the gauge argument a control would fail on a correct answer merely because its start differed from the generator's.
 '''
 

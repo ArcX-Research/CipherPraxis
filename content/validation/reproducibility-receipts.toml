@@ -40,13 +40,48 @@ kind = "assumptions"
 body = '''
 - Hashes are recomputed from the files at the moment of writing, not copied from a hand-off. Audits in the program state this explicitly.
 - Corpus and model tables are pinned by content hash, and derived tables (integer-scaled quadgram scores) by both their hash and a checksum.
-- Host artefacts outside the repository (a system dictionary used as a word bank) are a reproducibility risk; the audit recommended pinning the derived bank blob itself.
+- Host artefacts outside the repository (a system dictionary used as a word bank) are a reproducibility risk. The audit recommended pinning the derived bank blob itself.
 '''
 
 [[blocks]]
 kind = "attack"
 body = '''
-Receipts defeat three slow failures. **Drift**: a source is "improved" after a run, and the ledger notes that the current hash must not be represented as the executed one. **Promotion**: an exploratory, capped or empty log is later cited as an exclusion; the audit classified 200 logs and found four empty ones that prove nothing and a dozen failed or partial ones that are not exclusions. **Untraceable claims**: a statement made from the ledger's prose rather than from code or a log; the program retracted one such novelty claim after a source audit.
+Receipts defeat three slow failures. **Drift**: a source is "improved" after a run, and the ledger notes that the current hash must not be represented as the executed one. **Promotion**: an exploratory, capped or empty log is later cited as an exclusion. The audit classified 200 logs and found four empty ones that prove nothing and a dozen failed or partial ones that are not exclusions. **Untraceable claims**: a statement made from the ledger's prose rather than from code or a log. The program retracted one such novelty claim after a source audit.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Inputs: the pinned bytes (source, runner, parser, corpus, model tables),
+// the seeds and exact command line, and the transcript record a number x is
+// read from. Output: a receipt recorded in the transcript, the ledger entry
+// and the audit.
+function MAKE_RECEIPT(files, seeds, argv, transcript, record_id):
+    // recomputed now, never copied from a hand-off
+    for f in files: h[f] = SHA256(READ(f))
+    h_t = SHA256(READ(transcript))
+    receipt = (h[source], h[runner], h[parser], h[corpus], h[model_tables],
+               seeds, argv, h_t, record_id)
+    write receipt into the transcript's PINS record, the ledger entry and the
+            audit
+    // the last line of every launcher
+    print "transcript:", PATH(transcript)
+    return receipt
+
+function VERIFY_RECEIPT(receipt, transcript):
+    for f in receipt.files:
+        // the current bytes are not the executed bytes
+        if SHA256(READ(f)) != receipt.h[f]: return DRIFT
+    fresh = RERUN(receipt.files, receipt.seeds, receipt.argv)
+    // compare semantic records, not whole-file bytes: timing and memory
+    // fields may differ
+    if SEMANTIC_RECORDS(fresh) != SEMANTIC_RECORDS(transcript):
+        return NOT_REPRODUCED
+    // re-derive the number rather than accept it
+    x = READ_RECORD(fresh, receipt.record_id)
+    return REPRODUCED(x)
+```
 '''
 
 [[blocks]]
@@ -58,9 +93,9 @@ Hashing is free relative to any solver. The cost is procedural: the analysis scr
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Path-bound hashes.** Smoke transcripts that embed the absolute log path in `argv` have path-dependent whole-file hashes; the program records a path-independent fixture digest alongside.
+- **Path-bound hashes.** Smoke transcripts that embed the absolute log path in `argv` have path-dependent whole-file hashes. The program records a path-independent fixture digest alongside.
 - **Self-computed runner hash.** A runner that hashes itself at run time and exports the value validates a modified copy of itself; production modes pin the runner through the manifest and environment instead, and the auditors recorded that a public-mode transcript alone does not attest runner identity.
-- **Mis-filed transcripts.** A pilot's transcript was filed under a development directory when a superseded pilot was stopped; the ledger corrected the path and hash.
+- **Mis-filed transcripts.** A pilot's transcript was filed under a development directory when a superseded pilot was stopped. The ledger corrected the path and hash.
 '''
 
 [[blocks]]

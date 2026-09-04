@@ -17,7 +17,7 @@ For period $p$ let $J_r = \{j : j \equiv r \pmod p\}$ and $G = \prod_r S(J_r)$, 
 
 $$\text{decrypt}\big(A_g(c)\big) = A_g\big(\text{decrypt}(c)\big),$$
 
-so for every one of the $26^p$ keys the null decrypt is the original decrypt with its letters permuted within cosets. Any statistic that depends only on per-coset histograms is invariant; any statistic that reads letter order (quadgrams, word models, cross-coset equality patterns at fixed positions) is randomised.
+so for every one of the $26^p$ keys the null decrypt is the original decrypt with its letters permuted within cosets. Any statistic that depends only on per-coset histograms is invariant. Any statistic that reads letter order (quadgrams, word models, cross-coset equality patterns at fixed positions) is randomised.
 '''
 
 [[blocks]]
@@ -25,7 +25,7 @@ kind = "equations"
 title = "What is preserved"
 body = '''
 - Per-coset letter histograms $F_r(x)$ and hence the coset IC, the union IC of any alignment, and every shift-marginalised [evidence](/statistics/bayesian-evidence-model-selection).
-- For a progressive key $k_j = k_{j \bmod p} + d \cdot \lfloor j/p \rfloor$ the term $d \cdot j \bmod 26$ is *not* constant within a residue class of $p$; but for a period-26 coset structure with slope $d$, $d \cdot j \bmod 26$ is constant inside $j \bmod 26 = r$, so the de-progressed monogram multiset of every tested slope is preserved by the period-26 within-coset null.
+- For a progressive key $k_j = k_{j \bmod p} + d \cdot \lfloor j/p \rfloor$ the term $d \cdot j \bmod 26$ is *not* constant within a residue class of $p$. But for a period-26 coset structure with slope $d$, $d \cdot j \bmod 26$ is constant inside $j \bmod 26 = r$, so the de-progressed monogram multiset of every tested slope is preserved by the period-26 within-coset null.
 - Same-residue equality partitions: the multiset of pair indicators $[c_i = c_j]$ over pairs in one coset is preserved as a multiset but re-based to different positions, which re-orders (without changing) the row space of exact key-cancellation equations.
 '''
 
@@ -33,7 +33,7 @@ body = '''
 kind = "assumptions"
 body = '''
 - The alternative hypothesis is exchangeable within residue classes under the null: a language-like plaintext has no order structure that the periodic key model claims, so if the observed score is only the coset histograms' doing, the null reproduces it.
-- The period is fixed before the null is drawn; if the period is itself selected, the family-wise version must re-select it on every null.
+- The period is fixed before the null is drawn. If the period is itself selected, the family-wise version must re-select it on every null.
 - Transformations are sampled without replacement and never accepted or rejected on the basis of their score.
 '''
 
@@ -48,17 +48,53 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Positions j with the same residue j mod p form a class J_r; a null permutes
+// inside classes only.
+function DRAW_WITHIN_COSET(n, p, rng):
+    g = identity permutation of 0..n-1
+    for r in 0..p-1:
+        J_r = [j for j in 0..n-1 if j mod p == r]
+        // a random element of S(J_r)
+        SHUFFLE(rng, the entries of g at positions J_r)
+    return g
+
+function APPLY(c[0..n-1], g):
+    // every coset histogram is unchanged
+    return [c[g[j]] for j in 0..n-1]
+
+// SELECT runs the complete pipeline (enumeration, fit, polish, forward check)
+// and returns the endpoint score of the candidate it chooses; nothing
+// selected on c is reused on a null.
+function WITHIN_COSET_TEST(c[0..n-1], p, N, seed, SELECT):
+    rng = RNG(seed)
+    observed = SELECT(c)
+    for i in 1..N:
+        // distinct, non-identity, drawn before scoring
+        g_i = DRAW_WITHIN_COSET(n, p, rng)
+        null[i] = SELECT(APPLY(c, g_i))
+    // a tie counts against the candidate
+    rank = 1 + #{ i : null[i] >= observed }
+    p_hat = rank / (N + 1)
+    if rank == 1: return CANDIDATE, p_hat
+    return NO_CANDIDATE, p_hat
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-Drawing a null is $O(n)$; the cost is $N$ complete solver runs. In the audited exact lane the largest core search per replicate was 5,268 nodes and 700 replicates completed; in a bank search of 66,628 cycles each null took the full 12-minute pipeline, which is why only nine were run.
+Drawing a null is $O(n)$. The cost is $N$ complete solver runs. In the audited exact lane the largest core search per replicate was 5,268 nodes and 700 replicates completed; in a bank search of 66,628 cycles each null took the full 12-minute pipeline, which is why only nine were run.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
 - **Reusing the observed selection.** Scoring the observed key on shuffled texts (instead of re-fitting) measures a different, smaller null and inflates significance.
-- **Wrong period.** A within-coset null at the wrong $p$ neither preserves the true cosets nor randomises them fully; the resulting $\hat p$ is uninterpretable.
-- **Exchangeability across a union of hypotheses.** If the hypothesis family includes a re-indexing of the text (dihedral or affine re-orderings), one shuffle group is exchangeable for one indexing only; the null must either be proved exchangeable for the whole union or be run as separate matched tests with the worst-case $p$.
+- **Wrong period.** A within-coset null at the wrong $p$ neither preserves the true cosets nor randomises them fully. The resulting $\hat p$ is uninterpretable.
+- **Exchangeability across a union of hypotheses.** If the hypothesis family includes a re-indexing of the text (dihedral or affine re-orderings), one shuffle group is exchangeable for one indexing only. The null must either be proved exchangeable for the whole union or be run as separate matched tests with the worst-case $p$.
 - **Too few nulls.** One null gives $\hat p \le 1/2$ and proves nothing about a 1% rate; nine give $\hat p \ge 0.10$.
 '''
 
@@ -86,7 +122,7 @@ Every coset histogram is unchanged, the whole-text histogram is unchanged, and a
 [[blocks]]
 kind = "notes"
 body = '''
-The within-coset null is the general pattern "permute within the fibres of what the model conditions on"; the same idea gives within-segment nulls for change-point statistics and within-key-group pairing nulls for shared-cycle banks.
+The within-coset null is the general pattern "permute within the fibres of what the model conditions on". The same idea gives within-segment nulls for change-point statistics and within-key-group pairing nulls for shared-cycle banks.
 '''
 
 [[provenance]]

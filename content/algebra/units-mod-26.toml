@@ -28,7 +28,7 @@ Inverse pairs: $1 \cdot 1$, $3 \cdot 9 = 27$, $5 \cdot 21 = 105$, $7 \cdot 15 = 
 $$z(C_t[j]) \equiv a_t\, z(L[j]) + k_t[j \bmod 7] \pmod{26}, \qquad a_0 = 1,\; a_1, a_2 \in U(\mathbb{Z}_{26}),$$
 giving $12^2 = 144$ ordered pairs $(a_1, a_2)$. Within one residue class the keys cancel, $\Delta_t = a_t \Delta_L$, so the anchored equation
 $$a_u\,\Delta_t - a_t\,\Delta_u \equiv 0 \pmod{26}$$
-uses no inverse and is valid over the composite ring. Its reduction modulo 2 is the same for all 144 cells; the multiplier hypothesis is decided entirely modulo 13.
+uses no inverse and is valid over the composite ring. Its reduction modulo 2 is the same for all 144 cells. The multiplier hypothesis is decided entirely modulo 13.
 
 **Absolute orientation.** Relabelling the latent as $L' = z^{-1}(b\,z(L) + c)$ changes absolute coefficients by $\sigma_t' = \sigma_t b^{-1}$, so a chart with $a_0 = 1$ identifies only the ratios $\sigma_1/\sigma_0$ and $\sigma_2/\sigma_0$. Under the affine gauge $z' = \alpha z + \beta$ the keys transform as $k_t'[r] = \alpha k_t[r] + (1 - a_t)\beta$.
 '''
@@ -50,6 +50,45 @@ body = '''
 4. Matched nulls rerun the complete union (cells, orbits, orientations) and the strict rule is observed score above every null maximum.
 
 As a gauge in any cycle solver: canonicalise a recovered cycle as $\min_u u\,(z - z(A))$ over the twelve units after fixing the translation.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// The unit group U(Z26) = { u in 0..25 : gcd(u, 26) = 1 }: the residues that
+// are odd and not divisible by 13.
+function UNITS():
+    // 12 values
+    return [u for u in 0..25 if u mod 2 != 0 and u mod 13 != 0]
+
+function UNIT_INVERSE(u):                       // u in UNITS()
+    for v in UNITS():
+        if (u*v) mod 26 == 1: return v
+
+// g generates the (cyclic) group iff its successive powers visit all 12
+// units.
+function IS_GENERATOR(g):
+    seen = empty set; x = 1
+    repeat 12 times: x = (x*g) mod 26; add x to seen
+    return |seen| == 12
+
+// Reduction mod 13 is a bijection from U(Z26) onto the non-zero residues mod
+// 13.
+function UNIT_MOD13(u): return u mod 13
+
+// Unit gauge on a cycle z: fix the translation by z(A) = 0, then take the
+// least of the 12 unit multiples as the canonical representative of the orbit
+// {u z + b}.
+function CANONICAL_CYCLE(z):
+    for each letter x: t[x] = (z[x] - z[A]) mod 26
+    // lexicographic
+    return min over u in UNITS() of [ (u*t[x]) mod 26 for x in A..Z ]
+
+// Unit-ratio cell (a_1, a_2): within one residue class the periodic keys
+// cancel, so the anchored equation a_u Delta_t - a_t Delta_u = 0 mod 26 needs
+// no inverse.
+```
 '''
 
 [[blocks]]

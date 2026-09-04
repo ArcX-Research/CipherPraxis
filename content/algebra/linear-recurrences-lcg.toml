@@ -28,9 +28,9 @@ body = '''
 [[blocks]]
 kind = "assumptions"
 body = '''
-- The recurrence, its lag and its coefficients are the same over the whole text; a change point breaks every identity above.
+- The recurrence, its lag and its coefficients are the same over the whole text. A change point breaks every identity above.
 - For the filter the plaintext is natural language, so that $R_a$ is distinguishable from uniform.
-- For lagged-Fibonacci recovery the period $P$ is enumerated; the alphabet may be an arbitrary permutation.
+- For lagged-Fibonacci recovery the period $P$ is enumerated. The alphabet may be an arbitrary permutation.
 '''
 
 [[blocks]]
@@ -42,6 +42,43 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Affine (LCG-type) key stream k_i = a k_{i-L} + b mod M from L seed values.
+function AFFINE_KEY(seed[0..L-1], a, b, L, M, n):
+    for i in 0..L-1: k[i] = seed[i]
+    for i in L..n-1: k[i] = (a*k[i-L] + b) mod M
+    return k
+
+// Lagged-Fibonacci digit stream d_i = d_{i-P} + d_{i-P+1} mod 10 from a
+// P-digit primer.
+function LAGGED_FIBONACCI(primer[0..P-1], P, n):
+    for i in 0..P-1: d[i] = primer[i]
+    for i in P..n-1: d[i] = (d[i-P] + d[i-P+1]) mod 10
+    return d
+
+// Polynomial schedule a_i = beta i + alpha i(i-1)/2 mod 26 (constant second
+// difference alpha).
+function SCHEDULE(alpha, beta, n):
+    for i in 0..n-1: a[i] = (beta*i + alpha*i*(i-1)/2) mod 26
+    // a[i+1] - 2 a[i] + a[i-1] = alpha mod 26
+    return a
+
+// Affine-lag filter: if k_i = a k_{i-L} + b then c_i - a c_{i-L} = (p_i - a
+// p_{i-L}) + b.
+function LAG_FILTER(c[0..n-1], a, L):
+    for i in L..n-1: f[i-L] = (c[i] - a*c[i-L]) mod 26
+    // distributed as R_a shifted by b
+    return f
+
+// Screen: for every unit a and lag L, score LAG_FILTER(c, a, L) against R_a
+// with b maximised out; compare the family-wise maximum with the same scan on
+// shuffled texts.
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
 480 filters per text and order. Exactly $10^6$ and $10^7$ meet-in-the-middle cells at $P = 6, 7$ without recomputing the chain per cell. The schedule family has 1,352 raw descriptions in 1,351 equality classes; its core passed 112,216 arbitrary-acceleration checks.
@@ -50,17 +87,17 @@ body = '''
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- A maximum over 480 correlated filters reaches $z \approx +4$ per cell by chance; only the family-wise null (observed maximum LLR against the shuffled maximum) is interpretable, and it was flat: $z$ between $-0.7$ and $+0.3$ over the six text-and-order cells.
-- The invariant rank of a true primer can be as low as 72,008 of $10^7$; a shortlist narrower than that (an earlier lane retained far fewer) silently loses the truth. Raising an exhaustive loop bound without a new constraint repeats the old method.
+- A maximum over 480 correlated filters reaches $z \approx +4$ per cell by chance. Only the family-wise null (observed maximum LLR against the shuffled maximum) is interpretable, and it was flat: $z$ between $-0.7$ and $+0.3$ over the six text-and-order cells.
+- The invariant rank of a true primer can be as low as 72,008 of $10^7$. A shortlist narrower than that (an earlier lane retained far fewer) silently loses the truth. Raising an exhaustive loop bound without a new constraint repeats the old method.
 - Any invertible guess round-trips; readability, controls and family-wise nulls are separate mandatory gates.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Lagged Fibonacci, four 504-letter controls held out beyond the lag-model training prefix with arbitrary alphabets: primers 415511 and 638930 ($P = 6$) ranked 8,319 and 6,499 of $10^6$ by the invariant and 1 after refinement; primers 0691650 (leading zero retained) and 9783807 ($P = 7$) ranked 72,008 and 13,812 of $10^7$ then 1; all four recovered 504/504 letters, 26/26 observed alphabet ranks and passed core and independent forwards. Target at $P = 6$ and $7$: rates $-6.6653$ and $-6.6677$ (project rate $-7.2025$, $-7.1125$), non-language, forwards pass, no candidate.
+Lagged Fibonacci, four 504-letter controls held out beyond the lag-model training prefix with arbitrary alphabets: primers 415511 and 638930 ($P = 6$) ranked 8,319 and 6,499 of $10^6$ by the invariant and 1 after refinement; primers 0691650 (leading zero retained) and 9783807 ($P = 7$) ranked 72,008 and 13,812 of $10^7$ then 1. All four recovered 504/504 letters, 26/26 observed alphabet ranks and passed core and independent forwards. Target at $P = 6$ and $7$: rates $-6.6653$ and $-6.6677$ (project rate $-7.2025$, $-7.1125$), non-language, forwards pass, no candidate.
 
-Schedules: four controls (accelerations 2, 7, 12, 24) exact at rank one with rates $-9.62$ to $-10.06$; three live seeds round-tripped at $-14.968$, $-14.932$, $-14.931$ against a gate of $-12.5$, non-English.
+Schedules: four controls (accelerations 2, 7, 12, 24) exact at rank one with rates $-9.62$ to $-10.06$. Three live seeds round-tripped at $-14.968$, $-14.932$, $-14.931$ against a gate of $-12.5$, non-English.
 '''
 
 [[blocks]]
@@ -69,7 +106,7 @@ title = "Worked example"
 body = '''
 LCG $k_i = 3k_{i-1} + 5 \pmod{26}$ from $k_0 = 1$: $1, 8, 3, 14, 21, 16, 1, \dots$ — period 6. For any plaintext, $c_i - 3c_{i-1} = p_i - 3p_{i-1} + 5$: the filtered ciphertext equals the filtered plaintext plus the constant 5 at every position.
 
-Lagged Fibonacci with primer $3\,1\,4\,1\,5$ ($P = 5$): $d_5 = 3 + 1 = 4$, $d_6 = 1 + 4 = 5$, $d_7 = 4 + 1 = 5$, $d_8 = 1 + 5 = 6$, $d_9 = 5 + 4 = 9$, $d_{10} = 4 + 5 = 9$, $d_{11} = 5 + 5 = 10 \equiv 0$; the stream begins $3\,1\,4\,1\,5\,4\,5\,5\,6\,9\,9\,0$.
+Lagged Fibonacci with primer $3\,1\,4\,1\,5$ ($P = 5$): $d_5 = 3 + 1 = 4$, $d_6 = 1 + 4 = 5$, $d_7 = 4 + 1 = 5$, $d_8 = 1 + 5 = 6$, $d_9 = 5 + 4 = 9$, $d_{10} = 4 + 5 = 9$, $d_{11} = 5 + 5 = 10 \equiv 0$. The stream begins $3\,1\,4\,1\,5\,4\,5\,5\,6\,9\,9\,0$.
 
 Polynomial schedule with $\beta = 2$, $\alpha = 3$: $a_0, a_1, a_2, a_3 = 0, 2, 7, 15$ and the second differences are $7 - 4 + 0 = 3$, $15 - 14 + 2 = 3$.
 '''

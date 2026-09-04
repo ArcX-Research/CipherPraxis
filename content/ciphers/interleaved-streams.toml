@@ -20,7 +20,7 @@ Given streams $s^{(0)}, \dots, s^{(k-1)}$, the merged ciphertext is $c_i = s^{(i
 kind = "equations"
 title = "Why cosets look mixed"
 body = '''
-For $k = 2$ and $m = 7$ the merged period is 14, but a period-14 solver in one alphabet fails when the two streams use different alphabets, because coset $b$ of the merged text contains letters from both streams' cosets. De-interleaving restores two ordinary period-7 texts of $n/2$ letters each, and the lag profile of each stream shows the period-$m$ coincidence peak that the merged text hides. A nine-way "deal" is the same operation with $k = 9$; when three texts share the additive layer, the nine streams of each text cancel pairwise against the others' under a common key.
+For $k = 2$ and $m = 7$ the merged period is 14, but a period-14 solver in one alphabet fails when the two streams use different alphabets, because coset $b$ of the merged text contains letters from both streams' cosets. De-interleaving restores two ordinary period-7 texts of $n/2$ letters each, and the lag profile of each stream shows the period-$m$ coincidence peak that the merged text hides. A nine-way "deal" is the same operation with $k = 9$. When three texts share the additive layer, the nine streams of each text cancel pairwise against the others' under a common key.
 '''
 
 [[blocks]]
@@ -28,7 +28,7 @@ kind = "variants"
 body = '''
 - **Two or three streams**, each a period-7 keyed cipher in its own alphabet and relation.
 - **Nine-column deal** of a single text, or of three texts sharing one nine-value key, in row-major or column-deal geometry with nine phase choices.
-- **Interleaved nulls**: one stream is random letters; the residual stream (positions 0, 1, 3, 5 in one reading) is tested for periodicity on its own.
+- **Interleaved nulls**: one stream is random letters. The residual stream (positions 0, 1, 3, 5 in one reading) is tested for periodicity on its own.
 '''
 
 [[blocks]]
@@ -50,15 +50,51 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// k streams are merged one letter at a time: c[i] = s[i mod k][floor(i / k)].
+function INTERLEAVE(s[0..k-1]):                          // s[r] is stream r
+    for i in 0..n-1:
+        c[i] = s[i mod k][floor(i / k)]
+    return c
+
+function DEINTERLEAVE(c[0..n-1], k):
+    for r in 0..k-1:
+        s[r] = [c[i] for i in 0..n-1 if i mod k == r]
+    return s
+
+// Each stream is encrypted on its own, e.g. with a period-m key u[r] in
+// alphabet A[r].
+function ENCRYPT(streams[0..k-1], u, A):
+    for r in 0..k-1:
+        // A[r][pos(x) + u[r][j mod m]] at stream position j
+        s[r] = PERIODIC_ENCRYPT(streams[r], u[r], A[r])
+    return INTERLEAVE(s)
+
+function DECRYPT(c[0..n-1], k, u, A):
+    s = DEINTERLEAVE(c, k)
+    for r in 0..k-1:
+        streams[r] = PERIODIC_DECRYPT(s[r], u[r], A[r])
+    // merge back into plaintext order
+    return INTERLEAVE(streams)
+
+// Attack: split into the residue streams for each candidate k and solve every
+// stream as a period-m cipher in its own alphabet order and relation; each
+// stream must be long enough on its own.
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-Two or three streams: a handful of periodic solves of 50-77 letters, minutes. Nine-stream shared deal: 128 geometry/order/relation cells, each with an exhaustive $9! = 362{,}880$ column-order finish; a 9,999-null precision replay resolved its borderline structural cell.
+Two or three streams: a handful of periodic solves of 50-77 letters, minutes. Nine-stream shared deal: 128 geometry/order/relation cells, each with an exhaustive $9! = 362{,}880$ column-order finish. A 9,999-null precision replay resolved its borderline structural cell.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Stream length.** Three streams of 51 letters defeat the period-7 solver (16%, 4%, 4% on the control) even though the model is right; a negative at $k = 3$ is uninformative at this length.
+- **Stream length.** Three streams of 51 letters defeat the period-7 solver (16%, 4%, 4% on the control) even though the model is right. A negative at $k = 3$ is uninformative at this length.
 - **Borderline structural leads.** The nine-stream deal's best structural cell reached $p = 0.040$ over 9,999 complete-family nulls, short of the frozen $p \le 0.01$, and its exhaustive language finish was non-English ($-7.48$ combined): a weak campaign-level false lead, correctly not promoted.
 - **Selection over pairs and phases.** Cross-text relations in all four index-space pairs looked like +5.7 sigma per trial and +0.8 against the family-wise null.
 '''
@@ -66,7 +102,7 @@ body = '''
 [[blocks]]
 kind = "controls"
 body = '''
-Two-stream control (logs/11_misc.log): both streams recovered at 100% match (rates $-4.31$ and $-4.20$ in their own alphabets); three-stream control: 16%, 4% and 4%. Live texts: noise at $k = 2$ and $k = 3$. Nine-stream shared deal (logs 161/162/164): both the direct period-9 and the common-deal controls selected the true structural cell at rank 1, recovered the exact nine-value key, and the exhaustive finisher recovered all three hidden plaintexts and the exact common column order; the live combined rate was $-7.48$ with all three texts scoring no.
+Two-stream control (logs/11_misc.log): both streams recovered at 100% match (rates $-4.31$ and $-4.20$ in their own alphabets). Three-stream control: 16%, 4% and 4%. Live texts: noise at $k = 2$ and $k = 3$. Nine-stream shared deal (logs 161/162/164): both the direct period-9 and the common-deal controls selected the true structural cell at rank 1, recovered the exact nine-value key, and the exhaustive finisher recovered all three hidden plaintexts and the exact common column order. The live combined rate was $-7.48$ with all three texts scoring no.
 '''
 
 [[blocks]]
@@ -86,7 +122,7 @@ Re-interleaving A and B gives `SNXBPPOAZBB`. The merged text has no period-3 str
 [[blocks]]
 kind = "notes"
 body = '''
-Interleaving is one of the few constructions that reproduces the "mixed cosets" signature the program measured on its short texts; it was excluded for two streams with a verified control and left open for three streams for the stated power reason.
+Interleaving is one of the few constructions that reproduces the "mixed cosets" signature the program measured on its short texts. It was excluded for two streams with a verified control and left open for three streams for the stated power reason.
 '''
 
 [[provenance]]

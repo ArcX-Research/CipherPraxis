@@ -59,9 +59,12 @@ pub fn crt(congruences: &[(i64, i64)]) -> Option<(i64, i64)> {
         let lcm = m / g * n;
         // Solve x + m·t ≡ r (mod n)  ⇒  (m/g)·t ≡ (r − x)/g (mod n/g)
         let n_g = n / g;
-        let inv = mod_inverse((m / g).rem_euclid(n_g) as i64, n_g as i64)? as i128;
-        let t = ((r - x) / g * inv).rem_euclid(n_g);
-        x = (x + m * t).rem_euclid(lcm);
+        if n_g > 1 {
+            let inv = mod_inverse((m / g).rem_euclid(n_g) as i64, n_g as i64)? as i128;
+            let t = ((r - x) / g * inv).rem_euclid(n_g);
+            x = (x + m * t).rem_euclid(lcm);
+        }
+        // When n divides m the congruence is redundant (consistency was checked above).
         m = lcm;
     }
     Some((x as i64, m as i64))
@@ -115,6 +118,10 @@ mod tests {
         assert_eq!(crt(&[(1, 4), (3, 6)]), Some((9, 12)));
         assert_eq!(crt(&[(1, 4), (2, 6)]), None);
         assert_eq!(crt(&[]), Some((0, 1)));
+        // Redundant congruences (modulus divides the accumulated modulus) are consistent, not errors.
+        assert_eq!(crt(&[(1, 4), (1, 2)]), Some((1, 4)));
+        assert_eq!(crt(&[(3, 5), (3, 5)]), Some((3, 5)));
+        assert_eq!(crt(&[(1, 4), (0, 2)]), None);
     }
 
     #[test]

@@ -54,6 +54,53 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Coset histograms F[b][x] (n_b letters each), reference distribution E in
+// the hypothesised order, period m. one Caesar shift per coset; three
+// estimators
+function FIT_SHIFT(F_b, n_b, E):
+    for k in 0..25:
+        corr[k]   = sum over x of E[(x - k) mod 26] * F_b[x]
+        chi2[k]   = sum over x of (F_b[x] - n_b * E[(x - k) mod 26])^2 / (n_b
+                * E[(x - k) mod 26])
+        loglik[k] = sum over x of F_b[x] * log E[(x - k) mod 26]
+    // reciprocal relation: replace (x - k) by (k - x)
+    return argmax corr, or argmin chi2, or argmax loglik
+
+function RECOVER_SHIFTS(c[0..n-1], m, E):
+    for b in 0..m-1:
+        F[b] = HISTOGRAM([c[i] for i in 0..n-1 if i mod m == b])
+        // or: relative shifts from exact alignment, then try the 26 absolute
+        // rotations
+        k[b] = FIT_SHIFT(F[b], |coset b|, E)
+    rate = QUADGRAM_RATE(DECRYPT(c, k))
+    // coordinate descent, whole text re-scored per move
+    repeat until no single-shift move improves rate:
+        for b in 0..m-1, k' in 0..25:
+            if QUADGRAM_RATE(DECRYPT(c, k with k[b] := k')) > rate: keep the
+                    move
+    // free shifts overfit short texts
+    null_rate = the same fit and polish applied to SHUFFLE(c)
+    return (k, rate, rate compared with null_rate)
+
+// Shifts as nuisance parameters when comparing inner models f (uniform prior
+// over k).
+function LOG_EVIDENCE(F[0..m-1], f):
+    for b in 0..m-1:
+        Z_b = (1/26) * sum over k in 0..25 of product over x of f[(x - k) mod
+                26]^F[b][x]
+        posterior[b][k] = product over x of f[(x - k) mod 26]^F[b][x],
+                normalised over k
+    // MAP shift = argmax_k posterior[b][k]; a posterior spread over several k
+    // is carried as candidates; refine by class-EM from the class-conditional
+    // likelihood when the winning model assigns classes
+    return (sum over b of log Z_b, posterior)
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
 $O(26\,m)$ fits per hypothesis; in a vectorised screen over $M$ candidate alphabets the per-coset likelihood table is one $M \times m \times 26$ contraction, so 2.06 million alphabets were screened in about 30 s per family and relation (logs/24). Quadgram coordinate descent over $m$ shifts costs $O(26\,m\,n)$ per sweep.
@@ -64,7 +111,7 @@ kind = "failure_modes"
 body = '''
 - **Selection freedom.** Profiling $m$ free shifts inflates the fit by about $0.15$ nats per letter at 153 letters; free sub-coset shifts (a period-$7m$ key read as $m$ varied copies of a 7-letter word) fitted to *shuffled* text reached quadgram rates of $-5.83$ to $-5.87$, so a target row at that level is noise (logs/27).
 - **Tautological flexibility.** A key modelled as any 7-letter dictionary word per block makes any text read like English: the planted control scored $-3.84$ with only 51% of its letters right, and shuffled text reached $-4.04$ (logs/40). A family that quadgrams cannot falsify needs its key set constrained first.
-- **Short cosets.** At zone lengths of 63 to 96 letters (9 to 14 letters per coset) the marginal fit alone is unreliable; the corpus relied on joint constraints (cribs, exact solvers) there.
+- **Short cosets.** At zone lengths of 63 to 96 letters (9 to 14 letters per coset) the marginal fit alone is unreliable. The corpus relied on joint constraints (cribs, exact solvers) there.
 - **Diluted inner.** With a flat inner text the shifts are unrecoverable even though the alignment is visible.
 '''
 
@@ -74,7 +121,7 @@ body = '''
 - Mixture pipeline (logs/05): evidence fit plus class-EM recovered all seven outer shifts on four planted sandwiches, which then solved at 100% plaintext match.
 - Structured-alphabet screen (logs/24): per-coset monogram maximum likelihood over 2,057,878 alphabets ranked the planted alphabet first at rate $-3.942$ against a shuffled-segment maximum of $-6.194$ on a 96-letter zone.
 - Chi-square fit followed by two quadgram sweeps and a polish (logs/07): the planted phrase-keyed control read at $-4.34$ with 100% match.
-- Varied-copy keys (logs/27): a planted key of four slightly different copies of a 7-letter word over 153 letters was read at 71% letter match (rate $-4.948$) from the alignment start; a three-copy reciprocal-relation control read at 100% ($-4.296$).
+- Varied-copy keys (logs/27): a planted key of four slightly different copies of a 7-letter word over 153 letters was read at 71% letter match (rate $-4.948$) from the alignment start. A three-copy reciprocal-relation control read at 100% ($-4.296$).
 '''
 
 [[blocks]]
@@ -87,7 +134,7 @@ Take the twelve plaintext letters of one coset, `ETAETEHEATEN`, and shift them b
 k = 0 : 0.47      k = 3 : 1.20      k = 4 : 0.45      k = 7 : 0.56
 ```
 
-so $k = 3$ is read off, with H mapped back onto E. Relative to another coset with a different key element, the alignment step would already have given the difference of the two shifts; this step fixes the common rotation.
+so $k = 3$ is read off, with H mapped back onto E. Relative to another coset with a different key element, the alignment step would already have given the difference of the two shifts. This step fixes the common rotation.
 '''
 
 [[provenance]]

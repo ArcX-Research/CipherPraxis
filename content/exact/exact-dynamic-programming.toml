@@ -49,35 +49,74 @@ body = '''
 kind = "attack"
 title = "How to attack it"
 body = '''
-The layout DP measures, for every width $w$, how well the class posteriors of a mixture form the block pattern a columnar transposition would imprint (constant per column for even $w$, alternating for odd $w$) without knowing the column order; the resulting $z$ against shuffled ciphertexts pushed through the same DP selects the widths to hand to the order solver. The key-chain DP finishes periodic keys exactly inside a shortlist. The assignment DP proves properties of relaxations (that a proposed bound is identically zero) by exhausting all $2 \times 9 \times 7 = 126$ geometry cases.
+The layout DP measures, for every width $w$, how well the class posteriors of a mixture form the block pattern a columnar transposition would imprint (constant per column for even $w$, alternating for odd $w$) without knowing the column order. The resulting $z$ against shuffled ciphertexts pushed through the same DP selects the widths to hand to the order solver. The key-chain DP finishes periodic keys exactly inside a shortlist. The assignment DP proves properties of relaxations (that a proposed bound is identically zero) by exhausting all $2 \times 9 \times 7 = 126$ geometry cases.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Long/short column layout: n letters in w columns, rows = ceil(n / w), extra
+// = n mod w long columns; the first extra column indices are long (unpadded
+// convention). Q_t = centred per-class prefix sums, phase t
+function BLOCK_SCORE(Q, a, L):
+    // best class-pattern score of positions a..a+L-1
+    return max over t of (Q_t[a + L] - Q_t[a])
+
+// B(start, len) = BLOCK_SCORE
+function LAYOUT_DP(n, w, B):
+    rows = ceil(n / w); extra = n mod w
+    dp[j][l] = -inf for j in 0..w, l in 0..extra; dp[0][0] = 0
+    // columns in read-out order
+    for j in 0..w-1:
+        // long columns used so far
+        for l in 0..extra:
+            if dp[j][l] == -inf: continue
+            pos = l*rows + (j - l)*(rows - 1)          // start of column j
+            if l < extra and dp[j][l] + B(pos, rows) > dp[j+1][l+1]:
+                dp[j+1][l+1] = dp[j][l] + B(pos, rows)
+                choice[j+1][l+1] = LONG
+            if j - l < w - extra and dp[j][l] + B(pos, rows - 1) > dp[j+1][l]:
+                dp[j+1][l] = dp[j][l] + B(pos, rows - 1)
+                choice[j+1][l] = SHORT
+    layout = []; l = extra                             // traceback
+    for j in w down to 1:
+        layout.prepend(choice[j][l])
+        if choice[j][l] == LONG: l = l - 1
+    return (dp[w][extra], layout)
+
+// Brute-force twin for small cases: enumerate all C(w, extra) placements of
+// the long columns and require the same optimum; the DP is exact only inside
+// its stated family.
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-Layout DP: $O(w \cdot \text{extra})$ per width and phase, negligible next to the 60 shuffled nulls that calibrate it. Key chain: $O(p \cdot W^4)$ per starting triple. Assignment DP: 288 states joined with per-block enumerations; the compiled bound kernel that uses it evaluates 81 edges per cell with a median projection of 2.506529 CPU-hours over 185,088 cells for one partition ensemble.
+Layout DP: $O(w \cdot \text{extra})$ per width and phase, negligible next to the 60 shuffled nulls that calibrate it. Key chain: $O(p \cdot W^4)$ per starting triple. Assignment DP: 288 states joined with per-block enumerations. The compiled bound kernel that uses it evaluates 81 edges per cell with a median projection of 2.506529 CPU-hours over 185,088 cells for one partition ensemble.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Degenerate objective.** Without per-class centring, every even width is maximised by calling all letters one class; the DP faithfully returns that useless optimum.
-- **Wrong convention.** A DP over long/short columns assumes the unpadded convention (long columns first); an exact grid has no long columns and a padded grid has none either, so the model of the grid must be stated.
-- **Stage boundaries.** The open-chain key DP ignores the three closing quadgrams; the polish repairs them but does not guarantee the global optimum, which is why the cyclic variant enumerates starts.
+- **Degenerate objective.** Without per-class centring, every even width is maximised by calling all letters one class. The DP faithfully returns that useless optimum.
+- **Wrong convention.** A DP over long/short columns assumes the unpadded convention (long columns first). An exact grid has no long columns and a padded grid has none either, so the model of the grid must be stated.
+- **Stage boundaries.** The open-chain key DP ignores the three closing quadgrams. The polish repairs them but does not guarantee the global optimum, which is why the cyclic variant enumerates starts.
 - **Optimum under the wrong family.** Measured zones finished at $-6.037$, $-6.290$ and $-5.107$ by the exact key DP, at or below their conditional null maxima: exact, and meaningless.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Layout DP inside the mixture pipeline: planted sandwiches at width 9 ($z = +12.8$), width 8 ($z = +11.3$) and width 12 ($z = +4.3$) all polish to $-4.34$ with 100% match; a planted Bifid, a plain periodic layer and a double columnar show no width. Key-chain DP: three blind controls 100% (63 and 95 letters at period 7, 126 at period 26), KAT 8/8 against brute force. Inner-subset DP in the sandwich selector: development control D8 at exact tuple rank 1 of 4,096 starts after the k-best repair.
+Layout DP inside the mixture pipeline: planted sandwiches at width 9 ($z = +12.8$), width 8 ($z = +11.3$) and width 12 ($z = +4.3$) all polish to $-4.34$ with 100% match. A planted Bifid, a plain periodic layer and a double columnar show no width. Key-chain DP: three blind controls 100% (63 and 95 letters at period 7, 126 at period 26), KAT 8/8 against brute force. Inner-subset DP in the sandwich selector: development control D8 at exact tuple rank 1 of 4,096 starts after the k-best repair.
 '''
 
 [[blocks]]
 kind = "example"
 title = "Worked example"
 body = '''
-$n = 8$, $w = 3$: rows $= 3$, extra $= 2$, so two columns are long (length 3) and one short (length 2); the three layouts are LLS, LSL, SLL with blocks starting at $0, 3, 6$ / $0, 3, 5$ / $0, 2, 5$. Toy block scores: $B(0,3) = 2.0$, $B(3,3) = 1.5$, $B(2,3) = 0.5$, $B(5,3) = 1.0$, $B(6,2) = 0.8$, $B(3,2) = 0.2$, $B(0,2) = 0.3$.
+$n = 8$, $w = 3$: rows $= 3$, extra $= 2$, so two columns are long (length 3) and one short (length 2). The three layouts are LLS, LSL, SLL with blocks starting at $0, 3, 6$ / $0, 3, 5$ / $0, 2, 5$. Toy block scores: $B(0,3) = 2.0$, $B(3,3) = 1.5$, $B(2,3) = 0.5$, $B(5,3) = 1.0$, $B(6,2) = 0.8$, $B(3,2) = 0.2$, $B(0,2) = 0.3$.
 
 DP: $dp[1][1] = 2.0$ (long at 0), $dp[1][0] = 0.3$ (short at 0); $dp[2][2] = 2.0 + 1.5 = 3.5$, $dp[2][1] = \max(2.0 + 0.2,\ 0.3 + 0.5) = 2.2$; $dp[3][2] = \max(3.5 + 0.8,\ 2.2 + 1.0) = 4.3$. The optimum $4.3$ is layout LLS, and the direct sums confirm it: LLS $= 4.3$, LSL $= 3.2$, SLL $= 1.8$.
 '''

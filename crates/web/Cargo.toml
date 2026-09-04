@@ -19,7 +19,9 @@ web-sys = { version = "0.3", features = [
   "Window", "Document", "Element", "HtmlElement", "HtmlInputElement", "HtmlTextAreaElement",
   "HtmlSelectElement", "KeyboardEvent", "Location", "History", "ScrollToOptions", "ScrollBehavior",
   "MediaQueryList", "Storage", "CssStyleDeclaration", "DomTokenList", "NodeList", "Node",
+  "Request", "RequestInit", "Response", "Headers", "Navigator", "Clipboard",
 ] }
+wasm-bindgen-futures = "0.4"
 console_error_panic_hook = "0.1"
 serde.workspace = true
 serde_json.workspace = true

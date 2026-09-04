@@ -20,7 +20,7 @@ impl Perm {
         let mut seen = vec![false; n];
         for &m in &map {
             if m >= n || seen[m] {
-                return Err("not a permutation".into());
+                return Err("Each point must appear exactly once.".into());
             }
             seen[m] = true;
         }
@@ -37,13 +37,19 @@ impl Perm {
             let pts: Vec<usize> = cycle
                 .split(|c: char| c == ',' || c.is_whitespace())
                 .filter(|p| !p.is_empty())
-                .map(|p| p.parse::<usize>().map_err(|_| format!("bad point `{p}`")))
+                .map(|p| {
+                    p.parse::<usize>()
+                        .map_err(|_| format!("`{p}` is not a valid point."))
+                })
                 .collect::<Result<_, _>>()?;
             if pts.is_empty() {
                 continue;
             }
             if pts.iter().any(|&p| p >= n) {
-                return Err(format!("point out of range (n = {n})"));
+                return Err(format!(
+                    "A point is outside the range 0 to {}.",
+                    n.saturating_sub(1)
+                ));
             }
             for w in 0..pts.len() {
                 map[pts[w]] = pts[(w + 1) % pts.len()];

@@ -30,19 +30,19 @@ The program's generator produces six alphabets from one word: keyword plus the s
 [[blocks]]
 kind = "variants"
 body = '''
-- **Dictionary keyword**: one word from a word list; a bank of tens of thousands of alphabets.
-- **Phrase-keyed**: every 4 to 60-letter substring of a long text, in six styles; the program built 202,504 such alphabets from its own solved texts.
+- **Dictionary keyword**: one word from a word list. A bank of tens of thousands of alphabets.
+- **Phrase-keyed**: every 4 to 60-letter substring of a long text, in six styles. The program built 202,504 such alphabets from its own solved texts.
 - **Text-keyed**: the first-appearance order of the letters of a ciphertext or plaintext (140 alphabets in one sweep, 87 in another).
 - **Two-keyword**: word one followed by a keyed remainder generated from word two (425,000 alphabets).
-- **Arbitrary alphabet**: no structure; only a heuristic substitution solver applies.
+- **Arbitrary alphabet**: no structure. Only a heuristic substitution solver applies.
 '''
 
 [[blocks]]
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- The cipher is a bijection, so the ciphertext keeps the plaintext's index of coincidence, repeat pattern and word-length pattern; only letter identities change.
-- Structured alphabets are enumerable; an arbitrary alphabet is not. This is why the status of a Quagmire attack depends on whether its alphabet is keyed.
+- The cipher is a bijection, so the ciphertext keeps the plaintext's index of coincidence, repeat pattern and word-length pattern. Only letter identities change.
+- Structured alphabets are enumerable. An arbitrary alphabet is not. This is why the status of a Quagmire attack depends on whether its alphabet is keyed.
 - The base order for the remainder (straight or keyword-mixed) is itself a modelling choice.
 '''
 
@@ -50,29 +50,63 @@ body = '''
 kind = "attack"
 title = "How to attack it"
 body = '''
-1. **Structured bank.** Generate every alphabet from the bank in every style, decrypt, and rank by quadgram rate. The true alphabet reads as English at once; the wrong ones sit near $-6$ per letter.
-2. **Blind substitution.** Frequency initialisation followed by simulated annealing over letter swaps with a quadgram objective and a steepest pair-swap finish. At 504 letters this is reliable; the program's frozen schedule is 3 restarts of 10,000 steps over all cells, then 5 of 30,000 and 11 of 80,000 over the leaders.
+1. **Structured bank.** Generate every alphabet from the bank in every style, decrypt, and rank by quadgram rate. The true alphabet reads as English at once. The wrong ones sit near $-6$ per letter.
+2. **Blind substitution.** Frequency initialisation followed by simulated annealing over letter swaps with a quadgram objective and a steepest pair-swap finish. At 504 letters this is reliable. The program's frozen schedule is 3 restarts of 10,000 steps over all cells, then 5 of 30,000 and 11 of 80,000 over the leaders.
 3. **Gauge.** Rotations or reflections of the alphabet that leave the ciphertext unchanged are reported as one class, not as separate keys.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// pos(x) is the index of x in the straight alphabet; pos_K(x) its index in
+// the keyed alphabet K.
+function KEYED_ALPHABET(keyword, base_order):
+    w = keyword with repeated letters removed
+    // straight or keyword-mixed remainder
+    R = the letters of base_order that are not in w, in base order
+    // a permutation of the 26 letters
+    return w || R
+
+function ENCRYPT(p[0..n-1], K):
+    for i in 0..n-1:
+        c[i] = K[pos(p[i])]
+    return c
+
+function DECRYPT(c[0..n-1], K):
+    for i in 0..n-1:
+        p[i] = straight_alphabet[pos_K(c[i])]
+    return p
+
+// Structured-bank attack: one decrypt and one language score per candidate
+// alphabet.
+function BANK_ATTACK(c, keywords, styles):
+    for each keyword in keywords, each keying style:
+        K = KEYED_ALPHABET_IN_STYLE(keyword, style)
+        score[K] = QUADGRAM_RATE(DECRYPT(c, K))
+    // the true alphabet reads as English at once
+    return the best K
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-Bank search: one decrypt and quadgram score per alphabet, about 200,000 alphabets in ten minutes on twelve cores. Blind annealing: each swap is scored incrementally; the frozen 52-cell schedule ran in 106 seconds for six positives, three negatives and nineteen nulls at 504 letters.
+Bank search: one decrypt and quadgram score per alphabet, about 200,000 alphabets in ten minutes on twelve cores. Blind annealing: each swap is scored incrementally. The frozen 52-cell schedule ran in 106 seconds for six positives, three negatives and nineteen nulls at 504 letters.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Wrong style.** A keyword alphabet generated in a style outside the bank is missed entirely; the bank is a hypothesis, not a proof.
+- **Wrong style.** A keyword alphabet generated in a style outside the bank is missed entirely. The bank is a hypothesis, not a proof.
 - **Short texts.** Below about 100 letters the blind annealer's quadgram landscape has spurious optima; readability plus round-trip is not evidence.
-- **Partial alphabets.** A plaintext that exposes only $m$ letters leaves $(26-m)!$ completions of the alphabet unresolved; the program reports the observed map and the completion count separately.
+- **Partial alphabets.** A plaintext that exposes only $m$ letters leaves $(26-m)!$ completions of the alphabet unresolved. The program reports the observed map and the completion count separately.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Phrase-keyed Quagmire sweep: the planted control (a 31-letter phrase in the keyword-mixed style) was recovered at 100% match, rate $-4.34$, and the two live texts scored $-6.54$ and $-6.35$, i.e. noise (log 7). General arbitrary-substitution solver: six hidden 504-letter positives recovered exactly (observed alphabet sizes 20, 22, 24, 25, 26, 26), three random-latent negatives scored $-15.06$ to $-15.01$ and nineteen shuffled-prose nulls $-13.96$ to $-13.50$ against a frozen gate of $-10.0$ (log 327; the slope-0 cell of that lane is a plain substitution).
+Phrase-keyed Quagmire sweep: the planted control, a 31-letter phrase in the keyword-mixed style, was recovered with a 100% match and rate $-4.34$. The two live texts scored $-6.54$ and $-6.35$, which is noise (log 7). General arbitrary-substitution solver: six hidden 504-letter positives recovered exactly, with observed alphabet sizes 20, 22, 24, 25, 26, and 26. Three random-latent negatives scored $-15.06$ to $-15.01$, and 19 shuffled-prose nulls scored $-13.96$ to $-13.50$ against a frozen gate of $-10.0$ (log 327). The slope-0 cell in that lane is a plain substitution.
 '''
 
 [[blocks]]
@@ -92,7 +126,7 @@ Plaintext `CIPHER`: C is position 2 of the straight alphabet, so it becomes the 
 [[blocks]]
 kind = "notes"
 body = '''
-In the corpus the keyed alphabet is rarely the whole cipher; it is the alphabet inside a period-7 Quagmire. The program's finding was that every enumerable keying style over its available vocabulary and texts is excluded for the two short ciphertexts, which leaves an unstructured alphabet, and an unstructured alphabet under a Quagmire is exactly the case its solvers cannot reach (see [Quagmire III](/ciphers/quagmire-iii)).
+In the corpus the keyed alphabet is rarely the whole cipher. It is the alphabet inside a period-7 Quagmire. The program's finding was that every enumerable keying style over its available vocabulary and texts is excluded for the two short ciphertexts, which leaves an unstructured alphabet, and an unstructured alphabet under a Quagmire is exactly the case its solvers cannot reach (see [Quagmire III](/ciphers/quagmire-iii)).
 '''
 
 [[provenance]]

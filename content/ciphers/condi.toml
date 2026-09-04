@@ -24,7 +24,7 @@ Decryption is causal: $u_i = v_i - u_{i-1} - 1$, so one wrong alphabet cell prop
 kind = "equations"
 title = "Gauge, transition prediction and the parity split"
 body = '''
-For any unit $a$ modulo 26, $r'(L) = a(r(L) + 1) - 1$ and $s' = a s$ preserve every plaintext-ciphertext equation, so the raw alphabet and starter are identifiable only as a 12-member affine class. For a plaintext trigram $(x, y, z)$ the cipher predicts adjacent ciphertext ranks $(r(x) + r(y) + 1,\ r(y) + r(z) + 1)$, so a candidate $r$ projects the generic trigram table onto a predicted $26 \times 26$ transition table that can be fitted to the observed one; this objective moves smoothly under alphabet swaps, unlike the causal decrypt. Reducing modulo 2 gives $z(c_i) = z(p_i) + z(p_{i-1}) + 1$ with $z = r \bmod 2$, a balanced 13/13 partition that the gauge cannot change (every unit $a$ is odd); reducing modulo 13 gives the same feedback over $\mathrm{GF}(13)$, and CRT rebuilds $r$ from the two.
+For any unit $a$ modulo 26, $r'(L) = a(r(L) + 1) - 1$ and $s' = a s$ preserve every plaintext-ciphertext equation, so the raw alphabet and starter are identifiable only as a 12-member affine class. For a plaintext trigram $(x, y, z)$ the cipher predicts adjacent ciphertext ranks $(r(x) + r(y) + 1,\ r(y) + r(z) + 1)$, so a candidate $r$ projects the generic trigram table onto a predicted $26 \times 26$ transition table that can be fitted to the observed one. This objective moves smoothly under alphabet swaps, unlike the causal decrypt. Reducing modulo 2 gives $z(c_i) = z(p_i) + z(p_{i-1}) + 1$ with $z = r \bmod 2$, a balanced 13/13 partition that the gauge cannot change (every unit $a$ is odd); reducing modulo 13 gives the same feedback over $\mathrm{GF}(13)$, and CRT rebuilds $r$ from the two.
 '''
 
 [[blocks]]
@@ -55,9 +55,40 @@ Each decoder's controls had to recover 504/504 letters and the exact 12-unit con
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// sigma is the keyed alphabet; r(L) = pos_sigma(L) is the rank of letter L; s
+// is the starter. Gauge: for any unit a mod 26, r'(L) = a * (r(L) + 1) - 1
+// with s' = a * s gives the same cipher.
+function ENCRYPT(p[0..n-1], sigma, s):
+    for i in 0..n-1:
+        u = r(p[i])
+        v = (u + s) mod 26 if i == 0 else (u + u_prev + 1) mod 26
+        c[i] = sigma[v]
+        // the plaintext rank sets the next shift
+        u_prev = u
+    return c
+
+function DECRYPT(c[0..n-1], sigma, s):
+    for i in 0..n-1:
+        v = r(c[i])
+        u = (v - s) mod 26 if i == 0 else (v - u_prev - 1) mod 26
+        p[i] = sigma[u]
+        // causal: one wrong alphabet cell propagates forward
+        u_prev = u
+    return p
+
+// Parity split used by the exact decoder: with z = r mod 2, z(c[i]) = z(p[i])
+// + z(p[i-1]) + 1 (mod 2), a balanced 13/13 partition that the gauge cannot
+// change; the same feedback over GF(13) and CRT rebuild r.
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-Annealing: 128 starts of 6,000 swaps plus 12 basin kicks per control, about 11 seconds in the compiled core. Population search: 96 relaxed starts, three generations of 768 children, 41,600 exhaustive three-cycles per control, 16 to 21 seconds. Parity stage: all 10,400,600 masks in 1.65 to 1.95 seconds; the residue lift is bounded far below the $(13!)^2$ pairs.
+Annealing: 128 starts of 6,000 swaps plus 12 basin kicks per control, about 11 seconds in the compiled core. Population search: 96 relaxed starts, three generations of 768 children, 41,600 exhaustive three-cycles per control, 16 to 21 seconds. Parity stage: all 10,400,600 masks in 1.65 to 1.95 seconds. The residue lift is bounded far below the $(13!)^2$ pairs.
 '''
 
 [[blocks]]
@@ -66,7 +97,7 @@ body = '''
 - **No swap gradient on the causal decrypt.** The first control recovered only 28/504 letters.
 - **Real basin, never entered.** Post-selection tests showed the hidden alphabets are strict optima against all 325 single swaps (0/325 improving) under the transition likelihood, yet 128 annealing starts, a global population, and exhaustive three-cycles all finished 0.03 to 0.10 below the hidden aggregate with 5-8 of 26 correct classes.
 - **Selector misses.** Two of four hidden parity masks ranked 91,895 and 874,906 under the exact bigram selector and never reached the top-64 lift; for the two that did (ranks 14 and 1) the bounded residue lift still failed.
-- **Fluent false endpoints.** Selected outputs scored $-7.5$ to $-7.8$; the plaintexts themselves score near $-4.0$, so the gap is search, not model.
+- **Fluent false endpoints.** Selected outputs scored $-7.5$ to $-7.8$. The plaintexts themselves score near $-4.0$, so the gap is search, not model.
 '''
 
 [[blocks]]

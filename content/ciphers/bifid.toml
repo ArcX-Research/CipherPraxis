@@ -40,7 +40,7 @@ body = '''
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- 25-symbol alphabet; a direct Bifid ciphertext cannot contain all 26 letters, so an outer layer is required for the corpus texts.
+- 25-symbol alphabet. A direct Bifid ciphertext cannot contain all 26 letters, so an outer layer is required for the corpus texts.
 - Invariant: ciphertext letters inside a block depend only on that block; block boundaries at multiples of the period are recoverable by period estimation.
 - Invariant: coordinate roles fix which plaintext positions feed each output, so histograms of decoded symbols inside the three row-only and three column-only residues align when the outer key is right.
 - Round-trip of a fitted square is tautological.
@@ -53,7 +53,40 @@ body = '''
 1. Estimate the period from the block structure (candidate periods are those at which within-block statistics are distinctive).
 2. Anneal the square under a quadgram objective for each candidate period; select the period by score.
 3. With an outer layer shared across two texts, enumerate every admissible outer key from the omission constraint, order them by a coordinate-role histogram statistic without truncating, and run the square search for every key (512-state beam, then 64 restarts of 80,000 deep solves).
-4. Gate on both texts reading as English with a joint rate above $-5.0$ and two independent literal forwards; a crossing is only a preliminary candidate until a phase-aware selected-family null re-maximises over all arms.
+4. Gate on both texts reading as English with a joint rate above $-5.0$ and two independent literal forwards. A crossing is only a preliminary candidate until a phase-aware selected-family null re-maximises over all arms.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// S is a 5 x 5 square over 25 letters; r(x) and c(x) are the row and column
+// of letter x in S. Blocks have period m; a short final block uses its true
+// length L.
+function ENCRYPT_BLOCK(x[0..L-1], S):
+    // 2L coordinates
+    gamma = [r(x[0]), ..., r(x[L-1]), c(x[0]), ..., c(x[L-1])]
+    for j in 0..L-1:
+        y[j] = S[gamma[2j], gamma[2j+1]]
+    return y
+
+function DECRYPT_BLOCK(y[0..L-1], S):
+    for j in 0..L-1:
+        gamma[2j] = r(y[j]); gamma[2j+1] = c(y[j])
+    for j in 0..L-1:
+        x[j] = S[gamma[j], gamma[L + j]]
+    return x
+
+function ENCRYPT(p[0..n-1], S, m):
+    for each block x of p of length m (the last block may be shorter):
+        append ENCRYPT_BLOCK(x, S) to c
+    return c
+
+function DECRYPT(c[0..n-1], S, m):
+    for each block y of c of length m (the last block may be shorter):
+        append DECRYPT_BLOCK(y, S) to p
+    return p
+```
 '''
 
 [[blocks]]
@@ -65,7 +98,7 @@ Square space $25!$ up to gauge. Direct 504-letter annealing selects the period a
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Joint annealing of square and 14 free shifts** at 153 + 144 letters stops at n-gram local optima (rates $-6.49$ to $-6.64$) and recovered none of four planted pairs; the key had to be enumerated, not annealed.
+- **Joint annealing of square and 14 free shifts** at 153 + 144 letters stops at n-gram local optima (rates $-6.49$ to $-6.64$) and recovered none of four planted pairs. The key had to be enumerated, not annealed.
 - **Ordering statistic with a heavy tail.** A 300-control audit found the coordinate-role histogram statistic can rank the true key low, so it may order the search but never truncate it.
 - **Underpowered square panel.** A 24 x 40,000 fixed-key panel recovered 94/100 and was rejected; 64 x 80,000 gave 100/100.
 - **Unmotivated phases.** The relative-phase lane closed only phases 0, 3 and 6; phases 1, 2, 4, 5 are not silently claimed.

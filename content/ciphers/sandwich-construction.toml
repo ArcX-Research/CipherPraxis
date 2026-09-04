@@ -17,14 +17,14 @@ With an inner key $v$ of period $k$ in alphabet $A_1$, a transposition $T$ (typi
 
 $$y = A_1\big[\operatorname{pos}_{A_1}(p) + v_{i \bmod k}\big], \qquad z = T(y), \qquad c_j = A_2\big[\operatorname{pos}_{A_2}(z_j) + u_{j \bmod m}\big].$$
 
-The corpus's solved texts stack these layers in other orders too (transposition after two substitutions); the sandwich moves the transposition between them.
+The corpus's solved texts stack these layers in other orders too (transposition after two substitutions). The sandwich moves the transposition between them.
 '''
 
 [[blocks]]
 kind = "equations"
 title = "Transposition invariance and the class pattern"
 body = '''
-Under the outer layer, coset $b$ of the ciphertext is a rotation of the multiset of inner letters at the positions $T$ sends there. Because a transposition only moves letters, the multiset of all inner letters is $T$-invariant, and for $k = 2$ each coset histogram is a rotation of the balanced mixture $\tfrac12\big(E(\cdot - g_1) + E(\cdot - g_2)\big)$ of two rotated English distributions. Marginalising the $m$ outer shifts (profiling them buys about 0.15 nats per letter of spurious fit at 153 letters) gives an evidence for one, two or three inner alphabets and a posterior class for every ciphertext letter. In plaintext order the classes read $0101\dots$; a columnar of width $w$ turns that into a block pattern (constant per column for even $w$, alternating for odd $w$) that a DP over the long and short columns of the unpadded grid measures **without the column order**.
+Under the outer layer, coset $b$ of the ciphertext is a rotation of the multiset of inner letters at the positions $T$ sends there. Because a transposition only moves letters, the multiset of all inner letters is $T$-invariant, and for $k = 2$ each coset histogram is a rotation of the balanced mixture $\tfrac12\big(E(\cdot - g_1) + E(\cdot - g_2)\big)$ of two rotated English distributions. Marginalising the $m$ outer shifts (profiling them buys about 0.15 nats per letter of spurious fit at 153 letters) gives an evidence for one, two or three inner alphabets and a posterior class for every ciphertext letter. In plaintext order the classes read $0101\dots$. A columnar of width $w$ turns that into a block pattern (constant per column for even $w$, alternating for odd $w$) that a DP over the long and short columns of the unpadded grid measures **without the column order**.
 '''
 
 [[blocks]]
@@ -40,7 +40,7 @@ body = '''
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- The outer layer is periodic and additive in a known order; the inner layer has a small period.
+- The outer layer is periodic and additive in a known order. The inner layer has a small period.
 - Invariant: inner-letter multiset independent of $T$ (the whole attack rests on it).
 - Invariant: posteriors are centred per class (a period-$k$ inner is exactly balanced), so the degenerate "everything is class 0" configuration scores zero.
 - Wrong models must lose: shuffled ciphertexts through the identical pipeline give the null for every width.
@@ -50,31 +50,72 @@ body = '''
 kind = "attack"
 title = "How to attack it"
 body = '''
-1. Fit the inner mixture by evidence (one, two or three alphabets), marginalising the outer shifts; read the inner spacing $\delta = g_2 - g_1$ from its marginal evidence (correct on 7 of 8 planted seeds; the top three $\delta$ are carried).
+1. Fit the inner mixture with one, two, or three alphabets, using evidence that averages over the outer shifts. Read the inner spacing $\delta = g_2 - g_1$ from its marginal evidence. It was correct on 7 of 8 planted seeds, and the search keeps the top three $\delta$ values.
 2. Compute class posteriors for every letter and the order-free width statistic for every width; run class-EM to re-estimate each outer shift from its coset's class-conditional likelihood (this fixes the one or two cosets the evidence fit gets wrong).
 3. Hand widths with $z \ge 3$ to the column solver: residue classes fix part of the order, quadgrams fix the rest, then polish shifts and order alternately.
 4. Nulls: shuffled ciphertexts through fit, $\delta$ candidates, EM and DP, so the reported $z$ per width is honest.
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Inner key v (period k) in alphabet A1, a transposition T (typically a
+// columnar of width w), outer key u (period m) in alphabet A2, applied in
+// that order.
+function ENCRYPT(p[0..n-1], A1, v[0..k-1], T, A2, u[0..m-1]):
+    for i in 0..n-1:
+        // inner substitution
+        y[i] = A1[(pos_A1(p[i]) + v[i mod k]) mod 26]
+    z = T(y)                                                  // transposition
+    for j in 0..n-1:
+        // outer substitution
+        c[j] = A2[(pos_A2(z[j]) + u[j mod m]) mod 26]
+    return c
+
+function DECRYPT(c[0..n-1], A1, v[0..k-1], T, A2, u[0..m-1]):
+    for j in 0..n-1:
+        z[j] = A2[(pos_A2(c[j]) - u[j mod m]) mod 26]
+    y = T_inverse(z)
+    for i in 0..n-1:
+        p[i] = A1[(pos_A1(y[i]) - v[i mod k]) mod 26]
+    return p
+
+// Width search without the column order: the multiset of inner letters is
+// T-invariant.
+function WIDTH_SEARCH(c, A2, m):
+    fit the inner mixture (one, two or three alphabets), marginalising the m
+            outer shifts
+    // a period-k inner reads 0101... in plaintext order
+    post = class posterior of every ciphertext letter
+    for each candidate width w:
+        // block pattern over the long and short columns
+        z[w] = ORDER_FREE_WIDTH_DP(post, w)
+    hand widths with z >= 3 to the column solver
+    repeat the pipeline on shuffled c for the null
+    return the widths ranked by z
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-Evidence fits and the width DP are cheap (seconds per width); 60 null pipelines per control took about 20 seconds at 153 letters. The exhaustive column-order stages of the older solver cost $w!$ per width (about two hours for two texts including width 10); the cross-derived exact solver replaces that with 90,720 phase classes plus a subset DP.
+Evidence fits and the width DP are cheap (seconds per width); 60 null pipelines per control took about 20 seconds at 153 letters. The exhaustive column-order stages of the older solver cost $w!$ per width (about two hours for two texts including width 10). The cross-derived exact solver replaces that with 90,720 phase classes plus a subset DP.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Flat inner text.** If the inner layer is not a short-period substitution of language (a fractionation, say) the mixture evidence is silent; a Bifid control printed alongside shows no width, as designed.
+- **Flat inner text.** If the inner layer is not a short-period substitution of language (a fractionation, say) the mixture evidence is silent. A Bifid control printed alongside shows no width, as designed.
 - **Double transposition.** A double columnar under the outer layer still shows the two-alphabet evidence (z +5.8 on its control) but no single width, so the width solver cannot finish it.
 - **Selection freedom.** Profiling instead of marginalising the outer shifts lets wrong models win on shuffled nulls.
-- **Handoff basins.** In the exact width-9 solver one of 24 controls was lost because a single key initialised the inner DP in the wrong basin; the true key supplied post hoc recovered it immediately.
+- **Handoff basins.** In the exact width-9 solver one of 24 controls was lost because a single key initialised the inner DP in the wrong basin. The true key supplied post hoc recovered it immediately.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Mixture and width solver (logs/05_mix.log): four planted sandwiches, all solved 100% from cold with the true width on top (width-9 exact grid z +12.8, width-8 ragged z +11.3, width-12 mixed alphabets z +4.3, width-9 with period-3 inner z +5.1); a Bifid-7, a plain period-7 cipher and a double columnar printed alongside show the negative signatures. Older exhaustive solver (ck_sandwich_report.txt): three controls (width 8 with period-2 inner, width 12 with period-3 inner, two width-9 word keys with period-2 inner) read ENGLISH at $-4.34$ with 100% match. Cross-derived exact solver (log 237): 23/24 development controls. On the two short corpus texts the mixture evidence found no inner spacing and no width in any alphabet combination, which excludes a period-2 or -3 inner under *any* transposition for the 153-letter text.
+Mixture and width solver (logs/05_mix.log): four planted sandwiches, all solved 100% from cold with the true width on top (width-9 exact grid z +12.8, width-8 ragged z +11.3, width-12 mixed alphabets z +4.3, width-9 with period-3 inner z +5.1). A Bifid-7, a plain period-7 cipher and a double columnar printed alongside show the negative signatures. Older exhaustive solver (ck_sandwich_report.txt): three controls (width 8 with period-2 inner, width 12 with period-3 inner, two width-9 word keys with period-2 inner) read ENGLISH at $-4.34$ with 100% match. Cross-derived exact solver (log 237): 23/24 development controls. On the two short corpus texts the mixture evidence found no inner spacing and no width in any alphabet combination, which excludes a period-2 or -3 inner under *any* transposition for the 153-letter text.
 '''
 
 [[blocks]]

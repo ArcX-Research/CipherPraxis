@@ -17,7 +17,7 @@ Write the plaintext in rows of width $w = |key|$. Process the distinct key lette
 
 $$\text{output order} = \text{sort positions } (r, c) \text{ by } \big(\operatorname{rank}(c),\ r,\ c\big).$$
 
-A key with all letters distinct reduces to an ordinary keyed columnar; a key with all letters equal is the identity.
+A key with all letters distinct reduces to an ordinary keyed columnar. A key with all letters equal is the identity.
 '''
 
 [[blocks]]
@@ -40,7 +40,7 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - Letter identities are preserved; histogram and index of coincidence unchanged.
-- Invariant: the tie pattern of the key is what matters; two words with the same letter-repeat pattern give the same permutation, so the effective key space is the set of tie patterns times the ordering of distinct letters.
+- Invariant: the tie pattern of the key is what matters. Two words with the same letter-repeat pattern give the same permutation, so the effective key space is the set of tie patterns times the ordering of distinct letters.
 '''
 
 [[blocks]]
@@ -49,20 +49,53 @@ title = "How to attack it"
 body = '''
 1. Enumerate candidate key words with repeated letters (the program used its whole dictionary, lengths 4 to 16, with at least one repeated letter) and precompute the ciphertext-to-plaintext permutation for each, in both directions.
 2. For each permutation, undo the transposition, fit any periodic layer on top (both orders, both relations, a prefix drift for a key change) and score by quadgrams; polish the best.
-3. Compare the best rate with the sweep distribution; a solution reads as English at once.
+3. Compare the best rate with the sweep distribution. A solution reads as English at once.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Key of length w; rank(c) is the alphabetical rank of the key letter above
+// column c, equal letters sharing one rank. Cell (r, c) of the row-by-row
+// grid holds p[r * w + c].
+function OUTPUT_ORDER(key, n):
+    w = len(key)
+    cells = [(r, c) for r in 0..ceil(n / w)-1 for c in 0..w-1 if r * w + c <
+            n]
+    // tied columns are read together, row by row
+    return cells sorted by (rank(c), r, c)
+
+function ENCRYPT(p[0..n-1], key):
+    order = OUTPUT_ORDER(key, n)
+    for j in 0..n-1:
+        (r, c) = order[j]
+        out[j] = p[r * w + c]
+    return out
+
+function DECRYPT(out[0..n-1], key):
+    order = OUTPUT_ORDER(key, n)
+    for j in 0..n-1:
+        (r, c) = order[j]
+        p[r * w + c] = out[j]
+    return p
+
+// A key with all letters distinct is an ordinary keyed columnar; all letters
+// equal is the identity.
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-One decrypt and periodic fit per (word, direction); the full family shared a ten-minute sweep with rails, routes and block reversals (192,853 permutations in the control run).
+One decrypt and periodic fit per (word, direction). The full family shared a ten-minute sweep with rails, routes and block reversals (192,853 permutations in the control run).
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Vocabulary coverage.** A key that is not a dictionary word is missed; the tie pattern, not the word, is what a blind solver would have to search.
-- **No dedicated control.** The sweep validated its pipeline with a rail-fence plant; a Myszkowski plant with a strongly tied key was not run, so the power of the sweep for tie-heavy keys is not measured.
+- **Vocabulary coverage.** A key that is not a dictionary word is missed. The tie pattern, not the word, is what a blind solver would have to search.
+- **No dedicated control.** The sweep validated its pipeline with a rail-fence plant. A Myszkowski plant with a strongly tied key was not run, so the power of the sweep for tie-heavy keys is not measured.
 - **Near-miss keys.** Words with the same tie pattern but a different distinct-letter order produce partially right decrypts (8-30% match in the sweep's best wrong entries).
 '''
 
@@ -87,13 +120,13 @@ E A T O N C
 E
 ```
 
-Alphabetical order of key letters: A, M, O, O, T, T. Column A: `ROFO`; column M: `ACDT`; the two O columns row by row: `ED SE EE AC`; the two T columns row by row: `WE IV RL EN E`. Ciphertext `ROFOACDTEDSEEEACWEIVRLENE`.
+Alphabetical order of key letters: A, M, O, O, T, T. Column A: `ROFO`; column M: `ACDT`. The two O columns row by row: `ED SE EE AC`. The two T columns row by row: `WE IV RL EN E`. Ciphertext `ROFOACDTEDSEEEACWEIVRLENE`.
 '''
 
 [[blocks]]
 kind = "notes"
 body = '''
-A dedicated control would be a planted Myszkowski with a tie pattern such as `AABABCB` under the same period-7 layer; the program's key-pattern analysis of one text (a repeated-letter pattern among its coset classes) makes that a natural future control.
+A dedicated control would be a planted Myszkowski with a tie pattern such as `AABABCB` under the same period-7 layer. The program's key-pattern analysis of one text (a repeated-letter pattern among its coset classes) makes that a natural future control.
 '''
 
 [[provenance]]

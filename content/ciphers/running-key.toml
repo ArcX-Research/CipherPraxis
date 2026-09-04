@@ -17,21 +17,21 @@ With a key text $t_0 t_1 \dots$ at least as long as the message and an index ord
 
 $$a(c_i) \equiv a(p_i) + a(t_i) \pmod{26}$$
 
-(Vigenère), or $a(t_i) - a(p_i)$ (Beaufort), or $a(p_i) - a(t_i)$ (Variant). The key is the identity of the text and the starting offset; a keyed order adds a permutation. The one-time pad is the limit in which $t$ is uniformly random and never reused.
+(Vigenère), or $a(t_i) - a(p_i)$ (Beaufort), or $a(p_i) - a(t_i)$ (Variant). The key is the identity of the text and the starting offset. A keyed order adds a permutation. The one-time pad is the limit in which $t$ is uniformly random and never reused.
 '''
 
 [[blocks]]
 kind = "equations"
 title = "Known bank versus unknown key"
 body = '''
-**Known text, unknown alphabet and shifts.** If the key is a window $T[o : o+n]$ of a known text and a period-$m$ word shift $w$ is added, every position gives one linear equation in the alphabet positions, $x(c_i) - x(T_{o+i}) - k_{i \bmod m} \equiv 0$, with all $x$ distinct; $n = 63$ or $95$ equations make a wrong window inconsistent within a few search nodes and the right one yield a consistent alphabet. **Unknown English key.** The pair $(p, t)$ must be inferred jointly from $c$ alone; the symmetry $p \leftrightarrow t$ under Vigenère is intrinsic, and language models admit many fluent decompositions. Between two ciphertexts, a shared running key cancels: $c^{(1)}_i - c^{(2)}_i = p^{(1)}_i - p^{(2)}_i$, which is the relation test the program ran on its two short texts in every index-space pairing.
+**Known text, unknown alphabet and shifts.** If the key is a window $T[o : o+n]$ of a known text and a period-$m$ word shift $w$ is added, every position gives one linear equation in the alphabet positions, $x(c_i) - x(T_{o+i}) - k_{i \bmod m} \equiv 0$, with all $x$ distinct; $n = 63$ or $95$ equations make a wrong window inconsistent within a few search nodes and the right one yield a consistent alphabet. **Unknown English key.** The pair $(p, t)$ must be inferred jointly from $c$ alone. The symmetry $p \leftrightarrow t$ under Vigenère is intrinsic, and language models admit many fluent decompositions. Between two ciphertexts, a shared running key cancels: $c^{(1)}_i - c^{(2)}_i = p^{(1)}_i - p^{(2)}_i$, which is the relation test the program ran on its two short texts in every index-space pairing.
 '''
 
 [[blocks]]
 kind = "variants"
 body = '''
 - **Book cipher**: the key is a passage identified by its location in a book; see [Book cipher](/ciphers/book-cipher).
-- **Chained running key**: one recovered plaintext keys the next message; the solved prefix of the corpus contains such a link, which the cascade recovered through its running-key decision (see [Running-key relation test](/cryptanalysis/running-key-relation-test)).
+- **Chained running key**: one recovered plaintext keys the next message. The solved prefix of the corpus contains such a link, which the cascade recovered through its running-key decision (see [Running-key relation test](/cryptanalysis/running-key-relation-test)).
 - **Running key under a transposition**: score the plaintext side order-free (monograms only) and recover the key text from the ciphertext.
 '''
 
@@ -39,7 +39,7 @@ body = '''
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- Both streams are natural language; the cipher is additive in a known or guessed order.
+- Both streams are natural language. The cipher is additive in a known or guessed order.
 - Invariant: no lag has an elevated coincidence rate, so period-finding statistics are silent.
 - Invariant: two messages under the same key text differ by the difference of their plaintexts, regardless of the key.
 '''
@@ -54,6 +54,40 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// a is the index order; the key text t is at least as long as the message.
+function ENCRYPT(p[0..n-1], t, a, relation):
+    for i in 0..n-1:
+        if relation == Vigenère: c[i] = a_inverse((a(p[i]) + a(t[i])) mod 26)
+        if relation == Beaufort: c[i] = a_inverse((a(t[i]) - a(p[i])) mod 26)
+        if relation == Variant:  c[i] = a_inverse((a(p[i]) - a(t[i])) mod 26)
+    return c
+
+function DECRYPT(c[0..n-1], t, a, relation):
+    for i in 0..n-1:
+        if relation == Vigenère: p[i] = a_inverse((a(c[i]) - a(t[i])) mod 26)
+        // its own inverse
+        if relation == Beaufort: p[i] = a_inverse((a(t[i]) - a(c[i])) mod 26)
+        if relation == Variant:  p[i] = a_inverse((a(c[i]) + a(t[i])) mod 26)
+    return p
+
+// Known text T, unknown alphabet positions x and period-m shifts k: the exact
+// window test.
+function WINDOW_TEST(c[0..n-1], T, o, m):
+    constraints = [x(c[i]) - x(T[o + i]) - k[i mod m] = 0 (mod 26) for i in
+            0..n-1]
+    // a wrong window dies within a few nodes
+    return SOLVE_CSP(constraints, all x distinct)
+
+// Unknown English key: exact Viterbi over the last three key letters (26^3
+// states), scoring quadgrams of both streams p and t at every position;
+// matched planted controls come first.
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
 Bank sweep: one vector correlation per (text, offset), minutes for four novels and all offsets. Exact Viterbi: $26^3 = 17{,}576$ states per position. Joint beam: two recurrent states per hypothesis, beam 12,000, seconds per 100-letter control.
@@ -62,8 +96,8 @@ Bank sweep: one vector correlation per (text, offset), minutes for four novels a
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Identifiability.** The joint beam decoder's best hidden-pair matches were 41.3%, 49.5% and 26.2% on 63-, 95- and 126-letter controls; the truth left the beam every time while the decoder emitted two fluent streams with exact round-trips. That is why fluency plus round-trip cannot authenticate a running-key reading.
-- **Multiple comparisons.** Sweeping thousands of windows and offsets yields top alignments at the family-wise null; one lane's best alignment (z +4.7) sat at the multiple-comparison expectation of about 4.5.
+- **Identifiability.** The joint beam decoder's best hidden-pair matches were 41.3%, 49.5% and 26.2% on 63-, 95- and 126-letter controls. The truth left the beam every time while the decoder emitted two fluent streams with exact round-trips. That is why fluency plus round-trip cannot authenticate a running-key reading.
+- **Multiple comparisons.** Sweeping thousands of windows and offsets yields top alignments at the family-wise null. One lane's best alignment (z +4.7) sat at the multiple-comparison expectation of about 4.5.
 - **Bank coverage.** A negative bank sweep excludes only the texts in the bank.
 '''
 

@@ -13,7 +13,7 @@ updated = "2026-09-04"
 [[blocks]]
 kind = "definition"
 body = '''
-For $s$ words the mnemonic carries $\mathrm{ENT} = 32s/3$ entropy bits and $\mathrm{CS} = s/3$ checksum bits, the first $\mathrm{CS}$ bits of $\operatorname{SHA256}(\text{entropy})$; the $11s$ bits split into $s$ indices into the list. With four-letter prefixes the plaintext zone is $4s$ letters; 1,945 of the 2,048 English words have at least four letters (103 have three). The cipher layer studied is a Quagmire with one unknown 26-cycle $z$ and shifts $k$ by absolute position:
+For $s$ words the mnemonic carries $\mathrm{ENT} = 32s/3$ entropy bits and $\mathrm{CS} = s/3$ checksum bits, the first $\mathrm{CS}$ bits of $\operatorname{SHA256}(\text{entropy})$. The $11s$ bits split into $s$ indices into the list. With four-letter prefixes the plaintext zone is $4s$ letters; 1,945 of the 2,048 English words have at least four letters (103 have three). The cipher layer studied is a Quagmire with one unknown 26-cycle $z$ and shifts $k$ by absolute position:
 
 $$\text{Vigenère: } z(c_i) - z(p_i) - k_{i \bmod m} \equiv 0, \qquad \text{Beaufort: } z(c_i) + z(p_i) - k_{i \bmod m} \equiv 0 \pmod{26}.$$
 '''
@@ -22,7 +22,7 @@ $$\text{Vigenère: } z(c_i) - z(p_i) - k_{i \bmod m} \equiv 0, \qquad \text{Beau
 kind = "equations"
 title = "Exact search structure"
 body = '''
-The first $s - 1$ words are assigned most-constrained-first; the remaining $\mathrm{ENT} - 11(s-1)$ entropy bits leave at most eight tails, and SHA-256 fixes the last word's index for each, so the checksum prunes rather than scores. At every node the solver enforces equality and injectivity of each residue map, shared-cycle group identities (Vigenère maps must be restrictions of rotations of one cycle; Beaufort maps of reflections whose pair products are rotations), and homogeneous linear feasibility over $\mathrm{GF}(2)$ and $\mathrm{GF}(13)$ maintained as incremental echelon bases; CRT lifts a residue solution to a permutation of $\mathbb{Z}_{26}$ exactly when each residue is used twice with opposite parity. A cap overrun retains the branch, so caps cannot create false negatives. For period 2 the problem is an affine graph problem: each observed pair adds an edge $z(v) = s_v t + a_v$ and the components are packed exactly into the 26 coordinates.
+The first $s - 1$ words are assigned most-constrained-first. The remaining $\mathrm{ENT} - 11(s-1)$ entropy bits leave at most eight tails, and SHA-256 fixes the last word's index for each, so the checksum prunes rather than scores. At every node the solver enforces equality and injectivity of each residue map, shared-cycle group identities (Vigenère maps must be restrictions of rotations of one cycle; Beaufort maps of reflections whose pair products are rotations), and homogeneous linear feasibility over $\mathrm{GF}(2)$ and $\mathrm{GF}(13)$ maintained as incremental echelon bases; CRT lifts a residue solution to a permutation of $\mathbb{Z}_{26}$ exactly when each residue is used twice with opposite parity. A cap overrun retains the branch, so caps cannot create false negatives. For period 2 the problem is an affine graph problem: each observed pair adds an edge $z(v) = s_v t + a_v$ and the components are packed exactly into the 26 coordinates.
 '''
 
 [[blocks]]
@@ -39,9 +39,9 @@ body = '''
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- The standard English list and checksum rule; a declared word count, block origin and cipher period.
+- The standard English list and checksum rule. A declared word count, block origin and cipher period.
 - Invariant: prefix uniqueness makes the four-letter encoding lossless.
-- Invariant: an endpoint is accepted only if the checksum passes, $z$ is a permutation, a separately written literal decrypt yields the printed prefixes, and literal re-encryption reproduces every ciphertext letter; these are algebraic cross-checks, and only the checksum and literal replay are independent gates.
+- Invariant: an endpoint is accepted only if the checksum passes, $z$ is a permutation, a separately written literal decrypt yields the printed prefixes, and literal re-encryption reproduces every ciphertext letter. These are algebraic cross-checks, and only the checksum and literal replay are independent gates.
 '''
 
 [[blocks]]
@@ -51,7 +51,43 @@ body = '''
 1. Freeze the geometry (words, origin, period, tie) and the list hash.
 2. Run the compiled most-constrained-first DFS with split prefixes scheduled by the size of the next domain; stop at the first verified endpoint for a power test, or drain every task for an exhaustive zero.
 3. Before any live run, recover blind planted mnemonics over all 1,945 roots with no word, cycle or shift supplied.
-4. Report a zero only on natural drain (`complete`, every task finished, no endpoint over cap); otherwise the cell is scoped-inconclusive.
+4. Report a zero only on natural drain (`complete`, every task finished, no endpoint over cap). Otherwise the cell is scoped-inconclusive.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// s words carry ENT = 32s/3 entropy bits and CS = s/3 checksum bits; the list
+// holds 2,048 words.
+function ENCODE(entropy[0..ENT-1], list):
+    checksum = the first CS bits of SHA256(entropy)
+    bits = entropy || checksum                                    // 11s bits
+    for w in 0..s-1:
+        word[w] = list[integer value of bits[11w .. 11w+10]]
+    return word
+
+function VERIFY(word[0..s-1], list):
+    bits = concatenation of the 11-bit indices pos_list(word[w])
+    entropy = bits[0 .. ENT-1]; checksum = bits[ENT .. ENT+CS-1]
+    return checksum == the first CS bits of SHA256(entropy)
+
+function PREFIX_ZONE(word[0..s-1]):
+    // 4s letters, unique by prefix
+    return the first four letters of each word, concatenated
+
+// Cipher layer: one unknown 26-cycle z and shifts k by absolute position
+// (Vigenère form shown; Beaufort replaces z(c) - z(p) by z(c) + z(p)).
+function ENCRYPT_LAYER(p[0..n-1], z, k[0..m-1]):
+    for i in 0..n-1:
+        // z(c) - z(p) - k[i mod m] = 0
+        c[i] = z_inverse((z(p[i]) + k[i mod m]) mod 26)
+    return c
+
+// Exact search: assign the first s - 1 words most-constrained-first, keeping
+// every residue map consistent and injective at each node; the checksum then
+// fixes the last word, so it prunes.
+```
 '''
 
 [[blocks]]
@@ -65,7 +101,7 @@ kind = "failure_modes"
 body = '''
 - **Power tests are not uniqueness tests.** A control that stops at its first verified endpoint proves recovery power, not that no other endpoint exists.
 - **Incomplete drains.** One 12 + 24 wildcard cell stopped at 73.3% of its tasks after an hour and is recorded as inconclusive, never as an exclusion.
-- **Model boundaries.** Mnemonics containing any three-letter word, a different origin, another word count, or an unknown alphabet under seven free shifts are outside the closed cells; the unknown-cycle full-spelling model is the principal remaining version.
+- **Model boundaries.** Mnemonics containing any three-letter word, a different origin, another word count, or an unknown alphabet under seven free shifts are outside the closed cells. The unknown-cycle full-spelling model is the principal remaining version.
 - **Dictionary-distance optimisers** (annealing toward valid words) are decoder-power tools only and never authorised a live claim.
 '''
 
@@ -85,7 +121,7 @@ The all-zero entropy vectors show the checksum rule. With 128 zero bits, $\opera
 [[blocks]]
 kind = "notes"
 body = '''
-The hypothesis was chosen because it is a concrete, checksum-constrained realisation of a high-entropy but structured key; the exact negatives remove its simplest geometries and the audits are explicit that they do not justify a blind sweep of further periods without an independent reason.
+The hypothesis was chosen because it is a concrete, checksum-constrained realisation of a high-entropy but structured key. The exact negatives remove its simplest geometries and the audits are explicit that they do not justify a blind sweep of further periods without an independent reason.
 '''
 
 [[provenance]]

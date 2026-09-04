@@ -19,15 +19,15 @@ The examination lists every repeated $n$-gram (typically $n \ge 3$), the distanc
 
 $$\operatorname{votes}(p) = \#\{k : p \mid d_k\}.$$
 
-The true period and its divisors receive the most votes; the largest well-supported candidate is the period, and its multiples show the same support diluted.
+The true period and its divisors receive the most votes. The largest well-supported candidate is the period, and its multiples show the same support diluted.
 '''
 
 [[blocks]]
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- The key is strictly periodic and the same substitution rule applies at every position; a keyed alphabet on either side (Quagmire) leaves the argument intact because identical plaintext under identical key elements still gives identical ciphertext.
-- The plaintext repeats fragments: natural language does, from common words and affixes; a flat or random inner text does not.
+- The key is strictly periodic and the same substitution rule applies at every position. A keyed alphabet on either side (Quagmire) leaves the argument intact because identical plaintext under identical key elements still gives identical ciphertext.
+- The plaintext repeats fragments: natural language does, from common words and affixes. A flat or random inner text does not.
 - The expected number of chance repeats of an $n$-gram in a text of length $N$ over 26 letters is about $\binom{N}{2} / 26^{n}$; below a few hundred letters trigram repeats are mostly chance, and the votes are dominated by noise.
 '''
 
@@ -37,22 +37,54 @@ title = "How to attack it"
 body = '''
 1. Extract all repeated $n$-grams for $n$ from 3 up to about 6, preferring longer repeats (they are far less likely to be chance).
 2. Tabulate the distances and the factor votes for periods $2 \dots p_{\max}$.
-3. Cross-check the leading candidate against the periodic index of coincidence and the coincidence lag profile; all three should agree.
+3. Cross-check the leading candidate against the periodic index of coincidence and the coincidence lag profile. All three should agree.
 4. Continue with coset-wise shift recovery under the chosen period.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Ciphertext c[0..N-1]; n-gram lengths from 3 up to about 6; candidate
+// periods 2..p_max.
+function KASISKI(c[0..N-1], p_max):
+    distances = []
+    // longer repeats are far less likely to be chance
+    for n in 3..6:
+        // n-gram -> its start positions, in order
+        positions = MAP()
+        for i in 0..N-n: APPEND(positions[c[i..i+n-1]], i)
+        for each gram that occurs at least twice:
+            // m divides j - i unless the repeat is chance
+            for consecutive occurrences i < j of gram:
+                APPEND(distances, j - i)
+    for p in 2..p_max:
+        // votes(p) = #{k : p | d_k}
+        votes[p] = COUNT(d in distances such that p divides d)
+    // the true period and its divisors receive the most votes; multiples show
+    // the same support diluted
+    m = the largest well-supported candidate in votes
+    // cross-check: the periodic index of coincidence and the coincidence lag
+    // profile must agree with m
+    agree = PERIODIC_IC(c, m) exceeds the neighbouring periods and
+            LAG_PROFILE(c) peaks at multiples of m
+    // then continue with coset-wise shift recovery under m
+    return (m, votes, agree)
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-Collecting repeats with a hash map is $O(N \cdot n_{\max})$; the vote table is $O(R \cdot p_{\max})$ for $R$ distances. Negligible next to any subsequent solver.
+Collecting repeats with a hash map is $O(N \cdot n_{\max})$. The vote table is $O(R \cdot p_{\max})$ for $R$ distances. Negligible next to any subsequent solver.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
 - **Chance repeats.** On a 504-letter text the research program observed five repeated trigrams against about 7.2 expected for random text, and no repeated tetragram: the method had nothing to say, and the exact alignment objective was used instead.
-- **Short texts.** Below roughly 200 letters the vote table is dominated by divisors of a handful of distances; a period read from two distances is a guess.
-- **Non-periodic keys.** Autokey and running-key constructions produce no systematic repeats; the absence of Kasiski structure is itself a diagnostic.
+- **Short texts.** Below roughly 200 letters the vote table is dominated by divisors of a handful of distances. A period read from two distances is a guess.
+- **Non-periodic keys.** Autokey and running-key constructions produce no systematic repeats. The absence of Kasiski structure is itself a diagnostic.
 '''
 
 [[blocks]]

@@ -35,6 +35,41 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Ciphertext c[0..N-1]; window lengths L; candidate periods 2..p_max; the
+// useful length is calibrated on shuffled or random text.
+function PATTERN(s[0..L-1]):
+    // first-occurrence index
+    for i in 0..L-1: pi[i] = min { j : s[j] == s[i] }
+    // preserved by any relabelling of the letters
+    return pi
+
+function ISOMORPHS(c, L):
+    // pattern -> start positions (hashing replaces the all-pairs scan)
+    index = MAP()
+    for i in 0..N-L: APPEND(index[PATTERN(c[i..i+L-1])], i)
+    return { (i, j) : i < j and both are in index[pi] for some pattern pi }
+
+function ISOMORPH_PERIOD(c, L_min, p_max):
+    // lengths well above the chance level
+    for L >= L_min:
+        for (i, j) in ISOMORPHS(c, L): APPEND(offsets, j - i)
+    // offsets vote as Kasiski distances do
+    for p in 2..p_max: votes[p] = COUNT(d in offsets such that p divides d)
+    m = the largest well-supported candidate in votes, judged against the
+            vote table of shuffled text
+    // reduces the key search
+    constraints = for each isomorph pair, the relabelling tau that links the
+            substitutions at the two stretches
+    // not exercised here: a planted control must recover its period before
+    // any live use
+    return (m, votes, constraints)
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
 All window pairs of length $L$ cost $O(N^2 L)$; hashing patterns reduces it to $O(N L)$ per length. Chance isomorphs are far more frequent than chance identical repeats, so the minimum useful length is larger.
@@ -43,14 +78,14 @@ All window pairs of length $L$ cost $O(N^2 L)$; hashing patterns reduces it to $
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Chance isomorphs.** Short patterns such as ABCA occur by chance constantly; the significance threshold must be calibrated on shuffled or random text.
+- **Chance isomorphs.** Short patterns such as ABCA occur by chance constantly. The significance threshold must be calibrated on shuffled or random text.
 - **No shared relabelling.** When the substitutions at the two stretches are unrelated (independent alphabets per coset with a free key), isomorphs carry no information beyond identical repeats.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Not exercised in the research program; a control design would plant a periodic keyed-alphabet cipher over English with repeated words and require the isomorph offsets to recover the period at a stated text length before any live use.
+Not exercised in the research program. A control design would plant a periodic keyed-alphabet cipher over English with repeated words and require the isomorph offsets to recover the period at a stated text length before any live use.
 '''
 
 [[blocks]]

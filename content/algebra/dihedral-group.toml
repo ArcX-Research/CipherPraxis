@@ -52,6 +52,40 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Element (eps, rho) of D_n acts on Z_n by j -> eps*j + rho mod n.
+function APPLY((eps, rho), j, n):
+    // eps = +1 rotation, eps = -1 reflection
+    return (eps*j + rho) mod n
+
+function COMPOSE((eps1, rho1), (eps2, rho2), n): // (g1 o g2)(j) = g1(g2(j))
+    return (eps1*eps2, (eps1*rho2 + rho1) mod n)
+
+function INVERSE((eps, rho), n):
+    return (eps, (-eps*rho) mod n)
+
+function ELEMENTS(n):                             // all 2n elements of D_n
+    return [(eps, rho) for eps in {+1, -1} for rho in 0..n-1]
+
+// Key graph of a positional pair (g1, g2) on three rows of n positions with
+// period-7 keys: vertices (t, r) for t in 0..2, r in 0..6; one edge per
+// position and reindexed row.
+function KEY_GRAPH_COMPONENTS(g1, g2, n):
+    vertices = {(t, r) : t in 0..2, r in 0..6}
+    edges = []
+    for (t, g) in [(1, g1), (2, g2)]:
+        for j in 0..n-1:
+            edges.append( ((0, j mod 7), (t, APPLY(g, j, n) mod 7)) )
+    c = number of connected components of (vertices, edges)
+    // cycle rank = |edges| - |vertices| + c exact equations; c free key
+    // offsets
+    return c
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
 Component census over all 9,216 cells: $c = 1$: 8,852; $c = 2$: 120; $c = 3$: 96; $c = 4$: 72; $c = 5$: 48; $c = 6$: 24; $c = 7$: 4. Constrained key work $\sum 26^c$ over cells is 40,146,426,216 against $9{,}216 \cdot 26^7 = 74{,}021{,}162{,}582{,}016$ unconstrained, a 1,844-fold reduction; 96 % of cells need only 26 keys. The four $c = 7$ cells are exactly $g_1, g_2 \in \{\mathrm{id},\, j \mapsto 47 - j\}$, the only elements that induce a bijection on residues. Residue-edge signatures: 40 (26 singletons and 14 classes of size 5), hence 1,600 pair signatures and a maximum alias class of 25. Singleton fibres, which contribute no equation, occur in 52 of the 96 elements.
@@ -61,7 +95,7 @@ Component census over all 9,216 cells: $c = 1$: 8,852; $c = 2$: 120; $c = 3$: 96
 kind = "failure_modes"
 body = '''
 - Porting the aligned anchored elimination to a reindexed row is silently wrong, not merely weaker.
-- Searching an unconstrained $26^7$ on a $c = 1$ cell admits $26^6$ keys that contradict the data; the graph constraint is a correctness requirement.
+- Searching an unconstrained $26^7$ on a $c = 1$ cell admits $26^6$ keys that contradict the data. The graph constraint is a correctness requirement.
 - The null is heteroscedastic in $c$: internal maximisation over $26^c$ keys inflates a cell's null by roughly $\sigma\sqrt{2c\ln 26}$, from $2.553\sigma$ at $c = 1$ to $6.754\sigma$ at $c = 7$ (spread $4.20\sigma$). A threshold pooled over cells under-estimates the tail precisely at the four highest-freedom cells.
 - Multiplicity: a maximum over $M \approx 1.6 \times 10^7$ cells inflates the null by about $\sigma\sqrt{2 \ln M} \approx 5.76\sigma$, consuming most of a measured 13.63 sd aligned-cell separation.
 - Convention hazard: two implementations used transposed edge conventions; census and exceptional set agree, per-cell $c$ does not.
@@ -70,9 +104,9 @@ body = '''
 [[blocks]]
 kind = "controls"
 body = '''
-Seven frozen positive geometries with $c = 1..7$ recovered the exact held-out plaintext, raw positional pair, unit cell, orientation, affine gauge and independent forward (one raw survivor and 12 core calls each). An alias control with a repeated 24-letter latent half produced four raw survivors that selected one identical plaintext. Matched 100-replicate nulls: English $c = 1$ observed $-4{,}461{,}501$ against a null maximum of $-5{,}518{,}172$, rank 1/100; an IID latent ranked 83/100 and was rejected. A $q = 6$ graph KAT matched the CRT/null-space cycle set against all $6!$ cycles, 8/8. Aligned-thirds controls: one synthetic plant per sign partition satisfied all 423 clauses, one-coordinate edits rejected, 256 random profiles rejected.
+Seven frozen positive geometries with $c = 1..7$ recovered the exact held-out plaintext, raw positional pair, unit cell, orientation, affine gauge and independent forward (one raw survivor and 12 core calls each). An alias control with a repeated 24-letter latent half produced four raw survivors that selected one identical plaintext. Matched 100-replicate nulls: English $c = 1$ observed $-4{,}461{,}501$ against a null maximum of $-5{,}518{,}172$, rank 1/100. An IID latent ranked 83/100 and was rejected. A $q = 6$ graph KAT matched the CRT/null-space cycle set against all $6!$ cycles, 8/8. Aligned-thirds controls: one synthetic plant per sign partition satisfied all 423 clauses, one-coordinate edits rejected, 256 random profiles rejected.
 
-Target measurements: every one of the 9,216 raw positional pairs failed the equality gate (structural zero, terminal `POSITIONAL-DIHEDRAL UNIT FAMILY REJECTED`); the aligned-thirds necessary invariant failed (`ALIGNED-THIRDS FAMILY REJECTED`); the unit-ratio family gave zero cycles in all 144 cells. Each rejects only its declared finite family.
+Target measurements: every one of the 9,216 raw positional pairs failed the equality gate (structural zero, terminal `POSITIONAL-DIHEDRAL UNIT FAMILY REJECTED`). The aligned-thirds necessary invariant failed (`ALIGNED-THIRDS FAMILY REJECTED`). The unit-ratio family gave zero cycles in all 144 cells. Each rejects only its declared finite family.
 '''
 
 [[blocks]]

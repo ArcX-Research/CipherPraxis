@@ -21,7 +21,7 @@ with $\phi(w) = \log P_{\text{lex}}(w)$ for lexicon words and a fragment cost fo
 
 $$\text{best}[i] = \max_{i - L_{\max} \le j < i} \big(\text{best}[j] + \phi(x_{j:i})\big),$$
 
-$O(n L_{\max})$ for a lexicon lookup per span. The display segmenter uses $\phi(w) = -(1 - 0.15\,|w|)$ for dictionary words (long words preferred) and a cost of $3$ per unmatched letter, $L_{\max} = 16$; the frozen lattice used in the neural-control audits uses a top-100,000 word list with fragment score $-3 - 1.55L$ for fragments of length $L \le 8$.
+$O(n L_{\max})$ for a lexicon lookup per span. The display segmenter uses $\phi(w) = -(1 - 0.15\,|w|)$ for dictionary words (long words preferred) and a cost of $3$ per unmatched letter, $L_{\max} = 16$. The frozen lattice used in the neural-control audits uses a top-100,000 word list with fragment score $-3 - 1.55L$ for fragments of length $L \le 8$.
 '''
 
 [[blocks]]
@@ -39,8 +39,8 @@ over trie edges from node $q$ with $r$ letters remaining. A candidate is compare
 kind = "assumptions"
 body = '''
 - The plaintext is a concatenation of lexicon words; proper names, numbers spelled out, or deliberate misspellings fall outside the model and are charged as fragments.
-- The lexicon is generic and frozen (a published frequency list), with no puzzle-specific vocabulary, so that a hit cannot be an artefact of the word list.
-- The beam retains enough hypotheses to keep the truth alive until the cipher constraints bite; the measurements below say when it does not.
+- The word list is generic and fixed in advance. It comes from a published frequency list and contains no puzzle-specific terms, so a hit cannot be caused by a hand-picked vocabulary.
+- The beam retains enough hypotheses to keep the truth alive until the cipher constraints bite. The measurements below say when it does not.
 '''
 
 [[blocks]]
@@ -54,24 +54,62 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Segmentation DP over end positions: best[i] = max over j of best[j] +
+// phi(x[j:i]). Display scores: phi(w) = -(1 - 0.15*|w|) for a lexicon word,
+// -3 per unmatched letter, L_max = 16.
+function SEGMENT(x[0..n-1], lexicon, L_max):
+    best[0] = 0
+    for i in 1..n:
+        // x[i-1] left unmatched
+        best[i] = best[i-1] - 3; back[i] = i-1
+        for j in max(0, i - L_max) .. i-1:
+            w = x[j..i-1]
+            if w in lexicon and best[j] + phi(w) > best[i]:
+                best[i] = best[j] + phi(w); back[i] = j
+    // the best-scoring segmentation
+    return the words read back through back[] from n
+
+// Exact completion bound for a partial token: trie node q with r letters
+// still to read.
+function U(q, r):
+    // the word ending exactly at q
+    if r == 0: return terminal(q)
+    return max over trie edges q -> q' of U(q', r - 1)
+
+// Complete-token decoder step: the token length is declared at each boundary;
+// a hypothesis is bounded by the best completion of that exact length and
+// compared only with equal lengths.
+function EXTEND(hyp, letter, declared_length):
+    q' = child of hyp.q on letter; if none: reject
+    // injective per-class maps
+    if not CIPHER_PREDICATE(hyp.maps updated with letter): reject
+    hyp.bound = hyp.score + U(q', declared_length - hyp.read - 1)
+    return hyp
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-Segmentation is $O(n L_{\max})$ with hashed lookups. The decoder's cost is beam width times token extensions times the constraint check; a beam of 8,192 on a 95-letter control reached a resident set of about 1.08 GB before the run was stopped to avoid a multi-gigabyte widening.
+Segmentation is $O(n L_{\max})$ with hashed lookups. The decoder's cost is beam width times token extensions times the constraint check. A beam of 8,192 on a 95-letter control reached a resident set of about 1.08 GB before the run was stopped to avoid a multi-gigabyte widening.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
 - **Early language valley.** The first letters open free residues before any modular constraint bites, so the truth's rank collapses in the first word: ranks $3$, $1{,}068$, $1{,}212$, $29{,}892$, $27{,}125$, $42{,}571$, $26{,}415$, $11{,}761$ through the first eight letters of a 95-letter control at beam $8{,}192$, then loss at position 10 (rank above $113{,}351$ at position 9).
-- **Closed-vocabulary parses.** An exact parse that admits no mismatch is voided by a single null letter, transposition or typo in the ciphertext; one-error-tolerant runs are needed before a parse negative is cited.
+- **Closed-vocabulary parses.** An exact parse that admits no mismatch is voided by a single null letter, transposition or typo in the ciphertext. One-error-tolerant runs are needed before a parse negative is cited.
 - **Peaked plaintext.** A small-vocabulary plaintext defeats generic-English word scores in both directions: a correct parse scores poorly and a wrong one may segment fluently.
-- **Capped searches.** A search stopped at a node cap is undecided, not negative; the audit ledger lists several parse families that were reported as negative while capped.
+- **Capped searches.** A search stopped at a node cap is undecided, not negative. The audit ledger lists several parse families that were reported as negative while capped.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Complete-token decoder: one real held-out 95-letter word-aligned plant after a corpus-boundary defect in the control generator was fixed; truth ranks as above; classified as a quantified decoder-power failure rather than evidence about the cipher family. Secondary word-lattice scorer on 40 planted nine-chunk orderings: ranks within the pair cap had median 1–2 and worst 1,339. Exact-parse solvers with closed vocabularies recovered planted strings uniquely (a planted 95-letter digit string among survivors; a unique recovery in 6,000 nodes) where the search completed.
+Complete-token decoder: after fixing a corpus-boundary defect in the control generator, one real held-out 95-letter word-aligned plant produced the ranks above. This is a measured decoder-power failure, not evidence about the cipher family. A second word-lattice scorer tested 40 planted orders of nine chunks. Ranks inside the pair cap had a median of 1–2 and a worst value of 1,339. Exact parsers with closed vocabularies uniquely recovered planted strings when the search finished, including a 95-letter digit string and a case solved in 6,000 nodes.
 '''
 
 [[blocks]]

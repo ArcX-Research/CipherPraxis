@@ -17,7 +17,7 @@ Let $P$ be a mixed plaintext alphabet and $C$ the straight alphabet, with $\oper
 
 $$\operatorname{pos}_C(c_i) \equiv \operatorname{pos}_P(p_i) + k_{i \bmod m} \pmod{26}.$$
 
-In the classical presentation the shifts are given by a key word read against an indicator letter; the program treats them as free integers, which contains every word key.
+In the classical presentation the shifts are given by a key word read against an indicator letter. The program treats them as free integers, which contains every word key.
 '''
 
 [[blocks]]
@@ -56,17 +56,54 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// P is the mixed plaintext alphabet and C the straight alphabet; pos_P and
+// pos_C are their index maps.
+function ENCRYPT(p[0..n-1], P, k[0..m-1]):
+    for i in 0..n-1:
+        // C[x] is simply letter x
+        c[i] = C[(pos_P(p[i]) + k[i mod m]) mod 26]
+    return c
+
+function DECRYPT(c[0..n-1], P, k[0..m-1]):
+    for i in 0..n-1:
+        p[i] = P[(pos_C(c[i]) - k[i mod m]) mod 26]
+    return p
+
+// Crib attack: a known plaintext letter at position i fixes the shift of its
+// coset for the alphabet P being tried; a contiguous crib of length >= m
+// fixes all m shifts.
+function SHIFTS_FROM_CRIB(c, crib[0..L-1], offset, P, m):
+    for j in 0..L-1:
+        b = (offset + j) mod m
+        vote[b] += (pos_C(c[offset + j]) - pos_P(crib[j])) mod 26
+    for b in 0..m-1: k[b] = the most voted value (dissenters are penalised)
+    return k
+
+function CRIB_ATTACK(c, crib, offset, m):
+    P = a random alphabet
+    repeat (batched annealing with swap and insertion moves):
+        k = SHIFTS_FROM_CRIB(c, crib, offset, P, m)
+        propose P' and accept by the quadgram score of DECRYPT(c, P', k)
+    // a hit reads as English end to end
+    return P, k
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-Bank search: one decrypt per alphabet; 202,504 phrase-keyed alphabets in about ten minutes on twelve cores. Crib attack: every crib, offset, relation and restart is one annealing chain; the production sweep of 6,701 placements per text with 16 restarts of 40,000 steps took about six hours on twelve cores for two texts and four families.
+Bank search: one decrypt per alphabet; 202,504 phrase-keyed alphabets in about ten minutes on twelve cores. Crib attack: every crib, offset, relation and restart is one annealing chain. The production sweep of 6,701 placements per text with 16 restarts of 40,000 steps took about six hours on twelve cores for two texts and four families.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
 - **No crib, unstructured alphabet.** Blind annealing over the alphabet does not reach the basin at 153 letters; see [Quagmire III](/ciphers/quagmire-iii) for the measurements.
-- **Wrong crib or offset.** Wrong placements converge to alternative alphabets with rates around $-5.6$ to $-6.1$ that never read; the sweep must compare against that wrong-placement null rather than a fixed threshold.
-- **Key change inside the text.** A text whose shifts change part way through breaks the per-coset votes; the program handled this by fitting zones separately.
+- **Wrong crib or offset.** Wrong placements converge to alternative alphabets with rates around $-5.6$ to $-6.1$ that never read. The sweep must compare against that wrong-placement null rather than a fixed threshold.
+- **Key change inside the text.** A text whose shifts change part way through breaks the per-coset votes. The program handled this by fitting zones separately.
 '''
 
 [[blocks]]
@@ -95,7 +132,7 @@ Check position 1: U is letter 21 of $P$; $21 + 7 = 28 \equiv 2 = C$ in the strai
 [[blocks]]
 kind = "notes"
 body = '''
-The program regarded Quagmire I with a known ciphertext order as the principled reading of a text whose cosets align in that order's index space; the crib sweep excluded it for both short ciphertexts for every crib in a 112-word bank, which is a strong scoped negative because 3/3 seeds solved at every crib length.
+The program regarded Quagmire I with a known ciphertext order as the principled reading of a text whose cosets align in that order's index space. The crib sweep excluded it for both short ciphertexts for every crib in a 112-word bank, which is a strong scoped negative because 3/3 seeds solved at every crib length.
 '''
 
 [[provenance]]

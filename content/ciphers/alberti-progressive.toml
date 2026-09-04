@@ -41,9 +41,9 @@ body = '''
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- The outer order is one of two fixed orders; the schedule is a fixed function of position.
+- The outer order is one of two fixed orders. The schedule is a fixed function of position.
 - Invariant: under the true schedule the deprogressed stream has the plaintext's equality pattern; under a wrong one it is a scrambled stream that a substitution solver still fits, but at a random-like rate.
-- Invariant: a plaintext exposing $m$ symbols leaves $(26-m)!$ completions of $M$; the observed map is what is identifiable.
+- Invariant: a plaintext exposing $m$ symbols leaves $(26-m)!$ completions of $M$. The observed map is what is identifiable.
 '''
 
 [[blocks]]
@@ -52,28 +52,65 @@ title = "How to attack it"
 body = '''
 1. For every cell, deprogress the ciphertext and solve the resulting substitution with the frozen annealer (3 restarts of 10,000 steps for all cells, 5 of 30,000 for the top 12, 11 of 80,000 for the top 4, steepest pair-swap finish).
 2. Group cells into exact RGS classes; rank distinct classes globally, never aliases.
-3. Decide with frozen gates: an English rate threshold and a minimum gap between the best and second distinct classes; a tie is AMBIGUOUS.
+3. Decide with frozen gates: an English rate threshold and a minimum gap between the best and second distinct classes. A tie is AMBIGUOUS.
 4. Any candidate would still need 99 full-selector nulls; none was ever reached.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// B = outer (ciphertext) order, M = inner order; pos_B and pos_M are their
+// index maps. Schedule a[i]: constant advance a[i] = d * i; constant
+// acceleration a[i] = beta * i + alpha * i * (i - 1) / 2, the triangular term
+// formed as an integer before reduction mod 26 (alpha = +1 or -1 is unit
+// acceleration).
+function SCHEDULE(n, kind, d, alpha, beta):
+    for i in 0..n-1:
+        if kind == constant_advance: a[i] = d * i
+        else:
+            a[i] = beta * i + alpha * (i * (i - 1) / 2)
+    return a
+
+function ENCRYPT(p[0..n-1], B, M, a[0..n-1]):
+    for i in 0..n-1:
+        c[i] = B[(pos_M(p[i]) + a[i]) mod 26]
+    return c
+
+function DECRYPT(c[0..n-1], B, M, a[0..n-1]):
+    for i in 0..n-1:
+        p[i] = M[(pos_B(c[i]) - a[i]) mod 26]
+    return p
+
+// Reduction used by the attack: under the true schedule the deprogressed
+// stream U is one fixed substitution of the plaintext, p[i] = M[U[i]], so
+// RGS(U) = RGS(P).
+function DEPROGRESS(c[0..n-1], B, a[0..n-1]):
+    for i in 0..n-1:
+        U[i] = (pos_B(c[i]) - a[i]) mod 26
+    // then solve U -> p as a monoalphabetic substitution
+    return U
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-The 52-cell selector ran in 106 seconds for 28 fixtures; the 1,352-cell parent runs in a multithreaded compiled core with a first stage over all cells and refinement of the best 64 then 12. The finite-prior exact meet evaluated 520 schedule cells in 0.24 seconds.
+The 52-cell selector ran in 106 seconds for 28 fixtures. The 1,352-cell parent runs in a multithreaded compiled core with a first stage over all cells and refinement of the best 64 then 12. The finite-prior exact meet evaluated 520 schedule cells in 0.24 seconds.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
 - **Random-like ambiguity.** On the live text the constant-advance selector's four RGS classes scored within 0.02 of each other, far below the English gate, so the decision was AMBIGUOUS rather than a candidate.
-- **Hidden-bank power failure.** A frozen hidden validation of the $\alpha = 13$ slice ended POWER_BLOCKED on its first case and the bank was burned; the later complete parent re-covered that slice with fresh controls.
+- **Hidden-bank power failure.** A frozen hidden validation of the $\alpha = 13$ slice ended POWER_BLOCKED on its first case and the bank was burned. The later complete parent re-covered that slice with fresh controls.
 - **Finite prior is only a prior.** A structural zero against corpus windows says nothing about a plaintext outside the prior.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Finite-prior constant advance (log 295): 6/6 positives recovered the exact passage, outer order, slope and canonical inner cycle with one and only one hit; 3/3 valid-family latent negatives and 1/1 decoy returned zero hits. General constant advance (log 327): 6/6 hidden positives (alphabet sizes 20-26) exact, 3/3 IID negatives at $-15.06$ to $-15.01$, 19/19 shuffled nulls at $-13.96$ to $-13.50$ against the frozen gate $-10.0$; the live one-shot (log 357) was AMBIGUOUS with nulls not authorised. Unit acceleration (log 368): 30/30 hidden cases, positives 6/6 with weakest rate $-10.45$ against gate $-12.76$, sentinels 2/2, negatives 3/3, nulls 19/19. Full constant acceleration (log 408): 4/4 held-out controls at rank 1 with exact forward; all three live seeds non-English at $-14.93$ to $-14.97$ against gate $-12.5$, with no cell consensus.
+Finite-prior constant advance (log 295): 6/6 positives recovered the exact passage, outer order, slope and canonical inner cycle with one and only one hit; 3/3 valid-family latent negatives and 1/1 decoy returned zero hits. General constant advance (log 327): 6/6 hidden positives (alphabet sizes 20-26) exact, 3/3 IID negatives at $-15.06$ to $-15.01$, 19/19 shuffled nulls at $-13.96$ to $-13.50$ against the frozen gate $-10.0$. The live one-shot (log 357) was AMBIGUOUS with nulls not authorised. Unit acceleration (log 368): 30/30 hidden cases, positives 6/6 with weakest rate $-10.45$ against gate $-12.76$, sentinels 2/2, negatives 3/3, nulls 19/19. Full constant acceleration (log 408): 4/4 held-out controls at rank 1 with exact forward. All three live seeds non-English at $-14.93$ to $-14.97$ against gate $-12.5$, with no cell consensus.
 '''
 
 [[blocks]]

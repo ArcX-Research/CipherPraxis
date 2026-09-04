@@ -31,7 +31,7 @@ A pipeline is measured in stages so that a weak step is not mistaken for a weak 
 - $S_3$: end-to-end exact recovery — the power;
 - $S_4$: cross-cell discrimination — the planted cell wins against all alternative cells.
 
-Gate rule used by the lanes: a live pass is refused unless $S_3 \ge 0.95$ on the controls; the gate is fixed before the controls are run and is not re-tuned afterwards.
+Gate rule used by the lanes: a live pass is refused unless $S_3 \ge 0.95$ on the controls. The gate is fixed before the controls are run and is not re-tuned afterwards.
 '''
 
 [[blocks]]
@@ -54,6 +54,43 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Pi = the frozen pipeline; H = the hypothesis grid (cells); prose = held-out
+// windows of length n.
+function POWER(Pi, H, prose, N, seed):
+    rng = RNG(seed)
+    k = 0; s1 = 0; s2 = 0; s4 = 0
+    for t in 1..N:
+        // random key and parameters in the grid
+        h = DRAW_UNIFORM(rng, H)
+        P = RANDOM_WINDOW(rng, prose)
+        c = ENCRYPT(h, P)
+        // an independent forward re-encryption
+        assert FORWARD_CHECK(h, P, c)
+        // per-stage outcomes and the candidate
+        result = Pi(c)
+        if result.initialisation has every parameter of h right: s1 = s1 + 1
+        if result.exact stage given the true h succeeds:        s2 = s2 + 1
+        // exact recovery
+        if result.candidate == (h, P) and FORWARD_CHECK(h, P, c): k = k + 1
+        if the planted cell beats every alternative cell:       s4 = s4 + 1
+    rho = k / N
+    // or an exact binomial interval
+    se = sqrt(rho * (1 - rho) / N)
+    return S1 = s1 / N, S2 = s2 / N, S3 = rho +- se, S4 = s4 / N
+
+// gate fixed before the controls are run
+function LIVE_GATE(S3, gate):
+    // improve the pipeline, then re-measure
+    if S3 < gate: return LIVE_REFUSED
+    // cite any later miss with S3 and its scope
+    return LIVE_ALLOWED
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
 $N$ full pipeline runs: 1,024 trials at 0.09 s per cell for one selector; 64 trials at beam 32,768 for a width-17 order solver; 700 exact selections in the audited null lane. Power measurement is usually cheaper than the live run it licenses.
@@ -66,7 +103,7 @@ body = '''
 - **A weak step is not a weak selector.** Initialisation right in only $41.80\%$ of trials; exhaustive order scan $100\%$; local refit rescued $585/596$ bad starts; end-to-end $98.93\%$. The earlier reading "closes little" was withdrawn once the stages were measured.
 - **Small-sample optimism.** $31/32 = 0.969$ became $59/64 = 0.922$ (95% interval $[0.856, 0.988]$) with more trials, below the $0.95$ gate.
 - **Detecting the class is not recovering the object.** A span selector picked the planted structural class in $12/12$ positives but recovered the exact map in only $3/6$ and $4/6$; in the failures the wrong map scored higher than the truth under the frozen model, so more restarts cannot help, and $2$ to $5{,}040$ disk completions remained ambiguous.
-- **Plants sharing a model range.** Fixtures drawn from the same corpus tail used as the model's second argument are disjoint from training but not from calibration; a clean design uses a third range.
+- **Plants sharing a model range.** Fixtures drawn from the same corpus tail used as the model's second argument are disjoint from training but not from calibration. A clean design uses a third range.
 '''
 
 [[blocks]]
@@ -79,7 +116,7 @@ Segment-chain programme, target-absent: no-transposition lane $97.5$–$99.8\%$ 
 kind = "example"
 title = "Worked example"
 body = '''
-A lane recovers $59$ of $64$ planted fixtures exactly. The point estimate is $0.922$; the binomial standard error is $\sqrt{0.922 \times 0.078/64} = 0.034$, and the exact 95% interval is about $[0.83, 0.97]$ (the lane's own report gives $[0.856, 0.988]$ with a normal approximation). Because the interval reaches below the $0.95$ gate, the live pass is refused: a miss at $0.92$ power would leave an 8% chance that the truth was simply not found, and the family would remain open anyway.
+A lane recovers $59$ of $64$ planted fixtures exactly. The point estimate is $0.922$. The binomial standard error is $\sqrt{0.922 \times 0.078/64} = 0.034$, and the exact 95% interval is about $[0.83, 0.97]$ (the lane's own report gives $[0.856, 0.988]$ with a normal approximation). Because the interval reaches below the $0.95$ gate, the live pass is refused: a miss at $0.92$ power would leave an 8% chance that the truth was simply not found, and the family would remain open anyway.
 
 Rule of three for perfect scores: $256/256$ recoveries bound the miss rate below about $3/256 = 1.2\%$ at 95% confidence; $20/20$ only below $15\%$.
 '''

@@ -34,7 +34,7 @@ The program measured $\pi_{\text{sched}} = 20/20$ by searching a ten-task segmen
 [[blocks]]
 kind = "assumptions"
 body = '''
-- Fixtures are drawn from the same distribution the target is assumed to come from; a hardest-window panel (planted prose down to rate $-5.56$) is reported separately from the uniform panel.
+- Fixtures are drawn from the same distribution the target is assumed to come from. A hardest-window panel (planted prose down to rate $-5.56$) is reported separately from the uniform panel.
 - Ordering matters: power measured in one task order does not transfer to another. The driver gained a `--control-task-order {lex,hash}` option so that controls use the live ordering.
 - Power is a property of the whole decision, including gates and nulls, not of a preliminary statistic.
 '''
@@ -42,7 +42,46 @@ body = '''
 [[blocks]]
 kind = "attack"
 body = '''
-Power measurement is where a pipeline's weak link is found. In a segment-chain lane the suspected weak link was a width-8 shortlist of per-residue shifts; a different-agent review measured that all seven true shifts survived the shortlist in 195 of 200 hard-plaintext trials (0.975) and that the per-residue true shift was in the top eight 99.64% of the time, so the shortlist was not the reason the live runs missed. In a blind annealing lane, best-of-$N$ recovery plateaued at 30 to 40% of the alphabet for $N$ from 500 to 8,000 chains, which showed that the landscape, not the budget, was the obstacle and closed the approach.
+Power measurement is where a pipeline's weak link is found. In a segment-chain lane the suspected weak link was a width-8 shortlist of per-residue shifts. A different-agent review measured that all seven true shifts survived the shortlist in 195 of 200 hard-plaintext trials (0.975) and that the per-residue true shift was in the top eight 99.64% of the time, so the shortlist was not the reason the live runs missed. In a blind annealing lane, best-of-$N$ recovery plateaued at 30 to 40% of the alphabet for $N$ from 500 to 8,000 chains, which showed that the landscape, not the budget, was the obstacle and closed the approach.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Inputs: the frozen pipeline P (same code, gates, nulls, task order and
+// budget as the live run), model M, live length n, N fresh seeds; for a
+// capped search, the measured task rate rho, frontier size F and declared cap
+// T. Output: power_hat with its standard error, or power at the cap.
+function POWER(P, M, n, seeds):
+    r = []
+    for seed in seeds:
+        // drawn uniformly from the model
+        (p, k, c) = PLANT(M, n, seed)
+        // the whole decision, gates and nulls included
+        r.append(1 if P(c) recovers (p, k) else 0)
+    power_hat = SUM(r) / N
+    se = SQRT(power_hat * (1 - power_hat) / N)
+    report N, the fixture distribution, the task order and the budget with
+            power_hat and se
+    // a miss is "excluded with power power_hat at length n"
+    return power_hat
+
+function POWER_AT_CAP(P, M, n, seeds, rho, F, T):
+    // fraction of the frontier reached before the cap
+    coverage = MIN(1, rho * T / F)
+    recovered_when_scheduled = 0
+    for seed in seeds:
+        (p, k, c) = PLANT(M, n, seed)
+        // hash lookup in the live order
+        t_star = LOCATE_TRUTH_INDEX(c, p, k, live_order)
+        // the few tasks around t_star
+        if P(c, tasks = SEGMENT_AROUND(t_star)) recovers (p, k):
+            recovered_when_scheduled += 1
+    power_sched = recovered_when_scheduled / N
+    // coverage is also reported per fixture
+    return power_sched * coverage
+```
 '''
 
 [[blocks]]
@@ -54,9 +93,9 @@ A power panel costs $N$ full solves. Segment panels reduce this for exhaustive s
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Unmeasured power reported as a negative.** A cell whose blind control never reached its truth was at first described in outcome language; the ledger amended it to `POWER_UNMEASURED + SCOPED_INCONCLUSIVE` and ruled that no result from it may be called a negative.
-- **One control read as a panel.** A one-null disclosed run establishes rank against a single null, worth $p \le 1/2$; the auditor recorded that it must not be read as evidence of separation.
-- **Power from the wrong region.** Prose plants recovered at 97.5% say nothing about a target whose statistics no prose plant reproduces; the audit recommended citing such figures as within-family power only.
+- **Unmeasured power reported as a negative.** A cell whose blind control never reached its truth was at first described in outcome language. The ledger amended it to `POWER_UNMEASURED + SCOPED_INCONCLUSIVE` and ruled that no result from it may be called a negative.
+- **One control read as a panel.** A one-null disclosed run establishes rank against a single null, worth $p \le 1/2$. The auditor recorded that it must not be read as evidence of separation.
+- **Power from the wrong region.** Prose plants recovered at 97.5% say nothing about a target whose statistics no prose plant reproduces. The audit recommended citing such figures as within-family power only.
 '''
 
 [[blocks]]

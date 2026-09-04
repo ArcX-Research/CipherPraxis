@@ -12,10 +12,45 @@ updated = "2026-09-04"
 lab = "null"
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Statistic: the mean coset IC at period m (order-based; the whole-text IC is
+// shuffle-invariant).
+function PERIODIC_IC(c[0..n-1], m):
+    return mean over b in 0..m-1 of IC([c[i] for i in 0..n-1 if i mod m == b])
+
+function SHUFFLED_NULL_Z(c[0..n-1], m, trials, seed):
+    observed = PERIODIC_IC(c, m)
+    // fixed seed: the same run is repeatable
+    rng = RNG(seed)
+    for j in 1..trials:
+        // same letters, random positions
+        SHUFFLE(rng, c)
+        // the statistic recomputed on every shuffle
+        value[j] = PERIODIC_IC(c, m)
+    // sample standard deviation
+    mean = MEAN(value); sd = SD(value)
+    z = (observed - mean) / sd if sd > 0 else 0
+    p_upper = (#{ j : value[j] >= observed } + 1) / (trials + 1)
+    return observed, mean, sd, z, p_upper
+
+// Scan: one planned test per trial period, each with its own shuffles.
+function PERIOD_SCAN(c, periods, trials, seed):
+    for m in periods: z[m] = SHUFFLED_NULL_Z(c, m, trials, seed).z
+    // the best of the scan is a selected maximum, see the notes below
+    return z
+
+// A family-wise null would repeat the whole scan on every shuffle and compare
+// best with best.
+```
+'''
+
+[[blocks]]
 kind = "notes"
 title = "What to try"
 body = '''
-- Raise the number of trials: the null mean and standard deviation settle and the z stabilises; the seed makes every run reproducible.
-- Test a period that is not the key length: the z hovers around zero, which is what an honest negative looks like.
-- Read the sweep: the best of eleven periods is selected, so its z is inflated relative to a single pre-registered test. A family-wise null would repeat the whole sweep on every shuffle and compare maxima.
+- Raise the number of trials. The null mean, standard deviation, and z-score should become steadier. The seed makes the same run repeatable.
+- Test a period that is not the key length. Its z-score should stay near zero. That is what a sound negative result looks like.
+- Look at the full scan. It chooses the best of 11 periods, so that z-score tends to be larger than one from a single planned test. A family-wise null repeats all 11 tests on every shuffle and compares the highest scores.
 '''

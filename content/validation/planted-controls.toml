@@ -30,7 +30,7 @@ For $N$ planted controls with recovery indicators $r_i \in \{0, 1\}$,
 
 $$\hat{\pi} = \frac{1}{N}\sum_{i=1}^{N} r_i$$
 
-is the empirical **power** of the instrument on that family at that length. A single control ($N = 1$) proves that the wiring works; it does not estimate power (see [Power measurement](/validation/power-measurement)).
+is the empirical **power** of the test on that family at that length. A single control ($N = 1$) proves that the wiring works. It does not estimate power (see [Power measurement](/validation/power-measurement)).
 
 A negative on the target is informative only in proportion to $\hat\pi$: with $\hat\pi = 0$ the negative carries no information, which is exactly how the program records the blind unknown-alphabet annealers (0 of 24 planted cases, and 0 of 21 for a two-sided keyed alphabet with a 25-letter crib).
 '''
@@ -47,24 +47,71 @@ body = '''
 kind = "attack"
 title = "How controls protect an attack pipeline"
 body = '''
-1. **Instrument check.** A control that decrypts to garbage means the tool is broken. Targets are not run.
+1. **Test check.** A control that decrypts to garbage means the tool is broken. Targets are not run.
 2. **Length calibration.** The same solver that recovers a 300-letter plant can fail at 63 letters; controls at the zone length expose this before a scoped negative is claimed.
 3. **Selection calibration.** When the solver picks the best of many placements or keys, the controls tell you what score a *correct* recovery reaches, and shuffled versions of the control tell you what the *maximum over wrong candidates* reaches (see [Selection overfit check](/validation/selection-overfit-check)).
 4. **Gauge discovery.** Comparing the recovered key with the plant reveals gauge freedoms (a shared constant across two shift vectors, a translation of a cycle) that must be quotiented out before "exact key" is demanded of the solver.
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Inputs: cipher model M with key space K, solver S, the target length n, a
+// corpus range disjoint from the language model's training and calibration
+// ranges, N seeds and a set of negatives. Output: a control block printed
+// before any target row.
+function PLANT(M, corpus_range, n, seed):
+    // |c| equals the target (or zone) length
+    p = DRAW_PLAINTEXT(corpus_range, n, seed)
+    // from the whole key space
+    k = DRAW_KEY(K, seed)
+    return (p, k, ENCRYPT_M(p, k))
+
+function CHECK_CONTROL(S, p, k, c):
+    // c and nothing else the target would not give
+    (p_hat, k_hat) = S(c)
+    letters = MATCH_FRACTION(p_hat, p)
+    // declared gauge freedom only
+    key_ok  = EQUAL_MODULO_GAUGE(k_hat, k)
+    // re-encryption reproduces c exactly
+    forward = (ENCRYPT_M(p_hat, k_hat) == c)
+    if letters == 1.0 and key_ok and forward: return PASS
+    // reported as a percentage, never rounded up
+    return PARTIAL(letters)
+
+function CONTROL_GATE(M, S, n, seeds, negatives):
+    passes = 0
+    // positives span every discrete choice of M
+    for seed in seeds:
+        (p, k, c) = PLANT(M, corpus_range, n, seed)
+        print planted key, recovered key, letter match, forward check
+        if CHECK_CONTROL(S, p, k, c) == PASS: passes += 1
+    // N = 1 proves the wiring, not the power
+    power_hat = passes / N
+    // valid-model and model-violating
+    rejected = COUNT(c in negatives where S(c) claims no recovery)
+    report passes + "/" + N + " positives, " + rejected + "/" + |negatives| +
+            " negatives"
+    // target rows below it mean nothing
+    if passes < N or rejected < |negatives|: return FAIL
+    // only now may target rows be printed
+    return PASS
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-Controls multiply runtime: a launcher that runs $N$ controls before the target costs $(N+1)\times$ one solve, and a null-calibrated control (99 shuffles each) costs $100\times$ that. The program's one-shot hidden banks used 20 to 34 fixtures with 99 nulls each; a twenty-fixture bank of 100 replicates each was projected at about 12 minutes of compute plus the same again for the admission replay, and the full record of one 34-case bank ran to 4 MB of transcript.
+Controls multiply runtime: a launcher that runs $N$ controls before the target costs $(N+1)\times$ one solve, and a null-calibrated control (99 shuffles each) costs $100\times$ that. The program's one-shot hidden banks used 20 to 34 fixtures with 99 nulls each. A twenty-fixture bank of 100 replicates each was projected at about 12 minutes of compute plus the same again for the admission replay, and the full record of one 34-case bank ran to 4 MB of transcript.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Controls mismatched to the live problem.** An independent audit asked why lanes recovering plants at 97 to 100% power missed every live run. The controls were matched to the selectors, but they populated a region of the family whose statistics the target does not exhibit; a powered miss therefore said "no member of *this* family" and nothing about the premise.
-- **Calibration range equal to plant range.** One engine calibrated its English gate on the same corpus tail it planted from; this affects gate calibration (optimistic thresholds) rather than recovery, but it was recorded as a defect.
-- **Plants that cannot exercise a code path.** Keys drawn without the zero shift never tested the orbit filter's handling of fixed points; when the filter was later found to reject valid identity and half-turn rotations, about 21% of planted truths for one relation had been silently discarded by the control's own filter.
+- **Controls mismatched to the live problem.** An independent audit asked why lanes recovering plants at 97 to 100% power missed every live run. The controls were matched to the selectors, but they populated a region of the family whose statistics the target does not exhibit. A powered miss therefore said "no member of *this* family" and nothing about the premise.
+- **Calibration range equal to plant range.** One engine calibrated its English gate on the same corpus tail it planted from. This affects gate calibration (optimistic thresholds) rather than recovery, but it was recorded as a defect.
+- **Plants that cannot exercise a code path.** Keys drawn without the zero shift never tested the orbit filter's handling of fixed points. When the filter was later found to reject valid identity and half-turn rotations, about 21% of planted truths for one relation had been silently discarded by the control's own filter.
 - **Gauge-fixed comparison.** A control compared the recovered secondary plaintext in one fixed gauge, so the true key "missed" in about 25 of 26 plants. See [Gauge-defect invalidation](/validation/gauge-defect-invalidation).
 - **Reading a wiring test as power.** Two blind controls whose truth sat at the front of the task order were reclassified from a power pass to a pipeline-correctness pass once an auditor noticed the ordering.
 '''
@@ -97,7 +144,7 @@ A target row printed under a `CONTROL GATE: FAIL` line is annotated as uninforma
 [[blocks]]
 kind = "notes"
 body = '''
-The controls in this atlas are planted from a generic English corpus and random keys. Because they share nothing with any live text, they can be published, replayed and audited freely; the only secret in a *blind* control is the seed, and that is committed by hash before the run and revealed in the transcript afterwards.
+The controls in this atlas are planted from a generic English corpus and random keys. Because they share nothing with any live text, they can be published, replayed and audited freely. The only secret in a *blind* control is the seed, and that is committed by hash before the run and revealed in the transcript afterwards.
 '''
 
 [[provenance]]

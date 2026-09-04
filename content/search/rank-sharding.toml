@@ -23,13 +23,13 @@ reduce: G <- max_h L_h; keep rows with |F(x) - G| <= TOL; sum their tie counts;
         choose the minimum (key_index, perm_index, literal) as the representative
 ```
 
-Cumulative rank shards are the same idea over a k-best schedule: ranks 1-32, 33-64, 65-128, 129-256, 257-512, each finished completely; a hit never terminates a shard or the remaining schedule.
+Cumulative rank shards are the same idea over a k-best schedule: ranks 1-32, 33-64, 65-128, 129-256, 257-512, each finished completely. A hit never terminates a shard or the remaining schedule.
 '''
 
 [[blocks]]
 kind = "equations"
 body = '''
-Exactness of local pruning: if admissible bounds satisfy $F(i) \le U(i)$ for every state and $s_h \le L_h$ is any feasible score found inside shard $h$, then a state in the shard's tolerance band obeys $F(i) \ge L_h - \text{TOL} \ge s_h - \text{TOL}$, so it passes the local gate $U(i) \ge s_h - \text{TOL}$; anything rejected by the gate cannot be the shard winner. Local seeds and survivor counts may differ from the monolithic run; the closed local result cannot.
+Exactness of local pruning: if admissible bounds satisfy $F(i) \le U(i)$ for every state and $s_h \le L_h$ is any feasible score found inside shard $h$, then a state in the shard's tolerance band obeys $F(i) \ge L_h - \text{TOL} \ge s_h - \text{TOL}$, so it passes the local gate $U(i) \ge s_h - \text{TOL}$; anything rejected by the gate cannot be the shard winner. Local seeds and survivor counts may differ from the monolithic run. The closed local result cannot.
 
 Exact tie merge: a globally tied $x$ with $G - \text{TOL} \le F(x) \le L_h \le G$ satisfies $0 \le L_h - F(x) \le \text{TOL}$, so its own shard must have emitted it. Merging only per-shard aggregate tie counts is not exact.
 
@@ -40,7 +40,7 @@ Coverage under a cap: with tasks in a deterministic order and a truth uniformly 
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- Per-state values ($U(i)$, $F(i)$, literal representative, inner tie count) depend only on the immutable input and the state, never on an incumbent, another state or traversal order; this is what makes shard results identical to the monolithic ones.
+- Per-state values ($U(i)$, $F(i)$, literal representative, inner tie count) depend only on the immutable input and the state, never on an incumbent, another state or traversal order. This is what makes shard results identical to the monolithic ones.
 - Shards are adjacent and disjoint at runtime (checked), every emitted endpoint is unique, and a shard that times out, breaches memory, truncates or exits non-zero permanently fails the run; there is no retry or widening.
 - The order is frozen before outcomes: rank schedules are nonadaptive and cumulative; hash order is deterministic so a processed prefix is a resumable segment.
 '''
@@ -49,25 +49,58 @@ body = '''
 kind = "attack"
 title = "How to attack it"
 body = '''
-- **Rank shards of a two-stage selector.** Stage one exhausts an exact family (128 forward classes, 26,624 provenance rows); stage two finishes monogram-ranked method classes in five cumulative shards to rank 512 (a sealed successor: seven shards to 2,048). Each shard record binds its rank range, cumulative seed/class/tie counts, digests and the running winner; the whole selector is replayed in a separate supervised process before the transcript is committed.
-- **Index ranges of an exact core.** A universe of $64 \times 9! = 23{,}224{,}320$ states (64 retained keys times all permutations of nine columns) is cut into eight half-open ranges of $2{,}903{,}040$ states, each eight complete key blocks; the core also supports ranges that split a key by seeding each intersected fragment.
-- **Hash-ordered segments.** A pair frontier of about $1.7$ million tasks is processed in deterministic hash order with a declared time cap; a segment option runs any $[a, b)$ of the same order, so idle time can accumulate exact coverage.
+- **Rank shards of a two-stage selector.** Stage one exhausts an exact family (128 forward classes, 26,624 provenance rows); stage two finishes monogram-ranked method classes in five cumulative shards to rank 512 (a sealed successor: seven shards to 2,048). Each shard record binds its rank range, cumulative seed/class/tie counts, digests and the running winner. The whole selector is replayed in a separate supervised process before the transcript is committed.
+- **Index ranges of an exact core.** A universe of $64 \times 9! = 23{,}224{,}320$ states (64 retained keys times all permutations of nine columns) is cut into eight half-open ranges of $2{,}903{,}040$ states, each eight complete key blocks. The core also supports ranges that split a key by seeding each intersected fragment.
+- **Hash-ordered segments.** A pair frontier of about $1.7$ million tasks is processed in deterministic hash order with a declared time cap. A segment option runs any $[a, b)$ of the same order, so idle time can accumulate exact coverage.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Universe of states indexed 0 .. U-1 in a frozen order; exact score F;
+// tolerance TOL. Shards [s_h, e_h) are declared before any outcome: s_0 = 0,
+// e_h = s_{h+1}, last e = U.
+function RUN_SHARD(h):
+    // L_h = local maximum; rows_h = every
+    (status, scanned, L_h, rows_h) = exact core on [s_h, e_h)
+                                                                // x with |F(x) - L_h| <= TOL,
+                                                                // with its literal
+                                                                // representative
+    // no retry, no widening
+    if status != COMPLETE or scanned != e_h - s_h: mark shard h FAILED
+    else record (L_h, rows_h) with its digest
+
+function REDUCE(shards):
+    // an unfinished shard supports no conclusion
+    if any shard is FAILED or missing: refuse
+    G = max over h of L_h
+    // row-level merge, not per-shard counts
+    ties = [x in the union of all rows_h with |F(x) - G| <= TOL]
+    tie_count = sum over x in ties of the inner tie count of x
+    representative = minimum (key_index, perm_index, literal) among ties
+    return (G, tie_count, representative)
+
+// Cumulative rank shards over a k-best schedule are the same loop with [s_h,
+// e_h) = rank ranges; a hit inside a shard never stops that shard or the
+// remaining schedule.
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-Recorded: the 512-rank validation first pass took 265.004 s with peak resident memory 577,585,152 bytes for six fixtures; the eight-shard engineering plan projects about 81.4 s per shard from a monolithic light attempt that scanned 10,694,688 bound-pruned states in 300.011 s (a projection, not evidence); hash-order segments ran at 0.17-16.1 pairs per second per fixture on two threads (median 1.21), and a live frontier of 1,706,348 pairs at 0.148 pairs per second on six threads gives 0.75% coverage in 24 hours and about 134 days for a natural drain.
+Recorded: the 512-rank validation first pass took 265.004 s with peak resident memory 577,585,152 bytes for six fixtures. The eight-shard engineering plan projects about 81.4 s per shard from a monolithic light attempt that scanned 10,694,688 bound-pruned states in 300.011 s (a projection, not evidence); hash-order segments ran at 0.17-16.1 pairs per second per fixture on two threads (median 1.21), and a live frontier of 1,706,348 pairs at 0.148 pairs per second on six threads gives 0.75% coverage in 24 hours and about 134 days for a natural drain.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Incomplete shard.** A killed or capped shard proves nothing about its interval; the reducer refuses it.
+- **Incomplete shard.** A killed or capped shard proves nothing about its interval. The reducer refuses it.
 - **Naive tie aggregation.** On a synthetic tie trap, exhaustive enumeration and the row-level reducer both report 3 ties while per-shard aggregation reports 7.
-- **Schedule too shallow.** A truth at rank 790 is missed by a top-512 schedule (by design of the sentinel); the remedy is a new sealed schedule, never widening after the fact.
+- **Schedule too shallow.** A truth at rank 790 is missed by a top-512 schedule (by design of the sentinel). The remedy is a new sealed schedule, never widening after the fact.
 - **Undrainable frontier.** When throughput is limited, coverage at the cap is the power: a family whose frontier would need 40 thread-days per relation was declared not drainable with that core, and every capped non-hit is recorded as scoped-inconclusive, not negative.
-- **Serialization defects.** A validation attempt completed its full 512-rank pass and was then rejected at replay because a tuple-of-tuples emitted through JSON compared unequal to the in-memory record; the empty failed transcript is retained and the corrected wrapper re-ran the whole pass.
+- **Serialization defects.** A validation attempt completed its full 512-rank pass and was then rejected at replay because a tuple-of-tuples emitted through JSON compared unequal to the in-memory record. The empty failed transcript is retained and the corrected wrapper re-ran the whole pass.
 '''
 
 [[blocks]]

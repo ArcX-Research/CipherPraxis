@@ -40,9 +40,9 @@ body = '''
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- Periodic shifts; one ciphertext alphabet for the whole text.
+- Periodic shifts. One ciphertext alphabet for the whole text.
 - Invariant: within-coset equalities of ciphertext letters are equalities of plaintext letters.
-- The straight plaintext side means the plaintext histogram is known exactly; only the ciphertext labelling is unknown.
+- The straight plaintext side means the plaintext histogram is known exactly. Only the ciphertext labelling is unknown.
 '''
 
 [[blocks]]
@@ -51,20 +51,51 @@ title = "How to attack it"
 body = '''
 1. Recover the period from coincidence statistics (alignment in a guessed order is uninformative here).
 2. **Bank**: decrypt with every structured ciphertext alphabet, fit the shifts, rank by quadgrams.
-3. **Crib**: derive the shifts from the crib votes for each candidate alphabet and anneal the alphabet with the batched annealer; a Quagmire II swap changes two ciphertext slots, so more restarts are needed than for Quagmire I.
+3. **Crib**: derive the shifts from the crib votes for each candidate alphabet and anneal the alphabet with the batched annealer. A Quagmire II swap changes two ciphertext slots, so more restarts are needed than for Quagmire I.
 4. Compare against the wrong-placement null of the same sweep.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// P is the straight alphabet and C the mixed ciphertext alphabet; pos is the
+// straight index, pos_C the index in C.
+function ENCRYPT(p[0..n-1], C, k[0..m-1]):
+    for i in 0..n-1:
+        c[i] = C[(pos(p[i]) + k[i mod m]) mod 26]
+    return c
+
+function DECRYPT(c[0..n-1], C, k[0..m-1]):
+    for i in 0..n-1:
+        p[i] = straight_alphabet[(pos_C(c[i]) - k[i mod m]) mod 26]
+    return p
+
+// Bank attack: every structured candidate C, shifts fitted per coset, ranked
+// by quadgram rate.
+function BANK_ATTACK(c, bank, m):
+    for each C in bank:
+        // per coset, the shift with the best language fit
+        k = FIT_SHIFTS(c, C, m)
+        score[C] = QUADGRAM_RATE(DECRYPT(c, C, k))
+    return the best C and its k
+
+// Crib attack: a crib letter at position i gives k[i mod m] = pos_C(c[i]) -
+// pos(crib letter) for the candidate C; C is then annealed under quadgrams (a
+// swap moves two ciphertext slots, so more restarts are needed).
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-Same machinery as Quagmire I: one chain per (crib, offset, relation, restart) with 16 restarts of 40,000 steps in calibration; the three calibration seeds took 301, 377 and 457 seconds each at seven crib lengths.
+Same machinery as Quagmire I: one chain per (crib, offset, relation, restart) with 16 restarts of 40,000 steps in calibration. The three calibration seeds took 301, 377 and 457 seconds each at seven crib lengths.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Seed dependence.** One of three planted seeds failed at most crib lengths while the other two solved from 7-letter cribs; the number of converging restarts was 0 to 7 of 16, against 9 to 16 for Quagmire I. Power per crib is moderate, so a negative sweep excludes the family only moderately.
+- **Seed dependence.** One of three planted seeds failed at most crib lengths while the other two solved from 7-letter cribs. The number of converging restarts was 0 to 7 of 16, against 9 to 16 for Quagmire I. Power per crib is moderate, so a negative sweep excludes the family only moderately.
 - **No crib.** Blind alphabet search fails for the same reasons as for Quagmire III.
 - **Wrong period or key change.** As for Quagmire I.
 '''
@@ -95,7 +126,7 @@ Check position 2: A is 0, plus 12 gives 12, and letter 12 of $C$ is `J`. Ciphert
 [[blocks]]
 kind = "notes"
 body = '''
-Quagmire II was the long shot in the program's reading of the two short texts because their cosets did align in a fixed order; it was swept anyway because the crib attack was cheap once built, and the moderate control power is reported so that the negative is weighted accordingly.
+Quagmire II was the long shot in the program's reading of the two short texts because their cosets did align in a fixed order. It was swept anyway because the crib attack was cheap once built, and the moderate control power is reported so that the negative is weighted accordingly.
 '''
 
 [[provenance]]

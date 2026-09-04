@@ -17,21 +17,21 @@ Let $Q_A(k)$ denote the additive substitution $c = A[\,A^{-1}(p) + k_{i \bmod m}
 
 $$Q_A(k^{(2)}) \circ Q_A(k^{(1)}) = Q_A(k), \qquad k_i = k^{(1)}_{i \bmod m_1} + k^{(2)}_{i \bmod m_2}, \qquad \text{period } \operatorname{lcm}(m_1, m_2).$$
 
-Two rounds in **different** orders, $Q_B(k^{(2)}) \circ Q_A(k^{(1)})$, are a fixed substitution per residue $i \bmod \operatorname{lcm}(m_1,m_2)$ that is not a rotation of one alphabet; the composite belongs to the family of "one arbitrary substitution per coset". Every round-based reading of a ciphertext is therefore either a compound key (same alphabet) or a coset-substitution family (different alphabets); neither adds structure beyond those two, but the round description restricts the key space enough to enumerate.
+Two rounds in **different** orders, $Q_B(k^{(2)}) \circ Q_A(k^{(1)})$, are a fixed substitution per residue $i \bmod \operatorname{lcm}(m_1,m_2)$ that is not a rotation of one alphabet. The composite belongs to the family of "one arbitrary substitution per coset". Every round-based reading of a ciphertext is therefore either a compound key (same alphabet) or a coset-substitution family (different alphabets); neither adds structure beyond those two, but the round description restricts the key space enough to enumerate.
 '''
 
 [[blocks]]
 kind = "equations"
 title = "Fingerprints"
 body = '''
-A compound key of periods $7$ and $2$ in one alphabet shows alignment at both periods and their multiples: on a planted example the period-7 alignment fell to $z +3.2$ (plain period-7 reference $+7.4$) while period 14 rose to $+5.3$ (logs/312). Rounds in different alphabets give monoalphabetic cosets whose histograms are not rotations of each other in any single order, so the exact alignment weakens while the within-coset index of coincidence stays at the language level; this is the signature the corpus's family classifier groups with unknown-alphabet substitutions.
+A compound key of periods $7$ and $2$ in one alphabet shows alignment at both periods and their multiples: on a planted example the period-7 alignment fell to $z +3.2$ (plain period-7 reference $+7.4$) while period 14 rose to $+5.3$ (logs/312). Rounds in different alphabets give monoalphabetic cosets whose histograms are not rotations of each other in any single order, so the exact alignment weakens while the within-coset index of coincidence stays at the language level. This is the signature the corpus's family classifier groups with unknown-alphabet substitutions.
 '''
 
 [[blocks]]
 kind = "assumptions"
 body = '''
 - The round keys come from a small declared set (a handful of candidate words, plus the two reference alphabets and six keyed variants of each word) so that exact enumeration is possible; with free keys the family is the general coset-substitution family and needs other tools.
-- Round periods are known or small; the composite period must divide the text length usefully (a period-45 composite over 153 letters leaves 3 letters per coset).
+- Round periods are known or small. The composite period must divide the text length usefully (a period-45 composite over 153 letters leaves 3 letters per coset).
 '''
 
 [[blocks]]
@@ -39,10 +39,53 @@ kind = "attack"
 title = "How to attack it"
 body = '''
 1. Fix the candidate word set, the alphabets per round and the relation per round (additive or reciprocal).
-2. For $r = 1 \dots 4$ rounds enumerate every ordered choice of words, alphabets and relations; decrypt exactly (no search) and score with quadgrams; a true combination reads at the language rate at once.
-3. Calibrate with a planted $r$-round control that must rank first; the corpus control ranked first among 98k combinations.
+2. For $r = 1 \dots 4$ rounds enumerate every ordered choice of words, alphabets and relations; decrypt exactly (no search) and score with quadgrams. A true combination reads at the language rate at once.
+3. Calibrate with a planted $r$-round control that must rank first. The corpus control ranked first among 98k combinations.
 4. Same-alphabet rounds are handled once as a compound key: alternate exact monogram maximisation of the $m_1 + m_2$ shifts from many random starts (the alignment is useless here because the inner round flattens the cosets), then quadgram polish, with shuffled-text nulls (controls at $z +51$ and $+27$, 100% match, logs/06).
 5. Report the family as excluded only for the declared word set, alphabets, relations and round count.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Ciphertext c[0..n-1]; word set W; alphabet orders (reference and
+// word-keyed); relations {additive, reciprocal}; rounds r = 1..4. round =
+// (key word, order A, relation); Q_A(k): c = A[A^-1(p) + k_{i mod m}]
+function ROUND_DECRYPT(c, round):
+    k = the shifts of the key word;  m = |key word|
+    for i in 0..n-1:
+        // reciprocal: A[ (k[i mod m] - A^-1(c[i])) mod 26 ]
+        p[i] = A[ (A^-1(c[i]) - k[i mod m]) mod 26 ]
+    return p
+
+function ENUMERATE_ROUNDS(c, W, orders, relations, r_max):
+    for r in 1..r_max:
+        for every ordered choice of r rounds (word in W, order in orders,
+                relation in relations):
+            p = c
+            // exact decrypt, no search
+            for round in reverse order of application:
+                p = ROUND_DECRYPT(p, round)
+            rate[choice] = QUADGRAM_RATE(p)
+    // a true combination reads at the language rate at once
+    return choices ranked by rate
+
+function MULTIPLE_ROUNDS(c, W, orders, relations, r_max):
+    control = a known text under a planted r-round construction drawn from
+            the same sets
+    // enumeration broken
+    if ENUMERATE_ROUNDS(control, W, orders, relations, r_max) does not rank
+            the planted combination first:
+        stop
+    ranked = ENUMERATE_ROUNDS(c, W, orders, relations, r_max)
+    // rounds in one order are a single compound key of period lcm(m_1, m_2):
+    // fit it once by alternating exact monogram maximisation of the m_1 + m_2
+    // shifts from many random starts, then quadgram polish, against
+    // shuffled-text nulls excluded only for the declared words, orders,
+    // relations and round count
+    return (ranked top rates against the noise level)
+```
 '''
 
 [[blocks]]
@@ -54,9 +97,9 @@ $|W|^r \cdot |\mathcal{A}|^r \cdot 2^r$ exact decrypts; with four words, three e
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Redundancy.** Enumerating same-alphabet rounds as rounds re-tests a single compound key many times; a periodic solver over the composite period already covers it.
+- **Redundancy.** Enumerating same-alphabet rounds as rounds re-tests a single compound key many times. A periodic solver over the composite period already covers it.
 - **Unfalsifiable variants.** A "sequence of key words per 7-letter block" drawn from a 25k-word dictionary makes any text read like English: the control scored $-3.84$ with only 51% of its letters right and shuffled text reached $-4.04$ (logs/40). Only a constrained word set (704 words including one-letter variations: control $-3.97$ at 88% match, logs/39) is a test.
-- **Cluster inseparability.** "Four rounds in varied alphabets" sits in the family cluster the invariant statistics cannot split at 153 letters (Mahalanobis $d^2 = 13.2$ against $10.7$ for the nearest member, logs/04); a negative enumeration does not exclude the general coset-substitution family.
+- **Cluster inseparability.** "Four rounds in varied alphabets" sits in the family cluster the invariant statistics cannot split at 153 letters (Mahalanobis $d^2 = 13.2$ against $10.7$ for the nearest member, logs/04). A negative enumeration does not exclude the general coset-substitution family.
 - **Unknown alphabets.** With a round in an unstructured alphabet the enumeration is impossible and the family reverts to the blind unknown-alphabet problem, which is power-limited at these lengths.
 '''
 
@@ -81,7 +124,7 @@ key two   0 1 2 0 1 2
 sum       0 2 2 1 1 3
 ```
 
-Encrypting `ATTACKATDAWN` with the composite gives `AVVBDNAVFBXQ` (for instance $T + 2 = V$, $K + 3 = N$, $D + 2 = F$), identical to applying the two rounds in turn. A period-6 solver recovers $(0,2,2,1,1,3)$ directly; the split into two rounds is not identifiable and not needed. Had round two used a different keyed alphabet, each of the six residue classes would carry its own fixed substitution and the composite would be a six-alphabet coset cipher rather than an additive one.
+Encrypting `ATTACKATDAWN` with the composite gives `AVVBDNAVFBXQ` (for instance $T + 2 = V$, $K + 3 = N$, $D + 2 = F$), identical to applying the two rounds in turn. A period-6 solver recovers $(0,2,2,1,1,3)$ directly. The split into two rounds is not identifiable and not needed. Had round two used a different keyed alphabet, each of the six residue classes would carry its own fixed substitution and the composite would be a six-alphabet coset cipher rather than an additive one.
 '''
 
 [[provenance]]

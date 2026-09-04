@@ -29,7 +29,7 @@ body = '''
 [[blocks]]
 kind = "assumptions"
 body = '''
-- The block length divides the text length (or a padding rule is declared); a 153-letter text cannot be partitioned into digraphs and was excluded from unpadded Hill-2.
+- The block length divides the text length (or a padding rule is declared). A 153-letter text cannot be partitioned into digraphs and was excluded from unpadded Hill-2.
 - The map is linear over $\mathbb{Z}_{26}$ with no layer other than the tested inner periodic one.
 - English monograms (or the inner model) are known so that row streams can be scored before rows are joined.
 '''
@@ -44,23 +44,59 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// n x n matrices over Z26. M is invertible iff det M is a unit (odd and not
+// divisible by 13). cofactor expansion along the first row
+function DET(M):
+    if n == 1: return M[0][0]
+    return sum over j in 0..n-1 of (-1)^j * M[0][j] * DET(MINOR(M, 0, j))
+
+function IS_INVERTIBLE_MOD26(M):
+    d = DET(M) mod 26
+    return d mod 2 != 0 and d mod 13 != 0
+
+// requires IS_INVERTIBLE_MOD26(M)
+function INVERSE_MOD26(M):
+    dinv = INVERSE_MOD(DET(M) mod 26, 26)         // extended Euclid
+    for i, j in 0..n-1:
+        // adjugate: transposed cofactors
+        A[i][j] = (-1)^(i+j) * DET(MINOR(M, j, i))
+        // M^{-1} = (det M)^{-1} adj(M)
+        Minv[i][j] = (dinv * A[i][j]) mod 26
+    return Minv
+
+// A row belongs to some invertible matrix iff it is non-zero mod 2 and
+// non-zero mod 13.
+function IS_PRIMITIVE_ROW(r[0..n-1]):
+    return (some r[j] mod 2 != 0) and (some r[j] mod 13 != 0)
+
+// Hill blocks: c_j = E p_j and p_j = D c_j with D = INVERSE_MOD26(E).
+function HILL_DECRYPT_BLOCK(D, c_block):
+    // one plaintext block of n letters
+    return (D * c_block) mod 26
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-Hill-2 composite: all 504 rows scored, top 192 rows and 400 valid unordered pairs per cell, both orders, 6,400 matrices per case; a width-4 cyclic quadgram DP screens all 6,400, the top 64 plus per-cell leaders reach width 8 and 26-way polishing. Hill-3: 15,372 rows; the 144-letter control's true row triple ranked 13th before ordering, so the production matrix budget is 24.
+Hill-2 composite: all 504 rows scored, top 192 rows and 400 valid unordered pairs per cell, both orders, 6,400 matrices per case. A width-4 cyclic quadgram DP screens all 6,400, the top 64 plus per-cell leaders reach width 8 and 26-way polishing. Hill-3: 15,372 rows. The 144-letter control's true row triple ranked 13th before ordering, so the production matrix budget is 24.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
 - **Round trip proves nothing**: any invertible guessed matrix round-trips; readability, controls and family-wise nulls are separate gates.
-- **Too narrow a row shortlist**: an early gate keeping only eight row pairs per cell failed because the planted pairs ranked 256 and 319 although the correct matrices decode exactly; the repaired selector retains 400 pairs.
+- **Too narrow a row shortlist**: an early gate keeping only eight row pairs per cell failed because the planted pairs ranked 256 and 319 although the correct matrices decode exactly. The repaired selector retains 400 pairs.
 - **Selection overfit**: the 126-letter period-26 zone produced a language-like endpoint at $-4.8689$, but the block-shuffled null panel $[-4.7396, -4.9329, -4.9579, -4.8972, -4.9598]$ contains a better value, so it is ordinary period-26 overfit, not a candidate.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Hill-2: n96/p7 control recovered 96/96 letters, hidden $D = \begin{pmatrix} 15 & 14 \\ 4 & 7 \end{pmatrix}$ (determinant $49 \equiv 23$, a unit), hidden period-7 key, order, relation, inverse and independent forward; n126/p26 control recovered 126/126 with $D = \begin{pmatrix} 9 & 4 \\ 25 & 25 \end{pmatrix}$ (determinant $125 \equiv 21$). Hill-3: controls matched to 153, 144 and 504 letters (direct, over period 9, over period 33) recovered their texts within the budget. Targets: the 96-letter zone's best endpoint $-6.0558$ (no); the 126-letter zone as above (no candidate); Hill-3 best completions $-5.72$, $-5.29$, $-6.52$ at decimated periods 18, 24, 33, none English.
+Hill-2: n96/p7 control recovered 96/96 letters, hidden $D = \begin{pmatrix} 15 & 14 \\ 4 & 7 \end{pmatrix}$ (determinant $49 \equiv 23$, a unit), hidden period-7 key, order, relation, inverse and independent forward; n126/p26 control recovered 126/126 with $D = \begin{pmatrix} 9 & 4 \\ 25 & 25 \end{pmatrix}$ (determinant $125 \equiv 21$). Hill-3: controls matched to 153, 144 and 504 letters (direct, over period 9, over period 33) recovered their texts within the budget. Targets: the 96-letter zone's best endpoint $-6.0558$ (no). The 126-letter zone as above (no candidate); Hill-3 best completions $-5.72$, $-5.29$, $-6.52$ at decimated periods 18, 24, 33, none English.
 '''
 
 [[blocks]]

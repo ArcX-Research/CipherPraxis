@@ -21,7 +21,7 @@ Actions relevant to keyed ciphers: $S_{26}$ on letters (substitution); $\mathrm{
 [[blocks]]
 kind = "equations"
 body = '''
-- **Affine action on cycle solutions.** $z' = \alpha z + \beta$, $\alpha \in U(\mathbb{Z}_{26})$, $\beta \in \mathbb{Z}_{26}$, with keys $k' = \alpha k + (1 - a_t)\beta$; the action on bijective cycles is free, orbits have $12 \cdot 26 = 312$ members.
+- **Affine action on cycle solutions.** $z' = \alpha z + \beta$, $\alpha \in U(\mathbb{Z}_{26})$, $\beta \in \mathbb{Z}_{26}$, with keys $k' = \alpha k + (1 - a_t)\beta$. The action on bijective cycles is free, orbits have $12 \cdot 26 = 312$ members.
 - **Units on shift triples.** Ordered triples of distinct shifts number $26 \cdot 25 \cdot 24 = 15{,}600$. Under $k \mapsto uk$ (Vigenère-type: $z \to uz$ gives $k \to uk$) the action is free, so there are $15{,}600 / 12 = 1{,}300$ canonical cells (1,157 with a unit shift, 143 with all shifts even). Under units combined with the 13 even translations (Beaufort-type: $k \to uk + 2\beta$) the group has order $12 \cdot 13 = 156$ and there are $15{,}600 / 156 = 100$ cells (78 mixed parity, 11 all even, 11 all odd).
 - **Larger equivalence in degenerate regimes.** When the class maps do not generate the full rotation group, the equivalence group of the cycle has order 4,056 rather than 312.
 - **Dihedral relabelling.** Requiring $g_0 = \mathrm{id}$ forces $h = \mathrm{id}$, so the $96^2 = 9{,}216$ ordered pairs are a set of orbit representatives with no residual quotient.
@@ -30,23 +30,59 @@ body = '''
 [[blocks]]
 kind = "assumptions"
 body = '''
-- The group must act on the parameters *and* leave the observable invariant; otherwise it is a family axis, not a symmetry.
+- The group must act on the parameters *and* leave the observable invariant. Otherwise it is a family axis, not a symmetry.
 - Freeness must be proved, not assumed: non-free actions give orbits of varying size, and canonical counts change.
 '''
 
 [[blocks]]
 kind = "attack"
 body = '''
-1. Enumerate orbit representatives rather than all parameters (1,300 or 100 cells instead of 15,600 triples; one cycle per 312-orbit).
+1. List one representative from each orbit instead of all parameters: 1,300 or 100 cells instead of 15,600 triples, and one cycle from each 312-member orbit.
 2. Score with gauge-invariant statistics; verify invariance by scoring full orbits in a KAT.
 3. In controls, compare recovered parameters modulo the orbit and report the witness $(\alpha, \beta)$; require the control truth to lie in the retained orbit.
 4. Use orbit sizes to convert raw description counts into effective search sizes ($26!/312 \approx 2^{80}$ cycle classes).
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// A group G acts on a set X through ACT(g, x); orbits partition X.
+function ORBIT(x, G):
+    return { ACT(g, x) : g in G }
+
+// distinguished member of the orbit
+function CANONICAL(x, G):
+    return min over g in G of ACT(g, x)             // lexicographic minimum
+
+function STABILISER_ORDER(x, G):
+    // |orbit| * |stabiliser| = |G|
+    return |{ g in G : ACT(g, x) == x }|
+
+// One representative per orbit, and a check that the action is free.
+function ORBIT_REPRESENTATIVES(X, G):
+    reps = []; seen = empty set; free = true
+    for x in X (in lexicographic order):
+        if x in seen: continue
+        orb = ORBIT(x, G)
+        if |orb| != |G|: free = false                // non-trivial stabiliser
+        reps.append(x); seen = seen union orb
+    // |reps| = number of orbits
+    return (reps, free)
+
+// Actions used for keyed additive ciphers (all arithmetic mod 26): affine on
+// a cycle:        ACT((alpha, beta), z) = alpha*z + beta, keys k' = alpha*k +
+// (1 - a_t)*beta units on shift vectors:   ACT(u, k) = u*k (Vigenère-type)
+// units and even shifts:    ACT((u, beta), k) = u*k + 2*beta (Beaufort-type)
+// latent relabelling h:     ACT(h, g_t) = h^{-1} g_t               (position
+// maps)
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-$|\mathrm{AGL}(1, \mathbb{Z}_{26})| = 312$; $15{,}600 \to 1{,}300$ or $100$; $9{,}216$ dihedral pairs; $26!/312 \approx 2^{80}$. Orbit partitioning of a solution set costs one canonicalisation per cycle; the controls verified $\text{cycles} = 312 \times \text{orbits}$ in every one of 1,728 cells.
+$|\mathrm{AGL}(1, \mathbb{Z}_{26})| = 312$; $15{,}600 \to 1{,}300$ or $100$; $9{,}216$ dihedral pairs; $26!/312 \approx 2^{80}$. Orbit partitioning of a solution set costs one canonicalisation per cycle. The controls verified $\text{cycles} = 312 \times \text{orbits}$ in every one of 1,728 cells.
 '''
 
 [[blocks]]
@@ -54,14 +90,14 @@ kind = "failure_modes"
 body = '''
 - Quotienting a transformation that is not a symmetry (the translation-gauge defect: the decrypt of a second text is not invariant under a coordinate translation, and comparing it in a fixed gauge failed correct solutions).
 - Grouping solutions by a canonical key without proving that each group is a full orbit inside the solution set and that the groups partition it.
-- Confusing parameter aliases (same plaintext, different parameters) with ties between distinct plaintexts; the degenerate small-modulus fixture produced four multiplier aliases of one latent.
+- Confusing parameter aliases (same plaintext, different parameters) with ties between distinct plaintexts. The degenerate small-modulus fixture produced four multiplier aliases of one latent.
 - A ranker built on pooled marginal edges failed to separate the true canonical cell (rank 1 in 0/20 plants; max rank 1,268): a scorer failure, not an orbit failure, and recorded as such.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Canonical cell enumeration proved by exhaustive KAT (15,600 triples to 1,300 and 100 orbits; sampled key-orbit sizes 12 and 156); score gauge-invariance over full orbits on 20 random triples in both relations; an exact one-hot prior ranked the true canonical cell uniquely first on 6 plants. Dihedral controls: all solution sets partitioned into complete, disjoint 312-orbits in 1,728 unit cells, and 300 matched-null selections with constant one-orbit geometry; small-modulus analogue orbits of size 12 verified complete and disjoint. Bank deduplication: 312 descriptions of one alphabet reduced to one class.
+Canonical cell enumeration proved by exhaustive KAT (15,600 triples to 1,300 and 100 orbits; sampled key-orbit sizes 12 and 156); score gauge-invariance over full orbits on 20 random triples in both relations. An exact one-hot prior ranked the true canonical cell uniquely first on 6 plants. Dihedral controls: all solution sets partitioned into complete, disjoint 312-orbits in 1,728 unit cells, and 300 matched-null selections with constant one-orbit geometry; small-modulus analogue orbits of size 12 verified complete and disjoint. Bank deduplication: 312 descriptions of one alphabet reduced to one class.
 '''
 
 [[blocks]]
@@ -76,7 +112,7 @@ Ordered distinct shift triples under units: a unit $u \ne 1$ fixes $(k_a, k_b, k
 [[blocks]]
 kind = "notes"
 body = '''
-Orbit counting is the quantitative side of [Conjugacy and gauge](/algebra/conjugacy-and-gauge); the specific groups are described under [Units mod 26](/algebra/units-mod-26), [Affine maps](/algebra/affine-maps-mod-26) and [Dihedral group](/algebra/dihedral-group).
+Orbit counting is the quantitative side of [Conjugacy and gauge](/algebra/conjugacy-and-gauge). The specific groups are described under [Units mod 26](/algebra/units-mod-26), [Affine maps](/algebra/affine-maps-mod-26) and [Dihedral group](/algebra/dihedral-group).
 '''
 
 [[provenance]]

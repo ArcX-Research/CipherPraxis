@@ -25,14 +25,14 @@ the period phase **not** restarted at the boundary. Text A (153 letters) uses $P
 [144, 153)   constant key  c again      9 letters (the cycled key wraps to P[0..8])
 ```
 
-so the derived stream has 8 key groups with counts $[62, 13, 13, 13, 13, 13, 13, 13]$. For a general alignment $\phi_{\delta,\rho}(i) = (\delta + \rho\, i) \bmod 144$ the group vector is $g(i) = 0$ if $\phi(i) < t$ and $1 + (\phi(i) \bmod 7)$ otherwise; it may contain several constant and periodic intervals and must be computed, not assumed.
+so the derived stream has 8 key groups with counts $[62, 13, 13, 13, 13, 13, 13, 13]$. For a general alignment $\phi_{\delta,\rho}(i) = (\delta + \rho\, i) \bmod 144$ the group vector is $g(i) = 0$ if $\phi(i) < t$ and $1 + (\phi(i) \bmod 7)$ otherwise. It may contain several constant and periodic intervals and must be computed, not assumed.
 '''
 
 [[blocks]]
 kind = "equations"
 title = "Selector and null"
 body = '''
-For each of 16 cells (two index orders for each text, two signs each): on the 91-letter periodic segment build the 26 monogram scores of each residue, keep the top 8, maximise the exact order-3 cyclic quadgram factor graph over the $8^7 = 2{,}097{,}152$ product with all ties retained, polish deterministically, then enumerate the constant $c$ (26 values) and, for same-order cells, the 26 gauge states $h' = h + \delta$, $c' = c + \delta$ (a physical orbit, not a representation artefact); $8 \times 676 + 8 \times 26 = 5{,}616$ finish states. The statistic is the maximum integer quadgram score of the full 153-letter $Q$ over the implemented union; $P$'s language is not used for selection. Gates: an English threshold ($-4.8324$ per letter, calibrated on a disjoint corpus range) and a distinct-pair gap gate ($30{,}592{,}997{,}516$ integer units, the largest identity gap among the admitted negatives; the smallest positive gap was $159{,}924{,}989{,}002$). Null: permute the letters of both sources independently within every (zone $\times$ absolute residue) stratum, 99 replicates, the whole selector rerun each time; advancement requires strict rank one ($p = 1/100$).
+The search has 16 cells: two index orders for each text and two signs for each order. For the 91-letter periodic segment, it scores all 26 monogram shifts for each residue and keeps the best 8. It then finds the exact maximum of the order-3 cyclic quadgram factor graph over all $8^7 = 2{,}097{,}152$ combinations, keeping every tie, and polishes the result in a fixed way. Next it tries all 26 values of $c$. Same-order cells also try the 26 gauge states $h' = h + \delta$, $c' = c + \delta$, which form a physical orbit rather than a representation artefact. This gives $8 \times 676 + 8 \times 26 = 5{,}616$ final states. The score is the highest integer quadgram score for the full 153-letter $Q$ across this union; the search does not use $P$'s language. Two gates apply: an English threshold of $-4.8324$ per letter, calibrated on a separate corpus range, and a distinct-pair gap of $30{,}592{,}997{,}516$ integer units, the largest identity gap among allowed negatives. The smallest positive gap was $159{,}924{,}989{,}002$. For the null test, the method independently shuffles both sources inside each (zone $\times$ absolute residue) group, repeats the full selection 99 times, and requires strict rank one ($p = 1/100$).
 '''
 
 [[blocks]]
@@ -49,31 +49,81 @@ title = "How to attack it"
 body = '''
 1. Measure the boundary in text B and freeze it; compute the complete group vector and report the group counts before scoring.
 2. Freeze the selector, the integer language tables and the gates on disclosed development fixtures drawn from a corpus range disjoint from training, calibration and hidden ranges; seal source, parser, runner and model hashes; obtain an independent exact-byte audit.
-3. Only then let an independent creator draw a hidden bank: 16 positives (one per cell, random $c$ and shifts, two with a structured rather than prose $P$), 2 valid-family negatives with independent-monogram $Q$, 2 no-chain negatives; each with its own 99-null bank. Run once; a failure burns the bank.
+3. Only then let an independent creator draw a hidden bank: 16 positives (one per cell, random $c$ and shifts, two with a structured rather than prose $P$), 2 valid-family negatives with independent-monogram $Q$, 2 no-chain negatives. Each with its own 99-null bank. Run once. A failure burns the bank.
 4. A target wrapper, if ever authorised, may end only in candidate-pending-adjudication, non-English selector-scoped, ambiguous selector-scoped, or incomplete; never in a family rejection or a decipherment claim.
 5. Sequence the cheap complete families first: a finite, exactly enumerable structured-plaintext family must be resolved before the heuristic chain is spent.
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Ciphertexts x (text B) and y (text A) as positions a(.) in one index order;
+// boundary t measured in x and frozen; alignment phi(i) = (delta + rho * i)
+// mod |x|; signs e_B, e_A; 16 cells = two orders per text x two signs; 99
+// nulls.
+function GROUP_VECTOR(phi, t, |y|):
+    // group 0: constant key c; groups 1..7: the period-7 key h
+    for i in 0..|y|-1: g[i] = 0 if phi(i) < t else 1 + (phi(i) mod 7)
+    // computed, never assumed
+    report the group counts before any scoring
+    return g
+
+// cell = (order for x, order for y, e_B, e_A)
+function SELECTOR(x, y, phi, t, cell):
+    // P cancels; d is Q under the key groups
+    d[i] = (a(y[i]) - e_B * a(x[phi(i)])) mod 26
+    g = GROUP_VECTOR(phi, t, |y|)
+    for residue j in 0..6:
+        shortlist[j] = the best 8 of the 26 monogram shifts on the positions
+                with g[i] == 1 + j
+    // all 8^7 combinations; every tie kept; fixed polish
+    (h, ties) = EXACT_CYCLIC_QUADGRAM_DP(d, shortlist)
+    // h' = h + s, c' = c + s
+    for c in 0..25, gauge s in (0..25 if the cell is same-order else {0}):
+        Q = RECONSTRUCT(d, g, c', h', e_A, e_B)
+        // Q only; P's language is not used
+        score = INTEGER_QUADGRAM_SCORE(Q)
+    return (max score over the finish states, its state)
+
+function SEGMENT_CHAIN(x, y, phi, t):
+    observed = max over the 16 cells of SELECTOR(x, y, phi, t, cell)
+    for r in 1..99:
+        (x_r, y_r) = shuffle both sources independently within each (zone x
+                absolute residue) group
+        // the full selection repeated
+        null[r] = max over cells of SELECTOR(x_r, y_r, phi, t, cell)
+    passed = observed > every null[r] and observed passes the English
+            threshold and the distinct-pair gap gate
+    // end states: candidate pending adjudication, non-English, ambiguous, or
+    // incomplete; never a family rejection
+    return (state, observed, passed)
+// Protocol around the run: freeze selector, tables and gates on disclosed
+// development fixtures; seal and audit; one hidden-bank run; resolve the
+// cheaper, exactly enumerable families before spending the chain.
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-Per cell about $7 \times 8^7 \approx 1.5 \times 10^7$ max-add operations; per fixture with 99 nulls 1,600 cell solves and 561,600 full-candidate evaluations; the 20-fixture suite 32,000 cell solves, budgeted at 12 CPU-hours, 3 wall-hours, 1.5 GiB per worker.
+Per cell about $7 \times 8^7 \approx 1.5 \times 10^7$ max-add operations; per fixture with 99 nulls 1,600 cell solves and 561,600 full-candidate evaluations. The 20-fixture suite 32,000 cell solves, budgeted at 12 CPU-hours, 3 wall-hours, 1.5 GiB per worker.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
 - **Variable-length bias.** Maximising a raw sum over streams of different length made an earlier design's score grow deterministically with $t$; fixing $t$ makes every cell's periodic segment 91 letters and removes the bias.
-- **Incomplete search read as absence.** The $8^7$ product is exact only inside the monogram shortlist; the full $26^7$ family is not enumerated (8,031,810,176 states per cell), so a miss terminates as incomplete, never as a structural zero.
-- **Degenerate nulls.** Shuffles within the derived cosets leave histogram statistics unchanged; the stratified source-level permutation destroys adjacency and the cross-text pairing while preserving every stratum histogram.
-- **Inconsistent premise.** Simulated chains predict for text A a period-7 alignment of $z \approx +0.1$ and a zone coset IC of $0.040$; measured $+4.2$ and $0.066$ (coupling note, section 5). A hidden pass validates the instrument, not the family's presence.
-- **Leakage.** Language tables trained on ranges that contain later control windows invalidate the controls; the design fixes disjoint ranges and a dead gap.
+- **Incomplete search read as absence.** The $8^7$ product is exact only inside the monogram shortlist. The full $26^7$ family is not enumerated (8,031,810,176 states per cell), so a miss terminates as incomplete, never as a structural zero.
+- **Degenerate nulls.** Shuffles within the derived cosets leave histogram statistics unchanged. The stratified source-level permutation destroys adjacency and the cross-text pairing while preserving every stratum histogram.
+- **Inconsistent premise.** Simulated chains predict for text A a period-7 alignment of $z \approx +0.1$ and a zone coset IC of $0.040$; measured $+4.2$ and $0.066$ (coupling note, section 5). A hidden pass validates the test, not the family's presence.
+- **Leakage.** Language tables trained on ranges that contain later control windows invalidate the controls. The design fixes disjoint ranges and a dead gap.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Admitted controls-only run (logs/373): terminal "CONTROL_PASS_POWERED_INCOMPLETE_SELECTOR", exact 16/16, negatives 4/4, generator ties 0, target absent, mode FULL; every positive recovered all 153 letters of $Q$, all 144 letters of $P$ up to the declared gauge, the constant and the seven phase values, the planted cell and orbit, with two independent forwards and strict rank one against its 99 nulls. Replaying all 5,616 states of the four negatives gave identity gaps of 30,592,997,516; 8,298,729,871; 16,310,891,486; 2,169,186,315, from which the gap gate was frozen. A two-regime variant recovered 10/10 synthetic pairs in a separate derivation.
+Admitted controls-only run (logs/373): terminal "CONTROL_PASS_POWERED_INCOMPLETE_SELECTOR", exact 16/16, negatives 4/4, generator ties 0, target absent, mode FULL. Every positive recovered all 153 letters of $Q$, all 144 letters of $P$ up to the declared gauge, the constant and the seven phase values, the planted cell and orbit, with two independent forwards and strict rank one against its 99 nulls. Replaying all 5,616 states of the four negatives gave identity gaps of 30,592,997,516; 8,298,729,871; 16,310,891,486; 2,169,186,315, from which the gap gate was frozen. A two-regime variant recovered 10/10 synthetic pairs in a separate derivation.
 '''
 
 [[blocks]]

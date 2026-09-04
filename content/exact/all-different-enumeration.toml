@@ -47,7 +47,7 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - The system is homogeneous once gauged, hence always consistent: **rank never rejects**. On a target-absent plant, one 10-letter word gives nullities $(24, 24)$ for the true crib versus $(23, 23)$ for a wrong one, one 18-letter word $(15, 15)$ for both, and two words of 15 + 18 letters $(3, 3)$ versus $(2, 2)$, with 0 of 40 wrong pairs linearly inconsistent.
-- Enumeration is affordable only when $d_{13}$ is small: measured costs of 0.4-10 ms for $d_{13} \le 4$ and about 94 ms at $d_{13} = 5$ (later 44 ms with cached digit matrices); the probability that a pair reaches $d_{13} \le 5$ rises from 0.14 at 14 letters to 0.74 at 18 and 0.99 at 20.
+- Enumeration is affordable only when $d_{13}$ is small: measured costs of 0.4-10 ms for $d_{13} \le 4$ and about 94 ms at $d_{13} = 5$ (later 44 ms with cached digit matrices). The probability that a pair reaches $d_{13} \le 5$ rises from 0.14 at 14 letters to 0.74 at 18 and 0.99 at 20.
 - Unobserved letters must be left free: keeping them as columns inflates the null space (an 18-letter pair showed nullity 8 before projection and 5 after).
 '''
 
@@ -55,10 +55,47 @@ body = '''
 kind = "attack"
 title = "How to attack it"
 body = '''
-- **Two-crib systems.** Pairs of candidate phrases placed anywhere in a zone; after the first 240 high-dimension pairs per bank, the remaining systems were processed at a $13^7$ budget: 8,851 systems (941 from the semantic bank, 7,910 from nine matched decoy banks), zero all-different reads, so zero completions; the earlier stage had found all 245,766 candidate pairs linearly consistent, which is the rank-never-rejects fact in production.
-- **Word-pair chain CSP.** Two words of at least 18 letters combined in one constant-key class: 3,860 placements and 299,563 candidate pairs on a plant; nullity histogram over 600 random pairs $0{:}4,\ 1{:}23,\ 2{:}102,\ 3{:}198,\ 4{:}194,\ 5{:}55,\ 6{:}24$; 12.4 ms per pair on average; a planted pair returned 144 all-different solutions containing the planted cycle up to the unit gauge.
+- **Two-crib systems.** Pairs of candidate phrases placed anywhere in a zone; after the first 240 high-dimension pairs per bank, the remaining systems were processed at a $13^7$ budget: 8,851 systems (941 from the semantic bank, 7,910 from nine matched decoy banks), zero all-different reads, so zero completions. The earlier stage had found all 245,766 candidate pairs linearly consistent, which is the rank-never-rejects fact in production.
+- **Word-pair chain CSP.** Two words of at least 18 letters combined in one constant-key class: 3,860 placements and 299,563 candidate pairs on a plant; nullity histogram over 600 random pairs $0{:}4,\ 1{:}23,\ 2{:}102,\ 3{:}198,\ 4{:}194,\ 5{:}55,\ 6{:}24$; 12.4 ms per pair on average. A planted pair returned 144 all-different solutions containing the planted cycle up to the unit gauge.
 - **Anchored residue systems.** For three related texts sharing one cycle, eliminating the latent and the per-text offsets gives exact null spaces of dimension $(2, 2)$ over the two fields on every plant: 676 raw combinations of which exactly 312 are all-different, one gauge orbit of order $12 \times 26 = 312$.
 - **Direct letter-guess systems.** Without a free constant each guessed letter is one row; 32/32 exact recoveries at crib length 26 with typical dimensions 2-4 and 12-24 solutions per crib.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Inputs: homogeneous rows over Z26 in the observed letters, gauge row z(X0)
+// = 0 included. Output: every all-different read z, one representative per
+// orbit {u z + b} (312 images).
+function ALL_DIFFERENT_READS(rows, observed_letters, cap):
+    N2  = NULL_SPACE(rows mod 2,  GF(2));   d2  = dim(N2)
+    N13 = NULL_SPACE(rows mod 13, GF(13));  d13 = dim(N13)
+    // counted explicitly, never a rejection
+    if d13 > cap: return UNRESOLVED
+    reads = []
+    // 13^d13 residue vectors mod 13
+    for each v13 in span(N13):
+        if some residue mod 13 is carried by three or more letters: continue
+        // 2^d2 parity vectors mod 2
+        for each v2 in span(N2):
+            ok = true
+            for each pair of letters (x, y) with v13[x] == v13[y]:
+                // same residue and same parity: collision
+                if v2[x] == v2[y]: ok = false
+            if not ok: continue
+            // z[x] = 13 v2[x] + 14 v13[x] mod 26
+            z = CRT(v2, v13)
+            assign the unused positions to the unobserved letters
+            // keep every distinct read
+            reads.append(z)
+    // 12 units x 26 translations -> 1 class
+    return CANONICALISE(reads)
+
+// Parity conditions are linear in the GF(2) null-space coefficients once v13
+// is fixed, so the inner loop can be solved instead of enumerated: work 2^d2
+// + 13^d13, not the product.
+```
 '''
 
 [[blocks]]
@@ -70,10 +107,10 @@ Null spaces by Gaussian elimination over each field: $O(m \cdot r^2)$ for $m$ ro
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Fixed gauge on the wrong object.** A selector fixed $z(C_0) = 0$ and then scored a second text whose decrypt is not translation-invariant: the true cycle failed the "exact second text" check in about 25 of 26 plants because that decrypt was a rotation of the physical one; the run was invalidated and the successor maximises the second text's score over the 26 translations.
+- **Fixed gauge on the wrong object.** A selector fixed $z(C_0) = 0$ and then scored a second text whose decrypt is not translation-invariant: the true cycle failed the "exact second text" check in about 25 of 26 plants because that decrypt was a rotation of the physical one. The run was invalidated and the successor maximises the second text's score over the 26 translations.
 - **Single-orbit, first-match selection.** A certified core solved only the canonical form of the first returned cycle and returned on the first sign partition whose forward reproduced; with a tautological forward (every key reproduces, 200/200 wrong keys did) the pipeline could not select and was blocked for global use.
-- **Keeping one read per system.** The best-partial-read rule lost a planted pair whose true read ranked second; every distinct read must be kept.
-- **Large nullity.** A single word of any length up to about 20 leaves $13^{15}$ or more solutions; nothing can be enumerated, and nothing is rejected.
+- **Keeping one read per system.** The best-partial-read rule lost a planted pair whose true read ranked second. Every distinct read must be kept.
+- **Large nullity.** A single word of any length up to about 20 leaves $13^{15}$ or more solutions. Nothing can be enumerated, and nothing is rejected.
 '''
 
 [[blocks]]

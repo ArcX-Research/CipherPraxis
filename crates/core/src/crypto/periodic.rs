@@ -83,7 +83,7 @@ fn decipher_letter(c: u8, k: u8, v: Variant) -> u8 {
 fn key_indices(key: &str) -> Result<Vec<u8>, String> {
     let k = normalize(key);
     if k.is_empty() {
-        return Err("key must contain at least one letter".into());
+        return Err("Enter a key with at least one letter.".into());
     }
     Ok(k.bytes().map(|b| b - b'A').collect())
 }

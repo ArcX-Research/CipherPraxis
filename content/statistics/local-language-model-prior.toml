@@ -25,9 +25,9 @@ As a reranker the required quantity is the full-sequence log-likelihood $L(x) = 
 [[blocks]]
 kind = "assumptions"
 body = '''
-- **Provenance.** The model predates the texts under attack, or its training data is shown not to contain them; an adapter trained after the campaign began fails this and must be disabled (request-local scale zero) or excluded.
+- **Provenance.** The model predates the texts under attack, or its training data is shown not to contain them. An adapter trained after the campaign began fails this and must be disabled (request-local scale zero) or excluded.
 - **Determinism.** Scores are exact log-probabilities of already-specified sequences, at temperature zero, without repetition penalties; forced tokens via logit bias, chat-style choices among orders, or top-$N$ lists that censor the desired token are not the declared score.
-- **Decontamination.** Controls come from a corpus range disjoint from training *and* free of duplicated boilerplate; three of the audited controls were exact training duplicates and had to be discarded.
+- **Decontamination.** Controls come from a corpus range disjoint from training *and* free of duplicated boilerplate. Three of the audited controls were exact training duplicates and had to be discarded.
 '''
 
 [[blocks]]
@@ -36,30 +36,68 @@ title = "Use in an attack pipeline"
 body = '''
 1. Pin the model files by hash, the tokeniser, the decoding settings and the lexicon lattice.
 2. Freeze the development gate before any control is scored: for a proposal prior, "every true cell within the admitted top-$K$ on all $N$ controls"; for a reranker, "planted order at exact rank 1 on all 40 controls".
-3. Run the gate on development controls; keep a separate set of unopened validation controls; a gate that fails on development is closed without opening validation.
+3. Run the gate on development controls; keep a separate set of unopened validation controls. A gate that fails on development is closed without opening validation.
 4. Only after both pass, run the live text through the same frozen cascade, with the exact back end and the null-ranked endpoint unchanged.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// LM_LOGPROB(sequence) is an abstract call to the pinned local model
+// returning the exact full-sequence log-likelihood L(x) = sum over t of log
+// p(x_t | x_<t), at temperature zero.
+function PROPOSAL_PRIOR(cells (g, c), K):
+    for direction in {forward, backward}:
+        maps[direction] = DECODE(character model, cells, injective per-class
+                maps, direction)
+    pool the retained endpoint maps by normalised sequence likelihood ->
+            Pr_g(p | c) per cell
+    for each cell (g, c):
+        admit[g, c] = the top-K plaintext literals p by Pr_g(p | c), ties
+                included
+    // the exact solver searches only inside admit
+    return admit
+
+// frozen quadgram score, the only ranking statistic
+function FINAL_SCORE(window, m):
+    return log10( (1 / 26^m) * sum over completions v of P_Q4(v) )
+
+function RERANK_ORDERS(chunks c[0..8]):
+    for i in 0..8: L[i] = LM_LOGPROB(c[i])
+    // directed edge score
+    for i != j: s[i][j] = LM_LOGPROB(c[i] || c[j]) - L[i]
+    for each order pi of the 9 chunks:
+        S_pair[pi] = L[pi[0]] + sum over i of s[pi[i]][pi[i+1]]
+    // refuse the ranking if any needed edge is censored
+    return orders sorted by S_pair descending
+
+// Gate protocol: freeze the gate, score the development controls, keep the
+// validation controls unopened; a gate that fails on development is closed
+// without opening validation.
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-A bidirectional GRU decode with beam 20,000 and an exact ring search of width 100,000 fits a laptop GPU; the reranker scored $40 \times 4{,}096$ pair-capped candidates in 195 s with peak memory about 7.9 GB; a local server pilot made 168 calls in 31 s. Cost is not the blocker; the gates are.
+A bidirectional GRU decode with beam 20,000 and an exact ring search of width 100,000 fits a laptop GPU. The reranker scored $40 \times 4{,}096$ pair-capped candidates in 195 s with peak memory about 7.9 GB. A local server pilot made 168 calls in 31 s. Cost is not the blocker. The gates are.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
 - **Contamination.** A development control was solved to rank 1 by the prior plus exact ring search, and the same 95-letter plaintext was then found at training offset 575,000: an in-sample demonstration that validates the exact back end when the proposal is strong, not evidence of decoder power.
-- **Hard top-$K$ does not generalise.** On 20 clean controls every control had at least one true cell below rank 8; the per-control maximum true rank ranged from 9 to 23. The prior must be used softly or with much larger $K$.
-- **Reranker gate failure.** 24 of 34 completed planted orderings at exact rank 1 (median 1, worst 689) against a 40/40 requirement; the six remaining controls and all post-hoc mixtures were not completed, and must not be reported as validation.
-- **API cannot score.** A local server accepted `echo` but returned log-probabilities only for the generated token; a next-token boundary construction observed the desired first token for 37 of 72 directed edges and only 4 of 8 planted-path edges by top-2,048, and a segmented lowercase variant left the planted path's lower bound at $-\infty$. No $9!$ ranking can be fabricated from censored entries.
-- **Fluency is not correctness.** Beam decoders under weak constraints produce readable fragments on nulls; the exact endpoint, not the prior, carries the decision.
+- **Hard top-$K$ does not generalise.** On 20 clean controls every control had at least one true cell below rank 8. The per-control maximum true rank ranged from 9 to 23. The prior must be used softly or with much larger $K$.
+- **Reranker gate failure.** 24 of 34 completed planted orderings at exact rank 1 (median 1, worst 689) against a 40/40 requirement. The six remaining controls and all post-hoc mixtures were not completed, and must not be reported as validation.
+- **API cannot score.** A local server accepted `echo` but returned log-probabilities only for the generated token. A next-token boundary construction observed the desired first token for 37 of 72 directed edges and only 4 of 8 planted-path edges by top-2,048, and a segmented lowercase variant left the planted path's lower bound at $-\infty$. No $9!$ ranking can be fabricated from censored entries.
+- **Fluency is not correctness.** Beam decoders under weak constraints produce readable fragments on nulls. The exact endpoint, not the prior, carries the decision.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Proposal prior: nominal held-out control, 40 true cells within strict rank 7, exact planted solution at rank 1 with the runner-up 9.5 log-units behind (contaminated, see above); predeclared 20-control diagnostic with a fixed seed, falsified as stated. Reranker: 40 planted orders all survived the structural caps (pair rank worst 3,479, secondary rank worst 1,339); end-to-end 24/34 exact rank 1, stopped once the gate had irreversibly failed. Server pilot: interval certificate failed at the second planted edge; no target or validation material was opened in any of the three lanes.
+Proposal prior: nominal held-out control, 40 true cells within strict rank 7, exact planted solution at rank 1 with the runner-up 9.5 log-units behind (contaminated, see above); predeclared 20-control diagnostic with a fixed seed, falsified as stated. Reranker: 40 planted orders all survived the structural caps (pair rank worst 3,479, secondary rank worst 1,339); end-to-end 24/34 exact rank 1, stopped once the gate had irreversibly failed. Server pilot: interval certificate failed at the second planted edge. No target or validation material was opened in any of the three lanes.
 '''
 
 [[blocks]]
@@ -76,7 +114,7 @@ so $A \to B$ is preferred by $6.9$ nats, a likelihood ratio of about $1{,}000$. 
 [[blocks]]
 kind = "notes"
 body = '''
-Every failure above is a *power* or *capability* failure of a specific frozen model, not a result about any cipher family; the ledger records them as such. The design principle survives: neural models propose, exact algebra disposes, and nulls judge.
+Every failure above is a *power* or *capability* failure of a specific frozen model, not a result about any cipher family. The ledger records them as such. The design principle survives: neural models propose, exact algebra disposes, and nulls judge.
 '''
 
 [[provenance]]

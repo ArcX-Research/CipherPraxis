@@ -29,7 +29,7 @@ for each choice of the first three key letters (k_0, k_1, k_2):
 return the best over all starting triples
 ```
 
-An open-chain variant ignores the three wrap-around terms and repairs them with a coordinate polish; the Beaufort relation replaces $a(C_i) - k$ by $k - a(C_i)$.
+An open-chain variant ignores the three wrap-around terms and repairs them with a coordinate polish. The Beaufort relation replaces $a(C_i) - k$ by $k - a(C_i)$.
 '''
 
 [[blocks]]
@@ -46,31 +46,76 @@ Emission tables are built once per residue: $\Phi_r$ is a $|\mathcal{K}|^4$ arra
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- The plaintext is in order (a "quad" mode); if a transposition sits under the periodic layer the emission collapses to per-position monogram terms (a "mono" mode) and the chain structure carries no information.
+- The plaintext is in order (a "quad" mode). If a transposition sits under the periodic layer the emission collapses to per-position monogram terms (a "mono" mode) and the chain structure carries no information.
 - The alphabet order is known (straight or one fixed keyword-mixed order) and the relation is additive (Vigenère or Beaufort) or belongs to a small per-residue family (13 Porta rows; 312 affine maps) that can be shortlisted.
-- Exactness holds inside the shortlisted product; a coordinate and adjacent-pair pass afterwards lets an omitted shift enter.
+- Exactness holds inside the shortlisted product. A coordinate and adjacent-pair pass afterwards lets an omitted shift enter.
 '''
 
 [[blocks]]
 kind = "attack"
 title = "How to attack it"
 body = '''
-Run the DP for every period in a range, both alphabet orders and both relations, and compare each finish with the same solve on a shuffled ciphertext (or on within-coset shuffles, which preserve every coset histogram and destroy only adjacency). A real key gives a decrypt that reads as English and a large excess over the null; a wrong period gives an excess near zero. The same finisher is used inside larger selectors: after an exact stage-one enumeration of alphabets, each retained alphabet's seven shifts are initialised by the width-8 cyclic DP and four polish rounds.
+Run the DP for every period in a range, both alphabet orders and both relations, and compare each finish with the same solve on a shuffled ciphertext (or on within-coset shuffles, which preserve every coset histogram and destroy only adjacency). A real key gives a decrypt that reads as English and a large excess over the null. A wrong period gives an excess near zero. The same finisher is used inside larger selectors: after an exact stage-one enumeration of alphabets, each retained alphabet's seven shifts are initialised by the width-8 cyclic DP and four polish rounds.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Ciphertext C[0..n-1], period p, alphabet order A with position function
+// a(.), candidate shifts K_b per residue b. Decrypt P_i = A[(a(C_i) - k_{i
+// mod p}) mod 26] (Beaufort: k - a(C_i)).
+function BUILD_EMISSIONS(C, p):
+    // residue indices are taken mod p
+    for r in 0..p-1:
+        Phi_r = zero table over K_r x K_{r+1} x K_{r+2} x K_{r+3}
+        for each (k_r, k_{r+1}, k_{r+2}, k_{r+3}) and each i ≡ r (mod p) with
+                i + 3 < n:
+            Phi_r(k_r, k_{r+1}, k_{r+2}, k_{r+3}) += log10 Q_4(P_i P_{i+1}
+                    P_{i+2} P_{i+3})
+    return Phi
+
+// exact maximum of sum over r of Phi_r
+function CYCLIC_VITERBI(Phi, p):
+    best = -infinity
+    for each starting triple (k_0, k_1, k_2) in K_0 x K_1 x K_2:
+        V_2 = -infinity everywhere except V_2(k_0, k_1, k_2) = 0
+        for t in 3..p-1:
+            for each state (b, c, d) in K_{t-2} x K_{t-1} x K_t:
+                V_t(b, c, d) = max over a in K_{t-3} of [ V_{t-1}(a, b, c) +
+                        Phi_{t-3}(a, b, c, d) ]
+                // ties broken by a fixed rule
+                back_t(b, c, d) = the maximising a
+        // close the cycle on the fixed k_0, k_1, k_2
+        for each (x, y, z) in K_{p-3} x K_{p-2} x K_{p-1}:
+            total = V_{p-1}(x, y, z) + Phi_{p-3}(x, y, z, k_0) + Phi_{p-2}(y,
+                    z, k_0, k_1) + Phi_{p-1}(z, k_0, k_1, k_2)
+            if total > best:
+                best = total
+                keep (k_0, k_1, k_2), (x, y, z) and the back tables
+    trace back from the kept (k_{p-3}, k_{p-2}, k_{p-1}) through back_t to
+            recover k_3 .. k_{p-4}
+    // then an optional coordinate polish
+    return the key k_0 .. k_{p-1} and best
+
+// Open-chain variant: skip the three closing terms and repair them with a
+// coordinate polish.
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-Full-width states $26^3 = 17{,}576$ and $26^4 = 456{,}976$ transitions per residue; a 504-letter text at periods 4-170 over two orders, three relations, two modes and two prior weights produced 4,676 jobs on a 12-core pool. With the width-8 shortlist a period-7 or period-26 zone finishes in seconds; the rank-sharded validation finished 512 such DP-plus-polish runs in 265.004 s.
+Full-width states $26^3 = 17{,}576$ and $26^4 = 456{,}976$ transitions per residue. A 504-letter text at periods 4-170 over two orders, three relations, two modes and two prior weights produced 4,676 jobs on a 12-core pool. With the width-8 shortlist a period-7 or period-26 zone finishes in seconds. The rank-sharded validation finished 512 such DP-plus-polish runs in 265.004 s.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
 - **Too few letters per residue for a wide family.** At period 26 on 126 letters (four to five observations per residue) the 312-map affine family manufactured a false state: the control's selected text scored $-4.2767$ (reads as English) and reproduced the ciphertext, yet was neither the hidden plaintext nor the hidden maps. The additive and Porta families, with 26 and 13 options per residue, recovered the same-size control exactly. Family width, not the DP, is the limit.
-- **Shortlist omission.** A shift outside the eight best monogram candidates is unreachable by the DP; the polish pass is the repair, not a guarantee.
+- **Shortlist omission.** A shift outside the eight best monogram candidates is unreachable by the DP. The polish pass is the repair, not a guarantee.
 - **Free-shift overfit.** On measured 63-, 95- and 126-letter zones the best exact finishes ($-6.037$, $-6.290$, $-5.107$) sat at or below the maxima of five within-coset nulls ($-5.770$, $-6.185$, $-5.021$): a globally optimal key under a wrong model still scores like noise, and only the null says so.
-- **Wrap-around terms.** The open-chain variant is exact only up to the three closing quadgrams; the cyclic variant enumerates starts to remove that gap.
+- **Wrap-around terms.** The open-chain variant is exact only up to the three closing quadgrams. The cyclic variant enumerates starts to remove that gap.
 '''
 
 [[blocks]]

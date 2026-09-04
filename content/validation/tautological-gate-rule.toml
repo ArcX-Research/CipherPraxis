@@ -44,11 +44,45 @@ kind = "attack"
 body = '''
 Three tautologies recur in cryptanalytic pipelines and each appears in the program's ledger:
 
-- **Fitted roundtrip.** Fluent-looking overfits with exact two-layer roundtrips were produced by several lanes; the ledger rule "English-looking and exact roundtrip are separate checks; a freely fitted invertible key always roundtrips" was written after three such logs.
+- **Fitted roundtrip.** Fluent-looking overfits with exact two-layer roundtrips were produced by several lanes. The ledger rule "English-looking and exact roundtrip are separate checks. A freely fitted invertible key always roundtrips" was written after three such logs.
 - **A null the decision cannot lose to.** An audit of a two-stage selector found that its null replayed only a preliminary monogram statistic, never the finishing stage that declared a positive, so "every null comparison can fail and the immutable PASS can still be emitted". The lane was blocked.
-- **A structural check that cannot fire.** A within-coset alignment null was found to be mathematically invariant under the shuffles that generated it; an exact-solver certificate was noted to be unable to fail for any candidate that reached it.
+- **A structural check that cannot fire.** A within-coset alignment null was found to be mathematically invariant under the shuffles that generated it. An exact-solver certificate was noted to be unable to fail for any candidate that reached it.
 
 The cure in each case was the same: add an input class on which the check must fail, run it, and print the failure fraction.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Inputs: a gate predicate G on candidate solutions, planted truths
+// (conforming plants), and alternative input classes that are not solutions
+// (random letters, a valid-model negative, a wrong placement). Output: a
+// two-row certificate, or the gate is excluded from the evidence fields.
+function CERTIFY_GATE(G, plants, alternatives):
+    // row 1, necessity: G must pass on every planted truth, else it is broken
+    a = COUNT(x in plants where G(x))
+    if a < |plants|: return BROKEN
+    // row 2, power: G must fail on a stated fraction of non-solutions,
+    // measured on the full decision, selection and language threshold
+    // included
+    rows = []
+    for class in alternatives:
+        b = COUNT(x in class where not G(x))
+        rows.append("power: " + class.name + " fail " + b + "/" + |class|)
+    // tautological: a check that cannot fail is not evidence
+    if every b == 0: return DIAGNOSTIC_ONLY
+    return CERTIFICATE("necessity: " + a + "/" + |plants|, rows)
+
+// A fitted roundtrip is the standard tautology: logged, never cited.
+function FORWARD_CONSISTENCY(c, k_fitted):
+    p = DECRYPT(c, k_fitted)
+    // true for every invertible key fitted from c
+    return ENCRYPT(p, k_fitted) == c
+
+// The rule extends to nulls: a null the decision cannot lose to is not a
+// null.
+```
 '''
 
 [[blocks]]
@@ -61,7 +95,7 @@ Negligible in compute (a few hundred random or valid-model inputs) and large in 
 kind = "failure_modes"
 body = '''
 - A parity-style block test was presented with its necessity row (400 conforming plants, 0 violations) **and** its power row (random-letter zones violate with fraction 0.81 and 0.98; known prose windows 1 to 6 violations), so its exact refutation of two forms could be cited.
-- A language gate whose threshold was placed by a prose-tail order statistic rejected genuine held-out English windows; the tautology in reverse (a necessity failure) was caught by running known-real text through it, and the gate was re-anchored to an independent-letter ceiling.
+- A language gate whose threshold was placed by a prose-tail order statistic rejected genuine held-out English windows. The tautology in reverse (a necessity failure) was caught by running known-real text through it, and the gate was re-anchored to an independent-letter ceiling.
 '''
 
 [[blocks]]

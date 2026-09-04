@@ -17,7 +17,7 @@ body = '''
 
 $$\operatorname{bottom}_k(j) = j + k \ (\text{Vigenère}), \qquad j - k \ (\text{Variant}), \qquad k - j \ (\text{Beaufort}) \pmod{26}.$$
 
-With $a$ at column $j_a = a$ of the top row and $b$ at column $j_b = \operatorname{bottom}_k^{-1}(b)$ of the bottom row, the ciphertext is $\big(\text{top}[j_b], \text{bottom}[j_a]\big)$: the columns are exchanged. **Portax** lays each block of $2P$ letters in two rows of width $P$ and uses the Porta rectangle for each vertical pair with $s = \lfloor \operatorname{pos}(k)/2 \rfloor$; the same-column case exchanges rows, so encryption and decryption coincide.
+With $a$ at column $j_a = a$ of the top row and $b$ at column $j_b = \operatorname{bottom}_k^{-1}(b)$ of the bottom row, the ciphertext is $\big(\text{top}[j_b], \text{bottom}[j_a]\big)$: the columns are exchanged. **Portax** lays each block of $2P$ letters in two rows of width $P$ and uses the Porta rectangle for each vertical pair with $s = \lfloor \operatorname{pos}(k)/2 \rfloor$. The same-column case exchanges rows, so encryption and decryption coincide.
 '''
 
 [[blocks]]
@@ -58,6 +58,49 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Slidefair: letters are indices 0..25; the top row is the straight alphabet
+// (top[j] = j) and the bottom row is shifted by the key element k = key[i mod
+// P] of digraph number i.
+function BOTTOM(j, k, rule):
+    if rule == Vigenère: return (j + k) mod 26
+    if rule == Variant:  return (j - k) mod 26
+    if rule == Beaufort: return (k - j) mod 26
+
+function SLIDEFAIR_DIGRAPH(a, b, k, rule):
+    // column of a in the top row
+    j_a = a
+    // column of b in the bottom row
+    j_b = the column j with BOTTOM(j, k, rule) == b
+    if j_a == j_b:
+        apply the declared vertical-case convention (shift one column)
+    // the columns are exchanged
+    return (top[j_b], BOTTOM(j_a, k, rule))
+
+// encrypts and decrypts alike (involution)
+function SLIDEFAIR(text[0..n-1], key[0..P-1], rule):
+    for i in 0..n/2-1:
+        (out[2i], out[2i+1]) = SLIDEFAIR_DIGRAPH(text[2i], text[2i+1], key[i
+                mod P], rule)
+    return out
+
+// Portax: each block of 2P letters is written in two rows of width P; every
+// vertical pair goes through the Porta rectangle with s = floor(pos(key
+// letter) / 2); the same-column case exchanges the rows, so the same routine
+// encrypts and decrypts.
+function PORTAX(text, key[0..P-1]):
+    for each block of 2P letters, rows R0 = block[0..P-1] and R1 =
+            block[P..2P-1]:
+        for col in 0..P-1:
+            (R0[col], R1[col]) = PORTA_RECTANGLE(R0[col], R1[col],
+                    floor(pos(key[col]) / 2))
+    return the rows written back in place
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
 $26^P$ keys per rule and period (13 classes per position for Portax); with $P \le 12$ the annealer converged on every 504-letter control within the audit's standard budget in both declared seeds.
@@ -67,13 +110,13 @@ $26^P$ keys per rule and period (13 classes per position for Portax); with $P \l
 kind = "failure_modes"
 body = '''
 - **Period selection on a wrong family.** Live searches selected periods 8, 12, 12 and 11 with rates $-7.58$, $-7.49$, $-7.48$ and $-7.42$: a free period plus key fits nothing but noise.
-- **Vertical-case conventions.** A source that shifts the vertical case differently produces a different cipher; the program's independent implementation had to match the generator byte for byte.
+- **Vertical-case conventions.** A source that shifts the vertical case differently produces a different cipher. The program's independent implementation had to match the generator byte for byte.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Log 200: Portax with a nine-letter key (period 9) recovered at rate $-4.18$; Slidefair Vigenère, Variant and Beaufort with seven-letter keys recovered at $-4.46$, $-4.05$ and $-4.01$; all four gates passed in both production seeds, with periods and observable key classes recovered and the complete ciphertext reproduced by the independent transform (logs/200_digraphic_slides.log). Live text: all four rules non-English as above; no null spent.
+Log 200: Portax with a nine-letter key (period 9) recovered at rate $-4.18$; Slidefair Vigenère, Variant and Beaufort with seven-letter keys recovered at $-4.46$, $-4.05$ and $-4.01$. All four gates passed in both production seeds, with periods and observable key classes recovered and the complete ciphertext reproduced by the independent transform (logs/200_digraphic_slides.log). Live text: all four rules non-English as above. No null spent.
 '''
 
 [[blocks]]
@@ -93,7 +136,7 @@ bottom row  D E F G H I J K L ...   (j + 3)
 [[blocks]]
 kind = "notes"
 body = '''
-The slide families were audited because a bounded all-family sweep of an external engine timed out before reaching them; the lane's value is the independently verified rectangle algebra and the byte-matched generator, which make its scoped negative reproducible.
+The slide families were audited because a bounded all-family sweep of an external engine timed out before reaching them. The lane's value is the independently verified rectangle algebra and the byte-matched generator, which make its scoped negative reproducible.
 '''
 
 [[provenance]]

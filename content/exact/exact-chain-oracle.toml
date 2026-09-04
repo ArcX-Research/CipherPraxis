@@ -37,7 +37,7 @@ Elimination: $z(P'_j) = e_B (z(C'_j) - \kappa_j)$ and $z(P_i) = e_A (z(C_i) - z(
 
 $$z(P_i) - e_A\, z(C_i) + e_A e_B\, z(C'_j) - e_A e_B\, \kappa_j = 0 \pmod{26}.$$
 
-Subtracting two positions $i, r$ of the same $\kappa$ class removes $\kappa$ exactly. Translation $z \mapsto z + b$ is a symmetry with $\kappa \mapsto \kappa + b(1 + e_A e_B - e_B)$; the second text's decrypt is invariant only up to that translation, so any score of it must be maximised over the 26 translations of each candidate, and the first text's positions are ranked invariantly.
+Subtracting two positions $i, r$ of the same $\kappa$ class removes $\kappa$ exactly. Translation $z \mapsto z + b$ is a symmetry with $\kappa \mapsto \kappa + b(1 + e_A e_B - e_B)$. The second text's decrypt is invariant only up to that translation, so any score of it must be maximised over the 26 translations of each candidate, and the first text's positions are ranked invariantly.
 
 Collision invariants: $z$ injective and the equation linear in $z(P_i)$ imply that equal $(C_i, C'_j)$ pairs force equal $P_i$, and exactly one equal component forces unequal $P_i$, for every $z$, $\kappa$ and sign pair.
 '''
@@ -46,7 +46,7 @@ Collision invariants: $z$ injective and the equation linear in $z(P_i)$ imply th
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- The chain relation, the class boundary of $\kappa$ and the wrap rule are hypotheses of the family; the oracle is exact given them and silent about them.
+- The chain relation, the class boundary of $\kappa$ and the wrap rule are hypotheses of the family. The oracle is exact given them and silent about them.
 - A roundtrip after fitting is necessary but tautological: any invertible fitted key reproduces its ciphertext. Readability of the full text, an independent implementation, and null or uniqueness evidence are separate gates.
 - The oracle returns all reads, so a proposal generator (a language model, a particle filter, a corpus screen) can be arbitrarily heuristic without compromising the exactness of the decision.
 '''
@@ -55,24 +55,65 @@ body = '''
 kind = "attack"
 title = "How to attack it"
 body = '''
-- **Word-prefix front end.** Complete English words are proposed for the opening of the second text; cheap GF(2)/GF(13) consistency precedes a local all-different check; language-model selection happens only among algebraically feasible complete words; an adaptive mode keeps feasible prefixes as particles at 18, 21 and 24 clean letters and asks the model to continue them.
-- **Word-pair front end.** Two words of at least 18 letters placed anywhere in the constant-$\kappa$ class; each surviving cycle decrypts all 62 class positions of the second text and the 53-letter prefix of the first directly, with no shift search, which is the selection statistic; the completion of unobserved letters is exhaustive over at most 7 unused positions, else greedy.
+- **Word-prefix front end.** Complete English words are proposed for the opening of the second text; cheap GF(2)/GF(13) consistency precedes a local all-different check; language-model selection happens only among algebraically feasible complete words. An adaptive mode keeps feasible prefixes as particles at 18, 21 and 24 clean letters and asks the model to continue them.
+- **Word-pair front end.** Two words of at least 18 letters placed anywhere in the constant-$\kappa$ class. Each surviving cycle decrypts all 62 class positions of the second text and the 53-letter prefix of the first directly, with no shift search, which is the selection statistic. The completion of unobserved letters is exhaustive over at most 7 unused positions, else greedy.
 - **Corpus front end.** Every 24-letter window of a 2,344,368-letter corpus through the pre-filter (39,528 unique survivors) and then the oracle under all four sign pairs: zero endpoints.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Inputs: second-text ciphertext C, first-text ciphertext C' (length 144, j =
+// i mod 144), signs e_A, e_B, and a proposed opening P[0..L-1] of the second
+// text. alphabet-free collision implications
+function PREFILTER(P, C, C'):
+    for i in 0..L-1, r in i+1..L-1:
+        j = i mod 144; s = r mod 144
+        both = (C[i] == C[r]) and (C'[j] == C'[s])
+        // exactly one equal component
+        one  = (C[i] == C[r]) != (C'[j] == C'[s])
+        if both and P[i] != P[r]: return REJECT
+        if one  and P[i] == P[r]: return REJECT
+    return PASS
+
+function ORACLE(P, C, C', e_A, e_B):
+    if PREFILTER(P, C, C') == REJECT: return []
+    rows = []
+    // kappa cancels
+    for each pair (i, r) with i, r < L in the same kappa class:
+        rows.append( [z(P_i) - z(P_r)] - e_A [z(C_i) - z(C_r)] + e_A e_B
+                [z(C'_j) - z(C'_s)] = 0 )
+    add the gauge row z(X0) = 0; unknowns = the letters that occur
+    // GF(2) x GF(13) null spaces, 2^d2 + 13^d13
+    reads = ALL_DIFFERENT_READS(rows)
+    out = []
+    for z in reads:
+        complete z on the unused positions
+        derive kappa on the prefix classes
+        fit the periodic classes
+        P_full = DECRYPT(C, C', z, kappa, e_A, e_B)
+        if ENCRYPT(P_full, z, kappa, e_A, e_B) reproduces both C and C'
+                literally:
+            out.append((z, kappa, P_full))
+    // possibly empty: an exact decision
+    return out
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-Pre-filter $O(L^2)$ per proposal, vectorised over a corpus. Oracle cost is the all-different enumeration: 0.4-10 ms for $d_{13} \le 4$, 44-94 ms at $d_{13} = 5$; a full word-pair selector run (4 sign cells, 299,563 pairs) was estimated at about 41 minutes on 6 workers at 12.4 ms per pair, then sped up by cached digit matrices and int16 GF(13) collision rejection before the CRT cross product.
+Pre-filter $O(L^2)$ per proposal, vectorised over a corpus. Oracle cost is the all-different enumeration: 0.4-10 ms for $d_{13} \le 4$, 44-94 ms at $d_{13} = 5$. A full word-pair selector run (4 sign cells, 299,563 pairs) was estimated at about 41 minutes on 6 workers at 12.4 ms per pair, then sped up by cached digit matrices and int16 GF(13) collision rejection before the CRT cross product.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Gauge defect.** The first word-pair selector fixed $z(C_0) = 0$ and scored the first text's decrypt in that gauge; the true cycle then failed the exact first-text check in about 25 of 26 plants and could be discarded. The run was terminated, its header retained under a failed-run name, and the successor maximises over the 26 translations.
-- **Rank never rejects.** A single word gives a consistent system with an enormous null space; the oracle is only decisive once two long cribs or a long prefix (about 18-24 letters) bring $d_{13}$ to 5 or below.
-- **Scoped negatives.** A miss closes the proposal bank (verbatim corpus windows; a vocabulary of 105 words in pairs; sampled openings) and nothing else; the family stays open.
-- **Pattern is not an identifier.** The collision mask on the first 53 positions (4 equalities, 108 inequalities) admits vast numbers of English strings; it speeds the oracle up and identifies nothing by itself.
+- **Gauge defect.** The first word-pair selector fixed $z(C_0) = 0$ and scored the first text's decrypt in that gauge. The true cycle then failed the exact first-text check in about 25 of 26 plants and could be discarded. The run was terminated, its header retained under a failed-run name, and the successor maximises over the 26 translations.
+- **Rank never rejects.** A single word gives a consistent system with an enormous null space. The oracle is only decisive once two long cribs or a long prefix (about 18-24 letters) bring $d_{13}$ to 5 or below.
+- **Scoped negatives.** A miss closes only the tested proposal bank: verbatim corpus windows, pairs from a 105-word list, or sampled openings. The wider family stays open.
+- **Pattern is not an identifier.** The collision mask on the first 53 positions (4 equalities, 108 inequalities) admits vast numbers of English strings. It speeds the oracle up and identifies nothing by itself.
 '''
 
 [[blocks]]
@@ -89,7 +130,7 @@ Take $e_A = e_B = +1$ and two positions $i, r$ in the same $\kappa$ class. From 
 
 $$z(P_i) - z(P_r) = \big[z(C_i) - z(C_r)\big] - \big[z(C'_i) - z(C'_r)\big] \pmod{26}.$$
 
-Suppose the ciphertexts show $C_i = C_r$ but $C'_i \ne C'_r$. The right-hand side is $-[z(C'_i) - z(C'_r)] \ne 0$ because $z$ is injective, so $P_i \ne P_r$ for every alphabet and key: a proposed opening with $P_i = P_r$ is rejected before any algebra. If instead both components agree, the right-hand side is $0$ and the opening must have $P_i = P_r$. These two implications are the whole pre-filter; the oracle proper handles everything the pattern leaves open.
+Suppose the ciphertexts show $C_i = C_r$ but $C'_i \ne C'_r$. The right-hand side is $-[z(C'_i) - z(C'_r)] \ne 0$ because $z$ is injective, so $P_i \ne P_r$ for every alphabet and key: a proposed opening with $P_i = P_r$ is rejected before any algebra. If instead both components agree, the right-hand side is $0$ and the opening must have $P_i = P_r$. These two implications are the whole pre-filter. The oracle proper handles everything the pattern leaves open.
 '''
 
 [[provenance]]

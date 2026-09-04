@@ -55,3 +55,17 @@ cipher-praxis/
 
 The build fails on forbidden tokens, duplicate ids, missing status notes, unknown lab keys or
 bad provenance; dangling `related` links are warnings.
+
+## Evidence requests
+
+Every entry's Evidence panel has a "Request these files" form, because the cited files are internal.
+The site is static, so the form's delivery channel is configured in `crates/web/src/state.rs`:
+
+- `EVIDENCE_REQUEST_ENDPOINT = Some("https://…")` posts a JSON document
+  (`kind`, `entry`, `title`, `url`, `files`, `name`, `email`, `purpose`, `message`, `submitted_at`)
+  and shows the reply status; the endpoint must allow cross-origin `POST` with `Content-Type: application/json`.
+- `EVIDENCE_REQUEST_EMAIL = Some("support@questlyst.com")` (the setting in this checkout) opens the visitor's
+  mail app through a `mailto:` link with the request pre-filled, and shows the request text plus a direct
+  mail link as a fallback.
+- With neither set the form copies a plain-text request to the clipboard and shows it, so nothing is
+  silently dropped while the channel is unconfigured.

@@ -55,8 +55,47 @@ kind = "attack"
 title = "How to attack it"
 body = '''
 - **Finisher.** After the cyclic quadgram DP, an unrestricted 26-way coordinate and adjacent-pair pass lets a shift omitted by the monogram shortlist enter; after the open-chain Viterbi it repairs the wrap-around terms; in the rank-sharded selector four deterministic coordinate/pair polish rounds follow the width-8 DP; in the affine-map DP all 312 affine maps per residue enter through the same polish.
-- **Main search for varied-copy keys.** A key of $m \times 7$ letters ($m$ slightly different copies of one 7-letter word, period $7m$) is solved by exact period-7 alignment for the relative shifts, 26 absolute starts and the near-optimal alignment vectors as starts, then quadgram coordinate descent over the $7m$ sub-coset shifts (each moves about $n/7m$ letters) with random perturbation restarts; a constrained variant fits "copies differ by a constant" with $7 + m$ unknowns.
+- **Main search for varied-copy keys.** A key of $m \times 7$ letters ($m$ slightly different copies of one 7-letter word, period $7m$) is solved by exact period-7 alignment for the relative shifts, 26 absolute starts and the near-optimal alignment vectors as starts, then quadgram coordinate descent over the $7m$ sub-coset shifts (each moves about $n/7m$ letters) with random perturbation restarts. A constrained variant fits "copies differ by a constant" with $7 + m$ unknowns.
 - **Class solver polish.** The best candidates of a transposition search get a coordinate polish of all $7 + k$ shifts under quadgrams.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Key k = (k_0, ..., k_{p-1}) over Z_26; objective F(k) = quadgram rate of
+// the full decrypt.
+function COORDINATE_DESCENT(k, F, pairs):
+    repeat:
+        changed = false
+        // single coordinate
+        for b in 0..p-1:
+            // 26 full decrypt-and-scores
+            s* = argmax over s in 0..25 of F(k with k_b = s)
+            if F(k with k_b = s*) > F(k): k_b = s*; changed = true
+        if pairs:
+            // adjacent pair, indices mod p
+            for b in 0..p-1:
+                // 676 values
+                (s*, t*) = argmax over (s, t) in Z_26 x Z_26 of F(k with k_b
+                        = s, k_{b+1} = t)
+                if F(k with k_b = s*, k_{b+1} = t*) > F(k):
+                    apply (s*, t*)
+                    changed = true
+    // F never decreases, so this terminates
+    until not changed
+    // a coordinate-wise (pair-wise) optimum
+    return k
+
+function DESCENT_WITH_RESTARTS(k, F, restarts):
+    best = COORDINATE_DESCENT(k, F, true)
+    for r in 1..restarts:
+        // perturbation
+        k' = best with a few coordinates redrawn at random
+        k' = COORDINATE_DESCENT(k', F, true)
+        if F(k') > F(best): best = k'
+    return best
+```
 '''
 
 [[blocks]]
@@ -68,16 +107,16 @@ One single-coordinate sweep costs $26p$ full evaluations ($182$ decrypt-and-scor
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Coordinate-wise traps.** Two coupled shifts can each be individually optimal while the pair is not; the adjacent-pair sweep handles neighbours only.
+- **Coordinate-wise traps.** Two coupled shifts can each be individually optimal while the pair is not. The adjacent-pair sweep handles neighbours only.
 - **Overfit with many free coordinates.** Free sub-coset shifts on 153 letters lift shuffled-text nulls to $-5.8$ to $-5.9$ (four copies) and $-5.41$ to $-5.47$ (five copies); on a 95-letter zone to $-4.68$ to $-4.99$ and $-4.59$ to $-4.76$. A polished target rate that matches its null is noise.
-- **Wrong model still converges.** The descent reports a confident optimum for a key that does not exist; only the null and the readability verdict distinguish it.
+- **Wrong model still converges.** The descent reports a confident optimum for a key that does not exist. Only the null and the readability verdict distinguish it.
 - **Partial recovery at small changes.** The logged four-copy control (period 28) polished to $-4.948$ with 71% of the plaintext right, the wrong-$m$ control to 79%, while the three-copy control reached 100%: the descent lands near the truth but not always on it.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Varied-copy solver, planted keys over 153 letters of English: three-copy Beaufort key in the straight order $-4.296$, match 100%; four-copy Vigenère key in the keyword-mixed order $-4.948$, match 71%; the same text fitted with the wrong copy count ($m = 2$) 79%. Periodic DP with the polish pass: 3/3 blind controls at 100%; Porta DP 3/3; affine DP 2/2 at period 7. Sandwich class solver with polish: planted widths 8 and 12 at 100%.
+Varied-copy solver, planted keys over 153 letters of English: three-copy Beaufort key in the straight order $-4.296$, match 100%. Four-copy Vigenère key in the keyword-mixed order $-4.948$, match 71%. The same text fitted with the wrong copy count ($m = 2$) 79%. Periodic DP with the polish pass: 3/3 blind controls at 100%; Porta DP 3/3; affine DP 2/2 at period 7. Sandwich class solver with polish: planted widths 8 and 12 at 100%.
 '''
 
 [[blocks]]
@@ -93,7 +132,7 @@ k_1=1          4     3     1
 k_1=2          1     2     9
 ```
 
-Start at $(0, 0)$ with $F = 5$. Sweep $k_0$ with $k_1 = 0$: values $5, 6, 2$, choose $k_0 = 1$ ($F = 6$). Sweep $k_1$ with $k_0 = 1$: values $6, 3, 2$, keep $k_1 = 0$. No coordinate improves: the descent stops at $(1, 0)$ with $F = 6$, while the global maximum is $(2, 2)$ with $F = 9$. A pair sweep over all nine cells finds it; a perturbation restart from $(2, 1)$ climbs to $(2, 2)$ immediately.
+Start at $(0, 0)$ with $F = 5$. Sweep $k_0$ with $k_1 = 0$: values $5, 6, 2$, choose $k_0 = 1$ ($F = 6$). Sweep $k_1$ with $k_0 = 1$: values $6, 3, 2$, keep $k_1 = 0$. No coordinate improves: the descent stops at $(1, 0)$ with $F = 6$, while the global maximum is $(2, 2)$ with $F = 9$. A pair sweep over all nine cells finds it. A perturbation restart from $(2, 1)$ climbs to $(2, 2)$ immediately.
 '''
 
 [[provenance]]

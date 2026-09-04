@@ -13,7 +13,7 @@ updated = "2026-09-04"
 [[blocks]]
 kind = "notes"
 body = '''
-In this atlas, heuristic search results are never negatives (a failed search excludes nothing), while exact solvers that drain naturally give scoped exact negatives. The literature split above mirrors that rule: the first group produces candidates, the second produces certificates.
+On this site, a failed heuristic search rules out nothing. It may simply have missed a candidate. An exact solver can support a narrow negative result only after it finishes every case naturally. The first group of sources covers methods that find candidates. The second covers methods that can produce proof certificates.
 '''
 
 [[references]]

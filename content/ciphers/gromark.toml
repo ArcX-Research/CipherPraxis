@@ -49,9 +49,9 @@ body = '''
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- The chain rule and the alphabet style are fixed by the model; the primer and alphabet are unknown.
+- The chain rule and the alphabet style are fixed by the model. The primer and alphabet are unknown.
 - Invariant: with $\sigma$ unknown, the ciphertext-letter equality forest above constrains only plaintext differences, never absolute letters.
-- A fitted invertible state always round-trips; only exact control recovery is evidence.
+- A fitted invertible state always round-trips. Only exact control recovery is evidence.
 '''
 
 [[blocks]]
@@ -61,19 +61,53 @@ body = '''
 1. Enumerate all $10^P$ primers (meet in the middle at $P = 6, 7$) and score each by the substitution-invariant difference model.
 2. Give the top cells (32,768 at $P = 6$, 131,072 at $P = 7$) a one-to-one monogram assignment (Hungarian) and a provisional quadgram score.
 3. Anneal the arbitrary 26-letter alphabet for the best 32 (or 64 at $P = 5$) primers.
-4. Require the control gate: exact plaintext, exact transmitted primer including leading zeros, the hidden alphabet on every observed rank, and an independent forward reconstruction; only then read a live text, and require an English verdict before spending any null budget.
+4. Require the control gate: exact plaintext, exact transmitted primer including leading zeros, the hidden alphabet on every observed rank, and an independent forward reconstruction. Only then read a live text, and require an English verdict before spending any null budget.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Primer r[0..P-1] of decimal digits; sigma is the keyed alphabet; letters
+// are indices 0..25.
+function DIGIT_CHAIN(r[0..P-1], n):
+    for i in 0..n-1:
+        d[i] = r[i] if i < P else (d[i - P] + d[i - P + 1]) mod 10
+    return d
+
+function ENCRYPT(p[0..n-1], r, sigma):
+    d = DIGIT_CHAIN(r, n)
+    for i in 0..n-1:
+        c[i] = sigma[(p[i] + d[i]) mod 26]
+    return c
+
+function DECRYPT(c[0..n-1], r, sigma):
+    d = DIGIT_CHAIN(r, n)
+    for i in 0..n-1:
+        p[i] = (pos_sigma(c[i]) - d[i]) mod 26
+    return p
+
+// K2M alphabet: deduplicate the keyword, append the unused letters, fill rows
+// of keyword width, read the columns in the alphabetical order of the keyword
+// letters.
+function K2M_ALPHABET(keyword):
+    w = keyword with repeated letters removed
+    grid = rows of width len(w) filled with w followed by the unused letters
+    return the columns of grid concatenated, taken in the alphabetical order
+            of the letters of w
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-Exact primer stage: $10^4$ to $10^7$ cells; the $P = 5$ lane ran 100,000 primers with a Hungarian pre-pass in about 51 to 54 seconds per control. The alphabet anneal is bounded (top 32 or 64 primers) and therefore control-qualified rather than exhaustive. Each additional primer digit multiplies the exact stage by ten, which is why $P \ge 8$ was left open.
+Exact primer stage: $10^4$ to $10^7$ cells. The $P = 5$ lane ran 100,000 primers with a Hungarian pre-pass in about 51 to 54 seconds per control. The alphabet anneal is bounded (top 32 or 64 primers) and therefore control-qualified rather than exhaustive. Each additional primer digit multiplies the exact stage by ten, which is why $P \ge 8$ was left open.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Rank spread of the true primer.** Under the invariant selector the hidden primers ranked 8,319 and 6,499 of $10^6$ at $P = 6$ and 72,008 and 13,812 of $10^7$ at $P = 7$; a shortlist smaller than those ranks would silently lose the truth. The leading-zero control is what set the $P = 7$ shortlist size.
+- **Rank spread of the true primer.** Under the invariant selector the hidden primers ranked 8,319 and 6,499 of $10^6$ at $P = 6$ and 72,008 and 13,812 of $10^7$ at $P = 7$. A shortlist smaller than those ranks would silently lose the truth. The leading-zero control is what set the $P = 7$ shortlist size.
 - **Non-language endpoints.** Every live endpoint round-tripped but scored $-6.67$ to $-7.20$ per letter, far below the English gate, so the nulls were never triggered.
 - **Scope.** A different composition (Gromark under or over another layer) or $P \ge 8$ is not covered.
 '''
@@ -81,7 +115,7 @@ body = '''
 [[blocks]]
 kind = "controls"
 body = '''
-$P = 4$: exhaustive primer pre-pass, control PASS in 13.39 s; periodic Gromark $P = 4..8$: control PASS in 9.46 s (COLOSSUS_DYNAMIC_AUDIT.md). $P = 5$: two independently generated 504-letter controls recovered 504/504 letters, the exact primer and alphabet, forward PASS, in 51.37 s and 54.28 s; the live text gave primer-stage rate $-7.12$ (no) (logs/201_gromark5.log). $P = 6$ and $7$: four held-out 504-letter controls (two per length, arbitrary alphabets, one seven-digit primer with a leading zero) all recovered 504/504 letters, 26/26 alphabet entries and the exact primer with forward PASS; live endpoints $-7.20$ and $-7.11$ (no) (logs/212_gromark67_recurrence.log). Every control ciphertext also byte-matched an independently compiled source generator.
+$P = 4$: exhaustive primer pre-pass, control PASS in 13.39 s; periodic Gromark $P = 4..8$: control PASS in 9.46 s (COLOSSUS_DYNAMIC_AUDIT.md). $P = 5$: two independently generated 504-letter controls recovered 504/504 letters, the exact primer and alphabet, forward PASS, in 51.37 s and 54.28 s. The live text gave primer-stage rate $-7.12$ (no) (logs/201_gromark5.log). $P = 6$ and $7$: four held-out 504-letter controls (two per length, arbitrary alphabets, one seven-digit primer with a leading zero) all recovered 504/504 letters, 26/26 alphabet entries and the exact primer with forward PASS; live endpoints $-7.20$ and $-7.11$ (no) (logs/212_gromark67_recurrence.log). Every control ciphertext also byte-matched an independently compiled source generator.
 '''
 
 [[blocks]]

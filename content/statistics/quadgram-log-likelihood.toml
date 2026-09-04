@@ -31,14 +31,14 @@ body = '''
 - English prose: $r \approx -4.3$ ($\log_{10}$ per letter); on 1,545 held-out 153-letter windows the median was $-4.27$, the best $-3.76$ and the worst $-5.56$.
 - Uniform random letters: $r \approx -7$.
 - The toolkit's verdict rule: `ENGLISH` if $r > r_{\text{Eng}} - 0.7$, `partial` down to $r_{\text{Eng}} - 1.7$, else `no`. See [English gate calibration](/statistics/english-gate-calibration) for why such a threshold must be measured on real prose before it is trusted.
-- In natural-log units per letter the same quantities are $2.303$ times larger; per-letter evidence in nats is used by the [Bayesian instruments](/statistics/bayesian-evidence-model-selection), quadgram rates in $\log_{10}$ by the search solvers.
+- In natural-log units per letter the same quantities are $2.303$ times larger; per-letter evidence in nats is used by the [Bayesian tests](/statistics/bayesian-evidence-model-selection), quadgram rates in $\log_{10}$ by the search solvers.
 '''
 
 [[blocks]]
 kind = "assumptions"
 body = '''
 - The plaintext is prose in the corpus language. A peaked, small-vocabulary plaintext (lists, spelled digits, names) scores badly even when correct.
-- The candidate is a *complete* decrypt in reading order. A transposition destroys quadgrams but preserves the letter multiset: on a planted control the correct periodic key, recovered order-free, scored $-6.95$ while the transposition was still in place and $-4.38$ once it was stripped. While any transposition remains, score order-free (monogram evidence, [order-free width statistic](/cryptanalysis/order-free-width-statistic)); only afterwards score with quadgrams.
+- The candidate is a *complete* decrypt in reading order. A transposition destroys quadgrams but preserves the letter multiset: on a planted control the correct periodic key, recovered order-free, scored $-6.95$ while the transposition was still in place and $-4.38$ once it was stripped. While any transposition remains, score order-free (monogram evidence, [order-free width statistic](/cryptanalysis/order-free-width-statistic)). Only afterwards score with quadgrams.
 - The corpus is disjoint from the plaintext being scored (held-out); duplicated boilerplate in a concatenated corpus has produced in-sample controls that look stronger than they are.
 '''
 
@@ -46,25 +46,57 @@ body = '''
 kind = "attack"
 title = "How to attack it"
 body = '''
-1. **Objective.** Energy for [simulated annealing](/search/simulated-annealing) and [hill climbing](/search/hill-climbing) over keys, alphabets or column orders; the per-window additivity makes it exact for [dynamic programming](/exact/exact-dynamic-programming) over periodic keys (a window's score depends on at most four consecutive key elements).
+1. **Objective.** Energy for [simulated annealing](/search/simulated-annealing) and [hill climbing](/search/hill-climbing) over keys, alphabets or column orders. The per-window additivity makes it exact for [dynamic programming](/exact/exact-dynamic-programming) over periodic keys (a window's score depends on at most four consecutive key elements).
 2. **Polish.** Coordinate descent over individual shifts or column swaps with the rate as the criterion, applied only after the order-free stages have fixed the structure.
 3. **Verdict.** Compare with the English band and with the *null* of the same search: the best rate over all wrong keys at that length, not the random-letter level.
 4. **Segmentation.** A dictionary segmentation of the candidate (see [semi-Markov word model](/statistics/semi-markov-word-model)) is printed for human inspection; fluent-looking fragments at $-5$ are not evidence.
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// q(abcd) = count of the quadgram abcd in a reference corpus of N letters;
+// alpha = smoothing.
+function BUILD_TABLE(corpus, alpha):
+    N = length(corpus)
+    for every quadgram abcd (26^4 entries):
+        table[abcd] = log10((q(abcd) + alpha) / N)
+    return table
+
+// L(x): the sum over the n - 3 overlapping four-letter windows; r(x): the
+// rate per letter.
+function QUADGRAM_SCORE(x[0..n-1], table):
+    L = 0
+    for i in 0..n-4:
+        L = L + table[x[i] x[i+1] x[i+2] x[i+3]]
+    return L
+
+function QUADGRAM_RATE(x[0..n-1], table):
+    return QUADGRAM_SCORE(x, table) / (n - 3)
+
+// Verdict rule against the calibrated English rate r_Eng (a guard, not the
+// evidence).
+function VERDICT(r, r_Eng):
+    if r > r_Eng - 0.7: return ENGLISH
+    if r > r_Eng - 1.7: return partial
+    return no
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-One evaluation is $O(n)$ table lookups on a $26^4 = 456{,}976$-entry array; a vectorised implementation scores thousands of candidates per second, and the integer table lets a compiled dynamic program score $26^7$ key vectors exactly.
+One evaluation is $O(n)$ table lookups on a $26^4 = 456{,}976$-entry array. A vectorised implementation scores thousands of candidates per second, and the integer table lets a compiled dynamic program score $26^7$ key vectors exactly.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Free parameters inflate the null.** Seven free shifts fitted on a 63-letter zone reach $-4.7$ to $-5.0$ on shuffled texts; a 95-letter search over 4,033 crib placements has a wrong-placement null with median $-5.3$ and maximum $-4.83$; at 153 letters the wrong-placement null has median $-6.0$ to $-6.2$ and maximum $-5.5$ to $-5.9$. A candidate must beat the null *maximum* of its own search, which is why the [selection-overfit diagnostic](/statistics/selection-overfit-diagnostic) exists.
+- **Free parameters inflate the null.** Seven free shifts fitted on a 63-letter zone reach $-4.7$ to $-5.0$ on shuffled texts. A 95-letter search over 4,033 crib placements has a wrong-placement null with median $-5.3$ and maximum $-4.83$; at 153 letters the wrong-placement null has median $-6.0$ to $-6.2$ and maximum $-5.5$ to $-5.9$. A candidate must beat the null *maximum* of its own search, which is why the [selection-overfit diagnostic](/statistics/selection-overfit-diagnostic) exists.
 - **Verdict without a null.** A search over a large bank returned a candidate at $-4.869$ that the verdict rule labelled English; eight of nine complete-pipeline nulls scored higher ($-4.836$ on average).
 - **Unstripped transposition.** See the assumptions block: ranking candidates by quadgrams while a transposition is in place discards the true key as noise, and every negative obtained that way is void for such constructions.
-- **Heavy prose tail.** Real English windows reach $-5.56$ at 153 letters; a gate at English $-0.7$ rejects $0.71\%$ of genuine windows.
+- **Heavy prose tail.** Real English windows reach $-5.56$ at 153 letters. A gate at English $-0.7$ rejects $0.71\%$ of genuine windows.
 '''
 
 [[blocks]]

@@ -12,11 +12,53 @@ updated = "2026-09-04"
 lab = "quagmire"
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// A keyed alphabet lists the keyword's distinct letters in order, then the
+// unused letters A..Z. A[i] is the letter at position i of alphabet A and
+// POS_A(x) the position of letter x in A.
+function KEYED_ALPHABET(keyword):
+    A = the distinct letters of keyword in first-appearance order
+    append every letter of A..Z not yet in A
+    // an empty keyword gives the straight alphabet
+    return A
+
+function SETUP(type, plain_kw, cipher_kw, key[0..m-1], indicator):
+    if type == I:   PA = KEYED_ALPHABET(plain_kw);  CA = straight
+    if type == II:
+        PA = straight
+        CA = KEYED_ALPHABET(cipher_kw)
+    if type == III: PA = KEYED_ALPHABET(plain_kw);  CA = PA
+    if type == IV:
+        PA = KEYED_ALPHABET(plain_kw)
+        CA = KEYED_ALPHABET(cipher_kw)
+    // key letters sit under the indicator
+    ind = POS_PA(indicator)
+    for j in 0..m-1: shift[j] = (POS_CA(key[j]) - ind) mod 26
+    return PA, CA, shift
+
+function ENCRYPT(p[0..n-1], PA, CA, shift[0..m-1]):
+    for i in 0..n-1: c[i] = CA[(POS_PA(p[i]) + shift[i mod m]) mod 26]
+    return c
+
+function DECRYPT(c[0..n-1], PA, CA, shift[0..m-1]):
+    for i in 0..n-1: p[i] = PA[(POS_CA(c[i]) - shift[i mod m]) mod 26]
+    return p
+
+// Tableau row for coset j: the ciphertext alphabet rotated by that coset's
+// shift.
+function ROW(CA, shift, j):
+    return [CA[(i + shift[j]) mod 26] for i in 0..25]
+```
+'''
+
+[[blocks]]
 kind = "notes"
 title = "What to try"
 body = '''
-- Empty both keywords: every type collapses to Vigenère and the top row of the tableau becomes the straight alphabet.
-- Compare **type I** and **type II** with the same keyword: the coset shifts differ because the key letters are looked up in different alphabets.
-- In **type III** set the key to a single letter equal to the indicator: the shift is zero and the cipher is the identity, which is the alignment convention made visible.
-- In **type IV** change only the ciphertext keyword and watch the rows permute while the plaintext header stays fixed.
+- Clear both keywords. Every type becomes Vigenère, and the top row of the tableau becomes the regular alphabet.
+- Compare **type I** and **type II** with the same keyword. Their coset shifts differ because they look up key letters in different alphabets.
+- In **type III**, use a one-letter key that matches the indicator. The shift becomes zero and the plaintext stays unchanged. This shows the alignment rule directly.
+- In **type IV**, change only the ciphertext keyword. The rows move while the plaintext heading stays fixed.
 '''

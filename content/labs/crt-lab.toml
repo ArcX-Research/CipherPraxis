@@ -12,10 +12,46 @@ updated = "2026-09-04"
 lab = "crt"
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Congruences x ≡ r_i (mod n_i); the moduli need not be coprime. Returns (x,
+// M) with 0 <= x < M = lcm of the moduli, or "no solution" when two
+// congruences disagree.
+function CRT(list of (r_i, n_i)):
+    x = 0; M = 1
+    for each (r, n) in the list:
+        r = r mod n
+        g = gcd(M, n)
+        // disagreement modulo the shared factor g
+        if (r - x) mod g != 0: return NO_SOLUTION
+        L = (M / g) * n                                  // lcm(M, n)
+        // solve x + M*t ≡ r (mod n), i.e. (M/g)*t ≡ (r - x)/g (mod n/g)
+        inv = MOD_INVERSE((M / g) mod (n / g), n / g)
+        t = (((r - x) / g) * inv) mod (n / g)
+        x = (x + M * t) mod L
+        M = L
+    return (x, M)
+
+// Extended Euclid: returns (g, u, v) with a*u + b*v = g = gcd(a, b).
+function EGCD(a, b):
+    if b == 0: return (|a|, sign(a), 0)
+    (g, u1, v1) = EGCD(b, a mod b)
+    return (g, v1, u1 - (a div b) * v1)
+
+function MOD_INVERSE(a, m):
+    (g, u, v) = EGCD(a mod m, m)
+    // a and m are not coprime
+    if g != 1: return NONE
+    return u mod m
+```
+'''
+
+[[blocks]]
 kind = "notes"
 title = "What to try"
 body = '''
-- Enter `1 mod 4, 2 mod 6`: the moduli share the factor 2 and the residues disagree modulo 2, so the system is inconsistent.
-- Enter `5 mod 7, 5 mod 9`: the answer is 5 modulo 63, the least common multiple.
-- Ask for the inverse of 7 modulo 26 (15) and of 13 modulo 26 (none): the unit group of Z26 is the set of valid affine multipliers.
+- Enter `1 mod 4, 2 mod 6`. Both moduli contain the factor 2, but the residues disagree modulo 2, so there is no solution.
+- Enter `5 mod 7, 5 mod 9`. The answer is 5 modulo 63, their least common multiple.
+- Find the inverse of 7 modulo 26. It is 15. Then try 13, which has no inverse. The values that do have inverses form the unit group of Z26 and are the valid affine multipliers.
 '''

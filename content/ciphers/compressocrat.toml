@@ -17,20 +17,20 @@ Let $h(\ell) \in \{1, 2, 3\}^{+}$ be the prefix-free code of letter $\ell$. Conc
 
 $$r = 9(a - 1) + 3(b - 1) + (c - 1) \in \{0, \dots, 25\}, \qquad c_j = \sigma[r],$$
 
-with $\sigma$ a keyed permutation of the alphabet; the rank 26 (trigraph 333) never occurs. Decryption inverts $\sigma$, re-expands the digits and parses the prefix-free stream greedily.
+with $\sigma$ a keyed permutation of the alphabet. The rank 26 (trigraph 333) never occurs. Decryption inverts $\sigma$, re-expands the digits and parses the prefix-free stream greedily.
 '''
 
 [[blocks]]
 kind = "equations"
 title = "Length and validity"
 body = '''
-Ciphertext length is $\lceil (\sum_i |h(p_i)|) / 3 \rceil$, so a 504-letter ciphertext corresponds to a plaintext of about 520-530 letters under the standard code, and a control must be chosen by plaintext prefix to hit the target length exactly. A candidate $\sigma$ is *valid* only if the re-expanded digit stream parses into codes; the program counted valid tokens as a diagnostic (559 of 581 for the live endpoint) and rendered unparseable runs as filler, which loses their digit content and makes a literal forward impossible.
+Ciphertext length is $\lceil (\sum_i |h(p_i)|) / 3 \rceil$, so a 504-letter ciphertext corresponds to a plaintext of about 520-530 letters under the standard code, and a control must be chosen by plaintext prefix to hit the target length exactly. A candidate $\sigma$ is *valid* only if the re-expanded digit stream parses into codes. The program counted valid tokens as a diagnostic (559 of 581 for the live endpoint) and rendered unparseable runs as filler, which loses their digit content and makes a literal forward impossible.
 '''
 
 [[blocks]]
 kind = "variants"
 body = '''
-- **Fractionated Morse**: dots, dashes and separators as the three digits with a fixed Morse code; a neighbouring family whose control passed only under an observable-alphabet quotient (unused trigraph ranks leave alphabet cells unidentifiable).
+- **Fractionated Morse**: dots, dashes and separators as the three digits with a fixed Morse code. A neighbouring family whose control passed only under an observable-alphabet quotient (unused trigraph ranks leave alphabet cells unidentifiable).
 - **Trifid**: fixed-length three-coordinate fractionation; see [Trifid](/ciphers/trifid).
 '''
 
@@ -38,7 +38,7 @@ body = '''
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- The code table is the standard one and fixed; only $\sigma$ is secret.
+- The code table is the standard one and fixed. Only $\sigma$ is secret.
 - Invariant: the ciphertext letter for rank 26 never appears, so one alphabet letter is absent from a direct Compressocrat ciphertext unless $\sigma$ maps only the 26 used ranks (the standard convention).
 - A fitted $\sigma$ that leaves invalid runs cannot re-encrypt to the ciphertext; forward replay is a real gate here, not a tautology.
 '''
@@ -49,19 +49,54 @@ title = "How to attack it"
 body = '''
 1. Anneal $\sigma$ with an external search whose objective parses the digit stream and scores the resulting text (three predeclared seeds, best score selected).
 2. Independently re-implement encryption and decryption; require each control to byte-match a separately compiled generator before it counts.
-3. Gate a live result on the independent language verdict *and* an exact independent forward reconstruction; only then would a shuffled null be run.
+3. Gate a live result on the independent language verdict *and* an exact independent forward reconstruction. Only then would a shuffled null be run.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// h(letter) is the fixed prefix-free code over the digits {1, 2, 3}; sigma is
+// a keyed permutation of the 26 used trigraph ranks (rank 26, trigraph 333,
+// never occurs).
+function ENCRYPT(p[0..n-1], h, sigma):
+    digits = h(p[0]) || h(p[1]) || ... || h(p[n-1])
+    while len(digits) mod 3 != 0:
+        // at most two padding digits
+        digits = digits || "1"
+    for each trigraph (a, b, c) of digits:
+        r = 9 * (a - 1) + 3 * (b - 1) + (c - 1)             // 0..25
+        append sigma[r] to out
+    return out
+
+function DECRYPT(out[0..k-1], h, sigma):
+    digits = empty
+    for j in 0..k-1:
+        r = pos_sigma(out[j])
+        append the trigraph (r div 9 + 1, (r div 3) mod 3 + 1, r mod 3 + 1)
+                to digits
+    p = empty
+    // greedy parse of the prefix-free stream
+    while digits is not empty:
+        if some code h(x) is a prefix of digits:
+            append x to p
+            drop that prefix
+        else if digits is only padding 1s: stop
+        else: the stream does not parse (sigma is invalid)
+    return p
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-Key space $26!$ over the used ranks; the external annealer solved each 504-letter control from three seeds within the audit's standard budget, with all six control searches selecting the exact hidden endpoint.
+Key space $26!$ over the used ranks. The external annealer solved each 504-letter control from three seeds within the audit's standard budget, with all six control searches selecting the exact hidden endpoint.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Invalid runs.** The live endpoint had 22 invalid tokens out of 581; the displayed text could not re-encrypt to the ciphertext (forward FAIL) and scored $-6.29$ per letter (no).
+- **Invalid runs.** The live endpoint had 22 invalid tokens out of 581. The displayed text could not re-encrypt to the ciphertext (forward FAIL) and scored $-6.29$ per letter (no).
 - **Length mismatch.** A wrong assumption about the code table changes the implied plaintext length and every parse.
 - **Scope.** A different code table, a bespoke padding rule, or Compressocrat inside a composite is untested.
 '''
@@ -69,7 +104,7 @@ body = '''
 [[blocks]]
 kind = "controls"
 body = '''
-Two generic-corpus controls chosen to produce exactly 504 ciphertext letters (plaintexts of 527 and 520 letters) with keyed alphabets: both recovered exactly with all tokens valid and forward PASS in every one of the three seeds, and both matched the independent generator byte for byte (logs/199_compressocrat.log). The live text: 559/581 valid tokens, rate $-6.29$ (no), independent forward FAIL; no null run and no candidate.
+Two generic-corpus controls chosen to produce exactly 504 ciphertext letters (plaintexts of 527 and 520 letters) with keyed alphabets: both recovered exactly with all tokens valid and forward PASS in every one of the three seeds, and both matched the independent generator byte for byte (logs/199_compressocrat.log). The live text: 559/581 valid tokens, rate $-6.29$ (no), independent forward FAIL. No null run and no candidate.
 '''
 
 [[blocks]]

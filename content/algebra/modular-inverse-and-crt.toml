@@ -13,7 +13,7 @@ updated = "2026-09-04"
 [[blocks]]
 kind = "definition"
 body = '''
-$a$ has an inverse modulo $n$ iff $\gcd(a, n) = 1$; the extended Euclidean algorithm finds $x, y$ with $ax + ny = 1$, and $a^{-1} \equiv x$. For coprime $m, q$ the **Chinese remainder theorem** says that $x \mapsto (x \bmod m,\; x \bmod q)$ is a ring isomorphism $\mathbb{Z}_{mq} \cong \mathbb{Z}_m \times \mathbb{Z}_q$. For $26 = 2 \cdot 13$ the lift is explicit:
+$a$ has an inverse modulo $n$ iff $\gcd(a, n) = 1$. The extended Euclidean algorithm finds $x, y$ with $ax + ny = 1$, and $a^{-1} \equiv x$. For coprime $m, q$ the **Chinese remainder theorem** says that $x \mapsto (x \bmod m,\; x \bmod q)$ is a ring isomorphism $\mathbb{Z}_{mq} \cong \mathbb{Z}_m \times \mathbb{Z}_q$. For $26 = 2 \cdot 13$ the lift is explicit:
 $$z \equiv 13\,z_2 + 14\,z_{13} \pmod{26},$$
 because $13 \equiv 1 \pmod 2$, $13 \equiv 0 \pmod{13}$, $14 \equiv 0 \pmod 2$ and $14 \equiv 1 \pmod{13}$.
 '''
@@ -36,7 +36,7 @@ Condition (a) filters the $\mathrm{GF}(13)$ factor alone; condition (b) joins th
 [[blocks]]
 kind = "assumptions"
 body = '''
-- The modulus is squarefree with known factorisation ($26$, $10$); the CRT needs coprime factors. Prime-power moduli need Hensel lifting instead.
+- The modulus is squarefree with known factorisation ($26$, $10$). The CRT needs coprime factors. Prime-power moduli need Hensel lifting instead.
 - Inverses exist only for units; equations with non-unit coefficients (for example $2x \equiv c$) are handled by the two-factor view, not by division.
 '''
 
@@ -51,6 +51,42 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Extended Euclid: returns (g, x, y) with a*x + n*y = g = gcd(a, n).
+function EXTENDED_EUCLID(a, n):
+    (r0, r1) = (a, n); (x0, x1) = (1, 0); (y0, y1) = (0, 1)
+    while r1 != 0:
+        q = r0 div r1
+        (r0, r1) = (r1, r0 - q*r1)
+        (x0, x1) = (x1, x0 - q*x1)
+        (y0, y1) = (y1, y0 - q*y1)
+    return (r0, x0, y0)
+
+function INVERSE_MOD(a, n):
+    (g, x, y) = EXTENDED_EUCLID(a, n)
+    // no inverse unless gcd(a, n) = 1
+    if g != 1: return none
+    return x mod n                                // a^{-1} mod n
+
+// Chinese remainder theorem for coprime m, q: the x in 0..mq-1 with x = r_m
+// mod m, x = r_q mod q.
+function CRT(r_m, m, r_q, q):
+    t = ((r_q - r_m) * INVERSE_MOD(m, q)) mod q
+    return (r_m + m*t) mod (m*q)
+
+// The split and the explicit lift for Z26 = Z2 x Z13.
+function SPLIT26(z):
+    return (z mod 2, z mod 13)
+
+function LIFT26(z_2, z_13):
+    // 13 = (1, 0) and 14 = (0, 1) in Z2 x Z13
+    return (13*z_2 + 14*z_13) mod 26
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
 $2^{d_2} + 13^{d_{13}}$ instead of $2^{d_2} \cdot 13^{d_{13}}$: a $2^5 \cdot 13^5 = 11{,}881{,}376$ geometry was resolved in 371,325 units of work, about $0.1$ s. Budgets seen in practice: $13^5 = 371{,}293$ vectors per system as an enumeration cap, $13^7 = 62{,}748{,}517$ as the per-system budget of an exact crib-pair solver. Caps of $2^{18}$ $\mathrm{GF}(2)$ vectors, $13^5$ $\mathrm{GF}(13)$ vectors and 1,500,000 CRT pairs are declared boundaries that return INCOMPLETE, never a negative.
@@ -60,7 +96,7 @@ $2^{d_2} + 13^{d_{13}}$ instead of $2^{d_2} \cdot 13^{d_{13}}$: a $2^5 \cdot 13^
 kind = "failure_modes"
 body = '''
 - Forming the raw Cartesian product of the two null spaces and filtering afterwards.
-- Reading rank consistency as evidence: with a gauge row the system is homogeneous and always consistent; only the nullities carry information.
+- Reading rank consistency as evidence: with a gauge row the system is homogeneous and always consistent. Only the nullities carry information.
 - Silently turning a cap exhaustion into a zero. In depth-first solvers a branch whose partial all-different test exceeds its cap must be retained (deferred), not rejected.
 - Counting residues without first restoring the fixed coordinate $z(A) = 0$.
 '''
@@ -87,7 +123,7 @@ All-different check: positions $4$ and $17$ share the residue $4$ modulo 13 and 
 [[blocks]]
 kind = "notes"
 body = '''
-Because every unit is odd, the $\mathrm{GF}(2)$ part of a unit-ratio system is identical across all unit hypotheses; the CRT view is what makes that observation exact. See [Finite-field linear algebra](/algebra/finite-field-linear-algebra) for the row reduction and [All-different constraints](/algebra/all-different-constraints) for the enumeration discipline.
+Because every unit is odd, the $\mathrm{GF}(2)$ part of a unit-ratio system is identical across all unit hypotheses. The CRT view is what makes that observation exact. See [Finite-field linear algebra](/algebra/finite-field-linear-algebra) for the row reduction and [All-different constraints](/algebra/all-different-constraints) for the enumeration discipline.
 '''
 
 [[provenance]]

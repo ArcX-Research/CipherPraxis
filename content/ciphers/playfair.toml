@@ -24,7 +24,7 @@ with indices modulo 5. Decryption shifts left or up in the first two cases and s
 kind = "equations"
 title = "Invariants"
 body = '''
-No letter encrypts to itself; the digraph $(b, a)$ encrypts to the reverse of the encryption of $(a, b)$; and the same-row and same-column rules make about a quarter of digraphs "linear". The key is identified only up to the symmetries of the square's cyclic row and column structure that leave all three rules unchanged (rotations of rows and of columns), so a solver must compare squares modulo that gauge. A seriated Playfair writes the text in rows of a period $w$ and applies the rules to vertical pairs, which removes the digraph alignment and couples the square with $w$.
+No letter encrypts to itself. The digraph $(b, a)$ encrypts to the reverse of the encryption of $(a, b)$; and the same-row and same-column rules make about a quarter of digraphs "linear". The key is identified only up to the symmetries of the square's cyclic row and column structure that leave all three rules unchanged (rotations of rows and of columns), so a solver must compare squares modulo that gauge. A seriated Playfair writes the text in rows of a period $w$ and applies the rules to vertical pairs, which removes the digraph alignment and couples the square with $w$.
 '''
 
 [[blocks]]
@@ -40,7 +40,7 @@ body = '''
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- The text uses at most 25 symbols; a ciphertext containing all 26 letters cannot be a direct standard Playfair. This is a decisive structural check, and the program's three unsolved texts all fail it.
+- The text uses at most 25 symbols. A ciphertext containing all 26 letters cannot be a direct standard Playfair. This is a decisive structural check, and the program's three unsolved texts all fail it.
 - Digraph boundaries are aligned with the text start; padding conventions are part of the model.
 - A fitted square always round-trips.
 '''
@@ -50,9 +50,43 @@ kind = "attack"
 title = "How to attack it"
 body = '''
 1. Check the 25-symbol constraint and digraph invariants.
-2. Anneal the square under a quadgram objective with row/column swaps, cell swaps and full-square moves; the program's external engine used 1,000,000 iterations with 8 restarts for arbitrary squares at 504 letters.
-3. Verify the recovered square with an independent forward implementation; a control must reach exact plaintext, not merely a readable one (a one-letter language-model overfit is a failure).
+2. Anneal the square under a quadgram objective with row/column swaps, cell swaps and full-square moves. The program's external engine used 1,000,000 iterations with 8 restarts for arbitrary squares at 504 letters.
+3. Verify the recovered square with an independent forward implementation. A control must reach exact plaintext, not merely a readable one (a one-letter language-model overfit is a failure).
 4. With a keyword square, sweep a dictionary and the setter's vocabulary instead.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// S is a 5 x 5 square over 25 letters (J written as I); CELL(S, x) = (row,
+// column) of x in S. Indices are taken modulo 5.
+function PREPARE(p):
+    replace J by I; split into digraphs, inserting X between two equal letters
+    // padding conventions are part of the model
+    return the digraph list
+
+// shift = +1 to encrypt, -1 to decrypt
+function DIGRAPH(S, a, b, shift):
+    (r1, c1) = CELL(S, a); (r2, c2) = CELL(S, b)
+    // same row
+    if r1 == r2: return (S[r1, (c1 + shift) mod 5], S[r2, (c2 + shift) mod 5])
+    // same column
+    if c1 == c2: return (S[(r1 + shift) mod 5, c1], S[(r2 + shift) mod 5, c2])
+    // rectangle: swap columns
+    return (S[r1, c2], S[r2, c1])
+
+function ENCRYPT(p, S):
+    for each digraph (a, b) of PREPARE(p):
+        append DIGRAPH(S, a, b, +1) to c
+    return c
+
+function DECRYPT(c, S):
+    for each digraph (a, b) of c:
+        // the rectangle rule is its own inverse
+        append DIGRAPH(S, a, b, -1) to p
+    return p
+```
 '''
 
 [[blocks]]
@@ -66,8 +100,8 @@ kind = "failure_modes"
 body = '''
 - **Length.** At 144-153 letters generic quadgram annealing cannot identify an arbitrary square: 3.9% and 3.5% plaintext on the seriated controls, with false states that still round-trip.
 - **Seriation.** Even at 504 letters the seriated variant is locked (8.1%).
-- **One-letter overfits.** A neighbouring family's control stopped at 503/504 with a fluent but wrong letter; the audit refused to relax the exact gate for it.
-- **Alphabet mismatch.** An engine that treats the merged letter as a rejected sentinel cannot accept a 26-letter ciphertext at all; this is an implementation boundary, not evidence.
+- **One-letter overfits.** A neighbouring family's control stopped at 503/504 with a fluent but wrong letter. The audit refused to relax the exact gate for it.
+- **Alphabet mismatch.** An engine that treats the merged letter as a rejected sentinel cannot accept a 26-letter ciphertext at all. This is an implementation boundary, not evidence.
 '''
 
 [[blocks]]
@@ -96,7 +130,7 @@ Plaintext `HIDETHEGOLDINTHETREESTUMP` splits into `HI DE TH EG OL DI NT HE TR EX
 [[blocks]]
 kind = "notes"
 body = '''
-For the corpus texts the operative fact is structural: every one of them contains all 26 letters, so a direct standard Playfair (and Bifid, two-square, four-square) is impossible without a 26-symbol convention or an outer layer; the layered forms are treated under the square-under-periodic-key lanes.
+For the corpus texts the operative fact is structural: every one of them contains all 26 letters, so a direct standard Playfair (and Bifid, two-square, four-square) is impossible without a 26-symbol convention or an outer layer. The layered forms are treated under the square-under-periodic-key lanes.
 '''
 
 [[provenance]]

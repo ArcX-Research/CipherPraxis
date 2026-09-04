@@ -26,7 +26,7 @@ $$(a, b) \mapsto \big(U[r_1, c_2],\ L[r_2, c_1]\big).$$
 kind = "equations"
 title = "Configurations and gauges"
 body = '''
-Beyond the squares, a setter chooses horizontal or vertical layout, which square receives the first letter, a digraph offset (0 or 1) and possibly a reversed reading; the program's full selector enumerated 16 such configurations for two-square. Row and column rotations that preserve every rule are gauges of each square. Four-square with straight plaintext squares has only two unknown squares, but the coordinate exchange couples them tightly enough that a single wrong cell produced a fluent one-letter error on a control.
+Beyond the squares, a setter chooses horizontal or vertical layout, which square receives the first letter, a digraph offset (0 or 1) and possibly a reversed reading. The program's full selector enumerated 16 such configurations for two-square. Row and column rotations that preserve every rule are gauges of each square. Four-square with straight plaintext squares has only two unknown squares, but the coordinate exchange couples them tightly enough that a single wrong cell produced a fluent one-letter error on a control.
 '''
 
 [[blocks]]
@@ -42,7 +42,7 @@ body = '''
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- 25-symbol alphabets; a ciphertext with all 26 letters cannot be a direct member of the family.
+- 25-symbol alphabets. A ciphertext with all 26 letters cannot be a direct member of the family.
 - Digraph alignment with the text start (or a declared offset).
 - Invariant: a fitted pair of squares round-trips; readability plus round-trip is not evidence at any length tested.
 '''
@@ -54,27 +54,66 @@ body = '''
 1. Enumerate the configuration (layout, offset, swap, reversal).
 2. Anneal both squares jointly under a quadgram objective; at 504 letters the program's engine used $1{,}000{,}000$ iterations with 8 restarts per configuration.
 3. Verify with an independent transform (the program built a full transform matrix and checked it at 144 and 153 letters across every configuration) and require exact hidden-plaintext recovery and configuration recovery on the control.
-4. Run the complete selection on within-coset shuffled nulls; a target is a candidate only if it reads as English and beats the null maxima.
+4. Run the complete selection on within-coset shuffled nulls. A target is a candidate only if it reads as English and beats the null maxima.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// S1 and S2 are 5 x 5 squares (J merged into I); CELL(S, x) = (row, column)
+// of letter x in S.
+function TWO_SQUARE_DIGRAPH(a, b, S1, S2, layout):
+    (r1, c1) = CELL(S1, a); (r2, c2) = CELL(S2, b)
+    if layout == horizontal: return (S2[r1, c2], S1[r2, c1])
+    if layout == vertical:   return (S1[r1, c2], S2[r2, c1])
+
+function TWO_SQUARE_ENCRYPT(p, S1, S2, layout):
+    for each digraph (a, b) of p:
+        append TWO_SQUARE_DIGRAPH(a, b, S1, S2, layout) to c
+    return c
+
+function TWO_SQUARE_DECRYPT(c, S1, S2, layout):
+    for each digraph (x, y) of c:
+        if layout == horizontal:
+            (r1, c2) = CELL(S2, x)
+            (r2, c1) = CELL(S1, y)
+        else:
+            (r1, c2) = CELL(S1, x)
+            (r2, c1) = CELL(S2, y)
+        append (S1[r1, c1], S2[r2, c2]) to p
+    return p
+
+// Four-square: straight squares at upper-left and lower-right, keyed U
+// (upper-right) and L (lower-left).
+function FOUR_SQUARE_DIGRAPH(a, b, U, L):
+    (r1, c1) = CELL(straight, a); (r2, c2) = CELL(straight, b)
+    return (U[r1, c2], L[r2, c1])
+
+function FOUR_SQUARE_DECRYPT_DIGRAPH(x, y, U, L):
+    (r1, c2) = CELL(U, x); (r2, c1) = CELL(L, y)
+    return (straight[r1, c1], straight[r2, c2])
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-Two arbitrary squares: about $(25!)^2$ raw keys. Two-square at 504 letters: 16 configurations times 8 restarts of $10^6$ iterations; the earlier lane's 30,000 iterations times 3 restarts per configuration was insufficient at 144-153 letters and is recorded as a power failure.
+Two arbitrary squares: about $(25!)^2$ raw keys. Two-square at 504 letters: 16 configurations times 8 restarts of $10^6$ iterations. The earlier lane's 30,000 iterations times 3 restarts per configuration was insufficient at 144-153 letters and is recorded as a power failure.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Length.** At 144-153 letters the matched controls gave 9.2% and 5.6% (two-square), 8.5% and 6.9% (four-square) with round-trips that mostly passed and configurations that mostly failed; the observed selection beat null maxima on only 4/6 controls.
+- **Length.** At 144-153 letters the matched controls gave 9.2% and 5.6% (two-square), 8.5% and 6.9% (four-square) with round-trips that mostly passed and configurations that mostly failed. The observed selection beat null maxima on only 4/6 controls.
 - **Four-square near-misses.** 503/504 with a fluent wrong letter in one engine; 97.8% with a failed forward in another. Neither is an almost-solve that can relax the exact gate.
-- **Selection.** With 16 configurations and restarts, the best live two-square output at 504 letters scored about $-6.62$ with an exact false-state round-trip; it failed the English gate and the null tail was correctly not spent.
+- **Selection.** With 16 configurations and restarts, the best live two-square output at 504 letters scored about $-6.62$ with an exact false-state round-trip. It failed the English gate and the null tail was correctly not spent.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-External engine (log 184): two-square horizontal and vertical 504-letter controls 504/504 with correct variant selection; four-square 503/504 (position 264 decrypted with one wrong letter), gate FAIL. Program's own annealer at 504 letters (log 181): arbitrary two-square control 100% plaintext, configuration PASS, forward PASS at rate $-4.10$; four-square 97.8% with forward FAIL; seriated Playfair 8.1%. Complete two-square selection on the 504-letter text (log 181b): best about $-6.62$, not English, no candidate. Under a period-7 layer at 144-153 letters (log 165): all six matched controls failed; no live text entered the search.
+External engine (log 184): two-square horizontal and vertical 504-letter controls 504/504 with correct variant selection. Four-square 503/504 (position 264 decrypted with one wrong letter), gate FAIL. Program's own annealer at 504 letters (log 181): arbitrary two-square control 100% plaintext, configuration PASS, forward PASS at rate $-4.10$. Four-square 97.8% with forward FAIL; seriated Playfair 8.1%. Complete two-square selection on the 504-letter text (log 181b): best about $-6.62$, not English, no candidate. Under a period-7 layer at 144-153 letters (log 165): all six matched controls failed. No live text entered the search.
 '''
 
 [[blocks]]
@@ -94,7 +133,7 @@ Plaintext `HELPME`: `HE` has H at (2,1) in $S_1$ and E at (0,1) in $S_2$, giving
 [[blocks]]
 kind = "notes"
 body = '''
-The mixed status is deliberate: the two-square annealer is verified and its 504-letter negative is scoped; four-square and seriated forms never passed a control; and the whole family is unidentifiable at 150 letters by generic annealing, so a short-text negative would mean nothing.
+The mixed status is deliberate: the two-square annealer is verified and its 504-letter negative is scoped. Four-square and seriated forms never passed a control; and the whole family is unidentifiable at 150 letters by generic annealing, so a short-text negative would mean nothing.
 '''
 
 [[provenance]]

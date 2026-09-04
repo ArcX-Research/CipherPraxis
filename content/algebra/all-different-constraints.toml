@@ -19,9 +19,9 @@ For a coordinate function $z$ on the alphabet, $\mathrm{AllDifferent}(z(A), \dot
 [[blocks]]
 kind = "equations"
 body = '''
-- **CRT form.** $z$ is a permutation of $0..25$ iff each residue modulo 13 occurs exactly twice and the two carriers have opposite parity; the parity requirements are linear in the $\mathrm{GF}(2)$ null-space coefficients once the $\mathrm{GF}(13)$ vector is fixed.
-- **Potential form (union-find).** Maintaining $z(x) = s\, z(\mathrm{root}) + t$ with $s = \pm 1$ along accepted edges, a new edge is rejected if it forces two letters equal; a sign-mismatch cycle pins the root to a solution of $2z = c$, and a pinned root must admit a collision-free value.
-- **Key-free shadow.** Bijectivity of $z$ implies, within one key class, $C_i = C_j \Leftrightarrow P_i = P_j$; the equality partitions of ciphertext and plaintext must agree. This is the necessary condition tested before any algebra.
+- **CRT form.** $z$ is a permutation of $0..25$ iff each residue modulo 13 occurs exactly twice and the two carriers have opposite parity. The parity requirements are linear in the $\mathrm{GF}(2)$ null-space coefficients once the $\mathrm{GF}(13)$ vector is fixed.
+- **Potential form (union-find).** Maintaining $z(x) = s\, z(\mathrm{root}) + t$ with $s = \pm 1$ along accepted edges, a new edge is rejected if it forces two letters equal. A sign-mismatch cycle pins the root to a solution of $2z = c$, and a pinned root must admit a collision-free value.
+- **Key-free shadow.** Bijectivity of $z$ implies, within one key class, $C_i = C_j \Leftrightarrow P_i = P_j$. The equality partitions of ciphertext and plaintext must agree. This is the necessary condition tested before any algebra.
 - **Cycle-type shadow.** A single 26-cycle solution must have no closed sub-cycle in any partial map (see [Permutation cycles](/algebra/permutation-cycles)).
 '''
 
@@ -29,17 +29,54 @@ body = '''
 kind = "assumptions"
 body = '''
 - One alphabet; with several unrelated alphabets the constraint applies per alphabet and is much weaker.
-- The linear relations are exact; a single wrong crib letter turns a feasible system into an infeasible one, which is the point.
+- The linear relations are exact. A single wrong crib letter turns a feasible system into an infeasible one, which is the point.
 '''
 
 [[blocks]]
 kind = "attack"
 body = '''
-1. Solve the linear relations over $\mathrm{GF}(2)$ and $\mathrm{GF}(13)$ and enumerate only permutation lifts; a guess whose null space admits no permutation is rejected exactly.
+1. Solve the linear relations over $\mathrm{GF}(2)$ and $\mathrm{GF}(13)$ and enumerate only permutation lifts. A guess whose null space admits no permutation is rejected exactly.
 2. Retain **every** distinct all-different read of a system for later ranking.
 3. In depth-first word or block assignment, check injectivity of each observed residue map after every assignment, run the CRT feasibility test on the incremental echelon bases, and defer (never reject) a branch whose test exceeds its cap.
 4. Use the equality-partition gate and the collision implications as free pre-filters on candidate texts.
 5. Score survivors by language only after the exact stage, and require independent forwards.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Partial coordinate map z: assigned letters -> Z26. AllDifferent requires z
+// injective.
+function INJECTIVE(z):
+    used = empty set
+    for each assigned letter x:
+        if z[x] in used: return false           // two letters at one position
+        add z[x] to used
+    return true
+
+// CRT form for a full vector z over all 26 letters: z is a permutation of
+// 0..25 iff each residue mod 13 is carried by exactly two letters and those
+// two have opposite parity.
+function IS_PERMUTATION_CRT(z):
+    for r in 0..12:
+        carriers = { x : z[x] mod 13 == r }
+        if |carriers| != 2: return false
+        (x, y) = the two carriers
+        if z[x] mod 2 == z[y] mod 2: return false
+    return true
+
+// Key-free shadow: within one key class, C_i = C_j iff P_i = P_j. S =
+// positions of one key class
+function EQUALITY_PARTITION_GATE(C, P, S):
+    for i in S, j in S with i < j:
+        if (C[i] == C[j]) != (P[i] == P[j]): return REJECT
+    return PASS
+
+// Depth-first use: run INJECTIVE on the observed residue map after every
+// assignment; run the CRT feasibility test on the incremental echelon bases;
+// a branch whose test exceeds its cap is deferred, never rejected.
+```
 '''
 
 [[blocks]]
@@ -51,8 +88,8 @@ Exact crib-pair solver: 245,766 pairs, all linearly consistent, resolved only by
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Non-injective potentials pass every linear check.** Without the all-different test the potential $z' = 2z$ with keys $k' = 2k$ was fully consistent with the relations; only injectivity exposed it.
-- **Keeping only the best partial read.** A planted system whose true read ranked 2nd of 6 all-different reads was lost under that rule; the corrected rule retains all reads.
+- **Non-injective potentials pass every linear check.** Without the all-different test the potential $z' = 2z$ with keys $k' = 2k$ was fully consistent with the relations. Only injectivity exposed it.
+- **Keeping only the best partial read.** A planted system whose true read ranked 2nd of 6 all-different reads was lost under that rule. The corrected rule retains all reads.
 - **Rejecting on cap exhaustion** instead of deferring the branch.
 - **Single-word guesses.** One English word of up to about 20 letters leaves nullities far too large to enumerate; exact rejection needs two long cribs or one crib plus enough fixed letters.
 '''

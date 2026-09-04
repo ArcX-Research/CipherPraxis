@@ -24,7 +24,7 @@ For any fixed plaintext the ciphertext is uniform over $\mathbb{Z}_{26}^n$, and 
 kind = "equations"
 title = "Perfect secrecy and its failure modes"
 body = '''
-$\Pr[c \mid p] = 26^{-n}$ for every $p$, so $\Pr[p \mid c] = \Pr[p]$: the ciphertext carries no information. The guarantee depends on all three conditions. A reused pad leaks $c^{(1)} - c^{(2)} = p^{(1)} - p^{(2)}$, the same relation the program's cross-text tests look for between two ciphertexts; a key drawn from language is a [running key](/ciphers/running-key); a key shorter than the message is a Vigenère. In a keyed tableau the same arithmetic runs on $\operatorname{pos}_A$.
+$\Pr[c \mid p] = 26^{-n}$ for every $p$, so $\Pr[p \mid c] = \Pr[p]$: the ciphertext carries no information. The guarantee depends on all three conditions. A reused pad leaks $c^{(1)} - c^{(2)} = p^{(1)} - p^{(2)}$, the same relation the program's cross-text tests look for between two ciphertexts. A key drawn from language is a [running key](/ciphers/running-key). A key shorter than the message is a Vigenère. In a keyed tableau the same arithmetic runs on $\operatorname{pos}_A$.
 '''
 
 [[blocks]]
@@ -40,7 +40,7 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - Uniform, independent key letters; single use; key length at least the message length.
-- Invariant: the ciphertext index of coincidence is at the uniform level $1/26 \approx 0.038$ and no lag shows a coincidence peak; a ciphertext with a period signature is not a one-time pad.
+- Invariant: the ciphertext index of coincidence is at the uniform level $1/26 \approx 0.038$ and no lag shows a coincidence peak. A ciphertext with a period signature is not a one-time pad.
 '''
 
 [[blocks]]
@@ -48,6 +48,36 @@ kind = "attack"
 title = "How to attack it"
 body = '''
 There is none against a correctly used pad. What can be tested is whether a ciphertext *is* one: a flat histogram, uniform-level index of coincidence and an empty lag profile are consistent with a pad (and with any strong cipher), and any departure from them is evidence of structure. Between two ciphertexts, the difference test above detects a reused key.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Letters are indices 0..25. The key has n letters drawn uniformly and
+// independently from 0..25, is used once, and is never shorter than the
+// message.
+function KEYGEN(n):
+    for i in 0..n-1:
+        // a true random source, not a text or a word
+        k[i] = UNIFORM_RANDOM(0..25)
+    return k
+
+function ENCRYPT(p[0..n-1], k[0..n-1]):
+    for i in 0..n-1:
+        c[i] = (p[i] + k[i]) mod 26
+    return c
+
+function DECRYPT(c[0..n-1], k[0..n-1]):
+    for i in 0..n-1:
+        p[i] = (c[i] - k[i]) mod 26
+    return p
+
+// In a keyed tableau the same arithmetic runs on pos_A. There is no attack on
+// a correctly used pad: every plaintext of length n has exactly one key.
+// Reusing k on two messages leaks c1[i] - c2[i] = p1[i] - p2[i], a
+// two-plaintext running-key problem.
+```
 '''
 
 [[blocks]]
@@ -60,14 +90,14 @@ Encryption and decryption are $O(n)$. The information-theoretic cost of an attac
 kind = "failure_modes"
 body = '''
 - **Key reuse** turns two pads into one running-key problem with two language streams.
-- **Structured key** (text initials, a book passage) makes the pad a book cipher; the key is recoverable once the source is guessed.
+- **Structured key** (text initials, a book passage) makes the pad a book cipher. The key is recoverable once the source is guessed.
 - **Key transmission**: the pad must reach the recipient, which in practice means the key must be stored or hidden somewhere.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-No planted-control receipt exists for this entry; the corpus utility only verifies that its own panel decrypts back to the message. The uniform-level statistics that a pad would produce (index of coincidence 0.037-0.051 and 21-22 distinct letters per 26-letter window in the random-looking segments of the corpus texts) are reported by the measurement lanes but were not attributed to a pad.
+No planted-control receipt exists for this entry. The corpus utility only verifies that its own panel decrypts back to the message. The uniform-level statistics that a pad would produce (index of coincidence 0.037-0.051 and 21-22 distinct letters per 26-letter window in the random-looking segments of the corpus texts) are reported by the measurement lanes but were not attributed to a pad.
 '''
 
 [[blocks]]

@@ -9,7 +9,7 @@ use crate::state::use_state;
 use crate::util::set_title;
 use leptos::prelude::*;
 use leptos_router::hooks::use_params_map;
-use praxis_core::content::{Entry, Section};
+use praxis_core::content::{BlockKind, Entry, Section};
 
 #[component]
 pub fn EntryPage() -> impl IntoView {
@@ -74,28 +74,27 @@ fn EntryView(entry: Entry) -> impl IntoView {
 
     view! {
         <article class="wrap entry" class:entry-lab=is_lab>
-            <nav class="breadcrumbs mono" aria-label="Breadcrumb">
-                <a href="/">"Cipher Praxis"</a><span class="sep">"/"</span>
-                <a href=format!("/{}", section.slug())>{section.title()}</a><span class="sep">"/"</span>
-                <span aria-current="page">{title.clone()}</span>
-            </nav>
-            <header class="entry-header">
-                <p class="eyebrow mono">
-                    {format!("{:02} · {}", section.ordinal(), family)}
-                    {updated.map(|u| view! { <span class="sep">"·"</span><span>{format!("updated {u}")}</span> })}
-                </p>
-                <h1 class="display">{title.clone()}</h1>
-                {subtitle.map(|s| view! { <p class="entry-subtitle serif">{s}</p> })}
-                <div class="entry-status glass">
-                    <StatusBadge status=status large=true/>
-                    <p class="entry-status-note">{status_note.unwrap_or_else(|| status.description().to_string())}</p>
-                </div>
-                <p class="lede">{summary}</p>
-                {(!tags.is_empty()).then(|| view! { <div class="card-tags">{tags.iter().map(|t| view! { <span class="tag">{t.clone()}</span> }).collect_view()}</div> })}
-            </header>
-
             <div class="entry-grid">
                 <div class="entry-main">
+                    <nav class="breadcrumbs mono" aria-label="Breadcrumb">
+                        <a href="/">"Cipher Praxis"</a><span class="sep">"/"</span>
+                        <a href=format!("/{}", section.slug())>{section.title()}</a><span class="sep">"/"</span>
+                        <span aria-current="page">{title.clone()}</span>
+                    </nav>
+                    <header class="entry-header">
+                        <p class="eyebrow mono">
+                            {format!("{:02} · {}", section.ordinal(), family)}
+                            {updated.map(|u| view! { <span class="sep">"·"</span><span>{format!("updated {u}")}</span> })}
+                        </p>
+                        <h1 class="display">{title.clone()}</h1>
+                        {subtitle.map(|s| view! { <p class="entry-subtitle serif">{s}</p> })}
+                        <div class="entry-status glass">
+                            <StatusBadge status=status large=true/>
+                            <p class="entry-status-note">{status_note.unwrap_or_else(|| status.description().to_string())}</p>
+                        </div>
+                        <p class="lede">{summary}</p>
+                        {(!tags.is_empty()).then(|| view! { <div class="card-tags">{tags.iter().map(|t| view! { <span class="tag">{t.clone()}</span> }).collect_view()}</div> })}
+                    </header>
                     {(!toc.is_empty()).then(|| view! {
                         <nav class="toc toc-strip" aria-label="On this page">
                             {toc.iter().map(|(id, h)| view! { <a href=format!("#{id}")>{h.clone()}</a> }).collect_view()}
@@ -112,7 +111,11 @@ fn EntryView(entry: Entry) -> impl IntoView {
                         view! {
                             <section class="block" id=id.clone() aria-labelledby=format!("{id}-h")>
                                 <h2 class="block-h" id=format!("{id}-h")><span class="block-n mono">{format!("{:02}", b.kind.ordinal())}</span>{b.heading()}</h2>
-                                <Markdown source=b.body.clone()/>
+                                {if b.kind == BlockKind::Pseudocode {
+                                    view! { <div class="prose" inner_html=praxis_core::render::pseudocode_to_html(&b.body)></div> }.into_any()
+                                } else {
+                                    view! { <Markdown source=b.body.clone()/> }.into_any()
+                                }}
                             </section>
                         }
                     }).collect_view()}
@@ -139,7 +142,7 @@ fn EntryView(entry: Entry) -> impl IntoView {
             </div>
 
             <div class="entry-endmatter">
-                <EvidencePanel provenance=provenance references=references wide=true/>
+                <EvidencePanel provenance=provenance references=references wide=true entry_id=entry.id.clone() entry_title=title.clone()/>
                 {has_backlinks.then(|| view! {
                     <section class="related row-grid" aria-labelledby="cited-h">
                         <h2 id="cited-h" class="side-h">"Cited by"<span class="mono meta">{format!(" · {}", backlinks_len)}</span></h2>

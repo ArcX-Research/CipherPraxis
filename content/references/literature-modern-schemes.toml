@@ -13,7 +13,7 @@ updated = "2026-09-04"
 [[blocks]]
 kind = "notes"
 body = '''
-When a modern scheme is tested against a short classical-looking text, the specification is the control generator: plants must use the exact word list, checksum and padding conventions of the standard, or the negative closes a construction nobody would have used. The atlas entries for these hypotheses record which conventions their controls followed.
+When testing a modern scheme against a short, classical-looking text, build controls from the real specification. Planted cases must use its exact word list, checksum, and padding rules. Otherwise, a negative result rules out only an invented version of the scheme. Each entry states which conventions its controls used.
 '''
 
 [[references]]

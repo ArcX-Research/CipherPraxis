@@ -38,7 +38,7 @@ M-step for coset $b$ given predicted classes $z_i$:
 
 $$k_b \leftarrow \arg\max_{s \in \mathbb{Z}_{26}} \sum_{i \in \text{coset } b} \log E_{z_i}\big((x_i - s) \bmod 26\big).$$
 
-Both steps are monotone in the complete-data likelihood, so EM converges to a stationary point; it is not global.
+Both steps are monotone in the complete-data likelihood, so EM converges to a stationary point. It is not global.
 '''
 
 [[blocks]]
@@ -54,7 +54,7 @@ body = '''
 kind = "attack"
 title = "How to attack it"
 body = '''
-1. Fit the inner mixture by evidence with the outer shifts marginalised; read the inner spacing off the $\delta$-marginal (correct on 7/8 planted seeds; the top three carried).
+1. Fit the inner mixture by evidence while averaging over the outer shifts. Read the inner spacing from the $\delta$-marginal. It was correct on 7 of 8 planted seeds, and the search kept the top three values.
 2. For each width $w$, run the order-free pattern statistic (DP over long and short columns) and refine the shifts by class-EM; report the width's $z$ against shuffled ciphertexts pushed through the identical pipeline.
 3. Hand widths with $z \ge 3$ to the column solver (residue classes fixed by the pattern, the rest by quadgrams, then a polish of shifts and order).
 
@@ -62,17 +62,53 @@ Hard-EM appears wherever a class solver fits outer and inner shifts jointly for 
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Ciphertext letters x_i in the outer order, outer coset b(i) = i mod 7, k
+// inner classes with class-conditional distributions E_z and priors pi_z;
+// parameters: the seven outer shifts k_b.
+function CLASS_EM(x, E, pi, w, k_init):
+    // from the evidence fit (shifts marginalised)
+    k = k_init
+    for sweep in 1..4:
+        // E-step: posterior class of every position under the current shifts
+        for each position i:
+            for each class z: post[i][z] = pi_z * E_z((x_i - k_{b(i)}) mod 26)
+            normalise post[i] to sum to 1
+        centre post per class, lay it out at width w by the long/short column
+                DP
+        z_hat = predicted class per position from that layout
+        // M-step: re-estimate each outer coset's shift from its
+        // class-labelled letters
+        changed = false
+        for b in 0..6:
+            s* = argmax over s in 0..25 of sum over i in coset b of log
+                    E_{z_hat[i]}((x_i - s) mod 26)
+            if s* != k_b: k_b = s*; changed = true
+        // prior re-estimate
+        optionally pi_z = mean over i of post[i][z]
+        if not changed: break
+    return the shifts k with the best width statistic seen
+
+// Hard-EM variant (class solver): replace post by the current best assignment
+// and alternate exact monogram maximisation of the 7 outer and k inner shifts
+// for four sweeps.
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-One EM sweep costs one DP layout per width plus $7 \times 26$ coset-shift evaluations, each $O(n/7)$; four sweeps per width and up to 25 widths, repeated for 60 shuffled nulls, is the dominant cost of the mixture pipeline (about 40 minutes for two texts in all alphabet combinations).
+One EM sweep costs one DP layout per width plus $7 \times 26$ coset-shift evaluations, each $O(n/7)$. Four sweeps per width and up to 25 widths, repeated for 60 shuffled nulls, is the dominant cost of the mixture pipeline (about 40 minutes for two texts in all alphabet combinations).
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Degeneracy.** Without per-class centring the all-in-one-class configuration maximises even widths; the fix is structural, not a tuning.
-- **Local optima.** EM from a fit with more than two wrong cosets can converge to a wrong stationary point; the recorded controls needed at most two corrections.
-- **Flat inner texts.** If the inner layer is not a short-period substitution of natural language (fractionation, a second transposition-substitution layer, random letters) the classes are uninformative and EM has nothing to sharpen; the negative signatures of a Bifid, a plain periodic layer and a double columnar are printed alongside the controls for that reason.
+- **Degeneracy.** Without per-class centring the all-in-one-class configuration maximises even widths. The fix is structural, not a tuning.
+- **Local optima.** EM from a fit with more than two wrong cosets can converge to a wrong stationary point. The recorded controls needed at most two corrections.
+- **Flat inner texts.** If the inner layer is not a short-period substitution of natural language (fractionation, a second transposition-substitution layer, random letters) the classes are uninformative and EM has nothing to sharpen. The negative signatures of a Bifid, a plain periodic layer and a double columnar are printed alongside the controls for that reason.
 - **Selection freedom.** Maximising rather than marginalising the shifts in the first stage overfits by about $0.15$ nats per letter and picks wrong models on shuffled nulls.
 '''
 
@@ -90,7 +126,7 @@ Two classes over a three-letter alphabet with $E_0 = (0.6, 0.3, 0.1)$ and $E_1 =
 
 E-step: $P(z{=}0 \mid A) = 0.6/(0.6 + 0.1) = 0.857$; $P(z{=}0 \mid C) = 0.1/0.7 = 0.143$; $P(z{=}0 \mid B) = 0.3/0.6 = 0.5$. Posteriors for class 0: $(0.857, 0.143, 0.857, 0.5)$.
 
-M-step for the prior: $\pi_0 = (0.857 + 0.143 + 0.857 + 0.5)/4 = 0.589$. A shift M-step would instead score each of the 26 candidate rotations of $E_{z_i}$ against the coset's letters and keep the best. One more E-step with the new prior moves the A posterior to $0.589 \cdot 0.6 / (0.589 \cdot 0.6 + 0.411 \cdot 0.1) = 0.896$ and the C posterior to $0.589 \cdot 0.1 / (0.589 \cdot 0.1 + 0.411 \cdot 0.6) = 0.193$; the complete-data likelihood rises at every step, which is the monotonicity that makes EM converge.
+M-step for the prior: $\pi_0 = (0.857 + 0.143 + 0.857 + 0.5)/4 = 0.589$. A shift M-step would instead score each of the 26 candidate rotations of $E_{z_i}$ against the coset's letters and keep the best. One more E-step with the new prior moves the A posterior to $0.589 \cdot 0.6 / (0.589 \cdot 0.6 + 0.411 \cdot 0.1) = 0.896$ and the C posterior to $0.589 \cdot 0.1 / (0.589 \cdot 0.1 + 0.411 \cdot 0.6) = 0.193$. The complete-data likelihood rises at every step, which is the monotonicity that makes EM converge.
 '''
 
 [[provenance]]

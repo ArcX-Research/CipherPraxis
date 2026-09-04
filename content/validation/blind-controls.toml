@@ -15,7 +15,7 @@ kind = "definition"
 body = '''
 Two kinds of blindness are distinguished:
 
-- **Hidden bank.** Fixtures are derived deterministically from a seed $s$ supplied by the release authority after the code is frozen and audited. The attempt record stores only $\operatorname{SHA256}(s)$; the seed is revealed in the final transcript so that admission can regenerate the bank. Because the attempt path is occupied durably before any fixture is derived, a second try is impossible: the bank is **burned** by any attempt, successful or not.
+- **Hidden bank.** Fixtures are derived deterministically from a seed $s$ supplied by the release authority after the code is frozen and audited. The attempt record stores only $\operatorname{SHA256}(s)$. The seed is revealed in the final transcript so that admission can regenerate the bank. Because the attempt path is occupied durably before any fixture is derived, a second try is impossible: the bank is **burned** by any attempt, successful or not.
 - **Blind search (no oracle).** The solver is given the planted ciphertext and no information about where the truth lies in its task order (`oracle=False`). It passes only if it reaches the planted truth under the same ordering, budget and pruning the live run will use.
 
 A *disclosed* control, by contrast, is one whose seed and truth the author may inspect. It is admissible for development and for robustness diagnostics, and it never authorises a target run.
@@ -46,17 +46,54 @@ Disclosed controls are where a solver is developed, and development is selection
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Inputs: frozen and audited artefacts a_1..a_r, a hidden seed s held by the
+// release authority and never shown to the author, and the live ordering,
+// budget and pruning. Output: one recorded attempt, admitted only if the bank
+// regenerates from the revealed seed.
+function HIDDEN_BANK_ATTEMPT(artefacts, s, argv):
+    // one attempt, ever
+    if EXISTS(canonical_path) or EXISTS(attempt_path): refuse
+    marker = {SHA256(s), argv, [SHA256(a) for a in artefacts]}
+    // the bank is now burned
+    CREATE_EXCLUSIVE(attempt_path, marker); FSYNC()
+    // deterministic, domain-separated labels
+    fixtures = DERIVE_FIXTURES(s)
+    for f in fixtures:
+        run the identity case and its null replay on f with the live pipeline
+        // no retry
+        if not RECOVERED(f): terminate POWER_BLOCKED
+    write transcript; commit = SHA256(prefix); reveal s in the transcript
+    return transcript
+
+function ADMIT(transcript, marker):
+    require SHA256(transcript.revealed_seed) == marker.seed_hash
+    require DERIVE_FIXTURES(transcript.revealed_seed) == transcript.fixtures
+    replay the selector; require canonical equality
+
+function BLIND_SEARCH_CONTROL(c_planted, truth):
+    // oracle = False: the solver learns nothing about where the truth sits in
+    // its task order
+    result = SEARCH(c_planted, order = live_order, budget = live_budget,
+            pruning = live_pruning)
+    return result == truth
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-A hidden bank is run once. Everything it will need, including a second selector pass for determinism, three in-memory parses of the transcript and the admission replay, must fit the declared wall and memory caps; the program budgeted 1,200 s wall and 1 GiB for two sequential 34-case passes, with a measured margin of about three times.
+A hidden bank is run once. Everything it will need, including a second selector pass for determinism, three in-memory parses of the transcript and the admission replay, must fit the declared wall and memory caps. The program budgeted 1,200 s wall and 1 GiB for two sequential 34-case passes, with a measured margin of about three times.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Front-loaded fixtures.** Two blind controls recovered their truth at pair 150 and pair 17 of a 1.6-million-pair frontier; an auditor pointed out that the fixture had been chosen for that reason, and the ledger reclassified the results from `POWER_PASS` to `PIPELINE_CORRECTNESS_PASS / WIRING_KAT`.
-- **Process-local one-shot property.** A first seal kept the read-once counter in memory, so a crash after the read left no evidence and a rerun would read again; the replacement wrote a durable `O_EXCL` marker before the sole read.
-- **Burned by an environmental accident.** A hard kill between hard-link publication and temporary unlink leaves a state that admission refuses; it is fail-closed, but the fixtures are gone.
+- **Front-loaded fixtures.** Two blind controls recovered their truth at pair 150 and pair 17 of a 1.6-million-pair frontier. An auditor pointed out that the fixture had been chosen for that reason, and the ledger reclassified the results from `POWER_PASS` to `PIPELINE_CORRECTNESS_PASS / WIRING_KAT`.
+- **Process-local one-shot property.** A first seal kept the read-once counter in memory, so a crash after the read left no evidence and a rerun would read again. The replacement wrote a durable `O_EXCL` marker before the sole read.
+- **Burned by an environmental accident.** A hard kill between hard-link publication and temporary unlink leaves a state that admission refuses. It is fail-closed, but the fixtures are gone.
 '''
 
 [[blocks]]

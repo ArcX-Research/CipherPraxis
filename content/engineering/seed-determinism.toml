@@ -17,7 +17,7 @@ Given a root reveal $r$ (32 bytes) and a label $L$ (an ASCII string such as `SEE
 
 $$W(L, c) = \operatorname{SHA256}(r \,\|\, \operatorname{EL}(L) \,\|\, \operatorname{uint64be}(c)), \qquad c = 0, 1, 2, \dots$$
 
-with $\operatorname{EL}$ a length-prefixed encoding. Unsigned 64-bit words are consumed in order; a uniform draw in $[0, n)$ takes the next word $x$ and **rejects** it when $x \ge \lfloor 2^{64}/n \rfloor \cdot n$, otherwise returns $x \bmod n$. A seed is $1 + \operatorname{draw}(L, 2^{63}-1)$; if it duplicates an accepted seed, consumption continues on the **same** label's stream at its next unused counter. Construction and selector seeds use distinct label prefixes and are processed in fixed case order.
+with $\operatorname{EL}$ a length-prefixed encoding. Unsigned 64-bit words are consumed in order. A uniform draw in $[0, n)$ takes the next word $x$ and **rejects** it when $x \ge \lfloor 2^{64}/n \rfloor \cdot n$, otherwise returns $x \bmod n$. A seed is $1 + \operatorname{draw}(L, 2^{63}-1)$. If it duplicates an accepted seed, consumption continues on the **same** label's stream at its next unused counter. Construction and selector seeds use distinct label prefixes and are processed in fixed case order.
 '''
 
 [[blocks]]
@@ -42,23 +42,69 @@ Determinism is what makes the null valid and the audit possible. With the same s
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Root reveal r (32 bytes); label L (exact ASCII bytes); one private counter
+// per label. EL = length-prefixed encoding
+function WORD(r, L, c):
+    return the first 8 bytes of SHA256(r || EL(L) || uint64be(c)) as an
+            unsigned 64-bit integer
+
+// uniform in [0, n) by rejection
+function DRAW(r, L, n, counters):
+    loop:
+        x = WORD(r, L, counters[L]); counters[L] = counters[L] + 1
+        // otherwise reject and take the next word
+        if x < floor(2^64 / n) * n: return x mod n
+    // more than 2^32 words for one seed is a derivation failure: retire the
+    // reveal, no fallback
+
+function SEED(r, L, counters, accepted):
+    loop:
+        s = 1 + DRAW(r, L, 2^63 - 1, counters)
+        // duplicate: same stream, next counter
+        if s not in accepted: accepted = accepted + {s}; return s
+
+// fixed case order; never rerolled
+function DERIVE_SEEDS(r, cases):
+    for each case in cases in fixed order:
+        construction_seed[case] = SEED(r, "SEED/CONSTRUCTION/" + case,
+                counters, accepted)
+        selector_seed[case]     = SEED(r, "SEED/SELECTOR/" + case, counters,
+                accepted)
+    // same selector seed for the observation and each null
+    return construction_seed, selector_seed
+
+// descending Fisher-Yates, unbiased
+function SHUFFLE(r, L, n, counters):
+    perm = [0, 1, ..., n-1]
+    for i in n-1 down to 1:
+        // uniform in [0, i]
+        j = DRAW(r, L, i + 1, counters)
+        swap perm[i] and perm[j]
+    return perm
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-Hash-based derivation is negligible in cost. Rejection sampling wastes at most a fraction $n / 2^{64}$ of words. The cost is in writing the contract precisely enough that a second implementer reproduces it; one design was blocked for an ambiguous seed-label clause and its successor spelled out the exact bytes.
+Hash-based derivation is negligible in cost. Rejection sampling wastes at most a fraction $n / 2^{64}$ of words. The cost is in writing the contract precisely enough that a second implementer reproduces it. One design was blocked for an ambiguous seed-label clause and its successor spelled out the exact bytes.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Ambiguous label grammar.** A design that wrote `<kind>` where the stored case kind and the seed kind could be confused was blocked; the successor enumerated the two uppercase seed kinds and the exact label bytes.
+- **Ambiguous label grammar.** A design that wrote `<kind>` where the stored case kind and the seed kind could be confused was blocked. The successor enumerated the two uppercase seed kinds and the exact label bytes.
 - **Reroll after observation.** Replacing or extending seeds once a score is known invalidates the bank; designs state that seeds cannot be replaced after the observation is known and that a derivation failure retires the reveal rather than permitting search.
-- **Seeds in the clear.** The hidden seed appears in the attempt record only as its hash and is revealed only in the final transcript; a reveal in the environment at admission time is refused.
+- **Seeds in the clear.** The hidden seed appears in the attempt record only as its hash and is revealed only in the final transcript. A reveal in the environment at admission time is refused.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Derivation primitive KATs check the published first seeds, the same-stream continuation vectors after a forced duplicate, and the four negative spellings; the public bank hash is a KAT vector for the whole derivation.
+Derivation primitive KATs check the published first seeds, the same-stream continuation vectors after a forced duplicate, and the four negative spellings. The public bank hash is a KAT vector for the whole derivation.
 '''
 
 [[blocks]]

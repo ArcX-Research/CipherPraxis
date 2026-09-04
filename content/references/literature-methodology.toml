@@ -13,7 +13,7 @@ updated = "2026-09-04"
 [[blocks]]
 kind = "notes"
 body = '''
-Two ideas from this list are load-bearing for the whole atlas. Popper's falsifiability, in its operational form, is the tautological-gate rule: a check that cannot fail is not a check. Preregistration, in its operational form, is the seal: the design, the controls, the nulls, the gates and the terminal vocabulary are frozen and audited by a different agent before the one-shot resource is spent, so that nothing about the decision can be adjusted after the data are seen.
+Two ideas guide the whole site. First, a check that cannot fail is not a useful check. This is the tautological-gate rule based on Popper's falsifiability. Second, preregistration becomes a seal. A different agent reviews and freezes the design, controls, nulls, gates, and end-state terms before any one-use resource is spent. The decision rules cannot then change after the data are seen.
 '''
 
 [[references]]

@@ -30,7 +30,7 @@ and the index of coincidence of the aligned text follows in closed form:
 
 $$\operatorname{IC}_{\text{union}}(s) = \frac{\sum_b \sum_x F_b(x)^2 + 2J(s) - n}{n(n-1)}.$$
 
-Maximising $J$ is therefore the same as maximising the coincidence rate of the whole text after the layer is removed. For $m = 7$ the $26^6 \approx 3.1 \times 10^8$ relative vectors are enumerated exactly by fixing $(s_1, s_2, s_3)$ in batches and maximising the remaining three jointly from precomputed partial sums; the run takes under a second on the corpus texts. The **near-optimal set** $\{s : J(s) \ge J^* - \delta\}$ and the per-coset **margin** (best minus runner-up gain when one coset is moved alone) say which cosets are pinned and which are ambiguous.
+Maximising $J$ is therefore the same as maximising the coincidence rate of the whole text after the layer is removed. For $m = 7$ the $26^6 \approx 3.1 \times 10^8$ relative vectors are enumerated exactly by fixing $(s_1, s_2, s_3)$ in batches and maximising the remaining three jointly from precomputed partial sums. The run takes under a second on the corpus texts. The **near-optimal set** $\{s : J(s) \ge J^* - \delta\}$ and the per-coset **margin** (best minus runner-up gain when one coset is moved alone) say which cosets are pinned and which are ambiguous.
 '''
 
 [[blocks]]
@@ -55,6 +55,49 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Ciphertext c[0..n-1] as indices in the tested order; period m; N position
+// shuffles for the null.
+function ALIGN_EXACT(c[0..n-1], m):
+    for b in 0..m-1:
+        // F_b(x)
+        F[b] = HISTOGRAM([c[i] for i in 0..n-1 if i mod m == b])
+    for a in 0..m-1, b in 0..m-1, d in 0..25:
+        // cross tables
+        C[a][b][d] = sum over x of F[a][x] * F[b][(x + d) mod 26]
+    best = -infinity
+    // 26^(m-1) vectors, exact
+    for every relative vector s = (0, s_1, ..., s_{m-1}) with each s_b in
+            0..25:
+        J = sum over a < b of C[a][b][(s_b - s_a) mod 26]
+        if J > best: best = J; s_star = s
+    IC_union = (sum over b, x of F[b][x]^2 + 2 * best - n) / (n * (n - 1))
+    // which cosets are pinned
+    near_optimal = { s : J(s) >= best - delta }
+    // best minus runner-up
+    margin[b] = best - max J(s) over s that differ from s_star in coset b
+            alone
+    // the absolute rotation k_0 is a gauge, fixed later against a reference
+    return (s_star, IC_union, near_optimal, margin)
+
+function ALIGNMENT_Z(c[0..n-1], m, N):
+    (s_star, IC_obs, near_optimal, margin) = ALIGN_EXACT(c, m)
+    // the identical maximisation (exact, or the heuristic alignment for
+    // nulls)
+    for r in 1..N:
+        // same letter multiset, coset structure destroyed
+        IC_null[r] = ALIGN_EXACT(SHUFFLE_POSITIONS(c), m).IC_union
+    z = (IC_obs - MEAN(IC_null)) / SD(IC_null)
+    // read z against planted references of the same length (plain inner
+    // versus transposed inner); cosets with several near-tied shifts are
+    // votes, not facts, in later stages
+    return (s_star, IC_obs, z, near_optimal, margin)
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
 Cross tables: $O(m^2 \cdot 26^2)$. Exact enumeration: $26^{m-1}$ evaluations organised so that the last three shifts are maximised by array operations; for $m = 7$ the corpus implementation reports about 0.4 s per text and 90 s for 200 shuffle nulls (logs/01). The heuristic alignment is $O(m^2 \cdot 26)$ per polish sweep.
@@ -63,17 +106,17 @@ Cross tables: $O(m^2 \cdot 26^2)$. Exact enumeration: $26^{m-1}$ evaluations org
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Diluted inner.** When the inner text has index of coincidence $\kappa$ instead of the English $0.0665$, the alignment signal scales roughly as $(\kappa - 1/26)/(0.0665 - 1/26)$; an inner at $\kappa = 0.054$ keeps only about 55% of a clean signal. The 153-letter corpus text showed exactly this: a real period-7 alignment ($z +4.2$ in one order, $+3.3$ in the other) at the level of the transposed-inner reference rather than the plain reference (logs/01, logs/312).
+- **Diluted inner.** When the inner text has index of coincidence $\kappa$ instead of the English $0.0665$, the alignment signal scales roughly as $(\kappa - 1/26)/(0.0665 - 1/26)$. An inner at $\kappa = 0.054$ keeps only about 55% of a clean signal. The 153-letter corpus text showed exactly this: a real period-7 alignment ($z +4.2$ in one order, $+3.3$ in the other) at the level of the transposed-inner reference rather than the plain reference (logs/01, logs/312).
 - **Zoned text.** If the key changes inside the text, each coset mixes two keys. A constant drift of all key elements leaves the relative shifts unchanged (the alignment survives), while an unrelated re-keying dilutes it; neither case is visible from the alignment alone, see [Change-point and zone detection](/cryptanalysis/change-point-zone-detection).
-- **Wrong index order.** Both candidate orders can show a significant alignment; the statistic ranks orders weakly and cannot identify an unknown mixed alphabet.
-- **Selection over periods.** Scanning many periods and reporting the best $z$ needs a family-wise null; a genuine period also shows inherited peaks at its multiples (a period-7 planted layer gave $z +7.4$ at 7, $+4.9$ at 14 and $+3.1$ at 21, logs/312).
-- **Small effect claims.** The within-coset index of coincidence of a 22-letter coset has an exact standard deviation of about $0.021$ and its 7-coset mean about $0.008$; a "cosets are not monoalphabetic" verdict on the 153-letter text was a $1.5\sigma$ statement once the error bar was computed (logs/01).
+- **Wrong index order.** Both candidate orders can show a significant alignment. The statistic ranks orders weakly and cannot identify an unknown mixed alphabet.
+- **Selection over periods.** Scanning many periods and reporting the best $z$ needs a family-wise null. A genuine period also shows inherited peaks at its multiples (a period-7 planted layer gave $z +7.4$ at 7, $+4.9$ at 14 and $+3.1$ at 21, logs/312).
+- **Small effect claims.** The within-coset index of coincidence of a 22-letter coset has an exact standard deviation of about $0.021$ and its 7-coset mean about $0.008$. A "cosets are not monoalphabetic" verdict on the 153-letter text was a $1.5\sigma$ statement once the error bar was computed (logs/01).
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Planted references audited with the same code and 200 shuffles each (logs/01): a plain period-7 substitution over 153 letters of English aligned at union IC $0.0778$ against a shuffle null of $0.0535 \pm 0.0025$ ($z +9.6$, exact and heuristic agree); a period-7 substitution over a width-9 columnar transposition of a period-2 substituted text aligned at $0.0617$ against $0.0521 \pm 0.0024$ ($z +4.0$). The two unsolved corpus texts gave $z +4.2$ / $+3.3$ (153 letters) and $+2.9$ / $+3.4$ (144 letters) in the two orders.
+Planted references audited with the same code and 200 shuffles each (logs/01): a plain period-7 substitution over 153 letters of English aligned at union IC $0.0778$ against a shuffle null of $0.0535 \pm 0.0025$ ($z +9.6$, exact and heuristic agree). A period-7 substitution over a width-9 columnar transposition of a period-2 substituted text aligned at $0.0617$ against $0.0521 \pm 0.0024$ ($z +4.0$). The two unsolved corpus texts gave $z +4.2$ / $+3.3$ (153 letters) and $+2.9$ / $+3.4$ (144 letters) in the two orders.
 '''
 
 [[blocks]]
@@ -98,7 +141,7 @@ against $8/132 = 0.061$ for the unaligned twelve letters. The absolute rotation 
 [[blocks]]
 kind = "notes"
 body = '''
-Classical repeat-distance (Kasiski) analysis is the coincidence-based ancestor of this method. On the corpus's 504-letter text it had nothing to work with: 5 repeated trigrams against about 7.2 expected for random text and no repeated tetragram (logs/109), so period evidence there came from periodic coincidence scans instead. The exact alignment is the reference measurement that the mixture, width and family instruments of this atlas build on.
+Classical repeat-distance (Kasiski) analysis is the coincidence-based ancestor of this method. On the corpus's 504-letter text it had nothing to work with: 5 repeated trigrams against about 7.2 expected for random text and no repeated tetragram (logs/109), so period evidence there came from periodic coincidence scans instead. The exact alignment is the reference measurement that the mixture, width and family tests of this atlas build on.
 '''
 
 [[provenance]]

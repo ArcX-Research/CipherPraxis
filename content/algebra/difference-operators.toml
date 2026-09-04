@@ -13,7 +13,7 @@ updated = "2026-09-04"
 [[blocks]]
 kind = "definition"
 body = '''
-For a sequence $c$ over $\mathbb{Z}_{26}$ and lag $L$ the **lag difference** is $(\Delta_L c)_i = c_i - c_{i-L}$; the lag sum $c_i + c_{i-L}$ is its Beaufort-type twin. For two aligned sequences and a sign $\varepsilon \in \{\pm 1\}$ the **cross difference** is $c^A_i - \varepsilon\, c^B_{\psi(i)}$ with an index map $\psi$ (identity, offset, reversal, or cycling modulo the shorter length). Difference operators are linear, so they commute with the additive structure of the cipher and act on each additive term separately.
+For a sequence $c$ over $\mathbb{Z}_{26}$ and lag $L$ the **lag difference** is $(\Delta_L c)_i = c_i - c_{i-L}$. The lag sum $c_i + c_{i-L}$ is its Beaufort-type twin. For two aligned sequences and a sign $\varepsilon \in \{\pm 1\}$ the **cross difference** is $c^A_i - \varepsilon\, c^B_{\psi(i)}$ with an index map $\psi$ (identity, offset, reversal, or cycling modulo the shorter length). Difference operators are linear, so they commute with the additive structure of the cipher and act on each additive term separately.
 '''
 
 [[blocks]]
@@ -28,13 +28,13 @@ contains no letter of $P^B$: it is text A's plaintext under a key that is consta
 - **Common plaintext, two keys.** If $z(L_i) = s_L z(P_i) + k^L_{i \bmod 7}$ and $z(R_i) = s_R z(P_i) + k^R_{i \bmod 7}$ then with $\varepsilon = s_L s_R$
 $$z(L_i) - \varepsilon\, z(R_i) \equiv h_{i \bmod 7} \pmod{26},$$
 the plaintext vanishes and the difference is periodic. With unequal periods $m, q$ the difference is $A_{i \bmod m} - \varepsilon B_{i \bmod q}$, an edge value on a residue graph.
-- **Key-free collision implications** (chain with a constant class): if both $C^A_i = C^A_r$ and $C^B_j = C^B_s$ then $P^A_i = P^A_r$ for every $z$ and every sign; if exactly one component collides then $P^A_i \ne P^A_r$.
+- **Key-free collision implications** (chain with a constant class): if both $C^A_i = C^A_r$ and $C^B_j = C^B_s$ then $P^A_i = P^A_r$ for every $z$ and every sign. If exactly one component collides then $P^A_i \ne P^A_r$.
 '''
 
 [[blocks]]
 kind = "assumptions"
 body = '''
-- Additive layers over a common coordinate system; a transposition between the layers destroys index alignment.
+- Additive layers over a common coordinate system. A transposition between the layers destroys index alignment.
 - Known or enumerable index map $\psi$; offsets, reversal and cycling are family axes, not aliases.
 - Signs $e \in \{\pm 1\}$; other unit multipliers require the unit-ratio form.
 '''
@@ -49,15 +49,53 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Sequences over Z26; all arithmetic is mod 26. (Delta_L c)_i = c_i - c_{i-L}
+function LAG_DIFFERENCE(c[0..n-1], L):
+    for i in L..n-1:
+        d[i-L] = (c[i] - c[i-L]) mod 26
+    return d
+
+// Beaufort-type twin c_i + c_{i-L}
+function LAG_SUM(c[0..n-1], L):
+    for i in L..n-1:
+        d[i-L] = (c[i] + c[i-L]) mod 26
+    return d
+
+// Cross difference of two aligned sequences under an index map psi and a sign
+// eps.
+function CROSS_DIFFERENCE(cA, cB, psi, eps):     // eps in {+1, -1}
+    for i in 0..len(cA)-1:
+        d[i] = (cA[i] - eps*cB[psi(i)]) mod 26
+    return d
+
+// Derived stream of a shared-cycle chain: the running-key letters of P^B
+// cancel.
+function DERIVED_STREAM(z, CA, CB, psi, e_B):
+    for i in 0..len(CA)-1:
+        j = psi(i)
+        // = e_A z(P^A_i) - e_B kappa_j
+        D[i] = (z[CA[i]] - e_B*z[CB[j]]) mod 26
+    return D
+
+// Key-free collision implications in a chain with a constant class: (C^A_i,
+// C^B_j) = (C^A_r, C^B_s)  =>  P^A_i = P^A_r; exactly one equal component  =>
+// P^A_i != P^A_r.
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-$O(n)$ per lag and sign; the running-key screen evaluates 324 offset/sign/orientation trials per alphabet order. The derived stream of the chain is a same-order two-class cell solved exactly in about $0.5$ s ($8^7$ product plus polish) or 16 ms in the bank solver's compiled inner product.
+$O(n)$ per lag and sign. The running-key screen evaluates 324 offset/sign/orientation trials per alphabet order. The derived stream of the chain is a same-order two-class cell solved exactly in about $0.5$ s ($8^7$ product plus polish) or 16 ms in the bank solver's compiled inner product.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- A maximum over many lags and signs inflates the apparent significance; the running-key screen's own log notes that with 324 trials a maximum near $+3$ sd is expected by chance. Best running-key ICs of $0.0455$ to $0.0468$ against random pairing $0.0383 \pm 0.0017$ were therefore read as noise.
+- A maximum over many lags and signs inflates the apparent significance. The running-key screen's own log notes that with 324 trials a maximum near $+3$ sd is expected by chance. Best running-key ICs of $0.0455$ to $0.0468$ against random pairing $0.0383 \pm 0.0017$ were therefore read as noise.
 - The difference of two independent language streams is flatter than language (coincidence $0.066$ falls toward $0.0385$), so weak signals need matched nulls.
 - **Typicality is not necessity.** A high-entropy running key usually erases periodic structure in the keyed text, but a key text that is itself periodic restores it (a repeated seven-letter key text made the keyed text an ordinary period-7 cipher with alignment $z = +6.927$). A statistic that the family does not fix cannot be a gate.
 '''
@@ -65,7 +103,7 @@ body = '''
 [[blocks]]
 kind = "controls"
 body = '''
-Derived stream, inverses and two scalar forwards 32/32 over random cycles and sign cells; chain elimination 50/50 random plants; collision-implication filter validated on 256 synthetic arbitrary-permutation chains over all four sign pairs with 256/256 implication-violating mutations rejected and independent scalar/vector agreement over 4,096 windows. Screen results on the target texts: lag-difference maxima reached period-7 aligned-IC $z$ between $+2.5$ and $+3.9$ as maxima over 40 lag/sign texts per text and order, recorded without a lead; the running-key relation test was at noise.
+Derived stream, inverses and two scalar forwards 32/32 over random cycles and sign cells; chain elimination 50/50 random plants; collision-implication filter validated on 256 synthetic arbitrary-permutation chains over all four sign pairs with 256/256 implication-violating mutations rejected and independent scalar/vector agreement over 4,096 windows. Screen results on the target texts: lag-difference maxima reached period-7 aligned-IC $z$ between $+2.5$ and $+3.9$ as maxima over 40 lag/sign texts per text and order, recorded without a lead. The running-key relation test was at noise.
 '''
 
 [[blocks]]

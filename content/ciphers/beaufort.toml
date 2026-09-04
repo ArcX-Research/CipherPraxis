@@ -41,8 +41,8 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - Strict periodicity and a single alphabet order, exactly as for Vigenère.
-- Invariant: reciprocity. A fitted state always round-trips, so a round-trip proves nothing; only planted-control recovery and language evidence count.
-- Invariant: coset histograms are reflections of one distribution; a mixture of two inner alphabets under the same key is still a reflection of a mixture.
+- Invariant: reciprocity. A fitted state always round-trips, so a round-trip proves nothing. Only planted-control recovery and language evidence count.
+- Invariant: coset histograms are reflections of one distribution. A mixture of two inner alphabets under the same key is still a reflection of a mixture.
 '''
 
 [[blocks]]
@@ -55,6 +55,35 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Letters are indices 0..25. The key k has length m. One routine encrypts and
+// decrypts.
+function BEAUFORT(t[0..n-1], k[0..m-1]):
+    for i in 0..n-1:
+        out[i] = (k[i mod m] - t[i]) mod 26
+    return out
+
+function ENCRYPT(p, k): return BEAUFORT(p, k)
+// involution: k - (k - p) = p
+function DECRYPT(c, k): return BEAUFORT(c, k)
+
+// Ciphertext-only key recovery once the period m is known: each coset
+// histogram is the reference distribution E reflected and rotated, so
+// correlate against E(k - x) over the 26 values of k.
+function RECOVER_KEY(c[0..n-1], m, E):
+    for b in 0..m-1:
+        coset = [c[i] for i in 0..n-1 if i mod m == b]
+        h = HISTOGRAM(coset)                                // 26 counts
+        k[b] = argmax over s in 0..25 of sum over x of E[(s - x) mod 26] *
+                h[x]
+    // compare with the Vigenère fit by total evidence
+    return k
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
 Identical to Vigenère: $O(26\,m)$ correlations per relation, $26^{m-1}$ shift vectors for the exact alignment after fixing one gauge shift, and $8^3$ DP states per step for the order-three quadgram chain over an eight-way shortlist. Testing both relations doubles the work.
@@ -63,8 +92,8 @@ Identical to Vigenère: $O(26\,m)$ correlations per relation, $26^{m-1}$ shift v
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Sign ambiguity with free alphabets.** When the alphabet order is itself unknown, reversing the order converts a Beaufort into a Vigenère, so the relation is not separately identifiable; the program reports one canonical class.
-- **Selection freedom.** Choosing the better of two relations and $m$ free shifts on a short text adds spurious fit; the within-coset null must repeat that choice.
+- **Sign ambiguity with free alphabets.** When the alphabet order is itself unknown, reversing the order converts a Beaufort into a Vigenère, so the relation is not separately identifiable. The program reports one canonical class.
+- **Selection freedom.** Choosing the better of two relations and $m$ free shifts on a short text adds spurious fit. The within-coset null must repeat that choice.
 - **Flat inner text.** A fractionated or transposed inner stream leaves nothing to reflect.
 '''
 

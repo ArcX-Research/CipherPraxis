@@ -24,7 +24,7 @@ is the only admissible measure of surprise. A per-candidate null ("how often doe
 kind = "equations"
 title = "How much selection buys"
 body = '''
-Profiling $m$ free shifts of 26 values each on $n$ letters buys spurious fit. The program measured about $0.15$ nats per letter at $n = 153$ for $m = 7$, enough to make wrong models win a likelihood comparison, which is why its evidence-based instruments marginalise the shifts under a uniform prior instead of maximising them. For extreme-value intuition, the maximum of $M$ independent standard normals grows like $\sqrt{2\ln M}$: $M = 1{,}296$ trials gives about $3.8$, so a per-trial "$+5.7\sigma$" contains roughly $3.8\sigma$ of pure selection.
+Profiling $m$ free shifts of 26 values each on $n$ letters buys spurious fit. The program measured about $0.15$ nats per letter at $n = 153$ for $m = 7$, enough to make wrong models win a likelihood comparison, which is why its evidence-based tests marginalise the shifts under a uniform prior instead of maximising them. For extreme-value intuition, the maximum of $M$ independent standard normals grows like $\sqrt{2\ln M}$: $M = 1{,}296$ trials gives about $3.8$, so a per-trial "$+5.7\sigma$" contains roughly $3.8\sigma$ of pure selection.
 '''
 
 [[blocks]]
@@ -39,9 +39,48 @@ kind = "attack"
 body = '''
 Three recorded applications:
 
-- **Ciphertext-derived cycle bank.** 66,628 mechanically derived cycles were screened; the target's best at depth top-128 was $-4.869$ per letter. Nine complete-pipeline within-coset nulls were run through the same screen, depth and refinement; eight of nine null maxima beat the target (mean $-4.836$, empirical upper tail $p = 0.90$). Rejected as selection overfit, and the bank at that depth was closed.
+- **Ciphertext-derived cycle bank.** 66,628 mechanically derived cycles were screened. The target's best at depth top-128 was $-4.869$ per letter. Nine complete-pipeline within-coset nulls were run through the same screen, depth and refinement; eight of nine null maxima beat the target (mean $-4.836$, empirical upper tail $p = 0.90$). Rejected as selection overfit, and the bank at that depth was closed.
 - **Cross-text relations.** The best coincidence rate over all index-space pairs and offsets was $0.0495$; against a per-trial null it looked like $+5.7\sigma$, against the family-wise null over the 1,296 trials it was $+0.8\sigma$.
-- **Frozen 100-cycle bank on a live text.** Best rate $-6.70$, rank 16 of 20 in each of two independently declared null families ($p = 0.8$); a clean negative for the bank only.
+- **Frozen 100-cycle bank on a live text.** Best rate $-6.70$, rank 16 of 20 in each of two independently declared null families ($p = 0.8$). A clean negative for the bank only.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Inputs: observed ciphertext c_obs, candidate set Theta, score S, top-k
+// refinement and polish, a null generator NULL that preserves what the
+// pipeline may exploit and destroys what it claims to detect, and B nulls.
+// Output: the empirical exceedance p and a verdict.
+function PIPELINE(c, Theta):
+    // first screen
+    top = the k candidates theta in Theta with the largest S(c, theta)
+    // every later stage, unchanged
+    top = REFINE(top); top = POLISH(top)
+    // S*(c)
+    return MAX(S(c, theta) for theta in top)
+
+function SELECTION_OVERFIT_CHECK(c_obs, Theta, B):
+    s_obs = PIPELINE(c_obs, Theta)
+    exceed = 0
+    for b in 1..B:
+        // within-coset shuffle for a periodic model, whole-text for a
+        // transposition-invariant one
+        c_b = NULL(c_obs, b)
+        // identical Theta, refinement and polish
+        if PIPELINE(c_b, Theta) >= s_obs: exceed += 1
+    p = (1 + exceed) / (B + 1)
+    report p with its resolution limit 1 / (B + 1)
+    // a per-candidate null would understate the surprise
+    return p
+
+function CALIBRATE_ON_PLANT(c_plant, Theta, B):
+    // a real recovery under the same selection must rank first with a stated
+    // margin
+    s_plant = PIPELINE(c_plant, Theta)
+    null_max = MAX(PIPELINE(NULL(c_plant, b), Theta) for b in 1..B)
+    return (s_plant > null_max, s_plant - null_max)
+```
 '''
 
 [[blocks]]
@@ -53,9 +92,9 @@ The null multiplies the pipeline's cost by $B + 1$. The program uses $B = 9$ for
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Nulls that skip refinement.** The first screen is nulled, the top-$k$ polish is not; the polished target score then exceeds every null trivially.
+- **Nulls that skip refinement.** The first screen is nulled, the top-$k$ polish is not. The polished target score then exceeds every null trivially.
 - **Selecting the more favourable statistic.** Reporting whichever of two statistics gives the smaller $p$ is itself a selection; sealed designs declare one primary statistic and treat the second as a conjunctive guard that cannot rescue a failure.
-- **Fluent overfits.** Language-model beams produce fluent strings on any input; the ledger forbids promoting one unless the full selected-family null is lower.
+- **Fluent overfits.** Language-model beams produce fluent strings on any input. The ledger forbids promoting one unless the full selected-family null is lower.
 '''
 
 [[blocks]]

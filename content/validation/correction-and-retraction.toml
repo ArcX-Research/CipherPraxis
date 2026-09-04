@@ -27,7 +27,7 @@ A **retraction** is a correction whose consequence is "the claim is false and wi
 [[blocks]]
 kind = "assumptions"
 body = '''
-- The corrected entry stays as written. Sealed bytes and their hashes remain valid; the correction is carried forward in later receipts.
+- The corrected entry stays as written. Sealed bytes and their hashes remain valid. The correction is carried forward in later receipts.
 - Corrections are dated and attributed to a role, and where a different agent found the defect the entry says so.
 '''
 
@@ -35,11 +35,49 @@ body = '''
 kind = "attack"
 title = "Cases"
 body = '''
-- **False novelty.** A lane claimed that square routes on a 144-letter text were "genuinely untested". A source audit found that an existing route generator built spirals, boustrophedon and diagonal orders for *every* width from 2 to 24, so width 12 had been covered; the ledger had never named it because the code was generic. Retracted, with the rule that a keyword search over prose is not a source audit. Two genuinely new sub-families (composed write/read routes, triangular lattices) were identified in the same entry and kept open pending durable source and nulls.
+- **False novelty.** A lane claimed that square routes on a 144-letter text were "genuinely untested". A source audit found that an existing route generator built spirals, boustrophedon and diagonal orders for *every* width from 2 to 24, so width 12 had been covered. The ledger had never named it because the code was generic. Retracted, with the rule that a keyword search over prose is not a source audit. Two genuinely new sub-families (composed write/read routes, triangular lattices) were identified in the same entry and kept open pending durable source and nulls.
 - **Power that was wiring.** Two blind controls recovered their truths at pairs 150 and 17 of 1.6 million because the fixture had been chosen with its truth at the front of the task order; reclassified to a wiring test, and the unreached random fixture remained the power measurement.
-- **Selection mistaken for signal.** A cross-text coincidence maximum looked like $+5.7\sigma$ against a per-trial null and was $+0.8\sigma$ against the family-wise null over 1,296 trials; the ledger records the per-trial figure as the error.
-- **Working memory versus logs.** Two earlier jobs were believed to have excluded a shared-square family; the audit found one had failed its own controls and the other had crashed, and the family was reopened.
-- **Arithmetic.** An audit terminal said "17/17 gates"; the receipt recounted 16 gate records and recorded the miscount without editing the sealed note.
+- **Selection mistaken for signal.** A cross-text coincidence maximum looked like $+5.7\sigma$ against a per-trial null and was $+0.8\sigma$ against the family-wise null over 1,296 trials. The ledger records the per-trial figure as the error.
+- **Working memory versus logs.** Two earlier jobs were believed to have excluded a shared-square family. The audit found one had failed its own controls and the other had crashed, and the family was reopened.
+- **Arithmetic.** An audit terminal said "17/17 gates". The receipt recounted 16 gate records and recorded the miscount without editing the sealed note.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Inputs: the earlier ledger entry (log number and quoted claim), the defect,
+// the refuting evidence with its receipt, and the role that found the defect.
+// Output: a dated correction appended to the ledger; the earlier entry is
+// never edited.
+function CORRECT(ledger, log_number, quoted_claim, defect, evidence, finder):
+    // names a different agent when there was one
+    entry = NEW_DATED_ENTRY(attributed_to = finder)
+    entry.corrects = (log_number, quoted_claim)                // part 1
+    // part 2: file and line, transcript hash, recount
+    entry.defect   = defect
+    entry.evidence = (evidence, RECEIPT(evidence))             // part 3
+    // part 4: consequences, no more and no less than the defect warrants
+    for result in RESULTS_RESTING_ON(log_number):
+        // retraction
+        if defect makes result false:        entry.withdrawn.add(result)
+        // transcript kept, status changed
+        else if defect changes its status:   entry.reclassified.add(result)
+        else:                                entry.unchanged.add(result)
+    // part 5
+    if defect is a method error:
+        entry.rule = RULE_PREVENTING_REPETITION(defect)
+    // sealed bytes and their hashes stay valid
+    APPEND(ledger, entry)
+    // later receipts must carry it forward
+    return entry
+
+function VOID(ledger, collided_number):
+    // a correction of the ledger's own bookkeeping: no artefact ever existed
+    // under the number
+    APPEND(ledger, VOID_ENTRY(collided_number))
+    return FRESH_NUMBER(ledger)
+```
 '''
 
 [[blocks]]
@@ -51,8 +89,8 @@ Cheap to write, expensive to omit: an unretracted "closed" family is never revis
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Silent edits.** Rewriting the earlier entry destroys the record of what was believed when later decisions were made; the ledger forbids it.
-- **Over-retraction.** A correction that withdraws more than the defect warrants is also an error; the route retraction explicitly kept the lane's own sweep result (control power 1.000 per boundary, live feasibility 0 of 10,944) because the defect did not touch it.
+- **Silent edits.** Rewriting the earlier entry destroys the record of what was believed when later decisions were made. The ledger forbids it.
+- **Over-retraction.** A correction that withdraws more than the defect warrants is also an error. The route retraction explicitly kept the lane's own sweep result (control power 1.000 per boundary, live feasibility 0 of 10,944) because the defect did not touch it.
 - **Corrections that do not propagate.** A receipt that restates an audit must carry the audit's corrections forward, or a reader of the receipt alone inherits the mistake.
 '''
 

@@ -34,7 +34,7 @@ With $E$ the English monogram distribution and $E_g$ its rotation by $g$:
 - **M2** (two-rotation mixture): $\{w E_{g_1} + (1-w) E_{g_2}\}$ over $g_1 < g_2$ and a weight grid, $M = 325$ at $w = 1/2$.
 - **M3** (three-rotation mixture): $\{(E_{g_1} + E_{g_2} + E_{g_3})/3\}$, $M = 2{,}600$.
 
-For M2 the **delta-marginal** evidence groups members by the inner spacing $\delta = \min(g_2 - g_1,\ g_1 - g_2) \bmod 26$ and reports $\log Z$ per group; a real two-rotation inner shows one $\delta$ well above the rest. Per coset, the shift posterior is $\Pr(s_b \mid F_b) \propto \prod_x f(x - s_b)^{F_b(x)}$; per letter, the class posterior $\Pr(\text{component} \mid \text{letter})$ under the MAP member feeds the [order-free width statistic](/cryptanalysis/order-free-width-statistic).
+For M2 the **delta-marginal** evidence groups members by the inner spacing $\delta = \min(g_2 - g_1,\ g_1 - g_2) \bmod 26$ and reports $\log Z$ per group. A real two-rotation inner shows one $\delta$ well above the rest. Per coset, the shift posterior is $\Pr(s_b \mid F_b) \propto \prod_x f(x - s_b)^{F_b(x)}$; per letter, the class posterior $\Pr(\text{component} \mid \text{letter})$ under the MAP member feeds the [order-free width statistic](/cryptanalysis/order-free-width-statistic).
 
 **Profiling versus marginalising.** Replacing $\frac{1}{26}\sum_s$ by $\max_s$ in $Z_b$ gives the profile likelihood; at $n = 153$ it exceeds the evidence by about $0.15$ nats per letter on average, which is why the profile picks wrong families on shuffled texts.
 '''
@@ -42,34 +42,73 @@ For M2 the **delta-marginal** evidence groups members by the inner spacing $\del
 [[blocks]]
 kind = "assumptions"
 body = '''
-- Letters inside a coset are exchangeable draws from one rotated distribution; the model is therefore valid under *any* transposition below the periodic layer, since a transposition only decides which positions land in which coset.
+- Letters inside a coset are exchangeable draws from one rotated distribution. The model is therefore valid under *any* transposition below the periodic layer, since a transposition only decides which positions land in which coset.
 - The outer layer is additive in a known alphabet order (or in each of a small set of orders tried separately).
-- A uniform prior over shifts and over bank members; the evidence differences quoted are sensitive to the bank definition, so families are compared against nulls computed with the identical banks.
+- A uniform prior over shifts and over bank members. The evidence differences quoted are sensitive to the bank definition, so families are compared against nulls computed with the identical banks.
 '''
 
 [[blocks]]
 kind = "attack"
 title = "How to attack it"
 body = '''
-1. **Periodic gate.** In the cascade solver the best M1 gain over periods $2 \dots p_{\max}$, two alphabet orders and both relations is compared with the family-wise maximum of the same scan over shuffled texts; the decision fires when the gain clears that maximum by $0.02$ nats per letter. On the solved references the gains were $+0.255$, $+0.216$, $+0.229$ and $+0.080$ against shuffled maxima of $+0.024$, $+0.005$, $+0.010$ and $-0.015$.
+1. **Periodic gate.** In the cascade solver the best M1 gain over periods $2 \dots p_{\max}$, two alphabet orders and both relations is compared with the family-wise maximum of the same scan over shuffled texts. The decision fires when the gain clears that maximum by $0.02$ nats per letter. On the solved references the gains were $+0.255$, $+0.216$, $+0.229$ and $+0.080$ against shuffled maxima of $+0.024$, $+0.005$, $+0.010$ and $-0.015$.
 2. **Family comparison.** Compute the M1, M2, M3 family evidences and their differences; read the $\delta$-marginal; carry the top three $\delta$ forward.
 3. **Class posteriors and EM.** Assign each letter a component; test transposition widths order-free; re-estimate each coset's shift from the class-conditional likelihood (class-EM), which corrected the one or two wrong cosets on controls (7 of 7 after EM).
 4. **Nulls.** Push shuffled ciphertexts through the identical fit, $\delta$ selection, EM and width scan, so every reported $z$ is a complete-pipeline null.
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// F[b][x] = count of letter x in coset b (b = 0..p-1); n = total letters; f =
+// a 26-vector model of the inner text. Shift sums are taken in log space with
+// LOG_MEAN_EXP.
+function LOG_Z_COSET(F_b[0..25], f[0..25]):
+    for s in 0..25:
+        loglik[s] = sum over x of F_b[x] * log f[(x - s) mod 26]
+    // = log( (1/26) * sum over s of exp(loglik[s]) )
+    return LOG_MEAN_EXP(loglik[0..25])
+
+function LOG_Z(F[0..p-1], f):
+    return sum over b of LOG_Z_COSET(F[b], f)
+
+// evidence per letter over the uniform model
+function GAIN(F, f, n):
+    return (LOG_Z(F, f) + n * ln(26)) / n
+
+// Family evidence: uniform prior over the bank f_1..f_M; the log-mean-exp
+// charges ln M.
+function LOG_Z_FAMILY(F, bank[1..M]):
+    for m in 1..M:
+        logz[m] = LOG_Z(F, bank[m])
+    return LOG_MEAN_EXP(logz[1..M])
+
+// Per-coset shift posterior under one model (feeds the class posteriors and
+// class-EM).
+function SHIFT_POSTERIOR(F_b, f):
+    for s in 0..25:
+        loglik[s] = sum over x of F_b[x] * log f[(x - s) mod 26]
+    return NORMALISE(exp(loglik[s] - max(loglik)) for s in 0..25)
+
+// Replacing LOG_MEAN_EXP by max over s gives the profile likelihood, which is
+// not the evidence.
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-For a bank of $M$ members the coset log-likelihood table is $M \times p \times 26$ and is computed as one tensor contraction with the $p \times 26$ count matrix (chunked over members); a full run of the mixture pipeline with 60 null pipelines and widths up to 25 took 17–28 s per control at 153 letters.
+For a bank of $M$ members the coset log-likelihood table is $M \times p \times 26$ and is computed as one tensor contraction with the $p \times 26$ count matrix (chunked over members). A full run of the mixture pipeline with 60 null pipelines and widths up to 25 took 17–28 s per control at 153 letters.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
 - **Evidence differences have their own null.** On shuffled texts the mixture family beats the single-rotation family by $+0.13$ to $+0.17$ nats per letter, because a shuffle flattens every coset and a mixture fits a flat histogram better. Judge each family against its own shuffled distribution; on a plain periodic substitution $M2 - M1 = -0.080$ against a shuffled $+0.131 \pm 0.027$ is the decisive reading, not the sign of the raw difference.
-- **Flat inner text.** A fractionated inner (a bifid-like layer under the periodic key) leaves all three families at $z \approx 0$: the instrument says "not rotated English and not a small mixture", nothing more.
+- **Flat inner text.** A fractionated inner (a bifid-like layer under the periodic key) leaves all three families at $z \approx 0$: the test says "not rotated English and not a small mixture", nothing more.
 - **Pure transposition.** The shuffle preserves the letter multiset, so on an untransposed-substitution-free text the observed gain and the null saturate together and the gate stays quiet, correctly.
-- **Largest-period artefact.** A scan whose best gain sits at the largest period tried, in every text, is selection, not signal (see the [selection-overfit diagnostic](/statistics/selection-overfit-diagnostic)).
+- **False pattern at the largest period.** If every text gets its best gain at the largest period tried, selection is probably creating the result. It is not evidence of a real signal (see the [selection-overfit diagnostic](/statistics/selection-overfit-diagnostic)).
 '''
 
 [[blocks]]

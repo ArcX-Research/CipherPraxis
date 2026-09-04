@@ -12,10 +12,44 @@ updated = "2026-09-04"
 lab = "columnar"
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Keyword letters k[0..m-1]; the read-out order ranks them alphabetically,
+// ties left to right.
+function KEY_ORDER(k[0..m-1]):
+    return the indices 0..m-1 sorted by (k[index], index)
+
+// pad = a letter, or none for the irregular grid
+function ENCRYPT(p, k[0..m-1], pad):
+    t = LETTERS_ONLY(p)
+    if pad given: while length(t) mod m != 0: append pad to t
+    // write in by rows of width m
+    for i in 0..length(t)-1: append t[i] to column[i mod m]
+    return the concatenation of column[j] for j in KEY_ORDER(k)
+
+function DECRYPT(c[0..n-1], k[0..m-1]):
+    order = KEY_ORDER(k)
+    // the leftmost `long` columns hold base + 1 letters
+    base = n div m;  long = n mod m
+    pos = 0
+    // columns arrive in read-out order
+    for j in order:
+        len = base + (1 if long != 0 and j < long else 0)
+        column[j] = c[pos .. pos+len-1];  pos = pos + len
+    // read out by rows; short columns end early
+    for r in 0..base:
+        for j in 0..m-1:
+            if r < length(column[j]): append column[j][r] to p
+    return p
+```
+'''
+
+[[blocks]]
 kind = "notes"
 title = "What to try"
 body = '''
-- Toggle padding: the ciphertext changes only by the padding letters, but the column lengths become uniform and the decryption ambiguity disappears.
-- Use a keyword with repeated letters (`BANANA`): ties are broken left to right, and the small ranks under the keyword show the resulting order.
-- Make the text length a multiple of the keyword length: the irregular and regular ciphertexts coincide.
+- Turn padding on and off. Padding makes every column the same length, so there is no doubt about which columns are longer during decryption.
+- Use a keyword with repeated letters, such as `BANANA`. Ties are resolved from left to right. The small numbers under the keyword show the final order.
+- Make the text length a multiple of the keyword length. The padded and unpadded methods then give the same ciphertext before any extra padding.
 '''

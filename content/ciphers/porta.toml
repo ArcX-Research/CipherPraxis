@@ -32,7 +32,7 @@ kind = "variants"
 body = '''
 - **Free periodic Porta**: every coset chooses any of the 13 tables, in the straight or a keyword-mixed order.
 - **Word-keyed Porta**: seven-letter dictionary keys at every phase, both directions, two tableaux.
-- **Porta autokey**: the key stream is a primer followed by the plaintext; the pair equivalence makes the primer identifiable only up to A/B, C/D, ... classes.
+- **Porta autokey**: the key stream is a primer followed by the plaintext. The pair equivalence makes the primer identifiable only up to A/B, C/D, ... classes.
 - **Portax**: the digraphic slide built from the Porta rectangle; see [Digraphic slide](/ciphers/digraphic-slide).
 '''
 
@@ -55,9 +55,45 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Index order A (straight or keyword-mixed); x = pos_A(letter). A key letter
+// selects the table t = floor(pos(key letter) / 2) in 0..12. One routine
+// encrypts and decrypts.
+function PORTA_TABLE(x, t):
+    // top half goes to the bottom half
+    if x < 13: return 13 + (x + t) mod 13
+    // bottom half goes to the top half
+    else:      return (x - 13 - t) mod 13
+
+function PORTA(text[0..n-1], key[0..m-1], A):
+    for i in 0..n-1:
+        t = floor(pos(key[i mod m]) / 2)
+        out[i] = A[PORTA_TABLE(pos_A(text[i]), t)]
+    return out
+
+function ENCRYPT(p, key, A): return PORTA(p, key, A)
+function DECRYPT(c, key, A): return PORTA(c, key, A)   // involution
+
+// Free-key attack: each coset may use any of the 13 tables; shortlist per
+// coset by monogram likelihood, then solve the shortlisted product with the
+// cyclic quadgram DP.
+function SHORTLIST(c[0..n-1], m, A):
+    for b in 0..m-1:
+        coset = [c[i] for i in 0..n-1 if i mod m == b]
+        for t in 0..12:
+            score[t] = MONOGRAM_LOGLIK([A[PORTA_TABLE(pos_A(y), t)] for y in
+                    coset])
+        keep[b] = the eight best t by score
+    return keep
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-Free key: $13^m$ raw keys ($13^7 \approx 6.3 \times 10^7$, $13^{26} \approx 9 \times 10^{28}$); the DP makes the shortlisted product exact at $8^3$ states per step. Word keys: every seven-letter dictionary word times seven phases, batched, in one to two minutes.
+Free key: $13^m$ raw keys ($13^7 \approx 6.3 \times 10^7$, $13^{26} \approx 9 \times 10^{28}$). The DP makes the shortlisted product exact at $8^3$ states per step. Word keys: every seven-letter dictionary word times seven phases, batched, in one to two minutes.
 '''
 
 [[blocks]]
@@ -65,13 +101,13 @@ kind = "failure_modes"
 body = '''
 - **Partial-language endpoints.** The 126-letter period-26 zone reached $-5.73$ per letter ("partial"): a free 26-table key on five letters per coset fits fragments of language without being plaintext.
 - **Autokey power.** The plaintext-fed Porta autokey solver reached only 97.22% and 99.21% plaintext on its 144- and 504-letter controls, with the wrong primer class despite exact false-state round-trips, so those targets were never run.
-- **Unknown order.** Only two fixed orders were tried; an arbitrary mixed order under a Porta layer is outside the tested scope.
+- **Unknown order.** Only two fixed orders were tried. An arbitrary mixed order under a Porta layer is outside the tested scope.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Free periodic Porta (log 204): three blind controls at 63 letters/period 7 (straight order), 95 letters/period 7 and 126 letters/period 26 (keyword-mixed order) each recovered 100% plaintext, the exact order and effective key, and the forward ciphertext. The three admitted zones then scored $-6.25$ (no), $-6.36$ (no) and $-5.73$ (partial); none reached the predeclared English gate, so no null budget was spent and no candidate followed. Word-keyed Porta (logs/55_porta.log): controls ranked the planted key first; both zones negative. Porta autokey (log 185): the 153-letter control passed exactly; the 144- and 504-letter controls failed as above.
+Free periodic Porta (log 204): three blind controls at 63 letters/period 7 (straight order), 95 letters/period 7 and 126 letters/period 26 (keyword-mixed order) each recovered 100% plaintext, the exact order and effective key, and the forward ciphertext. The three admitted zones then scored $-6.25$ (no), $-6.36$ (no) and $-5.73$ (partial); none reached the predeclared English gate, so no null budget was spent and no candidate followed. Word-keyed Porta (logs/55_porta.log): controls ranked the planted key first; both zones negative. Porta autokey (log 185): the 153-letter control passed exactly. The 144- and 504-letter controls failed as above.
 '''
 
 [[blocks]]
@@ -88,7 +124,7 @@ result  13+12=25  13+6=19  13+(23 mod 13)=23  13+(16 mod 13)=16  (14-13-2) mod 1
 cipher  Z   T   X   Q   M
 ```
 
-Applying the same tables to `ZTXQM` returns `HELLO`; every plaintext letter changed half.
+Applying the same tables to `ZTXQM` returns `HELLO`. Every plaintext letter changed half.
 '''
 
 [[blocks]]

@@ -12,10 +12,53 @@ updated = "2026-09-04"
 lab = "dihedral"
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// An element of D_n acts on the ring positions x in 0..n-1 by x ↦ ±x + k:
+// sign + for a rotation, sign − for a reflection. It is stored as (reflect,
+// k) with 0 <= k < n.
+function APPLY(e, x):
+    if e.reflect: return (-x + e.k) mod n
+    return (x + e.k) mod n
+
+// a ∘ b: apply b first, then a
+function COMPOSE(a, b):
+    reflect = a.reflect xor b.reflect
+    // a reverses the direction of b's shift
+    if a.reflect: k = (a.k - b.k) mod n
+    else:         k = (a.k + b.k) mod n
+    return (reflect, k)
+
+function INVERSE(e):
+    // every reflection is its own inverse
+    if e.reflect: return e
+    return (false, (-e.k) mod n)
+
+function ORDER(e):
+    if e.reflect: return 2
+    if e.k == 0:  return 1
+    return n / gcd(n, e.k)
+
+// The position permutation of an element and its disjoint cycles (fixed
+// points are 1-cycles).
+function TO_PERMUTATION(e):
+    return [APPLY(e, x) for x in 0..n-1]
+
+function CYCLES(perm):
+    for each start in 0..n-1 not yet visited:
+        follow x -> perm[x] from start until it returns to start
+        record that cycle
+    // the lab checks COMPOSE(a, b) against composing the two permutations
+    return cycles
+```
+'''
+
+[[blocks]]
 kind = "notes"
 title = "What to try"
 body = '''
-- Two rotations commute: a ∘ b and b ∘ a agree. A rotation and a reflection do not.
-- Every reflection has order 2; a rotation by k has order n / gcd(n, k). Set n = 48 and k = 12 to obtain an element of order 4.
-- The cycle notation of a reflection shows its fixed points: for even n either two positions or none stay put.
+- Try two rotations. They commute, so a ∘ b and b ∘ a agree. A rotation and a reflection usually give different results in the two orders.
+- Every reflection has order 2. A rotation by k has order n / gcd(n, k). Set n = 48 and k = 12 to get order 4.
+- Read a reflection's cycle notation to find its fixed points. When n is even, either two positions or no positions stay in place.
 '''

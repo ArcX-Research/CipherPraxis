@@ -24,7 +24,7 @@ all modulo 26. Ciphertext autokey instead uses $K_i = c_{i-m}$, so that in an in
 kind = "equations"
 title = "Chains and the primer-free difference"
 body = '''
-In plaintext autokey, position $i$ belongs to chain $i \bmod m$; decrypting chain $r$ with the wrong primer letter $R_r + \delta$ gives plaintext letters alternately shifted by $-\delta$ and $+\delta$, so a half-right primer yields an intermediate index of coincidence rather than gibberish. In ciphertext autokey the difference text $x_i - x_{i-m}$ is the plaintext from position $m$ onward for the true $m$, independent of the primer; the primer prefix is unidentifiable and is never scored. For Porta the primer is identifiable only up to the pair classes A/B, C/D, and so on.
+In plaintext autokey, position $i$ belongs to chain $i \bmod m$; decrypting chain $r$ with the wrong primer letter $R_r + \delta$ gives plaintext letters alternately shifted by $-\delta$ and $+\delta$, so a half-right primer yields an intermediate index of coincidence rather than gibberish. In ciphertext autokey the difference text $x_i - x_{i-m}$ is the plaintext from position $m$ onward for the true $m$, independent of the primer. The primer prefix is unidentifiable and is never scored. For Porta the primer is identifiable only up to the pair classes A/B, C/D, and so on.
 '''
 
 [[blocks]]
@@ -42,8 +42,8 @@ title = "Assumptions and invariants"
 body = '''
 - One alphabet order and one relation for the whole text.
 - Invariant: plaintext autokey has no period, but the chains of spacing $m$ have the coincidence statistics of a shifted text, so $m$ is visible as a lag.
-- Invariant: ciphertext autokey makes the lag-$m$ difference text periodic-free plaintext; a difference-text periodicity scan finds $m$ without any key (see [Autokey difference periodicity](/cryptanalysis/autokey-difference-periodicity)).
-- Any fitted primer round-trips; only control recovery counts.
+- Invariant: ciphertext autokey makes the lag-$m$ difference text periodic-free plaintext. A difference-text periodicity scan finds $m$ without any key (see [Autokey difference periodicity](/cryptanalysis/autokey-difference-periodicity)).
+- Any fitted primer round-trips. Only control recovery counts.
 '''
 
 [[blocks]]
@@ -53,6 +53,43 @@ body = '''
 1. Scan primer lengths 1 to 40 (6 to 20 in the earlier lane), both alphabets and relations, scoring each chain's best shift, confidence gap, index of coincidence and monogram likelihood against 100 shuffled runs per length.
 2. Search the primer with an external proposal generator and re-solve chains by coordinate descent on quadgrams of the un-transposed text; for ciphertext autokey jointly select $m$, the cycle and the relation on the common suffix with 960 chains of 2,500 steps plus exact-neighbour polish.
 3. Require the control to recover 100% plaintext, the primer (modulo Porta's pair equivalence) and an independent forward reconstruction before the same-length live text is run; require an English verdict before any null.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Letters are indices 0..25. The primer R has length m. The Vigenère relation
+// is shown; Beaufort uses c[i] = (K[i] - p[i]) mod 26, and Porta selects its
+// table by floor(K[i] / 2).
+function ENCRYPT_PLAINTEXT_AUTOKEY(p[0..n-1], R[0..m-1]):
+    for i in 0..n-1:
+        K[i] = R[i] if i < m else p[i - m]
+        c[i] = (p[i] + K[i]) mod 26
+    return c
+
+function DECRYPT_PLAINTEXT_AUTOKEY(c[0..n-1], R[0..m-1]):
+    for i in 0..n-1:
+        // p[i - m] has already been recovered
+        K[i] = R[i] if i < m else p[i - m]
+        p[i] = (c[i] - K[i]) mod 26
+    return p
+
+// Ciphertext-fed form: the key continues with the ciphertext itself.
+function ENCRYPT_CIPHERTEXT_AUTOKEY(p[0..n-1], R[0..m-1]):
+    for i in 0..n-1:
+        K[i] = R[i] if i < m else c[i - m]
+        c[i] = (p[i] + K[i]) mod 26
+    return c
+
+// Primer-free difference text in an index order a (x = a(c)): plaintext from
+// position m onward.
+function DIFFERENCE_TEXT(c[0..n-1], m, a):
+    for i in m..n-1:
+        // equals a(p[i]) for the true m
+        d[i] = (a(c[i]) - a(c[i - m])) mod 26
+    return d
+```
 '''
 
 [[blocks]]
@@ -73,7 +110,7 @@ body = '''
 [[blocks]]
 kind = "controls"
 body = '''
-Plaintext autokey (log 185): Vigenère and Beaufort controls at 153, 144 and 504 letters recovered 100% plaintext, the hidden 17- and 19-letter primers and independent forward ciphertexts; Porta at 153 letters exact, at 144 and 504 letters locked as above. Ciphertext autokey with an unknown cycle (log 189): 0/3 controls. Periodic layer over plaintext autokey (log 11): control 86% for the additive case. An earlier primer-length lane re-tested its flagged 12-letter configuration against 100 shuffled runs per primer length; the observed IC was 0.0557 against a null maximum of 0.0478.
+Plaintext autokey (log 185): Vigenère and Beaufort controls at 153, 144 and 504 letters recovered 100% plaintext, the hidden 17- and 19-letter primers and independent forward ciphertexts; Porta at 153 letters exact, at 144 and 504 letters locked as above. Ciphertext autokey with an unknown cycle (log 189): 0/3 controls. Periodic layer over plaintext autokey (log 11): control 86% for the additive case. An earlier primer-length lane re-tested its flagged 12-letter configuration against 100 shuffled runs per primer length. The observed IC was 0.0557 against a null maximum of 0.0478.
 '''
 
 [[blocks]]

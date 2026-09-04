@@ -42,15 +42,56 @@ Checkpoints turn a search that cannot drain in one allocation into one that can 
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Form 1: carried scan state between a measuring stage and a finishing stage.
+procedure MEASURE_STAGE(texts):
+    for each text:
+        run the planted control through the pipeline
+        control_pass = (the control was recovered)
+        (null_mean, null_sd) = the familywise statistic on shuffled inputs
+        rows = ranked configuration rows (ev, z, width, inner period, outer
+                period, alphabet, relation, class pattern)
+        write {null_mean, null_sd, control_pass, rows} to
+                logs/state_<text>.json
+
+procedure FINISH_STAGE(texts):
+    for each text:
+        state = load logs/state_<text>.json
+        if not state.control_pass:
+            print "upstream control FAILED -> VOID"
+            skip this text
+        else finish state.rows
+
+// Form 2: task-frontier checkpoint of an exhaustive search over a fixed task
+// order.
+function SEARCH_WITH_CHECKPOINT(tasks[0..F-1], task_begin, receipt):
+    require receipt pins the generated core, the task list, relation, root
+            range, split depth and task order
+    bitmap = F zero bits
+    workers take tasks with index >= task_begin in the fixed order
+    on completion set bitmap[i] = 1
+    join all workers
+    // longest fully completed prefix
+    frontier = min { i : bitmap[i] == 0 }
+    print CHECKPOINT with tasks_total = F, frontier, sha256(bitmap), "resume:
+            --task-begin " + frontier
+    // a resume may repeat stragglers, never skips
+    return frontier
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-A bitmap over $F$ tasks costs $F/8$ bytes (about 200 KB for 1.7 million pairs). The differential KAT costs two single-thread runs of a 40-task fixture; the independent audit of the frontier logic was a reading exercise.
+A bitmap over $F$ tasks costs $F/8$ bytes (about 200 KB for 1.7 million pairs). The differential KAT costs two single-thread runs of a 40-task fixture. The independent audit of the frontier logic was a reading exercise.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Resuming under changed bytes.** A continuation with a different core or task order silently searches a different space; the receipt rule exists to make that visible.
+- **Resuming under changed bytes.** A continuation with a different core or task order silently searches a different space. The receipt rule exists to make that visible.
 - **A state file that hides a failed control.** Without the `control_pass` gate, a fluent finishing stage would run on a text whose measuring stage had failed its plant.
 - **Cross-run hash expectations.** A fresh transcript embeds elapsed time and memory, so state or transcript hashes differ between otherwise identical runs; compare semantic records.
 '''
@@ -58,7 +99,7 @@ body = '''
 [[blocks]]
 kind = "controls"
 body = '''
-Oracle smoke: the instrumented core must recover both inherited planted controls with checksums and literal replay. Differential KAT: zero-start instrumented run equals the un-instrumented run on every counter; a run from task 20 reaches frontier 40 and exhausts cleanly.
+Oracle smoke: the instrumented core must recover both inherited planted controls with checksums and literal replay. Differential KAT: zero-start instrumented run equals the un-instrumented run on every counter. A run from task 20 reaches frontier 40 and exhausts cleanly.
 '''
 
 [[blocks]]

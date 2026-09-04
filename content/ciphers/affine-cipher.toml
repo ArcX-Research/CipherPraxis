@@ -34,7 +34,7 @@ and the forward form is $\operatorname{pos}_A(c_i) \equiv m_b^{-1}(\operatorname
 [[blocks]]
 kind = "variants"
 body = '''
-- **Single affine map**: 312 keys; the frequency correlation over all keys is immediate.
+- **Single affine map**: 312 keys. The frequency correlation over all keys is immediate.
 - **Periodic affine (one map per coset)**: $312^p$ raw keys, searched by a monogram shortlist of the best eight maps per coset followed by an exact cyclic order-three quadgram DP, then an unrestricted 312-way coordinate polish.
 - **Affine position routes** are a different object: an affine permutation of *positions*, treated under [Route transposition](/ciphers/route-transposition).
 '''
@@ -43,9 +43,9 @@ body = '''
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- Natural-language plaintext; each coset must hold enough letters to distinguish 312 candidate maps.
+- Natural-language plaintext. Each coset must hold enough letters to distinguish 312 candidate maps.
 - Invariant: an affine map is a bijection, so within-coset coincidences $c_i = c_j \Leftrightarrow p_i = p_j$ are preserved, exactly as for a shift.
-- The index order is part of the model; the program tried the straight order and one keyword-mixed order.
+- The index order is part of the model. The program tried the straight order and one keyword-mixed order.
 '''
 
 [[blocks]]
@@ -59,15 +59,54 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Letters are indices 0..25. a must be a unit mod 26 (gcd(a, 26) = 1, twelve
+// choices), b in 0..25.
+function ENCRYPT(p[0..n-1], a, b):
+    for i in 0..n-1:
+        c[i] = (a * p[i] + b) mod 26
+    return c
+
+function DECRYPT(c[0..n-1], a, b):
+    a_inv = INVERSE_MOD_26(a)                     // a * a_inv = 1 (mod 26)
+    for i in 0..n-1:
+        p[i] = (a_inv * (c[i] - b)) mod 26
+    return p
+
+// Periodic affine layer in index order A: coset b = i mod p has its own
+// decrypt map (m_b, d_b).
+function PERIODIC_DECRYPT(c[0..n-1], A, p, m[0..p-1], d[0..p-1]):
+    for i in 0..n-1:
+        b = i mod p
+        plain[i] = A[(m[b] * pos_A(c[i]) + d[b]) mod 26]
+    return plain
+
+// Ciphertext-only shortlist: all 312 maps per coset, ranked by monogram
+// likelihood of the decrypted coset.
+function SHORTLIST(c[0..n-1], A, p):
+    for b in 0..p-1:
+        coset = [c[i] for i in 0..n-1 if i mod p == b]
+        for each unit m and each d in 0..25:
+            score[m, d] = MONOGRAM_LOGLIK([A[(m * pos_A(y) + d) mod 26] for y
+                    in coset])
+        keep[b] = the eight best (m, d) by score
+    // handed to the exact cyclic quadgram DP
+    return keep
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-Single map: 312 decrypts. Periodic: $8^p$ shortlisted states are exact in the DP with an order-three chain ($8^3$ states per step); the polish visits $312\,p$ single moves per sweep plus shortlisted pairs. Both period-7 controls completed inside the audit's standard budget (logs/205_periodic_affine.log).
+Single map: 312 decrypts. Periodic: $8^p$ shortlisted states are exact in the DP with an order-three chain ($8^3$ states per step). The polish visits $312\,p$ single moves per sweep plus shortlisted pairs. Both period-7 controls completed inside the audit's standard budget (logs/205_periodic_affine.log).
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Identifiability at four to five letters per coset.** The period-26 control on 126 letters produced an attractive false state: its selected text scored $-4.28$ per letter (inside the English band) and round-tripped, yet neither the plaintext nor the observable maps matched the plant. A wider family manufactures false language on short cosets; the target of that length was therefore kept locked.
+- **Identifiability at four to five letters per coset.** The period-26 control on 126 letters produced an attractive false state: its selected text scored $-4.28$ per letter (inside the English band) and round-tripped, yet neither the plaintext nor the observable maps matched the plant. A wider family manufactures false language on short cosets. The target of that length was therefore kept locked.
 - **Round-trip is tautological.** Any invertible fitted map reproduces the ciphertext.
 - **Language-model overfit.** The period-7 endpoints on the two live zones reached only $-5.26$ and $-5.77$ (partial), which the audit classified as quadgram overfit rather than plaintext.
 '''
@@ -98,7 +137,7 @@ Decrypt `W`: $21 \times (22 - 8) = 294 = 11 \times 26 + 8 \to I$. The [affine la
 [[blocks]]
 kind = "notes"
 body = '''
-The periodic-affine family was chosen because it is the largest structured subset between "one shift per coset" and "one arbitrary substitution per coset" that an exact DP can still search; the seven-free-substitution family itself is not identifiable at 63 letters (its control gate failed), so the affine subset is where exactness ends.
+The periodic-affine family was chosen because it is the largest structured subset between "one shift per coset" and "one arbitrary substitution per coset" that an exact DP can still search. The seven-free-substitution family itself is not identifiable at 63 letters (its control gate failed), so the affine subset is where exactness ends.
 '''
 
 [[provenance]]

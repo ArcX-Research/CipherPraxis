@@ -29,36 +29,74 @@ A **held-out gate** plants $N$ fixtures from the hidden or a fresh reservoir, at
 [[blocks]]
 kind = "equations"
 body = '''
-With true power $\pi$ and $N$ independent fixtures, the gate passes with probability $\Pr[\operatorname{Bin}(N, \pi) \ge k]$. For $N = 24$ and $k = 18$ this is about $0.99$ at $\pi = 0.9$, $0.61$ at $\pi = 0.75$ and $0.10$ at $\pi = 0.6$, so the gate separates a strong selector from a weak one but is close to a coin flip at the declared minimum power of $0.75$; the result is therefore reported as the count, not as pass/fail alone.
+With true power $\pi$ and $N$ independent fixtures, the gate passes with probability $\Pr[\operatorname{Bin}(N, \pi) \ge k]$. For $N = 24$ and $k = 18$ this is about $0.99$ at $\pi = 0.9$, $0.61$ at $\pi = 0.75$ and $0.10$ at $\pi = 0.6$, so the gate separates a strong selector from a weak one but is close to a coin flip at the declared minimum power of $0.75$. The result is therefore reported as the count, not as pass/fail alone.
 '''
 
 [[blocks]]
 kind = "assumptions"
 body = '''
-- No plaintext window crosses a reservoir boundary, and all windows are pairwise disjoint; the program's registry object records every interval and the parser re-checks disjointness across the transcript.
+- No plaintext window crosses a reservoir boundary, and all windows are pairwise disjoint. The program's registry object records every interval and the parser re-checks disjointness across the transcript.
 - The corpus is pure letters so byte and letter offsets coincide (2,344,368 letters, 0 non-letter bytes).
-- The fixtures' construction matches the live geometry (which segments are scored, which are neutral holdouts); a later lane corrected a gate that rewarded prose in a segment the live text does not exhibit as prose by declaring that segment an unscored holdout.
+- The fixtures' construction matches the live geometry (which segments are scored, which are neutral holdouts). A later lane corrected a gate that rewarded prose in a segment the live text does not exhibit as prose by declaring that segment an unscored holdout.
 '''
 
 [[blocks]]
 kind = "attack"
 body = '''
-The gate is the last step before the only irreversible one. In the program's joint two-text lane, development on deliberately difficult fixtures produced a selector that recovered both; the held-out gate then ran 24 fresh sentence-start fixtures selected as evenly spaced order statistics of the eligible starts, with a 512-letter exclusion around every development window, and recovered 18 of 24. The live successor is written so that its runner cannot start without a pinned gate receipt containing all 24 cases and at least 18 successes.
+The gate is the last step before the only irreversible one. In the program's joint two-text lane, development on deliberately difficult fixtures produced a selector that recovered both. The held-out gate then ran 24 fresh sentence-start fixtures selected as evenly spaced order statistics of the eligible starts, with a 512-letter exclusion around every development window, and recovered 18 of 24. The live successor is written so that its runner cannot start without a pinned gate receipt containing all 24 cases and at least 18 successes.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Inputs: named corpus reservoirs (training, calibration, development, gap,
+// hidden), the exclusion distance d, N seeds never used before, and the
+// predeclared minimum power. Output: a HELDOUT_GATE record with the success
+// count; the live successor is released only on PASS.
+function HELDOUT_GATE(reservoirs, d, N, seeds, minimum_power):
+    // the frozen runner takes none
+    require NO_ARGUMENTS()
+    for input in [corpus, imported stages, core, wrapper, model checkpoints]:
+        // hash drift refuses the launch
+        if SHA256(input) != PINNED_HASH[input]: refuse
+    require PAIRWISE_DISJOINT(reservoirs) and no window crosses a reservoir
+            boundary
+    // derived from the arguments, not typed
+    k = DERIVE_THRESHOLD(N, minimum_power); assert k
+    fixtures = []
+    for i in 1..N:
+        start = FRESH_ELIGIBLE_START(hidden_reservoir, seeds[i])
+        // machine-checked exclusion
+        require DISTANCE(start, every development window) >= d
+        fixtures.append(PLANT(start, seeds[i]))
+    success = 0
+    for f in fixtures:
+        if SELECT(f.c) == f.p exactly: success += 1
+    record HELDOUT_GATE target=ABSENT cases=N success=success/N threshold=k
+    // the count is reported, not pass/fail alone
+    return PASS if success >= k else FAIL
+
+function LIVE_RUNNER(gate_receipt):
+    require gate_receipt is pinned by hash, holds all N cases and shows
+            success >= k
+    // without that receipt the live successor cannot start
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-One selector run per fixture at the live budget. The lane's gate used a beam of 100,000, 5,000 maps, two repair rounds and 24 cases under a 1,800 s per-case timeout; the first two-case launch was discarded before citation when an auditor found transcript reproducibility gaps, and the restarted gate is the one on record.
+One selector run per fixture at the live budget. The lane's gate used a beam of 100,000, 5,000 maps, two repair rounds and 24 cases under a 1,800 s per-case timeout. The first two-case launch was discarded before citation when an auditor found transcript reproducibility gaps, and the restarted gate is the one on record.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Reused ranges presented as fresh.** An independent range audit found that one of three proposed validation ranges was byte-identical to an earlier control range; the reuse was deliberate (promoting a sentinel), but "must not be described as fresh held-out data".
+- **Reused ranges presented as fresh.** An independent range audit found that one of three proposed validation ranges was byte-identical to an earlier control range. The reuse was deliberate (promoting a sentinel), but "must not be described as fresh held-out data".
 - **Tight margins.** Another range cleared a development window by 37 letters and a third abutted its neighbours with zero margin; both valid, neither tolerant of an off-by-one.
 - **Calibration equal to plant range.** One engine calibrated its gate on the tail it planted from, affecting the threshold rather than recovery.
-- **A gate that rejects real English.** A prose-tail threshold rejected genuine held-out windows (11 of the hardest windows below one threshold, 0 below the re-anchored one); the design audit blocked the lane until the gate was fixed.
+- **A gate that rejects real English.** A prose-tail threshold rejected genuine held-out windows (11 of the hardest windows below one threshold, 0 below the re-anchored one). The design audit blocked the lane until the gate was fixed.
 '''
 
 [[blocks]]

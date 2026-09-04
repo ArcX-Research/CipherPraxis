@@ -22,7 +22,7 @@ for rank r in 1 .. K:                      # or in cumulative shards 1-32, 33-64
 report the best finished endpoint, its rank, ties, and the score gap at rank K
 ```
 
-Calibration: plant instances with a known key, record the truth's rank $r^\ast$ under $g$, and choose $K \ge r^\ast$ with margin; a sentinel plant with $r^\ast > K$ must be missed, proving the schedule is not tautological.
+Calibration: plant instances with a known key, record the truth's rank $r^\ast$ under $g$, and choose $K \ge r^\ast$ with margin. A sentinel plant with $r^\ast > K$ must be missed, proving the schedule is not tautological.
 
 **Exact k-best over a product.** When $g(k) = \sum_b g_b(k_b)$ is a sum of independent per-residue terms, the top $K$ of the product space is obtained by best-first merging: a prefix that falls below rank $K$ among prefixes is dominated under every suffix, so the search never enumerates $26^p$ keys.
 '''
@@ -34,42 +34,80 @@ Additive profile of a periodic key under a monogram model $m$ with per-residue l
 
 $$g(k) = \sum_{b} S_b(k_b), \qquad S_b(s) = \sum_t C_b(t)\, \log m\big(A(t + s)\big).$$
 
-Changing the hidden key or the Vigenère/Beaufort relation only relabels the 26 values of each $S_b$, so the multiset of all $26^p$ candidate scores and hence the truth's strict rank is invariant; the literal rank can change only through exact score ties.
+Changing the hidden key or the Vigenère/Beaufort relation only relabels the 26 values of each $S_b$, so the multiset of all $26^p$ candidate scores and hence the truth's strict rank is invariant. The literal rank can change only through exact score ties.
 '''
 
 [[blocks]]
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- The cheap score must be monotone enough that the truth's rank is bounded; a monogram score of a 63-letter zone ranks planted keys anywhere from 40 to 790, a relaxed bigram score of a cycle bank ranks planted cycles 16th and 2nd where the monogram score ranked them 7,559th and 7,598th.
+- The cheap score must be monotone enough that the truth's rank is bounded. A monogram score of a 63-letter zone ranks planted keys anywhere from 40 to 790, a relaxed bigram score of a cycle bank ranks planted cycles 16th and 2nd where the monogram score ranked them 7,559th and 7,598th.
 - The schedule is fixed before the target is seen; ties at the boundary (a sort key that omits a flag) are processed as a whole straddling group so the schedule is a superset of the declared slice.
-- Every retained item is finished; the list is not pruned by a language verdict on the way.
+- Every retained item is finished. The list is not pruned by a language verdict on the way.
 '''
 
 [[blocks]]
 kind = "attack"
 title = "How to attack it"
 body = '''
-- **Periodic DP.** For each residue keep the eight best shifts by monogram likelihood; the exact cyclic quadgram DP runs inside the $8^p$ product and an unrestricted coordinate pass lets an omitted shift re-enter. Three blind controls (63 and 95 letters at period 7, 126 at period 26) recover 100% of their plaintext.
-- **Rank-sharded selector.** Stage one exhausts an exact family; stage two finishes monogram-ranked method classes in cumulative shards 1-32, 33-64, 65-128, 129-256, 257-512, every rank finished once, no early stop. Validation: five unseen positives at truth ranks 40, 47, 91, 155 and 443 recovered exactly (rates $-4.37$, $-4.30$, $-3.92$, $-4.19$, $-3.91$); the sentinel at rank 790 missed as declared. A sealed successor extends the schedule to rank 2,048 in seven shards with the rank-790 construction promoted to a required positive.
-- **Exact top-16 keys.** In a two-transposition sandwich selector one development control's true key sat at exact additive-profile rank 10 while the argmax key missed two coordinates; the successor enumerates the exact top 16 keys for every retained phase and completion, restoring the truth to final rank 1.
+- **Periodic DP.** For each residue keep the eight best shifts by monogram likelihood. The exact cyclic quadgram DP runs inside the $8^p$ product and an unrestricted coordinate pass lets an omitted shift re-enter. Three blind controls (63 and 95 letters at period 7, 126 at period 26) recover 100% of their plaintext.
+- **Rank-sharded selector.** Stage one exhausts an exact family; stage two finishes monogram-ranked method classes in cumulative shards 1-32, 33-64, 65-128, 129-256, 257-512, every rank finished once, no early stop. Validation: five unseen positives at truth ranks 40, 47, 91, 155 and 443 recovered exactly (rates $-4.37$, $-4.30$, $-3.92$, $-4.19$, $-3.91$). The sentinel at rank 790 missed as declared. A sealed successor extends the schedule to rank 2,048 in seven shards with the rank-790 construction promoted to a required positive.
+- **Exact top-16 keys.** In a two-transposition sandwich selector one development control's true key sat at exact additive-profile rank 10 while the argmax key missed two coordinates. The successor enumerates the exact top 16 keys for every retained phase and completion, restoring the truth to final rank 1.
 - **Cycle banks.** 66,628 mechanically derived cycles are shortlisted by an independent-edge bigram relaxation (planted cycles at ranks 16 and 2) and the top 32 or 128 per relation are finished by the exact cyclic DP; both controls recover 100% at rates $-4.217$ and $-4.135$.
 - **All-different reads.** When enumerating null-space solutions, every distinct all-different read is kept rather than the best partial read per system: in a known-answer test the true read ranked second of six.
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Cheap score g, exact finisher F, list size K fixed before the target is
+// seen.
+function KBEST_FINISH(items, g, F, K):
+    // a tie group straddling rank K is finished whole
+    candidates = items sorted by g descending
+    finished = []
+    // or in cumulative shards 1-32, 33-64, ...
+    for r in 1..K:
+        // every rank finished; never stop early on a hit
+        finished = finished + [F(candidates[r])]
+    return the best finished endpoint, its rank, ties, and the score gap at
+            rank K
+
+// Calibration: plant known keys, record the truth's rank r* under g and
+// choose K >= r* with margin; a sentinel plant with r* > K must be missed.
+
+// Exact top-K of an additive score g(k) = sum over b of g_b(k_b) over a
+// product space, by best-first merging: a prefix below rank K among prefixes
+// is dominated under every suffix.
+function KBEST_PRODUCT(g_b for each residue b, K):
+    sort each residue's candidates by g_b descending and index them 0, 1, 2,
+            ...
+    heap = {tuple (0, 0, ..., 0) with score sum over b of g_b[0]}; output = []
+    while |output| < K and heap is not empty:
+        k = pop the highest-scoring tuple from heap; output = output + [k]
+        // successors: advance one coordinate
+        for each residue b:
+            k' = k with k_b moved to the next candidate of residue b
+            if k' has not been pushed before: push k' with score g(k')
+    // the K highest-scoring tuples, in order
+    return output
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-Cost is $K$ times the finisher. Recorded: 512 method classes each finished by a width-8 cyclic DP and four polish rounds in 265.004 s (first pass), peak resident set 577,585,152 bytes; the eight-best-shift product at period 7 is $8^7 = 2{,}097{,}152$ keys, searched exactly by the DP in $O(p \cdot 8^4)$ table operations rather than by enumeration.
+Cost is $K$ times the finisher. Recorded: 512 method classes each finished by a width-8 cyclic DP and four polish rounds in 265.004 s (first pass), peak resident set 577,585,152 bytes. The eight-best-shift product at period 7 is $8^7 = 2{,}097{,}152$ keys, searched exactly by the DP in $O(p \cdot 8^4)$ table operations rather than by enumeration.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Rank beyond K.** A hidden class at lag-gap rank 2,023 fell outside a frozen top-512 prefilter, so its exact endpoint rank was zero and the validation failed; the boundary sentinel at rank 790 is missed by a top-512 schedule by construction.
-- **Cheap score misranks.** Monogram evidence alone ranked two fixed hidden cycles 7,559th and 7,598th of 66,628; only a better relaxation made a top-128 finish meaningful.
-- **Keeping one read per system.** The frozen rule that retained only the best partial read lost a planted pair whose true read ranked second; the corrected rule keeps every distinct read.
-- **Adaptive widening.** Widening K after seeing a target is selection; the corpus forbids it and re-plants instead.
+- **Rank beyond K.** A hidden class at lag-gap rank 2,023 fell outside a frozen top-512 prefilter, so its exact endpoint rank was zero and the validation failed. The boundary sentinel at rank 790 is missed by a top-512 schedule by construction.
+- **Cheap score misranks.** Monogram evidence alone ranked two fixed hidden cycles 7,559th and 7,598th of 66,628. Only a better relaxation made a top-128 finish meaningful.
+- **Keeping one read per system.** The frozen rule that retained only the best partial read lost a planted pair whose true read ranked second. The corrected rule keeps every distinct read.
+- **Adaptive widening.** Widening K after seeing a target is selection. The corpus forbids it and re-plants instead.
 '''
 
 [[blocks]]
@@ -82,7 +120,7 @@ Rank-sharded validation: positives 5/5 at ranks 40/47/91/155/443, sentinel 1/1 a
 kind = "example"
 title = "Worked example"
 body = '''
-Two residues with three candidate shifts each and additive scores: residue 0 $\{a: -1,\ b: -2,\ c: -5\}$, residue 1 $\{x: -1.5,\ y: -1.7,\ z: -4\}$. Sums in order: $ax = -2.5$, $ay = -2.7$, $bx = -3.5$, $by = -3.7$, $az = -5.0$, $cx = -6.5$, $\dots$ With $K = 3$ the finisher sees $ax, ay, bx$; if the planted key is $by$ (rank 4) it is missed, with $K = 4$ it is recovered. Best-first merging produces this order without forming all nine sums: after $ax$, only its two successors $ay$ and $bx$ are candidates, and so on.
+Two residues with three candidate shifts each and additive scores: residue 0 $\{a: -1,\ b: -2,\ c: -5\}$, residue 1 $\{x: -1.5,\ y: -1.7,\ z: -4\}$. Sums in order: $ax = -2.5$, $ay = -2.7$, $bx = -3.5$, $by = -3.7$, $az = -5.0$, $cx = -6.5$, $\dots$ With $K = 3$ the finisher sees $ax, ay, bx$. If the planted key is $by$ (rank 4) it is missed, with $K = 4$ it is recovered. Best-first merging produces this order without forming all nine sums: after $ax$, only its two successors $ay$ and $bx$ are candidates, and so on.
 '''
 
 [[provenance]]

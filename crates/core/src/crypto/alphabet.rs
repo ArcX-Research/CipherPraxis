@@ -93,7 +93,10 @@ impl std::str::FromStr for Alphabet {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let s = normalize(s);
         if s.len() != 26 {
-            return Err(format!("alphabet must have 26 letters, got {}", s.len()));
+            return Err(format!(
+                "Enter all 26 letters once. The alphabet has {} letters.",
+                s.len()
+            ));
         }
 
         let mut letters = [0u8; 26];
@@ -101,7 +104,7 @@ impl std::str::FromStr for Alphabet {
         for (i, b) in s.bytes().enumerate() {
             let k = (b - b'A') as usize;
             if pos[k] != 255 {
-                return Err(format!("letter {} repeats", b as char));
+                return Err(format!("The letter {} appears more than once.", b as char));
             }
             pos[k] = i as u8;
             letters[i] = b;

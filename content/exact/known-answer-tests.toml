@@ -39,7 +39,7 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - The expected answer comes from an independent path (a scalar loop against a vectorised core; Python against C++; brute force against DP), never from the code under test.
-- Tests exercise the production entry point: a suite that called an internal helper by name stayed green while the production parser was broken; the repaired suite calls the production function with no explicit guard.
+- Tests exercise the production entry point: a suite that called an internal helper by name stayed green while the production parser was broken. The repaired suite calls the production function with no explicit guard.
 - Exit codes and status lines are cross-checked: a core that returns 3 on INCOMPLETE must not be read as a crash, and COMPLETE must always carry a key while INCOMPLETE never does.
 - Binary hashes are informational; source hashes are the pin (two identical compilations produce different bytes).
 '''
@@ -52,18 +52,60 @@ KATs gate every stage. Compiled enumeration cores self-test before serving; exac
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// KAT harness: every check can fail; counts are printed before any control or
+// target.
+function KAT_SUITE(core, fixtures, space, small_instances, cells,
+        valid_inputs, negatives):
+    passed = 0; failed = []
+    // roundtrip KAT
+    for x in fixtures, p in space:
+        CHECK(core.decrypt(core.encrypt(x, p), p) == x, "roundtrip")
+    // parity KAT
+    for inst in small_instances:
+        // score, winner, ties, literal
+        CHECK(core.fast(inst) == BRUTE_FORCE(inst), "parity")
+    // identity KAT
+    for cell in cells:
+        CHECK(the algebraic relation holds exactly on cell, "identity")
+    // mutation KAT
+    for v in valid_inputs, for each single-coordinate edit v' of v:
+        CHECK(core.verify(v') == REJECT, "mutation")
+    // sentinel KAT
+    r = core.search(node_cap = 1)
+    CHECK(r.status == INCOMPLETE and r.exit_code != 0 and r.key is none,
+            "sentinel")
+    // negative KAT
+    for inst in negatives:
+        CHECK(core.solve(inst) == REJECT, "negative")
+    print passed, failed
+    if failed is not empty: exit non-zero naming the first failed gate
+
+function CHECK(condition, gate):
+    if condition: passed = passed + 1
+    else: failed.append(gate)
+
+// Forced-failure pass: for each gate, edit it to be wrong, run KAT_SUITE,
+// require a non-zero exit that names that gate, then delete the mutant. A
+// check that cannot fail is not a test.
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-KATs are cheap by design: a whole-schedule roundtrip of 2.7 million coordinates, a 1,092-cell identity check and three compiled/Python parity cases fit in seconds; the sealed anchored-residue suite (core rebuild, 3 KATs, 12 type-rejection cases, 6 plants, sentinel, 6 mutations, 5 negatives) runs in about 1.9 s.
+KATs are cheap by design: a whole-schedule roundtrip of 2.7 million coordinates, a 1,092-cell identity check and three compiled/Python parity cases fit in seconds. The sealed anchored-residue suite (core rebuild, 3 KATs, 12 type-rejection cases, 6 plants, sentinel, 6 mutations, 5 negatives) runs in about 1.9 s.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Tautological checks.** An independent forward that every candidate key reproduces (200/200 random wrong keys did, because the forward algebra cancels the key identically) certifies only that a per-residue quantity is constant; the only discriminating gate on the plant was the comparison with the known latent, which does not exist on a target. The lane was blocked for global use.
+- **Tautological checks.** An independent forward that every candidate key reproduces (200/200 random wrong keys did, because the forward algebra cancels the key identically) certifies only that a per-residue quantity is constant. The only discriminating gate on the plant was the comparison with the known latent, which does not exist on a target. The lane was blocked for global use.
 - **Tests that bypass production.** The parser self-test called a helper by name; swapping the guard used by the real parser left the tests green. Repair: the suite calls the production function and a discrimination probe names exactly the three in-range cases that distinguish a correct integer guard from one that accepts booleans.
 - **Misread exit codes.** The first draft treated the deliberate exit 3 of an incomplete search as a crash, so the sentinel could not pass.
-- **Wrong reference in the KAT itself.** A sparse-identity KAT compared each of two positions in a chunk separately against the whole tensor slice and falsely failed; the corrected reference sums both positions.
+- **Wrong reference in the KAT itself.** A sparse-identity KAT compared each of two positions in a chunk separately against the whole tensor slice and falsely failed. The corrected reference sums both positions.
 - **Suites that never ran.** A KAT count absent from the transcript is a KAT that did not run.
 '''
 

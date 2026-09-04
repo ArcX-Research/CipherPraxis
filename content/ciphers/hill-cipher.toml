@@ -37,14 +37,14 @@ body = '''
 - **Direct Hill** of size 2, 3 or 4 on the whole text.
 - **Hill over a periodic layer** (Hill-3 and Hill-2 lanes): the inner additive key is finished with the exact cyclic quadgram DP after the matrix is chosen.
 - **Keyword matrices**: a $d^2$-letter word read into the matrix in one of four conventions; screened by dictionary and by the cascade's decision D4.
-- **Padding**: an odd-length text cannot be split into digraphs without a convention; the program refused to truncate or pad silently.
+- **Padding**: an odd-length text cannot be split into digraphs without a convention. The program refused to truncate or pad silently.
 '''
 
 [[blocks]]
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- Block boundaries are aligned with the start of the text; the matrix is constant.
+- Block boundaries are aligned with the start of the text. The matrix is constant.
 - Invariant: whole-block permutation of the ciphertext preserves every within-block linear combination, which is the null the program used for the periodic variants.
 - Invariant: a Hill layer destroys single-letter frequencies but not the periodicity of a layer beneath it, seen through the decimated period $q$.
 '''
@@ -53,10 +53,48 @@ body = '''
 kind = "attack"
 title = "How to attack it"
 body = '''
-1. Enumerate every primitive row of $D$ and score its decimated stream (monogram likelihood for direct Hill; shift-marginalised periodic likelihood for Hill over a periodic layer; a lag-$d$ trigram likelihood for $d = 4$).
+1. Check every primitive row of $D$ and score its decimated stream. Use monogram likelihood for direct Hill, shift-marginalised periodic likelihood for Hill over a periodic layer, and lag-$d$ trigram likelihood when $d = 4$.
 2. Join the top rows into unit-determinant matrices in every row order; rescore the full decrypt with quadgrams.
 3. For periodic variants, finish the inner key with the exact cyclic DP and check the independent forward equations $\mathbf{h}_j = D\mathbf{c}_j$, $\mathbf{c}_j = E\mathbf{h}_j$.
 4. Compare any English-looking endpoint against whole-block permutation nulls run through the same selector.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Blocks of d letters are column vectors over Z_26; E is a d x d matrix whose
+// determinant is a unit mod 26.
+function ENCRYPT(p[0..n-1], E, d):
+    for each block j (P = p[jd .. jd+d-1] as a column vector):
+        C = (E * P) mod 26
+        write C into c[jd .. jd+d-1]
+    return c
+
+function MATRIX_INVERSE(E):
+    // must be odd and not divisible by 13
+    det = DET(E) mod 26
+    return (INVERSE_MOD_26(det) * ADJUGATE(E)) mod 26
+
+function DECRYPT(c[0..n-1], E, d):
+    D = MATRIX_INVERSE(E)
+    for each block j (C = c[jd .. jd+d-1] as a column vector):
+        P = (D * C) mod 26
+        write P into p[jd .. jd+d-1]
+    return p
+
+// Row-separable attack: row r of D yields every d-th plaintext letter and is
+// scored on its own.
+function ROW_ATTACK(c, d):
+    for each primitive row r (non-zero mod 2 and mod 13):
+        // one decimated plaintext stream
+        y = [(r . C_j) mod 26 for each ciphertext block C_j]
+        // monogram, or shift-marginalised over a periodic layer
+        score[r] = STREAM_SCORE(y)
+    join the top rows in every row order into matrices D with a unit
+            determinant
+    return the D whose full decrypt scores best on quadgrams
+```
 '''
 
 [[blocks]]
@@ -68,10 +106,10 @@ Rows: 504, 15,372 and 428,400 for $d = 2, 3, 4$. Hill-2 periodic: top 192 rows, 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Shortlist too narrow.** The first Hill-2 preflight kept eight pairs per cell and failed because the planted pairs ranked 256 and 319; the repaired selector ranks the hidden matrix first on both controls.
-- **Periodic overfit.** The 126-letter period-26 Hill-2 endpoint scored $-4.87$, but the selected-family block-shuffled null panel contained $-4.74$, so it was ordinary overfit; the 144-letter Hill-3 statistic was ordering-dependent yet its reconstructions stayed near $-6.2$.
+- **Shortlist too narrow.** The first Hill-2 preflight kept eight pairs per cell and failed because the planted pairs ranked 256 and 319. The repaired selector ranks the hidden matrix first on both controls.
+- **Periodic overfit.** The 126-letter period-26 Hill-2 endpoint scored $-4.87$, but the selected-family block-shuffled null panel contained $-4.74$, so it was ordinary overfit. The 144-letter Hill-3 statistic was ordering-dependent yet its reconstructions stayed near $-6.2$.
 - **Odd lengths.** A 153-letter text is out of scope for unpadded Hill-2.
-- **Word-keyed matrices** cover a tiny fraction of $\mathrm{GL}(d, \mathbb{Z}_{26})$; the arbitrary-row lanes exist for that reason.
+- **Word-keyed matrices** cover a tiny fraction of $\mathrm{GL}(d, \mathbb{Z}_{26})$. The arbitrary-row lanes exist for that reason.
 '''
 
 [[blocks]]
@@ -97,7 +135,7 @@ Ciphertext `HIAT`. The inverse is $D = 3 \begin{pmatrix} 5 & -3 \\ -2 & 3 \end{p
 [[blocks]]
 kind = "notes"
 body = '''
-Row separability is what turns a $26^{d^2}$ key space into $26^d$ independent row scores plus a cheap join; it is exact for direct Hill and remains exact for Hill over a periodic layer because the periodic structure survives decimation.
+Row separability is what turns a $26^{d^2}$ key space into $26^d$ independent row scores plus a cheap join. It is exact for direct Hill and remains exact for Hill over a periodic layer because the periodic structure survives decimation.
 '''
 
 [[provenance]]

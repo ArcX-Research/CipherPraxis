@@ -17,7 +17,7 @@ With $\{A,\dots,Z\} \cong \mathbb{Z}_{26}$ and a key $k \in \mathbb{Z}_{26}$,
 
 $$c_i \equiv p_i + k \pmod{26}, \qquad p_i \equiv c_i - k \pmod{26}.$$
 
-The ciphertext histogram is the plaintext histogram rotated by $k$. In a keyed order $A$ (any fixed permutation of the alphabet) the same cipher reads $\operatorname{pos}_A(c_i) = \operatorname{pos}_A(p_i) + k$; the choice of order is part of the key.
+The ciphertext histogram is the plaintext histogram rotated by $k$. In a keyed order $A$ (any fixed permutation of the alphabet) the same cipher reads $\operatorname{pos}_A(c_i) = \operatorname{pos}_A(p_i) + k$. The choice of order is part of the key.
 '''
 
 [[blocks]]
@@ -40,7 +40,7 @@ kind = "variants"
 body = '''
 - **Keyed-order shift**: the same rotation in a mixed alphabet; see [Keyword-mixed alphabet](/ciphers/keyword-mixed-alphabet).
 - **Per-coset shifts**: a periodic vector of shifts is the [Vigenère cipher](/ciphers/vigenere); subtraction gives [Beaufort](/ciphers/beaufort) and [Variant Beaufort](/ciphers/variant-beaufort).
-- **Drifting shift**: a shift that changes by a constant per block ("Caesar-drifted key") is the block model tested by the program's block-structure instrument.
+- **Drifting shift**: a shift that changes by a constant per block ("Caesar-drifted key") is the block model tested by the program's block-structure test.
 - **Block addition**: the base-26 integer form above, exhaustive at width 3 ($26^3 = 17{,}576$ keys per serialisation cell) and beam-searched at width 9.
 '''
 
@@ -48,7 +48,7 @@ body = '''
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- The plaintext letter distribution is non-flat; a flat histogram makes every shift equally likely.
+- The plaintext letter distribution is non-flat. A flat histogram makes every shift equally likely.
 - Invariant: coincidences $c_i = c_j$ are exactly the plaintext coincidences $p_i = p_j$ under a single shift, so the index of coincidence is unchanged by the cipher.
 - In the block form the invariant fails: two ciphertext blocks differ in every digit that a borrow crosses.
 '''
@@ -63,23 +63,58 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Letters are indices 0..25; one key k in 0..25.
+function ENCRYPT(p[0..n-1], k):
+    for i in 0..n-1:
+        c[i] = (p[i] + k) mod 26
+    return c
+
+function DECRYPT(c[0..n-1], k):
+    for i in 0..n-1:
+        p[i] = (c[i] - k) mod 26
+    return p
+
+// Maximum-likelihood shift from the ciphertext histogram h and a reference
+// distribution E.
+function RECOVER_SHIFT(c[0..n-1], E):
+    h = HISTOGRAM(c)                                       // 26 counts
+    return argmax over k in 0..25 of sum over x of h[x] * log E[(x - k) mod
+            26]
+
+// Block generalisation: b letters form one base-26 integer in digit order O
+// with exponents e(r), and a single key K is added with carries.
+function BLOCK_ENCRYPT(x[0..n-1], b, K, O, e):
+    for each block j (letters x[jb .. jb+b-1]):
+        X = sum over r in 0..b-1 of O(x[jb + r]) * 26^e(r)
+        // a carry couples the positions of a block
+        C = (X + K) mod 26^b
+        write C back as b digits in the same order and orientation
+    // decryption subtracts K mod 26^b
+    return the re-serialised letters
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-Single shift: 26 correlations, $O(26 \cdot 26)$ work. Block addition at width 3: $17{,}576$ keys in each of four serialisation cells (two digit orders times two orientations), i.e. $70{,}304$ decrypt-and-score evaluations per objective. Width 9 ($26^9 \approx 5.4 \times 10^{12}$ keys) is not exhaustible; the program's beam kept every $26^3$ suffix through depth three and the best $20{,}000$ suffixes afterwards.
+Single shift: 26 correlations, $O(26 \cdot 26)$ work. Block addition at width 3: $17{,}576$ keys in each of four serialisation cells (two digit orders times two orientations), i.e. $70{,}304$ decrypt-and-score evaluations per objective. Width 9 ($26^9 \approx 5.4 \times 10^{12}$ keys) is not exhaustible. The program's beam kept every $26^3$ suffix through depth three and the best $20{,}000$ suffixes afterwards.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Short samples.** Below roughly 12 letters the argmax shift is unreliable; a coset of a periodic cipher can be that short.
+- **Short samples.** Below roughly 12 letters the argmax shift is unreliable. A coset of a periodic cipher can be that short.
 - **Non-language plaintext.** A flat inner text gives no rotation signal even though the cipher is trivial.
-- **Beam truncation.** In the width-9 block search the first three key digits are ranked from only 16 or 17 letters of a 144- or 153-letter text; a control can be recovered while a different true key is lost when the beam truncates at depth four, so a width-9 miss is not a family exclusion.
+- **Beam truncation.** In the width-9 block search the first three key digits are ranked from only 16 or 17 letters of a 144- or 153-letter text. A control can be recovered while a different true key is lost when the beam truncates at depth four, so a width-9 miss is not a family exclusion.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-The block-addition lane ran target-profile planted controls for every width and objective before any live text was loaded: each control recovered the exact planted plaintext, block key and serialisation convention and passed an independent scalar forward replay; the width-9 truth ranked first at every beam depth for the true convention (logs/477_blockadd_live_20260903T194147Z.log). The live width-3 search was an exact key-space negative for English-like plaintext: best rates between $-7.25$ and $-7.68$ per letter, with 19 matched block-permutation nulls giving empirical $p$ between $0.35$ and $0.80$. Width 9 ended as NO_CANDIDATE_IN_BEAM, deliberately not an exclusion.
+The block-addition lane ran target-profile planted controls for every width and objective before any live text was loaded: each control recovered the exact planted plaintext, block key and serialisation convention and passed an independent scalar forward replay. The width-9 truth ranked first at every beam depth for the true convention (logs/477_blockadd_live_20260903T194147Z.log). The live width-3 search was an exact key-space negative for English-like plaintext: best rates between $-7.25$ and $-7.68$ per letter, with 19 matched block-permutation nulls giving empirical $p$ between $0.35$ and $0.80$. Width 9 ended as NO_CANDIDATE_IN_BEAM, deliberately not an exclusion.
 '''
 
 [[blocks]]
@@ -101,7 +136,7 @@ Check: $O = 14$, $14 + 3 = 17 = R$. Decryption subtracts 3.
 [[blocks]]
 kind = "notes"
 body = '''
-The program never treated a Caesar shift as a hypothesis on its own; it appears as the per-coset step inside every periodic solver and as the degenerate $m = 1$ case of the affine-route and periodic dynamic-programming lanes. The block-addition experiment is the only place where a single shift is the whole cipher, and its value was to show that carries break the coset invariants on which all the other instruments rest.
+The program never treated a Caesar shift as a hypothesis on its own. It appears as the per-coset step inside every periodic solver and as the degenerate $m = 1$ case of the affine-route and periodic dynamic-programming lanes. The block-addition experiment is the only place where a single shift is the whole cipher, and its value was to show that carries break the coset invariants on which all the other tests rest.
 '''
 
 [[provenance]]

@@ -40,7 +40,7 @@ body = '''
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- Fixed-width serialisation in one of four cells; a modulus bounded by the block width.
+- Fixed-width serialisation in one of four cells. A modulus bounded by the block width.
 - Invariant: a literal modular-power replay must reproduce every ciphertext block, which is the gate a language score can never replace.
 - Invariant: any block cipher of width above 1 mixes every plaintext letter of a block into every ciphertext letter, so within-class equalities $c_i = c_j \Leftrightarrow p_i = p_j$ that the corpus texts exhibit are incompatible with it; width-1 RSA ($N < 26$) is a monoalphabetic substitution.
 '''
@@ -51,28 +51,65 @@ title = "How to attack it"
 body = '''
 1. Read $c_{\max}$ from the serialised ciphertext in each cell; enumerate every admissible $N$ (sieve, then products).
 2. For each $N$ and exponent class decrypt every block; score each payload subset by quadgrams.
-3. Keep the top candidates, verify by independent decryption and literal replay, and compare with an out-of-sample English threshold; any crossing requires a selection-matched null that permutes whole ciphertext blocks and reruns the complete selector.
+3. Keep the top candidates, verify by independent decryption and literal replay, and compare with an out-of-sample English threshold. Any crossing requires a selection-matched null that permutes whole ciphertext blocks and reruns the complete selector.
 4. Gate on planted controls that recover the exact modulus, factors, exponent, mask and plaintext before any live text is loaded.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Blocks of b letters; digit order O (straight or keyword-mixed) and
+// orientation e(r) (most- or least-significant first). N is the modulus, N <
+// 26^b; E and D satisfy E * D = 1 (mod lambda(N)).
+function SERIALISE(x[0..b-1], O, e):
+    // an integer below 26^b
+    return sum over r in 0..b-1 of O(x[r]) * 26^e(r)
+
+function DESERIALISE(X, O, e):
+    // same order and orientation
+    return the b letters whose digits O(x[r]) * 26^e(r) sum to X
+
+function ENCRYPT(p[0..n-1], b, N, E, O, e):
+    for each block of b letters of p:
+        X = SERIALISE(block, O, e)
+        // C < N < 26^b
+        C = POWMOD(X, E, N)
+        append DESERIALISE(C, O, e) to c
+    return c
+
+function DECRYPT(c[0..n-1], b, N, D, O, e):
+    for each block of b letters of c:
+        C = SERIALISE(block, O, e)
+        X = POWMOD(C, D, N)
+        append DESERIALISE(X, O, e) to p
+    return p
+
+// Attack: read c_max from the serialised ciphertext, enumerate every
+// admissible N with c_max < N < 26^b (distinct-prime semiprimes, then
+// squarefree multi-prime), every unit exponent class D modulo lambda(N) and
+// every payload subset; score by quadgrams and gate on literal replay.
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-Width 3 with all unit exponents: 1,348,830 exponent maps and 14,618,198 payload scores for two-prime moduli; 4,214 multi-prime moduli (3,267 three-factor, 881 four-factor, 66 five-factor) with 360,512 maps. Width 4 with the expanded bank and erasure: 1,653,009 exponent pairs and 50,429,456 projections; the full unit group at width 4 (about $1.02 \times 10^9$ maps) was refused as intractable and not identifiable at four-letter blocks. Width 9 word factors: 648,896 moduli and 4,799,164 maps on the blind gate.
+Width 3 with all unit exponents: 1,348,830 exponent maps and 14,618,198 payload scores for two-prime moduli; 4,214 multi-prime moduli (3,267 three-factor, 881 four-factor, 66 five-factor) with 360,512 maps. Width 4 with the expanded bank and erasure: 1,653,009 exponent pairs and 50,429,456 projections. The full unit group at width 4 (about $1.02 \times 10^9$ maps) was refused as intractable and not identifiable at four-letter blocks. Width 9 word factors: 648,896 moduli and 4,799,164 maps on the blind gate.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
 - **Short hits are selection noise.** The width-9 family produced two 16-letter and two 17-letter English-looking prefixes/suffixes; under 19 block-order permutations 13 of 19 (and 19 of 19) nulls scored at least as well, giving $p = 0.70$ and $p = 1.00$.
-- **Erased columns impose no forward constraint**, so replay is necessary but not sufficient there; an English threshold and a matched null are required.
+- **Erased columns impose no forward constraint**, so replay is necessary but not sufficient there. An English threshold and a matched null are required.
 - **Scope.** Width 4 is only bank-complete; widths 5-8, 10 and above, non-word primes at width 9, variable-width serialisation, non-fixed pad positions and an external modulus remain open in principle, and none is both tractable and identifiable.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Every lane recovered its exact planted modulus, exponent pair, serialisation and plaintext with replay before release: widths 2-4 (log 478), deterministic padding (log 479, live structural admission count zero in every width and group), erasure (log 480), all unit exponents (log 481), multi-prime (log 482), and the width-9 word-factor lane (log 483), whose blind gate recovered a cross-convention plant with a 13-digit modulus and its two word factors. All live outcomes were negative; the two short width-9 hits were rejected by logs 484 and 485 as above. An independent read-only audit certified the closures.
+Every lane recovered its exact planted modulus, exponent pair, serialisation and plaintext with replay before release: widths 2-4 (log 478), deterministic padding (log 479, live structural admission count zero in every width and group), erasure (log 480), all unit exponents (log 481), multi-prime (log 482), and the width-9 word-factor lane (log 483), whose blind gate recovered a cross-convention plant with a 13-digit modulus and its two word factors. All live outcomes were negative. The two short width-9 hits were rejected by logs 484 and 485 as above. An independent read-only audit certified the closures.
 '''
 
 [[blocks]]

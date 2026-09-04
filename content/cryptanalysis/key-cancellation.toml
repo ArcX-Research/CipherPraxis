@@ -25,7 +25,7 @@ kind = "equations"
 title = "Conditions, counts and gauge"
 body = '''
 - **Common index space.** If B's plaintext is indexed by $z_9$ and A converts the running-key letters by $z_8$, cancellation requires the physical-letter conversion $F(u) = z_8(z_9^{-1}(u))$ to be affine, $F(u) = au + b$ with $\gcd(a, 26) = 1$: then $a\epsilon_B x$ cancels the plaintext and $b$ is absorbed into the key. The straight order and the keyword-mixed order of the corpus admit **no** affine map between them (checked over all 12 units and 26 translations), so only matched-order cells cancel literally; mixed-order subtraction tests a shared numeric stream, not a shared plaintext.
-- **Signs.** With the plaintext sign convention, four sign cells $(\epsilon_B, \epsilon_A)$ give two observably different streams ($y - x$ and $y + x$) with two endpoint relations each; a convention that puts the sign on the key instead has only two effective cells. A production source must declare one convention and prove it with known-answer tests.
+- **Signs.** With the plaintext sign convention, four sign cells $(\epsilon_B, \epsilon_A)$ give two observably different streams ($y - x$ and $y + x$) with two endpoint relations each. A convention that puts the sign on the key instead has only two effective cells. A production source must declare one convention and prove it with known-answer tests.
 - **Alignment.** For a cycled 144-letter key the offsets live in $\mathbb{Z}/144$; with two orientations there are 288 raw alignments (not 592, which counts non-wrapped edge overlaps of a different model).
 - **Gauge.** For any $b$, $K'_j = K_j + b$, $z(P'_j) = z(P_j) - \epsilon_B b$, $z(Q'_i) = z(Q_i) + \epsilon_A\epsilon_B b$ leave both ciphertexts unchanged: "recover the key exactly" is meaningful only after a gauge is fixed or a unique physical plaintext is selected.
 '''
@@ -50,28 +50,71 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Ciphertexts x (text B) and y (text A) as indices under one letter-to-index
+// map z; alignment phi; signs eps_B, eps_A in {+1, -1}.
+function CANCEL(y, x, phi, eps_B):
+    for i in 0..|y|-1:
+        // = eps_A z(Q_i) - eps_B K_phi(i): the plaintext P has cancelled
+        d[i] = (y[i] - eps_B * x[phi(i)]) mod 26
+    return d
+
+function KEY_CANCELLATION(x, y, phi, orders):
+    // 16 cells for two orders and two signs per text
+    for each cell (order for x, order for y, eps_B, eps_A):
+        d = CANCEL(y, x, phi, eps_B)
+        // the cipher the residual key implies: a constant segment, a periodic
+        // segment, or both
+        K = SOLVE_RESIDUAL(d)
+        // gauge states K' = K + g; retain ties
+        for g in (0..25 if the cell is same-order else {0}):
+            K' = K + g
+            Q[i] = (eps_A * (d[i] + eps_B * K'[phi(i)])) mod 26
+            P[j] = (eps_B * (x[j] - K'[j])) mod 26
+            // validates the implementation only
+            assert ENCRYPT_B(P, K', eps_B) == x and ENCRYPT_A(Q, P, phi,
+                    eps_A) == y
+            // Q only; P may be structured rather than prose
+            score[cell, g] = LANGUAGE_STATISTIC(Q)
+    return (the best (cell, K', Q, P), observed = max score)
+
+function SELECT_WITH_NULL(x, y, phi, orders, N):
+    (best, observed) = KEY_CANCELLATION(x, y, phi, orders)
+    // N = 99 full reruns of the entire selector
+    for r in 1..N:
+        null[r] = observed score of KEY_CANCELLATION with the derived stream
+                permuted within its key groups
+                  // destroys adjacency and the cross-text pairing, preserves
+                  // the group histograms
+    return (best, observed, observed beats every null[r])
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-Cancellation is $O(n)$ per cell. The cost is in the residual solve and its nulls: 16 cells $\times$ (a width-8 shortlist cyclic DP of $8^7$ states plus 5,616 finish states), 1,600 cell solves and 561,600 full-candidate evaluations per fixture with 99 nulls; a 20-fixture hidden suite is 32,000 cell solves.
+Cancellation is $O(n)$ per cell. The cost is in the residual solve and its nulls: 16 cells $\times$ (a width-8 shortlist cyclic DP of $8^7$ states plus 5,616 finish states), 1,600 cell solves and 561,600 full-candidate evaluations per fixture with 99 nulls. A 20-fixture hidden suite is 32,000 cell solves.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Wrong index space.** Subtracting a straight-order ciphertext from a keyed-order one cancels nothing; a selector must include a mismatched-index negative to prove it does not treat that as cancellation.
-- **Degenerate nulls.** Histogram-only gates (marginalised monogram evidence, exact coset alignment) are invariant under shuffles within the derived cosets, so such a null cannot calibrate them; a structural null must destroy the cross-source pairing while preserving each source's coset histograms.
-- **Variable-length scores.** A raw sum of log-probabilities over segments of different length grows deterministically with the breakpoint; an earlier design was blocked for exactly this bias.
-- **Premise inconsistent with the data.** Simulated chains of this kind predict for the 153-letter text a period-7 alignment of $z +0.13$ (range $-1.1$ to $+2.0$) and a zone coset IC of about $0.040$, against the measured $+4.2$ and $0.066$; the chain premise is disfavoured at roughly 3 to 4$\sigma$ before any run, and a hidden-bank pass would validate an instrument for a family the text does not resemble.
-- **Reading too much.** A readable $Q$ determines $P$ only algebraically; a claim about $P$ needs its own predeclared criterion.
+- **Wrong index space.** Subtracting a straight-order ciphertext from a keyed-order one cancels nothing. A selector must include a mismatched-index negative to prove it does not treat that as cancellation.
+- **Degenerate nulls.** Histogram-only gates (marginalised monogram evidence, exact coset alignment) are invariant under shuffles within the derived cosets, so such a null cannot calibrate them. A structural null must destroy the cross-source pairing while preserving each source's coset histograms.
+- **Variable-length scores.** A raw sum of log-probabilities over segments of different length grows deterministically with the breakpoint. An earlier design was blocked for exactly this bias.
+- **Premise inconsistent with the data.** Simulated chains of this kind predict for the 153-letter text a period-7 alignment of $z +0.13$ (range $-1.1$ to $+2.0$) and a zone coset IC of about $0.040$, against the measured $+4.2$ and $0.066$. The chain premise is disfavoured at roughly 3 to 4$\sigma$ before any run, and a hidden-bank pass would validate a test for a family the text does not resemble.
+- **Reading too much.** A readable $Q$ determines $P$ only algebraically. A claim about $P$ needs its own predeclared criterion.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-- Algebra known-answer tests (segment-cancellation review): random numeric fixtures over breakpoints $\{45, 53, 60\}$, orientations $\pm 1$, offsets $\{0, 1, 52, 53, 71, 143\}$ and all four sign pairs, 144 combinations, all passing the cancellation identity, both inverses and both source forwards; the exact key-group counts at the three breakpoints; the non-existence of an affine map between the two orders.
+- Algebra known-answer tests (segment-cancellation review): random numeric fixtures over breakpoints $\{45, 53, 60\}$, orientations $\pm 1$, offsets $\{0, 1, 52, 53, 71, 143\}$ and all four sign pairs, 144 combinations, all passing the cancellation identity, both inverses and both source forwards. The exact key-group counts at the three breakpoints. The non-existence of an affine map between the two orders.
 - Segment-aware selector (logs/373): 16/16 hidden positives (every order pair and sign pair at breakpoint 53) recovered exactly with strict rank one against 99 nulls; 4/4 negatives (two valid-family random-latent with independent-monogram $Q$, two no-chain with an independent running stream) rejected; zero generator ties; target absent.
 - Two-regime derivation (coupling note, section 6): exact per-regime $8^7$ products with a 14-shift joint polish recovered $Q$ and, through the closure invariant, $P$ in 10/10 synthetic pairs in under a second per cell.
-- Broad cross-derived scan (logs/155): every ordered pair, both orders, both signs, both orientations, every eligible offset, periods 7 and 26, with a null that shuffles each complete source and repeats the whole selection; a planted cross-running-key control at period 7 precedes the targets.
+- Broad cross-derived scan (logs/155): every ordered pair, both orders, both signs, both orientations, every eligible offset, periods 7 and 26, with a null that shuffles each complete source and repeats the whole selection. A planted cross-running-key control at period 7 precedes the targets.
 '''
 
 [[blocks]]

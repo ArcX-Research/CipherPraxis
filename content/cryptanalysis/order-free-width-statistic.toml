@@ -13,9 +13,9 @@ updated = "2026-09-04"
 [[blocks]]
 kind = "definition"
 body = '''
-The rule: **while any transposition remains unstripped, score order-free (shift-marginalised monogram evidence, class patterns); only once every transposition is stripped, score with quadgrams.** The reason is exact: a transposition preserves the letter multiset, so the correct outer key leaves a residue whose monogram distribution is exactly the language's, while the same residue has a quadgram rate indistinguishable from noise.
+The rule: **while any transposition remains unstripped, score order-free (shift-marginalised monogram evidence, class patterns). Only once every transposition is stripped, score with quadgrams.** The reason is exact: a transposition preserves the letter multiset, so the correct outer key leaves a residue whose monogram distribution is exactly the language's, while the same residue has a quadgram rate indistinguishable from noise.
 
-Two order-free width statistics follow. Given an inner period $k$ and a hypothesised width $w$, the **residue pattern** is the sequence $\sigma(s) \bmod k$ over read-out columns; the **block pattern** is the predicted class of every output position under $w$, constant per column if $k \mid w$ and alternating otherwise.
+Two order-free width statistics follow. Given an inner period $k$ and a hypothesised width $w$, the **residue pattern** is the sequence $\sigma(s) \bmod k$ over read-out columns. The **block pattern** is the predicted class of every output position under $w$, constant per column if $k \mid w$ and alternating otherwise.
 '''
 
 [[blocks]]
@@ -34,9 +34,9 @@ For the residue-pattern fit, the outer shifts $u$ (period $p$) and inner shifts 
 [[blocks]]
 kind = "assumptions"
 body = '''
-- The inner layer has a short period $k$ so that classes exist; a plain (period-1) inner gives no class structure and no width signal, which is the correct negative.
+- The inner layer has a short period $k$ so that classes exist. A plain (period-1) inner gives no class structure and no width signal, which is the correct negative.
 - The transposition is columnar with the unpadded long/short convention; other transposition types need their own position map.
-- The outer layer is additive in a known order so that class posteriors can be formed; the posteriors are only as good as the inner model.
+- The outer layer is additive in a known order so that class posteriors can be formed. The posteriors are only as good as the inner model.
 '''
 
 [[blocks]]
@@ -51,6 +51,52 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Class posteriors P[i][gamma] for positions 0..n-1 and inner classes 0..k-1
+// (outer shifts marginalised); widths 2..w_max; N shuffles.
+function BLOCK_STATISTIC(P, k, w, orientation):
+    // rows; number of long columns
+    h = ceil(n / w);  e = n mod w
+    // 0 when k divides w (constant blocks), otherwise alternating
+    step = (orientation * w) mod k
+    // centring: "every letter is class 0" scores zero
+    Pbar[gamma] = mean over i of P[i][gamma]
+    gain(B) = max over phase t of sum over i in B of ( P[i][(t + step * i)
+            mod k] - Pbar[(t + step * i) mod k] )
+    // a block B is a run of h (long) or h - 1 (short) consecutive output
+    // positions; a layout says which e of the w blocks are long dynamic
+    // programme over the columns, or enumeration when C(w, e) is small
+    S = max over layouts of sum over blocks B of gain(B)
+    return S
+
+function SCAN(c, m, k, w_max):
+    // top spacings delta kept with the posteriors
+    P = CLASS_POSTERIORS(MIXTURE_FIT(c, m))
+    for w in 2..w_max, orientation in {+1, -1}:
+        S[w] = max(S[w], BLOCK_STATISTIC(P, k, w, orientation))
+        // outer shifts refined for this width
+        S[w] = max(S[w], BLOCK_STATISTIC(CLASS_EM_REFINE(P, w), k, w,
+                orientation))
+    return S
+
+function WIDTH_Z(c, m, k, w_max, N):
+    S = SCAN(c, m, k, w_max)
+    // identical pipeline: fit, spacing candidates, class-EM, DP
+    for r in 1..N: S_null[r] = SCAN(SHUFFLE(c), m, k, w_max)
+    for w in 2..w_max: z[w] = (S[w] - MEAN_r S_null[r][w]) / SD_r S_null[r][w]
+    // to the column solver
+    return { w : z[w] >= 3 } smallest first, with z
+
+// Exact-grid alternative: enumerate the residue patterns sigma(s) mod k; fit
+// the outer shifts u and inner shifts v per pattern by alternating exact
+// monogram maximisation, fixing the gauge of v only after convergence; rank
+// the patterns against a familywise shuffle null.
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
 Pattern statistic: $O(k\,n)$ prefix sums, then $O(w \cdot e)$ DP per width; sixty null pipelines over widths 2 to 25 run in tens of minutes per text. Residue-pattern fit: $w!/\prod(\text{mult}!)$ patterns, each an alternating exact maximisation over $26(p + k)$ values; width 17 with $k \le 2$ is exhaustive at 153 letters.
@@ -62,15 +108,15 @@ body = '''
 - **Using quadgrams too early.** The verify demonstration: correct inner, monogram log-likelihood $-2.83$ per letter, quadgram rate $-6.95$; after stripping, $-4.38$ (logs/301).
 - **Uncentred posteriors.** Without centring, the all-one-class configuration maximises every even width.
 - **Gauge collapse.** Fixing $v_0 = 0$ during the alternating fit returns nothing while looking like a working solver.
-- **Shared signals across widths.** Several widths respond to the same alternation or constancy; the statistic ranks, the plaintext decides.
+- **Shared signals across widths.** Several widths respond to the same alternation or constancy. The statistic ranks, the plaintext decides.
 - **Non-single transpositions.** A double columnar shows the inner mixture ($M_2$ at $z +5.8$) but no single width; fractionation shows weak mixture and no width. On the two unsolved corpus texts no width reached $z \ge 3$ in any combination of orders (logs/05).
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-- Block statistic (logs/05): planted period-7 over width-9 over period-2 (exact grid) $z +12.8$; width 8 ragged $+11.3$; width 12 with a different inner alphabet $+4.3$; width 9 with a period-3 inner $+5.1$; each then solved at 100% match and rate $-4.34$. Controls printed alongside showed the negative signatures: a fractionated inner, a plain periodic substitution, a double columnar.
-- Residue-pattern fit (logs/300, 303): planted period-7 over width-9 over period-2 at 153 letters, CONTROL PASS with the true pattern first; the design note reports rank 1 of 504 at evidence $-2.9776$ against $-3.3739$ for the runner-up ($z +9.4$ familywise) with the inner shifts recovered exactly and the outer up to the gauge.
+- Block statistic (logs/05): planted period-7 over width-9 over period-2 (exact grid) $z +12.8$; width 8 ragged $+11.3$; width 12 with a different inner alphabet $+4.3$; width 9 with a period-3 inner $+5.1$. Each then solved at 100% match and rate $-4.34$. Controls printed alongside showed the negative signatures: a fractionated inner, a plain periodic substitution, a double columnar.
+- Residue-pattern fit (logs/300, 303): planted period-7 over width-9 over period-2 at 153 letters, CONTROL PASS with the true pattern first. The design note reports rank 1 of 504 at evidence $-2.9776$ against $-3.3739$ for the runner-up ($z +9.4$ familywise) with the inner shifts recovered exactly and the outer up to the gauge.
 '''
 
 [[blocks]]
@@ -84,7 +130,7 @@ output   T A W | A C D | A T N | T K A
 class    0 0 0 | 0 0 0 | 1 1 1 | 1 1 1
 ```
 
-With centred class scores ($+\tfrac12$ for a position whose class matches the block's predicted class, $-\tfrac12$ otherwise) width 4 predicts a constant class per block and scores $S(4) = 4 \times 1.5 = 6$. Width 3 is odd, so it predicts an *alternating* class down each column of four; the actual classes in blocks of four are `0000 | 0011 | 1111`, which match an alternating pattern in exactly two positions of every block, giving $S(3) = 0$. In a real run the classes are posteriors rather than labels, and the counts are $\binom{9}{4} = 126$ residue patterns for width 9, $1{,}680$ for period 3 and $24{,}310$ for width 17 with period 2.
+With centred class scores ($+\tfrac12$ for a position whose class matches the block's predicted class, $-\tfrac12$ otherwise) width 4 predicts a constant class per block and scores $S(4) = 4 \times 1.5 = 6$. Width 3 is odd, so it predicts an *alternating* class down each column of four. The actual classes in blocks of four are `0000 | 0011 | 1111`, which match an alternating pattern in exactly two positions of every block, giving $S(3) = 0$. In a real run the classes are posteriors rather than labels, and the counts are $\binom{9}{4} = 126$ residue patterns for width 9, $1{,}680$ for period 3 and $24{,}310$ for width 17 with period 2.
 '''
 
 [[provenance]]

@@ -24,7 +24,7 @@ Features are standardised by the pooled standard deviation over all families bef
 kind = "equations"
 title = "The 19 invariant features"
 body = '''
-Raw IC; number of distinct symbols; union IC after heuristic period-7 alignment; mean within-coset IC; digram IC of the aligned text; the largest residual periodic IC of the aligned text over periods $2 \dots 30$ not divisible by 7; periodic IC at 7, 14 and 28; the smallest per-coset alignment margin; the M1, M2 and M3 [family evidences](/statistics/bayesian-evidence-model-selection) with shifts marginalised; the differences M2$-$M1 and M3$-$M2; the M2 MAP gain; the mean maximum shift posterior under M2; and the lag-1 and lag-2 autocorrelations of the M2 class posterior along the text.
+Raw IC; number of distinct symbols; union IC after heuristic period-7 alignment; mean within-coset IC; digram IC of the aligned text. The largest residual periodic IC of the aligned text over periods $2 \dots 30$ not divisible by 7; periodic IC at 7, 14 and 28. The smallest per-coset alignment margin. The M1, M2 and M3 [family evidences](/statistics/bayesian-evidence-model-selection) with shifts marginalised. The differences M2$-$M1 and M3$-$M2. The M2 MAP gain. The mean maximum shift posterior under M2; and the lag-1 and lag-2 autocorrelations of the M2 class posterior along the text.
 
 None of these depends on the key values, and all but the last two are unchanged by any transposition below the periodic layer.
 '''
@@ -33,7 +33,7 @@ None of these depends on the key values, and all but the last two are unchanged 
 kind = "assumptions"
 body = '''
 - Each family's feature cloud is approximately Gaussian at the simulated length; with 120 draws the tails are not resolved.
-- The simulated plaintexts (random windows of a large English corpus) are representative of the target plaintext; a peaked or non-prose plaintext belongs to no simulated family.
+- The simulated plaintexts (random windows of a large English corpus) are representative of the target plaintext. A peaked or non-prose plaintext belongs to no simulated family.
 - The target is homogeneous. A text whose key changes part-way, or whose periodic layer covers only a zone, lies between clouds and its distances are not interpretable as family membership.
 '''
 
@@ -43,8 +43,46 @@ title = "How to attack it"
 body = '''
 1. Simulate every candidate construction $N$ times on real English with random keys (plain and transposed English, periodic substitution, sandwiches at several widths and inner periods, double columnar, bifid with several periods, running key, autokey, compound keys, binary-perturbed keys, random-alphabet keyed substitution, seven independent alphabets, two alphabet orders in sequence, four rounds, segment-varied keys, 20% nulls, progressive key, Hill-then-periodic, and, for even lengths, Playfair-then-periodic).
 2. Compute the feature vector for the target and for each simulation; rank families by $d^2$; print the per-feature residuals above $|2|$.
-3. Read the self-classification table: a family that the instrument cannot recognise in its own simulations cannot be excluded for the target.
+3. Read the self-classification table: a family that the test cannot recognise in its own simulations cannot be excluded for the target.
 4. Use the ranking to *choose solvers*, not to close families: the excluded families are those with many features at $|z| > 3$.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// FEATURES(text) returns the fixed vector of k key-independent statistics.
+function BUILD_CLOUDS(families, N, prose):
+    for F in families:
+        for i in 1..N:
+            // real English, the target's length
+            P = RANDOM_WINDOW(prose)
+            X_F[i] = FEATURES(ENCRYPT_F(P, RANDOM_KEY(F)))
+    sigma_pool = per-feature standard deviation over the X_F of all families
+    for F in families:
+        // standardise every feature
+        X_F = X_F / sigma_pool
+        mu_F = MEAN(X_F)
+        Sigma_F = COVARIANCE(X_F)
+        Sigma_F = 0.7 * Sigma_F + 0.3 * DIAG(Sigma_F) + 1e-6 * I
+    return mu, Sigma, sigma_pool
+
+function D2(x, mu_F, Sigma_F):
+    r = x - mu_F
+    return transpose(r) * INVERSE(Sigma_F) * r
+
+function CLASSIFY(target, mu, Sigma, sigma_pool):
+    x = FEATURES(target) / sigma_pool
+    for F in families:
+        d2[F] = D2(x, mu_F, Sigma_F)
+        loglik[F] = -0.5 * (d2[F] + ln det Sigma_F)
+        for each feature j:
+            residual[F][j] = (x[j] - mu_F[j]) / sqrt(Sigma_F[j][j])
+    return families sorted by d2 ascending, residuals with |value| > 2
+
+// Self-classification: CLASSIFY every simulated X_F[i]; the share that lands
+// on F is the test's resolution for that family at this length.
+```
 '''
 
 [[blocks]]
@@ -57,9 +95,9 @@ $29 \times 120 = 3{,}480$ simulations, each requiring an alignment and three evi
 kind = "failure_modes"
 body = '''
 - **Plug-in optimism.** Self-classification is measured on the same simulations that estimated the clouds, so the quoted accuracies are upper bounds.
-- **Cluster degeneracy at short length.** At 153 letters bifid, keyed random alphabet, seven independent alphabets, four rounds, sandwiches and 7+3 compounds all sit within $d^2$ $10.7$–$17.1$ of the same target and classify themselves correctly only 8–40% of the time; the instrument places the target in the cluster and stops.
-- **Feature saturation.** Several features are maxima over scans (residual periodicity, alignment margin), which are right-skewed; the Gaussian model underestimates their tails.
-- **Heterogeneous targets.** A zoned text is not any single simulated family; the per-feature residuals then flag the zone-sensitive statistics (lag-based) rather than the construction.
+- **Cluster degeneracy at short length.** At 153 letters bifid, keyed random alphabet, seven independent alphabets, four rounds, sandwiches and 7+3 compounds all sit within $d^2$ $10.7$–$17.1$ of the same target and classify themselves correctly only 8–40% of the time. The test places the target in the cluster and stops.
+- **Feature saturation.** Several features are maxima over scans (residual periodicity, alignment margin), which are right-skewed. The Gaussian model underestimates their tails.
+- **Heterogeneous targets.** A zoned text is not any single simulated family. The per-feature residuals then flag the zone-sensitive statistics (lag-based) rather than the construction.
 '''
 
 [[blocks]]
@@ -82,7 +120,7 @@ For two independent features $d^2$ is chi-squared with 2 degrees of freedom, so 
 [[blocks]]
 kind = "notes"
 body = '''
-This is approximate Bayesian computation with a Gaussian synthetic likelihood. Its value is less in the ranking than in the self-classification table, which states the instrument's resolution at the text length in hand and thereby prevents a negative from being over-read.
+This is approximate Bayesian computation with a Gaussian synthetic likelihood. Its value is less in the ranking than in the self-classification table, which states the test's resolution at the text length in hand and thereby prevents a negative from being over-read.
 '''
 
 [[provenance]]

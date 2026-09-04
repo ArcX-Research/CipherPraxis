@@ -20,20 +20,20 @@ A **phrase-keyed alphabet** is built from a phrase $w$ by writing its distinct l
 - continued remainder, starting after the phrase's last letter and wrapping;
 - columnar read-out: the phrase plus remainder written in rows of the phrase's width and read by columns (straight or keyed base).
 
-For a periodic keyed substitution the alphabet can act on the plaintext side, on the ciphertext side or on both; each variant is screened separately with the same shift fit.
+For a periodic keyed substitution the alphabet can act on the plaintext side, on the ciphertext side or on both. Each variant is screened separately with the same shift fit.
 '''
 
 [[blocks]]
 kind = "equations"
 title = "Screen"
 body = '''
-For each alphabet $A$ and variant, coset $b$'s shift is fitted by chi-square against the language distribution in $A$'s order, $\hat k_b = \arg\min_k \chi^2\big(F_b, n_b E_A(\cdot - k)\big)$, followed by two quadgram sweeps over the $m$ shifts; the score is the quadgram rate of the decrypt. Large screens replace chi-square by the vectorised per-coset log-likelihood $\sum_x F_b(x) \log E(A[x - k])$ over all alphabets at once and calibrate the top rate on shuffled segments (see [Coset shift recovery](/cryptanalysis/coset-shift-recovery)).
+For each alphabet $A$ and variant, coset $b$'s shift is fitted by chi-square against the language distribution in $A$'s order, $\hat k_b = \arg\min_k \chi^2\big(F_b, n_b E_A(\cdot - k)\big)$, followed by two quadgram sweeps over the $m$ shifts. The score is the quadgram rate of the decrypt. Large screens replace chi-square by the vectorised per-coset log-likelihood $\sum_x F_b(x) \log E(A[x - k])$ over all alphabets at once and calibrate the top rate on shuffled segments (see [Coset shift recovery](/cryptanalysis/coset-shift-recovery)).
 '''
 
 [[blocks]]
 kind = "assumptions"
 body = '''
-- The alphabet was derived from a phrase in one of the enumerated sources by one of the enumerated styles; the sweep closes nothing outside that.
+- The alphabet was derived from a phrase in one of the enumerated sources by one of the enumerated styles. The sweep closes nothing outside that.
 - The period, relation and zone are right: screening a whole text whose first third is keyed differently corrupts every score, which is why the corpus re-ran its screens per zone once the zones were known.
 - The plaintext is language of the reference distribution.
 '''
@@ -42,10 +42,59 @@ body = '''
 kind = "attack"
 title = "How to attack it"
 body = '''
-1. Build the alphabet table: all substrings of length 4 to 60 of every source text, six styles, deduplicated (202,504 alphabets from the known texts; a 2.06 million table adds dictionary words in six styles, columnar-keyed and multi-keyed alphabets).
-2. Plant a control: a known text under a keyed substitution whose alphabet is in the table; it must read at 100% and rank first.
+1. Build the alphabet table from every 4- to 60-letter substring of each source text in six styles, then remove duplicates. This gives 202,504 alphabets from the known texts. A larger table of 2.06 million also adds dictionary words in six styles plus columnar-keyed and multi-keyed alphabets.
+2. Plant a control: a known text under a keyed substitution whose alphabet is in the table. It must read at 100% and rank first.
 3. Screen every alphabet and variant; polish the top dozen; print the top rates against the noise level (about $-6.3$ per letter at 153 letters).
 4. Report the family as excluded for the enumerated sources and styles only.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Source texts, keying styles, ciphertext c[0..n-1], period m, language
+// distribution E, shuffled segments for the noise level.
+function PHRASE_ALPHABET(phrase, style):
+    head = the distinct letters of phrase in order of first appearance
+    // straight or known-keyed remainder, reversed, continued after the last
+    // letter, columnar read-out
+    rest = the remaining letters ordered by style
+    // a 26-letter permutation
+    return head ++ rest
+
+function BUILD_TABLE(sources, styles):
+    table = SET()                                     // duplicates removed
+    for text in sources, substring phrase of text with 4 to 60 letters, style
+            in styles:
+        ADD(table, PHRASE_ALPHABET(phrase, style))
+    return table
+
+function SCREEN(c, m, table, variants, E):
+    // alphabet on the plaintext side, the ciphertext side, or both
+    for A in table, variant in variants:
+        for b in 0..m-1:
+            F_b = histogram of coset b in A's order
+            // large screens: vectorised per-coset log-likelihood over all A
+            // at once
+            k[b] = argmin over k of CHI_SQUARE(F_b, n_b * E_A(. - k))
+        // two sweeps over the m shifts
+        k = QUADGRAM_SWEEP(QUADGRAM_SWEEP(k, c, A, variant))
+        rate[A, variant] = QUADGRAM_RATE(DECRYPT(c, A, variant, k))
+    polish the top dozen;  return rates ranked
+
+function PHRASE_KEYED_ATTACK(c, m, sources, styles, variants, E):
+    table = BUILD_TABLE(sources, styles)
+    control = a known text under a keyed substitution whose alphabet is in
+            table
+    // the screen is broken
+    if SCREEN(control, m, table, variants, E) does not rank its alphabet
+            first at 100% match:
+        stop
+    ranked = SCREEN(c, m, table, variants, E)
+    noise = the top rate of the same screen on shuffled segments
+    // excluded only for the enumerated sources and styles
+    return (ranked top rates against noise)
+```
 '''
 
 [[blocks]]
@@ -57,9 +106,9 @@ $O(|\mathcal{A}| \cdot m \cdot 26 \cdot n)$ for the chi-square screen: 202,504 a
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Scope.** The sweep excludes only enumerated structures; the corpus concluded that either the alphabet's structure is of a kind not enumerated or the alphabet is random and was transmitted by other means. Family sweeps beyond that point were judged "buying lottery tickets".
-- **Zoning.** Whole-text screens on a text with a differently keyed prefix score every alphabet at noise; the zone screens had to be repeated.
-- **Top-of-null inflation.** The best of $10^6$ alphabets on a 63-letter zone sits near $-5.2$ to $-5.5$, the shuffled-segment maximum; only a rate near the language level with a readable decrypt counts.
+- **Scope.** The sweep excludes only enumerated structures. The corpus concluded that either the alphabet's structure is of a kind not enumerated or the alphabet is random and was transmitted by other means. Family sweeps beyond that point were judged "buying lottery tickets".
+- **Zoning.** Whole-text screens on a text with a differently keyed prefix score every alphabet at noise. The zone screens had to be repeated.
+- **Top-of-null inflation.** The best of $10^6$ alphabets on a 63-letter zone sits near $-5.2$ to $-5.5$, the shuffled-segment maximum. Only a rate near the language level with a readable decrypt counts.
 '''
 
 [[blocks]]
@@ -83,7 +132,7 @@ reversed remainder   THEQUICKBROWNFX ZYVSPMLJGDA
 continued remainder  THEQUICKBROWNFX YZADGJLMPSV   (continue after X, wrap)
 ```
 
-Each is a 26-letter permutation; a period-7 keyed substitution in the first of them applied to a 150-letter text is one row of the screen, and the table for a corpus of a few thousand letters of known text holds about two hundred thousand such rows.
+Each is a 26-letter permutation. A period-7 keyed substitution in the first of them applied to a 150-letter text is one row of the screen, and the table for a corpus of a few thousand letters of known text holds about two hundred thousand such rows.
 '''
 
 [[provenance]]

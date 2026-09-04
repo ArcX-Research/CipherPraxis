@@ -41,24 +41,66 @@ Alphabet polish alternates two exact sub-steps until neither improves: for each 
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- The objective is a language score of the full decrypt; a state within the basin of the truth climbs to it, a state outside climbs to a spurious local optimum with a lower score.
+- The objective is a language score of the full decrypt. A state within the basin of the truth climbs to it, a state outside climbs to a spurious local optimum with a lower score.
 - The finish is deterministic given its start, so a polished score is reproducible from the (seed, chain) that produced the start.
-- Shift refits inside the polish are exact per coordinate; they add no randomness but do add selection freedom on short texts.
+- Shift refits inside the polish are exact per coordinate. They add no randomness but do add selection freedom on short texts.
 '''
 
 [[blocks]]
 kind = "attack"
 title = "How to attack it"
 body = '''
-- **Finisher for annealed alphabets.** The best chain of every crib placement is polished by first-improvement over the 925 neighbours (up to 80 iterations); the best tempering chains by the alternating shift/alphabet climb (up to 60 iterations).
+- **Finisher for annealed alphabets.** The best chain of every crib placement is polished by first-improvement over the 925 neighbours (up to 80 iterations). The best tempering chains by the alternating shift/alphabet climb (up to 60 iterations).
 - **Column orders.** After each anneal restart, a steepest-ascent finish over all swaps, insertions and relabellings of every order in the state, with the energy recomputed by the class solver (all outer and inner shifts refit per candidate). Iterated local search then runs 40 rounds of kick-anneal-finish from the incumbent.
-- **Evidence climb.** A stage-one climb over the alphabet maximising shift-marginalised monogram evidence was tried as a start for the two-sided problem; it converges to alphabets with higher evidence than the truth and was abandoned.
+- **Evidence climb.** A stage-one climb over the alphabet maximising shift-marginalised monogram evidence was tried as a start for the two-sided problem. It converges to alphabets with higher evidence than the truth and was abandoned.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// State s, objective E (maximised), neighbourhood N(s): the 925 alphabet
+// swaps/insertions, or the column-order moves.
+function FIRST_IMPROVEMENT(s, E):
+    repeat:
+        improved = false
+        for s' in N(s) in a fixed index order:
+            // restart the scan from the new s
+            if E(s') > E(s): s = s'; improved = true; break
+    until not improved
+    return s
+
+function STEEPEST_ASCENT(s, E):
+    repeat:
+        s' = argmax over N(s) of E
+        if E(s') > E(s): s = s' else return s
+
+// k random moves = the kick
+function ITERATED_LOCAL_SEARCH(E, rounds, k):
+    best = local_search(random start)
+    for r in 1..rounds:
+        s = best perturbed by k random moves
+        s = short anneal from s, then STEEPEST_ASCENT(s, E)
+        if E(s) > E(best): best = s
+    return best
+
+// alphabet polish: two exact sub-steps
+function POLISH(A, k, E):
+    repeat:
+        // 26 candidates
+        for each text and coset b:
+            k_b = argmax over s in Z_26 of E(A, k with k_b = s)
+        // 925 neighbours, scored in one batch
+        A = argmax over A' in N(A) of E(A', k)
+    until neither step improved E
+    return (A, k)
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-One polish iteration costs one batch of 925 decrypt-and-scores plus $7 \times 26$ shift candidates per text, all vectorised; a full-neighbourhood finish over two column orders of width $w$ costs about $2(1.5\,w^2 + w)$ energies per round, each an exact shift refit. The corpus caps the alphabet polish at 60-80 iterations.
+One polish iteration costs one batch of 925 decrypt-and-scores plus $7 \times 26$ shift candidates per text, all vectorised. A full-neighbourhood finish over two column orders of width $w$ costs about $2(1.5\,w^2 + w)$ energies per round, each an exact shift refit. The corpus caps the alphabet polish at 60-80 iterations.
 '''
 
 [[blocks]]

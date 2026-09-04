@@ -30,7 +30,7 @@ kind = "equations"
 body = '''
 Bank size is a product of independent choices: for four 7-letter words as round keys with $r$ rounds, each round choosing one of 8 alphabets (two fixed orders and six styles) and one of 2 relations, the count is $P(4, r) \cdot 16^r$: $64$, $3{,}072$, $98{,}304$ and $1{,}572{,}864$ for $r = 1, 2, 3, 4$.
 
-Noise floor: the maximum of $B$ independent wrong-key scores grows like the upper tail of the score distribution; a per-trial null that ignores $B$ overstates significance. In one recorded relation test the best of 1,296 trials looked like $+5.7\sigma$ per trial and $+0.8\sigma$ against the family-wise null.
+Noise floor: the maximum of $B$ independent wrong-key scores grows like the upper tail of the score distribution. A per-trial null that ignores $B$ overstates significance. In one recorded relation test the best of 1,296 trials looked like $+5.7\sigma$ per trial and $+0.8\sigma$ against the family-wise null.
 '''
 
 [[blocks]]
@@ -38,7 +38,7 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - The bank is fixed and enumerated before the target is scored; its hash and size are printed. Adding entries after seeing near-misses is selection.
-- A planted control from the bank at the target length must rank first; a bank whose control fails proves nothing about the target.
+- A planted control from the bank at the target length must rank first. A bank whose control fails proves nothing about the target.
 - The verdict threshold is the bank's own null (shuffled text through the same sweep, or the distribution of wrong-key scores), not an absolute number.
 '''
 
@@ -55,18 +55,58 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Bank: an explicit, finite list of keys (words, phrases, alphabets, orders)
+// fixed before scoring.
+function DICTIONARY_SWEEP(c, bank, configurations, rate):
+    print hash(bank) and |bank|
+    // control first: a bank key planted on real text of the target length
+    // must rank first
+    c_ctrl = encrypt(real text of length |c|, a key drawn from bank, some
+            configuration)
+    // bank proves nothing
+    if rank of the planted key in SCORE_ALL(c_ctrl, bank, configurations,
+            rate) != 1:
+        stop
+    null = level reached by the same sweep on shuffled text (or the wrong-key
+            score distribution)
+    results = SCORE_ALL(c, bank, configurations, rate)
+    // verdict against null, not an absolute
+    return the top entries of results, the control's rank, and null
+
+function SCORE_ALL(c, bank, configurations, rate):
+    results = []
+    for each key in bank:
+        for each configuration (alphabet order, relation, phase, direction)
+                in configurations:
+            p = decrypt(c, key, configuration)
+            results = results + [(rate(p), key, configuration)]
+    return results sorted by score descending
+
+// Keyword-mixed alphabet from a word w with repeated letters removed: std: w
+// then the unused letters in straight order;   rev: unused letters reversed;
+// kry: unused letters in a second fixed order;        cont: unused letters
+// continuing from the last letter of w and wrapping;  col / kcol: the keyed
+// alphabet written in rows of width |w| and read by columns, over either base
+// order.
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-Cost is bank size times configurations times one decrypt-and-score; a compiled or vectorised scorer handles millions per minute: the four-round bank of 1,572,864 combinations scored in 33 s on one machine, 202,504 phrase alphabets in about ten minutes on 12 workers, 2.06 million alphabets with refinement in the order of an hour.
+Cost is bank size times configurations times one decrypt-and-score. A compiled or vectorised scorer handles millions per minute: the four-round bank of 1,572,864 combinations scored in 33 s on one machine, 202,504 phrase alphabets in about ten minutes on 12 workers, 2.06 million alphabets with refinement in the order of an hour.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Coverage.** A bank of 100 word-derived entries carries about 6.6 bits; an unstructured alphabet carries about 84 bits after gauge. A miss excludes the bank, not the family, and every corpus sweep reports it so.
+- **Coverage.** A bank of 100 word-derived entries carries about 6.6 bits. An unstructured alphabet carries about 84 bits after gauge. A miss excludes the bank, not the family, and every corpus sweep reports it so.
 - **Multiple comparisons.** The best of many trials always looks significant against a per-trial null (the $+5.7\sigma$ versus $+0.8\sigma$ case above); banks need family-wise nulls.
-- **Noise floor.** Wrong keys under a keyed substitution score $-6.0$ to $-6.5$; a partial-looking $-5.5$ from a large bank is usually the bank's maximum, not a partial solve.
-- **Free parameters inside the sweep.** Refitting shifts per bank element lifts the null on short texts; the control's rank, not its absolute score, is the calibration.
+- **Noise floor.** Wrong keys under a keyed substitution score $-6.0$ to $-6.5$. A partial-looking $-5.5$ from a large bank is usually the bank's maximum, not a partial solve.
+- **Free parameters inside the sweep.** Refitting shifts per bank element lifts the null on short texts. The control's rank, not its absolute score, is the calibration.
 '''
 
 [[blocks]]
@@ -79,7 +119,7 @@ Phrase alphabets: control 100%. Structured library: control rank 1 / 100%. Four-
 kind = "example"
 title = "Worked example"
 body = '''
-Ciphertext `LXFOPVEFRNHR` (the Vigenère exemplar: plaintext `ATTACKATDAWN`, key `LEMON`). Bank $\{$`APPLE`, `LEMON`, `MANGO`, `PEACH`$\}$ as Vigenère keys. Decrypting with `APPLE` position by position ($c - k \bmod 26$): L$-$A = L, X$-$P = I, F$-$P = Q, O$-$L = D, P$-$E = L, V$-$A = V, E$-$P = P, F$-$P = Q, R$-$L = G, N$-$E = J, H$-$A = H, R$-$P = C, giving `LIQDLVPQGJHC`, which scores like random text. `LEMON` returns `ATTACKATDAWN`, the only readable decrypt; a quadgram scorer ranks it first by several units per letter, and the control principle is exactly this: a bank key must come out on top when it is present.
+Ciphertext `LXFOPVEFRNHR` (the Vigenère exemplar: plaintext `ATTACKATDAWN`, key `LEMON`). Bank $\{$`APPLE`, `LEMON`, `MANGO`, `PEACH`$\}$ as Vigenère keys. Decrypting with `APPLE` position by position ($c - k \bmod 26$): L$-$A = L, X$-$P = I, F$-$P = Q, O$-$L = D, P$-$E = L, V$-$A = V, E$-$P = P, F$-$P = Q, R$-$L = G, N$-$E = J, H$-$A = H, R$-$P = C, giving `LIQDLVPQGJHC`, which scores like random text. `LEMON` returns `ATTACKATDAWN`, the only readable decrypt. A quadgram scorer ranks it first by several units per letter, and the control principle is exactly this: a bank key must come out on top when it is present.
 '''
 
 [[provenance]]

@@ -17,7 +17,7 @@ Fix a cipher model $\mathcal{M}$ with key space $K$ and a selector that outputs 
 
 The required outcome is a **negative terminal** (`NON_ENGLISH` or "no candidate"). A valid-model null that reaches the candidate terminal is a gate failure of the whole pipeline, regardless of how many positives pass.
 
-Model-violating negatives are kept alongside (an independent random key for the second text; an offset or reversed chain) because they test a different property, that the algebra rather than the language does the rejecting.
+Model-violating negatives are kept alongside them, such as an independent random key for the second text or an offset or reversed chain. They test a different property: whether the algebra, rather than the language score, rejects the case.
 '''
 
 [[blocks]]
@@ -41,21 +41,60 @@ body = '''
 [[blocks]]
 kind = "attack"
 body = '''
-Valid-model nulls expose the decisions a pipeline makes on pure noise under a true model. In one sealed suite the independent-letter negative ranked first among its nulls *with the true cycle*, because the algebra was exactly right, and was stopped only by the English gate; a suite without that fixture would have certified a gate that merely checks algebra. In another, the negative ranked 3 to 12 among nulls and was rejected on rank alone. Both outcomes are informative and both were recorded per fixture.
+Valid-model nulls expose the decisions a pipeline makes on pure noise under a true model. In one sealed suite the independent-letter negative ranked first among its nulls *with the true cycle*, because the algebra was exactly right, and was stopped only by the English gate. A suite without that fixture would have certified a gate that merely checks algebra. In another, the negative ranked 3 to 12 among nulls and was rejected on rank alone. Both outcomes are informative and both were recorded per fixture.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Inputs: cipher model M with key space K and its real forward ENCRYPT_M, the
+// full selector SELECT (candidate plaintext plus decision), the English
+// monogram distribution E, and B precommitted permutations. Output:
+// per-fixture verdicts; a gate failure if any valid-model null is accepted.
+function VALID_MODEL_NULL(M, n, seed):
+    // correct unigram statistics, no adjacency
+    p_star = DRAW_INDEPENDENT_LETTERS(E, n, seed)
+    k = DRAW_LEGAL_KEY(K, seed)
+    // the algebra is present, the language signal is not
+    return (p_star, k, ENCRYPT_M(p_star, k))
+
+function CHECK_NEGATIVES(fixtures):
+    // valid-model and model-violating negatives alike
+    for f in fixtures:
+        // NON_ENGLISH or "no candidate" is required
+        if TERMINAL(SELECT(f.c)) != NEGATIVE:
+            // regardless of how many positives pass
+            return GATE_FAILURE
+    return NEGATIVES_PASS
+
+function CONDITIONAL_NULL_CERTIFICATE(c_obs, B):
+    // histogram and class structure preserved; digest recorded first
+    bank = PRECOMMITTED_PERMUTATIONS(c_obs, B)
+    // selection over classes happens inside every replicate
+    s_obs = SELECT(c_obs).score
+    exceed = 0
+    for b in 1..B:
+        // identical full selector; no null filtered or rerolled
+        s_b = SELECT(PERMUTE(c_obs, bank[b])).score
+        if s_b >= s_obs: exceed += 1                     // equality loses
+    p = (1 + exceed) / (B + 1)
+    return (CERTIFIED if exceed == 0 else NOT_CERTIFIED, p)
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-Each valid-model null costs one full selector run; a conditional randomisation certificate costs $B + 1$ full runs (100 for $B = 99$). The program budgets these inside the same wall and memory caps as the observation and treats any replicate that fails for a computational reason as `INCOMPLETE` for the whole certificate, never as a null loss.
+Each valid-model null costs one full selector run. A conditional randomisation certificate costs $B + 1$ full runs (100 for $B = 99$). The program budgets these inside the same wall and memory caps as the observation and treats any replicate that fails for a computational reason as `INCOMPLETE` for the whole certificate, never as a null loss.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Nulls that skip the finishing stage.** A two-stage selector's null replayed only the first stage; the decision-bearing second stage was never nulled, so the null could not lose. Blocked at audit.
-- **Score-dependent null membership.** Accepting or replacing a null after seeing its score invalidates the bank; the design forbids reroll and requires the bank digest before selection.
-- **Tied nulls dropped.** A null that ties the observation must count as a loss for the observation; the design states "equality loses" and the parser enforces `ties == len(top)`.
+- **Nulls that skip the finishing stage.** A two-stage selector's null replayed only the first stage. The decision-bearing second stage was never nulled, so the null could not lose. Blocked at audit.
+- **Score-dependent null membership.** Accepting or replacing a null after seeing its score invalidates the bank. The design forbids reroll and requires the bank digest before selection.
+- **Tied nulls dropped.** A null that ties the observation must count as a loss for the observation. The design states "equality loses" and the parser enforces `ties == len(top)`.
 '''
 
 [[blocks]]

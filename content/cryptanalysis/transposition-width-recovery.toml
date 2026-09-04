@@ -25,14 +25,14 @@ kind = "equations"
 title = "Three order-free handles on the width"
 body = '''
 - **Residue pattern.** If a period-$k$ inner substitution sits under the transposition, position $j$ of the output belongs to inner class $\tau(j) \bmod k = (\sigma(s) + r w) \bmod k$. For $k \mid w$ every output column is one constant class; for odd $w$ and $k = 2$ the classes alternate down each column. The class structure depends on $\sigma$ only through $\sigma(s) \bmod k$, so the shift fit ranges over $w!/\prod_j (\text{mult}_j!)$ residue patterns instead of $w!$ orders: 126 for $(w,k) = (9,2)$, 1,680 for $(9,3)$, 24,310 for $(17,2)$ against $17! \approx 3.6 \times 10^{14}$ orders.
-- **Class-posterior blocks.** Under a mixture model every letter has a posterior class; a width $w$ predicts constant or alternating blocks of length $h$ or $h-1$, scored by a dynamic programme over the long/short column layout (see [Order-free width statistic](/cryptanalysis/order-free-width-statistic)).
-- **Exact-grid arithmetic.** Setters who fill grids exactly leave $w \mid n$; the divisors of $n$ are the first candidates (a 153-letter text: 3, 9, 17, 51; a 144-letter text: 2, 3, 4, 6, 8, 9, 12, 16, 18, 24, 36, 48, 72).
+- **Class-posterior blocks.** Under a mixture model every letter has a posterior class. A width $w$ predicts constant or alternating blocks of length $h$ or $h-1$, scored by a dynamic programme over the long/short column layout (see [Order-free width statistic](/cryptanalysis/order-free-width-statistic)).
+- **Exact-grid arithmetic.** If the text fills the grid exactly, then $w \mid n$. Start with the divisors of $n$. For 153 letters they are 3, 9, 17, and 51. For 144 letters they are 2, 3, 4, 6, 8, 9, 12, 16, 18, 24, 36, 48, and 72.
 '''
 
 [[blocks]]
 kind = "assumptions"
 body = '''
-- The transposition is a single columnar (or a known small family: rail fence, route, block reversal, Myszkowski, powers and compositions of columnars); each family needs its own permutation generator.
+- The transposition is a single columnar (or a known small family: rail fence, route, block reversal, Myszkowski, powers and compositions of columnars). Each family needs its own permutation generator.
 - While any transposition is unstripped, only order-free statistics are valid; language scores apply after every transposition is undone.
 - Dictionary-word column orders assume a keyword habit; exhaustive enumeration is limited to about $w \le 9$ ($9! = 362{,}880$ orders per hypothesis).
 '''
@@ -44,21 +44,61 @@ body = '''
 1. Fit and peel the outer periodic layer with order-free statistics (marginalised monogram evidence), so that what remains is transposed language.
 2. Rank widths order-free: residue patterns if an inner period is suspected, class-posterior blocks under a mixture model, or the exact-grid divisors.
 3. For each surviving width, resolve the column order: dictionary-word orders first, exhaustive orders for $w \le 7$, annealing only with a control that passes at that width.
-4. Score the fully stripped text with quadgrams; a correct order reads at the language rate (about $-4.3$ per letter) while wrong orders stay near $-6$.
+4. Score the fully stripped text with quadgrams. A correct order reads at the language rate (about $-4.3$ per letter) while wrong orders stay near $-6$.
 5. Joint refit: alternate the outer shifts and the order, since a nearly right order and nearly right shifts polish each other and neither reads alone.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Ciphertext c[0..n-1]: an outer periodic layer over a columnar transposition
+// (width w, read-out order sigma) over inner text; a word list. inverse of
+// the unpadded columnar read-out
+function UNTRANSPOSE(t[0..n-1], w, sigma):
+    // the first e columns hold h letters, the rest h - 1 (all h if e = 0)
+    h = ceil(n / w);  e = n mod w
+    j = 0
+    // column sigma(s) is read s-th
+    for s in 0..w-1:
+        rows = h if (e == 0 or sigma(s) < e) else h - 1
+        // exact grid: tau(j) = sigma(s) + r w
+        for r in 0..rows-1: source[sigma(s) + r * w] = t[j];  j = j + 1
+    return source
+
+function WIDTH_AND_ORDER(c, words):
+    // order-free fit: marginalised monogram evidence; t = transposed inner
+    // text
+    (u, t) = PEEL_OUTER_LAYER(c)
+    // residue patterns, class-posterior blocks, or the divisors of n for an
+    // exact grid
+    widths = RANK_WIDTHS_ORDER_FREE(t)
+    for w in widths:
+        orders = word orders of length w first, then all w! orders for w <=
+                7, annealing only with a control that passes at w
+        for sigma in orders, and its relabellings (sigma + d) mod w:
+            // valid only now: every transposition is stripped
+            rate[w, sigma] = QUADGRAM_RATE(UNTRANSPOSE(t, w, sigma))
+        // joint refit
+        repeat:
+            refit u given sigma, refit sigma given u, until neither improves
+    (w*, sigma*) = argmax rate
+    // a correct order reads at the language rate
+    return (w*, sigma*, u, rate[w*, sigma*] against the level of wrong orders)
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-Residue-pattern fit: patterns $\times$ (alternating exact monogram maximisation of the $p + k$ shifts). Exhaustive orders: $w!$ decrypts and quadgram scores per width and shift hypothesis; $9!$ at 153 letters is seconds in a compiled core. Dictionary orders: the number of words of length $w$; a width-9 control solved in 4 s (logs/317).
+Residue-pattern fit: patterns $\times$ (alternating exact monogram maximisation of the $p + k$ shifts). Exhaustive orders: $w!$ decrypts and quadgram scores per width and shift hypothesis; $9!$ at 153 letters is seconds in a compiled core. Dictionary orders: the number of words of length $w$. A width-9 control solved in 4 s (logs/317).
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
 - **The statistic error.** Ranking candidates by quadgrams with a transposition still in place: on a planted substitution-over-transposition the correct outer key leaves an inner whose monogram log-likelihood is $-2.83$ per letter (English $-2.89$) but whose quadgram rate is $-6.95$, indistinguishable from noise; after stripping the transposition it reads $-4.38$ (logs/301). Every negative produced that way is void for constructions with an unstripped transposition.
-- **Unvalidated local search.** A plain iterated local search over column orders failed its own width-9 control ($-4.995$, three columns wrong); the same stage with dictionary-word orders recovered the planted text exactly (logs/317). An earlier annealer reported width 15 as 0/3 on controls.
+- **Unvalidated local search.** A plain iterated local search over column orders failed its own width-9 control ($-4.995$, three columns wrong). The same stage with dictionary-word orders recovered the planted text exactly (logs/317). An earlier annealer reported width 15 as 0/3 on controls.
 - **Width ranking without refit.** In a solved text of the series the true width ranked fourth in the width scan at $-6.37$ and reached $-4.23$ only after a joint refit of shifts and order.
 - **Relabel symmetry.** $(\sigma + d) \bmod w$ (every row rotated) is a near-miss local optimum of the order search and must be tried explicitly.
 - **Chance level of the periodic-IC objective.** Annealing a column order to maximise the periodic IC of the untransposed text reaches $0.045$ to $0.084$ on shuffled texts depending on width and text; undoing every order of widths 6 to 9 on the 504-letter text never restored a period-7 structure above that band (maximum $0.0437$ at width 8, logs/106).
@@ -69,8 +109,8 @@ kind = "controls"
 body = '''
 - Peel then order (logs/317, 320): planted width-9 columnar under a period-7 substitution, plaintext recovered exactly at $-4.3830$ with the dictionary order in 4 s (19 s with the exact variant).
 - Residue-pattern reduction (logs/300, 303): planted period-7 over width-9 over period-2 at 153 letters, CONTROL PASS with the true residue pattern ranked first.
-- Class-posterior widths (logs/05): four planted sandwiches, true width on top at $z +12.8$ (width 9, exact grid), $+11.3$ (width 8, ragged), $+4.3$ (width 12, different inner alphabet), $+5.1$ (width 9, period-3 inner); all solved at 100%.
-- Other families: rail fence 5 with offset 2 under a period-7 layer recovered among 192,853 permutations at $-4.169$ (logs/29); one to four stacked columnars with monotone widths, controls 100% at $-4.257$ (logs/48).
+- Class-posterior widths (logs/05): four planted sandwiches, true width on top at $z +12.8$ (width 9, exact grid), $+11.3$ (width 8, ragged), $+4.3$ (width 12, different inner alphabet), $+5.1$ (width 9, period-3 inner). All solved at 100%.
+- Other families: rail fence 5 with offset 2 under a period-7 layer recovered among 192,853 permutations at $-4.169$ (logs/29). One to four stacked columnars with monotone widths, controls 100% at $-4.257$ (logs/48).
 '''
 
 [[blocks]]
@@ -85,7 +125,7 @@ C K A T
 D A W N
 ```
 
-Reading the columns in the order $\sigma = (2, 0, 3, 1)$ gives `TAW ACD ATN TKA` = `TAWACDATNTKA`. Because $w = 4$ is even, a period-2 substitution applied before the transposition would leave each output column in a single inner class: the pattern is $\sigma \bmod 2 = (0,0,1,1)$, i.e. classes `000 000 111 111` down the output. Only $4!/(2!\,2!) = 6$ residue patterns exist for this width, against $4! = 24$ orders, and the pattern is visible from class posteriors alone; the remaining order within each residue class is then a two-way choice each, resolved by reading the text.
+Reading the columns in the order $\sigma = (2, 0, 3, 1)$ gives `TAW ACD ATN TKA` = `TAWACDATNTKA`. Because $w = 4$ is even, a period-2 substitution applied before the transposition would leave each output column in a single inner class: the pattern is $\sigma \bmod 2 = (0,0,1,1)$, i.e. classes `000 000 111 111` down the output. Only $4!/(2!\,2!) = 6$ residue patterns exist for this width, against $4! = 24$ orders, and the pattern is visible from class posteriors alone. The remaining order within each residue class is then a two-way choice each, resolved by reading the text.
 '''
 
 [[provenance]]

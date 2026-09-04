@@ -15,11 +15,11 @@ kind = "definition"
 body = '''
 A run under the control-first policy has three phases in a fixed order:
 
-1. **Known-answer tests** of the compiled core and the parser (see [KAT harness](/engineering/kat-harness)); any failure aborts before a corpus is loaded.
+1. **Known-answer tests** of the compiled core and the parser (see [KAT harness](/engineering/kat-harness)). Any failure aborts before a corpus is loaded.
 2. **Planted controls** at the target's length and information budget, printed in full with their planted and recovered parameters (see [Planted controls](/validation/planted-controls)).
 3. **Target** rows, printed only if phase 2 ended in `CONTROL_GATE: PASS`.
 
-The policy is stated in the program's launcher as: every script prints planted controls before the targets; a control that fails means the tool is broken and the target rows below it mean nothing.
+The policy is stated in the program's launcher as: every script prints planted controls before the targets. A control that fails means the tool is broken and the target rows below it mean nothing.
 '''
 
 [[blocks]]
@@ -32,7 +32,7 @@ Write $G$ for the event that the control gate passes and $E$ for a target readin
 [[blocks]]
 kind = "assumptions"
 body = '''
-- The control phase exercises the same code path, budget and ordering that the target phase will use. A control run in lexicographic task order does not validate a live run in hash order; the program had to reclassify such a pass as a wiring test.
+- The control phase exercises the same code path, budget and ordering that the target phase will use. A control run in lexicographic task order does not validate a live run in hash order. The program had to reclassify such a pass as a wiring test.
 - The controls are matched to the selector's real decision, including its gates and nulls, not only to a preliminary statistic (see [Tautological gate rule](/validation/tautological-gate-rule)).
 '''
 
@@ -42,7 +42,42 @@ title = "Why the order matters"
 body = '''
 Running the target first invites two self-deceptions. The first is post-hoc control design: after seeing a suggestive target score, one builds controls that the score would pass. The second is silent promotion: an unfinished or partly failed run leaves a readable-looking row in a log, and months later the row is cited as an exclusion. The program's negative-results ledger was written to catch exactly that, and it found two earlier jobs that had not excluded what the working memory said they had: one had failed its own controls and one had crashed.
 
-Under the policy the target phase is gated in code. The launchers expose modes `controls`, `smoke` and `live`; the `live` mode re-runs the controls in-process before touching the target, and a control gate failure ends with `TARGET_REFUSED`.
+Under the policy the target phase is gated in code. The launchers expose modes `controls`, `smoke` and `live`. The `live` mode re-runs the controls in-process before touching the target, and a control gate failure ends with `TARGET_REFUSED`.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Inputs: compiled core and parser, a planted-control suite at the target's
+// length and information budget, mode in {controls, smoke, live}. Output:
+// CONTROL_GATE PASS or FAIL; target rows only after PASS, else
+// TARGET_REFUSED.
+function RUN(mode):
+    // phase 1: known-answer tests, before any corpus is loaded
+    if not SELF_KAT(core) or not SELF_KAT(parser): abort
+    // phase 2: planted controls on the same code path, budget and task order
+    // that the target phase will use, printed in full
+    suite = CONTROL_SUITE()
+    // one control, then the target
+    if mode == smoke: suite = suite[0:1]
+    gate = PASS
+    for control in suite:
+        // identical pipeline
+        result = SOLVE(control.ciphertext)
+        print control.planted, result.recovered
+        if not RECOVERED(result, control): gate = FAIL
+    print "CONTROL_GATE:", gate
+    if gate == FAIL:
+        record a decoder-power result, not evidence about the target family
+        // no target run until the family changes
+        print "TARGET_REFUSED"
+        return
+    if mode == controls: return
+    // phase 3: target rows, printed only under CONTROL_GATE: PASS
+    for row in TARGET_ROWS():
+        print SOLVE(row)
+```
 '''
 
 [[blocks]]
@@ -54,9 +89,9 @@ The cost is the control phase itself, typically one to twenty extra solves plus 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Fluent output from a control-gated decoder.** A seven-alphabet beam decoder produces fluent English on any input; because its matched 63-letter controls failed, the program locked its target mode so that no such string could be promoted.
-- **Controls passing on a broken selector.** An exact solver's control returned an unknown status (neither proved nor refuted) and the run was still catalogued; the ledger later ruled that no target verdict from that run is admissible.
-- **A gate that never runs.** Early smoke variants of a mixture statistic failed several controls while the statistic was being developed; only the final variant with an all-controls-pass contract may be cited.
+- **Fluent output from a control-gated decoder.** A seven-alphabet beam decoder produces fluent English on any input. Because its matched 63-letter controls failed, the program locked its target mode so that no such string could be promoted.
+- **Controls passing on a broken selector.** An exact solver's control returned an unknown status (neither proved nor refuted) and the run was still catalogued. The ledger later ruled that no target verdict from that run is admissible.
+- **A gate that never runs.** Early smoke variants of a mixture statistic failed several controls while the statistic was being developed. Only the final variant with an all-controls-pass contract may be cited.
 '''
 
 [[blocks]]

@@ -22,7 +22,7 @@ body = '''
 - Common plaintext, two additive layers, one cycle: $z(L_i) - \varepsilon\, z(R_i) \equiv h_{i \bmod 7}$; subtracting the first equation of each residue removes $h$ and leaves homogeneous four-letter rows in $z$.
 - Shift-free key stream: each guessed plaintext letter gives one homogeneous row directly.
 - Chain with an unknown constant: pairs in the same key class give rows $[z(P_i) - z(P_r)] - e_A[z(C^A_i) - z(C^A_r)] + e_A e_B [z(C^B_j) - z(C^B_s)] \equiv 0$.
-- Unit-ratio cells: all units are $\equiv 1 \pmod 2$, so the $\mathrm{GF}(2)$ echelon form is identical across all 144 cells; the multiplier acts only in $\mathrm{GF}(13)$.
+- Unit-ratio cells: all units are $\equiv 1 \pmod 2$, so the $\mathrm{GF}(2)$ echelon form is identical across all 144 cells. The multiplier acts only in $\mathrm{GF}(13)$.
 - Residue graphs: the incidence matrix of $K_{7,9}$ has rank 15 over both fields, and its 48 rectangle rows have rank 48 over both fields.
 
 Measured nullity of the chain system versus crib length (1,500-pair development shard, no length minimum): $P(f_{13} \le 5) = 0.14$ at 14 letters, $0.34$ at 16, $0.54$ at 17, $0.74$ at 18, $0.90$ at 19, $0.99$ at 20; nullity histogram 0..8 = 26 / 85 / 163 / 297 / 406 / 320 / 147 / 45 / 11 with 22.7 observed letters against 19 equations on average.
@@ -47,31 +47,68 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Row reduction of an m x r matrix M over the prime field GF(q), q in {2,
+// 13}. Returns the reduced row echelon form, the rank, and a basis of the
+// null space.
+function RREF_NULLSPACE(M[0..m-1][0..r-1], q):
+    pivots = []; row = 0
+    for col in 0..r-1:
+        find i >= row with M[i][col] != 0 mod q; if none: continue
+        swap rows i and row
+        // pivot becomes 1
+        M[row] = INVERSE_MOD(M[row][col], q) * M[row] mod q
+        for each other row i' != row:
+            M[i'] = M[i'] - M[i'][col] * M[row] mod q
+        pivots.append(col); row = row + 1
+    rank = row; free = [col for col in 0..r-1 if col not in pivots]
+    basis = []
+    // one null vector per free column
+    for f in free:
+        v = zero vector of length r; v[f] = 1
+        for (i, pc) in enumerate(pivots): v[pc] = (-M[i][f]) mod q
+        basis.append(v)
+    // nullity d_q = r - rank
+    return (M, rank, basis)
+
+// Homogeneous system M z = 0 mod 26 in the 25 free coordinates (gauge row
+// z(A) = 0 included).
+function NULLITIES(M):
+    (_, rank_2, N2) = RREF_NULLSPACE(M mod 2, 2);    d_2 = |N2|
+    (_, rank_13, N13) = RREF_NULLSPACE(M mod 13, 13); d_13 = |N13|
+    // 2^{d_2} * 13^{d_13} solutions mod 26, obtained by CRT lift
+    return (d_2, d_13)
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-Reduction is negligible; enumeration is $13^{d_{13}}$: $13^5 = 371{,}293$, $13^7 = 62{,}748{,}517$. On a target-absent plant: one 10-letter word in a constant-key region gives $(f_2, f_{13}) = (24, 24)$ true crib and $(23, 23)$ wrong crib — $13^{23}$ solutions, nothing to enumerate; one 18-letter word in a period-7 region $(15, 15)$; two words of 15 and 18 letters $(3, 3)$ true and $(2, 2)$ wrong — enumerable. An exact crib-pair solver left 976 systems of one text unresolved by dimension ($f_{13} = 5$: 781, 6: 174, 7: 19, 8: 2) and 261 of another ($f_{13} = 5$: 160, 6: 95, 7: 6); its continuation processed all 8,851 $f_{13} = 5$ systems at $13^7$ each.
+Reduction is negligible; enumeration is $13^{d_{13}}$: $13^5 = 371{,}293$, $13^7 = 62{,}748{,}517$. On a target-absent plant: one 10-letter word in a constant-key region gives $(f_2, f_{13}) = (24, 24)$ true crib and $(23, 23)$ wrong crib — $13^{23}$ solutions, nothing to enumerate. One 18-letter word in a period-7 region $(15, 15)$. Two words of 15 and 18 letters $(3, 3)$ true and $(2, 2)$ wrong — enumerable. An exact crib-pair solver left 976 systems of one text unresolved by dimension ($f_{13} = 5$: 781, 6: 174, 7: 19, 8: 2) and 261 of another ($f_{13} = 5$: 160, 6: 95, 7: 6); its continuation processed all 8,851 $f_{13} = 5$ systems at $13^7$ each.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Ranks alone never reject.** 40 random wrong crib pairs were 0/40 linearly inconsistent; all 245,766 pairs of an exact pair solver were "linearly consistent". Rejection comes from all-different enumeration only.
-- Vacuous tests: a KAT that enumerated length-six inputs at period 7 made every equality residue a singleton, so its 4,096 checks tested nothing; it was labelled REJECTED_VACUOUS and replaced by a nonvacuous KAT (65,536 binary pairs, 175 restricted-growth pairs).
-- Keeping only the best partial read per system: a KAT planted a system whose true read ranked 2nd of 6 all-different reads and was lost; the rule was corrected to retain every read.
+- **Ranks alone never reject.** 40 random wrong crib pairs were 0/40 linearly inconsistent. All 245,766 pairs of an exact pair solver were "linearly consistent". Rejection comes from all-different enumeration only.
+- Vacuous tests: a KAT that enumerated length-six inputs at period 7 made every equality residue a singleton, so its 4,096 checks tested nothing. It was labelled REJECTED_VACUOUS and replaced by a nonvacuous KAT (65,536 binary pairs, 175 restricted-growth pairs).
+- Keeping only the best partial read per system: a KAT planted a system whose true read ranked 2nd of 6 all-different reads and was lost. The rule was corrected to retain every read.
 - Integer overflow in index arithmetic (int16) exposed by exhaustive KAT.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Exhaustive small KATs: all $2 \times 3$ matrices over $\mathrm{GF}(2)$ with complete null spaces (64), all $1 \times 2$ rows over $\mathrm{GF}(13)$ (169), 64 literal CRT permutations. Four hidden common-plaintext controls with true-cell nullities $(1, 1)$ each yielded exactly one structural class and exact plaintext, cycle, keys and three forwards; a 132-cell scan took 1.484 s. The shift-free exact crib solver: 32/32 exact recoveries at crib length 26. The tail-continuation KAT recovered a planted $f_{13} = 5$ pair at index 1,459 of 3,482 large systems exactly, and proved its skip boundary.
+Exhaustive small KATs: all $2 \times 3$ matrices over $\mathrm{GF}(2)$ with complete null spaces (64), all $1 \times 2$ rows over $\mathrm{GF}(13)$ (169), 64 literal CRT permutations. Four hidden common-plaintext controls with true-cell nullities $(1, 1)$ each yielded exactly one structural class and exact plaintext, cycle, keys and three forwards. A 132-cell scan took 1.484 s. The shift-free exact crib solver: 32/32 exact recoveries at crib length 26. The tail-continuation KAT recovered a planted $f_{13} = 5$ pair at index 1,459 of 3,482 large systems exactly, and proved its skip boundary.
 '''
 
 [[blocks]]
 kind = "example"
 title = "Worked example"
 body = '''
-Unknowns $x_1, x_2, x_3$ (positions of three letters; a fourth letter is fixed at 0 by the gauge). Rows: $x_1 + x_2 + x_3 \equiv 0$ and $x_1 - x_2 \equiv 0 \pmod{26}$.
+The unknowns $x_1, x_2, x_3$ are the positions of three letters. The gauge fixes a fourth letter at 0. The rows are $x_1 + x_2 + x_3 \equiv 0$ and $x_1 - x_2 \equiv 0 \pmod{26}$.
 
 Over $\mathrm{GF}(13)$: $x_1 = x_2 = t$, $x_3 = -2t = 11t$; nullity 1, thirteen solutions. Over $\mathrm{GF}(2)$: $x_1 = x_2 = s$, $x_3 = 0$; nullity 1, two solutions. Combined: $2 \cdot 13 = 26$ solutions modulo 26, namely $x_1 = x_2$, $x_3 = -2x_1$. Every one of them has $x_1 = x_2$, so **no** solution is injective: the system is rejected by all-different, although it is consistent and has 26 linear solutions. Check one: $x_1 = x_2 = 5$, $x_3 = -10 \equiv 16$; $5 + 5 + 16 = 26 \equiv 0$.
 '''

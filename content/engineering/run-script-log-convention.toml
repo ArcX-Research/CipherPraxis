@@ -15,7 +15,7 @@ kind = "definition"
 body = '''
 **Launcher** (`run_<lane>.sh`): `set -euo pipefail`; resolves its own directory; compiles the core into a temporary directory removed by a trap; runs `--self-kat`; verifies SHA-256 pins of every frozen input; dispatches on a mode word (`controls | smoke | live`, or `static | benchmark | disclosed | parse | admit`); tees the driver's output to the transcript while preserving the driver's exit status (`PIPESTATUS`); prints `transcript: <path>` last.
 
-**Transcript names**: `logs/NNN_<lane>_<variant>_<UTC stamp>[_<pid>].log` with stamp `%Y%m%dT%H%M%SZ`; the first eight instruments used the short form `logs/01_audit.log` to `08_q3.log`. Development and smoke transcripts carry `_disclosed`, `_smoke` or `_dev` in the name and are labelled non-evidence.
+**Transcript names**: `logs/NNN_<lane>_<variant>_<UTC stamp>[_<pid>].log` with stamp `%Y%m%dT%H%M%SZ`. The first eight tests used the short form `logs/01_audit.log` to `08_q3.log`. Development and smoke transcripts carry `_disclosed`, `_smoke` or `_dev` in the name and are labelled non-evidence.
 
 **Failed logs**: `logs/failed/NNN_<lane>.<DEFECT>.<stamp>.log`, where the defect token is one of the recorded vocabulary: `INVALID-gauge-defect`, `CONTROL_FAIL`, `CONTROL_CRITERION_DEFECT`, `STALE_SOURCE-NO_LIVE`, `RESOURCE_BLOCKED-rss-ceiling`, `SUPERSEDED-<reason>`, `interrupted`.
 
@@ -32,7 +32,48 @@ body = '''
 [[blocks]]
 kind = "attack"
 body = '''
-The convention protects against the two ways a log becomes a false exclusion: a run whose inputs drifted, and a run that was stopped or broken but looks complete. Hash pins refuse the first ("REFUSED hash drift: <path>"). For the second, the failed-logs directory and the defect suffix keep the artefact while making it uncitable; the ledger's audit of the directory found multiprocessing shutdowns, a missing-module failure, a traceback mid-run, an exact-solver control that returned unknown, and several runs stopped after a stated fraction of placements, all of which are now labelled and excluded.
+The convention protects against the two ways a log becomes a false exclusion: a run whose inputs drifted, and a run that was stopped or broken but looks complete. Hash pins refuse the first ("REFUSED hash drift: <path>"). For the second, the failed-logs directory and the defect suffix keep the artefact while making it uncitable. The ledger's audit of the directory found multiprocessing shutdowns, a missing-module failure, a traceback mid-run, an exact-solver control that returned unknown, and several runs stopped after a stated fraction of placements, all of which are now labelled and excluded.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Launcher run_<lane>.sh for ledger number NNN; every setting a person might
+// change is fixed inside it.
+procedure LAUNCH(mode):
+    // set -euo pipefail
+    fail on any error, unset variable or broken pipe
+    HERE = directory of this script
+    // create nothing
+    if this is a frozen gate and any argument was given:
+        print "REFUSED" to stderr
+        exit 2
+    for each frozen input (path, pinned_sha256):
+        if sha256(path) != pinned_sha256:
+            print "REFUSED hash drift: " + path to stderr
+            exit 2
+    build_dir = temporary directory, removed by a trap on exit
+    compile the core into build_dir; require "--self-kat" to pass
+    stamp = current UTC time as %Y%m%dT%H%M%SZ
+    // _disclosed / _smoke / _dev = non-evidence
+    log = HERE/logs/NNN_<lane>_<variant>_<stamp>[_<pid>].log
+    if mode is a one-shot computation:
+        // durable marker, never removed
+        create HERE/logs/NNN_<lane>.log.attempt with O_EXCL
+    dispatch on mode (controls | smoke | live, or static | benchmark |
+            disclosed | parse | admit)
+    run the driver with the mode's fixed settings, teeing its output to log
+    status = the driver's own exit status (PIPESTATUS), not tee's
+    // the last line
+    print "transcript: " + log
+    exit status
+
+// A run later found defective is moved, never deleted or cited. DEFECT from
+// the recorded vocabulary
+procedure FILE_AS_FAILED(log, DEFECT):
+    rename log to HERE/logs/failed/NNN_<lane>.<DEFECT>.<stamp>.log
+```
 '''
 
 [[blocks]]
@@ -45,7 +86,7 @@ A launcher is 20 to 260 lines. The directory audit that classified 200 text logs
 kind = "failure_modes"
 body = '''
 - **Mis-filing.** A pilot's transcript was filed under a development directory when an earlier pilot was stopped; corrected in the ledger with the restored path and hash.
-- **Empty logs.** Four historical logs are empty and prove nothing; they were left in place and listed as such.
+- **Empty logs.** Four historical logs are empty and prove nothing. They were left in place and listed as such.
 - **Suffix collisions.** A `.failed-no-numpy` suffix was used ad hoc before the failed directory existed; later runs of the same family exist without the suffix.
 - **Stale sources.** A live run launched from bytes that had since changed is labelled `STALE_SOURCE-NO_LIVE` and its target portion is void.
 '''

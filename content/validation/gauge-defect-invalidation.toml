@@ -13,7 +13,7 @@ updated = "2026-09-04"
 [[blocks]]
 kind = "definition"
 body = '''
-Let a construction map plaintext to ciphertext through parameters $\theta$, and let a group $G$ act on parameters so that $\operatorname{Enc}_{g\theta} = \operatorname{Enc}_\theta$ for all $g \in G$. The $G$-orbit of $\theta$ is its **gauge orbit**; only the orbit is identifiable from data. A control is **gauge-correct** when it compares the recovered $\hat\theta$ with the planted $\theta$ modulo $G$, i.e. requires $\hat\theta \in G\theta$, and reports which $g$ relates them.
+Let a construction map plaintext to ciphertext through parameters $\theta$, and let a group $G$ act on parameters so that $\operatorname{Enc}_{g\theta} = \operatorname{Enc}_\theta$ for all $g \in G$. The $G$-orbit of $\theta$ is its **gauge orbit**. Only the orbit is identifiable from data. A control is **gauge-correct** when it compares the recovered $\hat\theta$ with the planted $\theta$ modulo $G$, i.e. requires $\hat\theta \in G\theta$, and reports which $g$ relates them.
 
 Examples in the program:
 
@@ -37,7 +37,7 @@ so fixing $z(C_0) = 0$ and demanding the planted secondary plaintext exactly rej
 kind = "assumptions"
 body = '''
 - The gauge group is known and enumerable; for translation and affine gauges of $\mathbb{Z}_{26}$ it has 26 or 312 elements and the orbit can be expanded explicitly.
-- Mixed-order constructions (different alphabet orders on the two layers) may have **no** affine gauge; the program's designs state that such cells receive only the literal base key and "no false orbit".
+- Mixed-order constructions (different alphabet orders on the two layers) may have **no** affine gauge. The program's designs state that such cells receive only the literal base key and "no false orbit".
 '''
 
 [[blocks]]
@@ -49,20 +49,66 @@ Gauge handling appears at three points of an attack pipeline:
 2. **Scoring.** If a second statistic is not gauge-invariant (the secondary plaintext's language rate), maximise it over the orbit or restrict to invariant statistics.
 3. **Control comparison.** Expand the planted key's orbit and require membership; require all orbit members to satisfy the algebraic relations by direct reconstruction.
 
-Sealed designs in the program make step 3 a requirement: "there exists a single $\delta$ for which all seven gauge-shifted key symbols are members of the width-8 lists; the returned base key is in the planted 26-state orbit; all 26 orbit members were expanded and satisfy the delta relations". A related defect of orbit handling, an orbit filter that rejected valid identity and half-turn rotations, was found by the same kind of audit and shown to discard about 21% of planted truths for one relation.
+Sealed designs in the program make step 3 a requirement: "there exists a single $\delta$ for which all seven gauge-shifted key symbols are members of the width-8 lists. The returned base key is in the planted 26-state orbit. All 26 orbit members were expanded and satisfy the delta relations". A related defect of orbit handling, an orbit filter that rejected valid identity and half-turn rotations, was found by the same kind of audit and shown to discard about 21% of planted truths for one relation.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Inputs: planted parameters theta, a gauge group G with ENC(g theta) =
+// ENC(theta) for every g in G, the recovered theta_hat, and a selector whose
+// score may include a statistic that is not gauge-invariant. Output: a
+// gauge-correct comparison, or invalidation of the whole control run.
+function IN_ORBIT(theta_hat, theta, G):
+    // G is enumerable: expand the orbit explicitly
+    for g in G:
+        // report which g relates them
+        if theta_hat == g(theta): return (true, g)
+    return (false, none)
+
+function GAUGE_KAT(theta, G):
+    // before any search: the predicate must accept the truth and still reject
+    // a non-orbit element
+    assert IN_ORBIT(theta, theta, G).member
+    assert not IN_ORBIT(NON_ORBIT_ELEMENT(theta), theta, G).member
+
+function SCORE(c, theta_hat, G):
+    // the primary decrypt's rate
+    s = INVARIANT_STATISTIC(c, theta_hat)
+    // non-invariant part maximised over the orbit
+    s += MAX(SECONDARY_STATISTIC(c, g(theta_hat)) for g in G)
+    return s
+
+function GAUGE_CORRECT_CONTROL(c, theta, G):
+    // fixing one gauge during the search is correct
+    theta_hat = SEARCH(c, gauge_fixed = true)
+    (member, g) = IN_ORBIT(theta_hat, theta, G)
+    require every g2(theta), g2 in G, satisfies the algebraic relations by
+            direct reconstruction
+    return PASS(g) if member else FAIL
+
+function ON_FIXED_GAUGE_DEFECT(run):
+    // the run scored or compared a non-invariant quantity in one fixed gauge
+    KILL(run); keep the transcript under the failed-logs directory with the
+            suffix INVALID-gauge-defect
+    mark it "never a gate"
+    leave the source bytes unchanged
+    reserve a successor
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-Orbit expansion multiplies the finish by $|G|$ (26 for translations); the program's complete finish enumerates $8 \times 26 \times 26 + 8 \times 26 = 5{,}616$ states per replicate rather than pruning any gauge state by score.
+Orbit expansion multiplies the finish by $|G|$ (26 for translations). The program's complete finish enumerates $8 \times 26 \times 26 + 8 \times 26 = 5{,}616$ states per replicate rather than pruning any gauge state by score.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Fixed-gauge secondary comparison** (the case above): run killed after producing only a header; transcript kept under the failed-logs directory with the suffix `INVALID-gauge-defect`; "never a gate"; the source bytes left unchanged and a successor reserved.
-- **Displayed representatives mistaken for the author's key.** Two shift vectors with a shared-constant freedom were recovered exactly as a cipher but the displayed vectors need not be the intended word representatives; the replay note says so rather than claiming key labels are identifiable.
+- **Fixed-gauge secondary comparison** (the case above): run killed after producing only a header; transcript kept under the failed-logs directory with the suffix `INVALID-gauge-defect`; "never a gate". The source bytes left unchanged and a successor reserved.
+- **Displayed representatives mistaken for the author's key.** Two shift vectors with a shared-constant freedom were recovered exactly as a cipher but the displayed vectors need not be the intended word representatives. The replay note says so rather than claiming key labels are identifiable.
 - **Orbit filter with wrong closure rule.** A rotation mask rejected any partial map containing a fixed point at length 3 or a complete 2-cycle at length 4, i.e. the identity and half-turn, because it tested "returns at length $\ell$" instead of "first return at $\ell$".
 '''
 

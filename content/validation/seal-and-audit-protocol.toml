@@ -13,12 +13,12 @@ updated = "2026-09-04"
 [[blocks]]
 kind = "definition"
 body = '''
-Roles: the **creator** writes the design and implementation; the **independent auditor** is a different agent who did not write the bytes; the **release authority** holds tokens and seeds and executes production modes. Stages, each producing a hashed artefact:
+Roles: the **creator** writes the design and implementation. The **independent auditor** is a different agent who did not write the bytes. The **release authority** holds tokens and seeds and executes production modes. Stages, each producing a hashed artefact:
 
 1. **Design** note, predeclaring family, algebra, controls, nulls, gates, terminals, resources and file names.
 2. **Design audit** by the auditor: PASS authorises implementation; BLOCK names blockers.
 3. **Implementation**: source, strict parser and runner, mutually pinned by hash.
-4. **Build manifest** (detached JSON) binding implementation hashes, frozen ancestors, constants and reserved paths; it contains no descendant hash.
+4. **Build manifest** (detached JSON) binding implementation hashes, frozen ancestors, constants and reserved paths. It contains no descendant hash.
 5. **Creator audit** (the *seal*): static KAT, disclosed runs, refusal probes, residuals.
 6. **Independent exact-byte audit**: rehash, rerun public routes, mutate and probe; verdict PASS or BLOCK.
 7. **Release** record created by the authority, binding manifest, both audits and an authorisation token.
@@ -41,30 +41,71 @@ Mutual source/runner identity without a cycle is achieved by hashing the runner 
 [[blocks]]
 kind = "assumptions"
 body = '''
-- Auditors are genuinely different agents with no authorship of the bytes; the ledger records who wrote what, and a take-over of an interrupted implementation was recorded as such (the inherited bytes verified unchanged, the manifest and audit written fresh).
+- Auditors are genuinely different agents with no authorship of the bytes. The ledger records who wrote what, and a take-over of an interrupted implementation was recorded as such (the inherited bytes verified unchanged, the manifest and audit written fresh).
 - Audits are target-absent: they run only public modes and mocks, never the production transaction.
-- A PASS certifies the wrapper's gates, parser and transaction on the exact bytes; it is not a statement about any target.
+- A PASS certifies the wrapper's gates, parser and transaction on the exact bytes. It is not a statement about any target.
 '''
 
 [[blocks]]
 kind = "attack"
 title = "What the audits caught"
 body = '''
-- A controls lane whose creator note said the null permutations were drawn before the identity run, while the code drew them after; whose generator truncated tie sets to 64; and whose structural parser accepted a false null tie count (an in-memory mutation from 1 to 2 was accepted). BLOCK; the successor retained ties completely, and the successor after that rejected 38 of 38 parser mutations and rejected a falsified runner pin at all three admission layers (parser, attempt marker, semantic replay).
-- A one-shot target wrapper whose read-once counter lived in the process, so a crash after the read left no evidence; and whose runner was not pinned by the source. BLOCK; the replacement wrote a durable `O_EXCL` attempt marker before the sole read and added a one-line release manifest for mutual identity.
-- A design whose seed-label clause was ambiguous and whose summary was rendered before the snapshot it had to contain existed. BLOCK; the successor fixed both, and an auditor replayed the whole 34-row public bank from the design text before implementation was allowed.
+- A controls lane whose creator note said the null permutations were drawn before the identity run, while the code drew them after; whose generator truncated tie sets to 64; and whose structural parser accepted a false null tie count (an in-memory mutation from 1 to 2 was accepted). BLOCK. The successor retained ties completely, and the successor after that rejected 38 of 38 parser mutations and rejected a falsified runner pin at all three admission layers (parser, attempt marker, semantic replay).
+- A one-shot target wrapper whose read-once counter lived in the process, so a crash after the read left no evidence; and whose runner was not pinned by the source. BLOCK. The replacement wrote a durable `O_EXCL` attempt marker before the sole read and added a one-line release manifest for mutual identity.
+- A design whose seed-label clause was ambiguous and whose summary was rendered before the snapshot it had to contain existed. BLOCK. The successor fixed both, and an auditor replayed the whole 34-row public bank from the design text before implementation was allowed.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Roles: the creator writes the bytes, the independent auditor did not, the
+// release authority holds tokens and seeds. Every stage yields a hashed
+// artefact and no artefact hashes a later one. Output: a released one-shot
+// transaction, or a BLOCK answered only by a fresh successor.
+function LINEAGE(design):
+    // blockers named; successor gets a fresh log number
+    if DESIGN_AUDIT(design) == BLOCK: return BLOCK
+    // source pins h(runner masked), runner pins h(source)
+    (source, parser, runner) = IMPLEMENT(design)
+    manifest = BUILD_MANIFEST(h(source), h(parser), h(runner),
+            frozen_ancestors, constants, reserved_paths)
+    // static KAT, disclosed runs, refusal probes, residuals
+    seal = CREATOR_AUDIT(manifest)
+    // a different agent, on the exact bytes
+    verdict = INDEPENDENT_AUDIT(manifest, seal)
+    // never repaired in place; the bytes stay frozen
+    if verdict == BLOCK: return BLOCK
+    // written by the authority alone
+    release = RELEASE_RECORD(manifest, seal, verdict, token)
+    transcript = TRANSACTION(release)                           // one shot
+    return ADMISSION_REPLAY(transcript, release)
+
+function INDEPENDENT_AUDIT(manifest, seal):
+    for file in manifest.files:
+        // rehash; read code, not notes
+        require h(file) == manifest.hash[file]
+    // never the production transaction
+    rerun public routes and mocks only
+    for copy in ONE_BYTE_APPENDED_COPIES(source, parser, core):
+        require REFUSES(copy, "hash drift")
+    for mode in production_modes:
+        require RUN(mode, token = none) exits 2 and creates no artefact
+    // PASS certifies the bytes, not any target
+    return PASS if every probe held else BLOCK(blockers)
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-Each lineage costs several audit-days and produces on the order of ten artefacts. The program's counts: 16 design notes, 9 creator audits, 33 independent audits and 216 audit notes of all kinds, for roughly 470 solver scripts. The compute inside an audit is small (static KATs of 50 to 100 s, disclosed replays of about 100 s); the discipline is the cost.
+Each lineage costs several audit-days and produces on the order of ten artefacts. The program's counts: 16 design notes, 9 creator audits, 33 independent audits and 216 audit notes of all kinds, for roughly 470 solver scripts. The compute inside an audit is small (static KATs of 50 to 100 s, disclosed replays of about 100 s). The discipline is the cost.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Creator statements that contradict the bytes** (the null-precommit order); the audit reads code, not notes.
+- **Creator statements that contradict the bytes** (the null-precommit order). The audit reads code, not notes.
 - **Miscounted receipts.** An audit's terminal said 17/17 gates; recounting the sealed transcript gave 16, and the correction was carried in the binding receipt while the sealed bytes stayed unmodified so their hashes remained valid.
 - **Reserved-path confusion.** The auditor of one lane wrote under a fresh log number and deliberately left the reserved audit path absent, so production stayed correctly blocked until the authority decided whether to install it.
 '''

@@ -75,6 +75,111 @@ pub fn markdown_to_html(md: &str) -> String {
     out
 }
 
+const PSEUDO_KEYWORDS: &[&str] = &[
+    "function", "for", "in", "if", "else", "elif", "while", "repeat", "until", "return", "each",
+    "and", "or", "not", "break", "continue", "then", "do", "assert", "yield", "true", "false",
+    "with", "where", "of", "to", "from", "by", "step",
+];
+
+fn is_ident_char(c: char) -> bool {
+    c.is_alphanumeric() || c == '_'
+}
+
+/// Highlights one pseudocode line: comments, keywords, function names, upper-case procedure calls.
+fn highlight_pseudocode_line(line: &str) -> String {
+    let (code, comment) = match line.find("//") {
+        Some(i) => (&line[..i], Some(&line[i..])),
+        None => (line, None),
+    };
+    let mut out = String::with_capacity(line.len() + 32);
+    let chars: Vec<char> = code.chars().collect();
+    let mut i = 0;
+    let mut after_function = false;
+    while i < chars.len() {
+        let c = chars[i];
+        if is_ident_char(c) {
+            let start = i;
+            while i < chars.len() && is_ident_char(chars[i]) {
+                i += 1;
+            }
+            let word: String = chars[start..i].iter().collect();
+            let next_paren = chars.get(i).copied() == Some('(');
+            let lower = word.to_lowercase();
+            if after_function {
+                out.push_str(&format!(
+                    "<span class=\"pc-f\">{}</span>",
+                    escape_html(&word)
+                ));
+                after_function = false;
+            } else if PSEUDO_KEYWORDS.contains(&lower.as_str()) && lower == word {
+                out.push_str(&format!(
+                    "<span class=\"pc-k\">{}</span>",
+                    escape_html(&word)
+                ));
+                after_function = word == "function";
+            } else if next_paren
+                && word.chars().any(|c| c.is_ascii_uppercase())
+                && word == word.to_uppercase()
+            {
+                out.push_str(&format!(
+                    "<span class=\"pc-f\">{}</span>",
+                    escape_html(&word)
+                ));
+            } else {
+                out.push_str(&escape_html(&word));
+            }
+        } else {
+            out.push_str(&escape_html(&c.to_string()));
+            i += 1;
+        }
+    }
+    if let Some(cm) = comment {
+        out.push_str(&format!("<span class=\"pc-c\">{}</span>", escape_html(cm)));
+    }
+    out
+}
+
+/// Renders a pseudocode block body: text outside the first fenced code block is Markdown, the
+/// fence becomes a numbered line list that keeps each line's indentation when it wraps.
+pub fn pseudocode_to_html(body: &str) -> String {
+    let lines: Vec<&str> = body.lines().collect();
+    let open = lines.iter().position(|l| l.trim_start().starts_with("```"));
+    let close = open.and_then(|o| {
+        lines[o + 1..]
+            .iter()
+            .position(|l| l.trim_start().starts_with("```"))
+            .map(|p| o + 1 + p)
+    });
+    let (Some(o), Some(c)) = (open, close) else {
+        return markdown_to_html(body);
+    };
+    let mut out = String::new();
+    let before = lines[..o].join("\n");
+    if !before.trim().is_empty() {
+        out.push_str(&markdown_to_html(&before));
+    }
+    out.push_str("<div class=\"pc\"><ol class=\"pc-lines\">");
+    for line in &lines[o + 1..c] {
+        let expanded = line.replace('\t', "    ");
+        let indent = expanded.len() - expanded.trim_start_matches(' ').len();
+        let content = expanded.trim_start_matches(' ');
+        if content.trim().is_empty() {
+            out.push_str("<li class=\"pc-line pc-blank\"><code> </code></li>");
+        } else {
+            out.push_str(&format!(
+                "<li class=\"pc-line\" style=\"--pc-indent:{indent}\"><code>{}</code></li>",
+                highlight_pseudocode_line(content)
+            ));
+        }
+    }
+    out.push_str("</ol></div>");
+    let after = lines[c + 1..].join("\n");
+    if !after.trim().is_empty() {
+        out.push_str(&markdown_to_html(&after));
+    }
+    out
+}
+
 /// Strips Markdown to plain text (rough, for snippets and search).
 pub fn markdown_to_text(md: &str) -> String {
     let mut opts = Options::empty();
@@ -132,5 +237,34 @@ mod tests {
     fn plain_text_extraction() {
         let t = markdown_to_text("# Head\n\nSome *text* with `code` and $x^2$.\n\n- item");
         assert_eq!(t, "Head Some text with code and x^2 . item");
+    }
+
+    #[test]
+    fn pseudocode_lines_keep_indent_and_highlight() {
+        let body = "```text\n// setup\nfunction ENCRYPT(p, k):\n    for i in 0..n-1:\n        c[i] = (p[i] + k[i mod m]) mod 26   // add\n    return HISTOGRAM(c)\n```";
+        let html = pseudocode_to_html(body);
+        assert!(html.contains("<ol class=\"pc-lines\">"));
+        assert!(html.contains("style=\"--pc-indent:8\""), "{html}");
+        assert!(
+            html.contains(
+                "<span class=\"pc-k\">function</span> <span class=\"pc-f\">ENCRYPT</span>"
+            ),
+            "{html}"
+        );
+        assert!(
+            html.contains("<span class=\"pc-f\">HISTOGRAM</span>"),
+            "{html}"
+        );
+        assert!(
+            html.contains("<span class=\"pc-c\">// add</span>"),
+            "{html}"
+        );
+        assert!(html.contains("<span class=\"pc-c\">// setup</span>"));
+        assert!(!html.contains("<pre>"));
+    }
+
+    #[test]
+    fn pseudocode_without_fence_falls_back_to_markdown() {
+        assert!(pseudocode_to_html("Just *text*").contains("<em>text</em>"));
     }
 }

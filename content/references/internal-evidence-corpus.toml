@@ -40,23 +40,23 @@ body = '''
 kind = "variants"
 title = "Note types"
 body = '''
-- **Design** (`*_DESIGN.md`): predeclared family, algebra, controls, nulls, gates, terminals, resources and reserved paths; no implementation.
-- **Creator audit / seal** (`*_CREATOR_AUDIT.md`, `*_AUDIT.md`): the implementer's frozen hashes, static KAT and disclosed evidence, residuals, release boundary.
-- **Independent audit** (`*_INDEPENDENT_AUDIT*.md`): a different agent's exact-byte verdict, PASS or BLOCK, with recomputed hashes.
-- **Review** (`*_REVIEW.md`): static assessment of an idea or a proposed successor without execution.
-- **Note** (`*_NOTE.md`): a measurement or a closed question with its transcript.
-- **Ledger** (`COORDINATION.md`, `LOG_AUDIT.md`): append-only reservations, seals, verdicts, terminals, corrections; the classification of every log.
-- **Manifest / release** (`*.json`): one-line canonical records pinning bytes and authorisations.
-- **Transcript** (`logs/NNN_*.log`): the machine record of a run; non-evidence variants are named `_smoke`, `_dev`, `_disclosed`; invalidated ones live under `failed/` with a defect suffix.
-- **Attempt marker** (`logs/NNN_*.log.attempt`): proof that a one-shot resource was consumed.
-- **State checkpoint** (`logs/state_*.json`): carried scan state with a control-pass flag.
+- **Design** (`*_DESIGN.md`): states the family, math, controls, nulls, gates, end states, resources, and reserved paths before implementation begins.
+- **Creator audit / seal** (`*_CREATOR_AUDIT.md`, `*_AUDIT.md`): records the implementer's fixed hashes, known-answer test (KAT), disclosed evidence, remaining limits, and release boundary.
+- **Independent audit** (`*_INDEPENDENT_AUDIT*.md`): gives a different agent's PASS or BLOCK decision after checking the exact bytes and recalculating hashes.
+- **Review** (`*_REVIEW.md`): assesses an idea or proposed next step without running it.
+- **Note** (`*_NOTE.md`): records a measurement or answers a closed question, with its transcript.
+- **Ledger** (`COORDINATION.md`, `LOG_AUDIT.md`): keeps append-only reservations, seals, decisions, end states, corrections, and the class of every log.
+- **Manifest / release** (`*.json`): pins the approved bytes and permissions in one standard record.
+- **Transcript** (`logs/NNN_*.log`): records a machine run. Files ending in `_smoke`, `_dev`, or `_disclosed` are not evidence. Invalid files move to `failed/` and get a defect suffix.
+- **Attempt marker** (`logs/NNN_*.log.attempt`): proves that a one-use resource was spent.
+- **State checkpoint** (`logs/state_*.json`): saves scan state and whether its controls passed.
 '''
 
 [[blocks]]
 kind = "notes"
 title = "How to read a provenance path"
 body = '''
-A `[[provenance]]` entry gives a repository-relative path, a kind (solver, library, audit, design, note, log, script, data, ledger) and, for ledger and log references, a `ref` such as `LOG503` or `logs/152_crosscycle_full.log`. A ledger reference means the number quoted is in the headed entry for that log number; a log reference means it is in that transcript. File names in the corpus contain internal identifiers; the public text of this atlas does not repeat them, and it refers to the texts only by length.
+A `[[provenance]]` item lists a path from the repository root and a file type, such as solver, library, audit, design, note, log, script, data, or ledger. Ledger and log items may also give a `ref`, such as `LOG503` or `logs/152_crosscycle_full.log`. A ledger reference points to the heading for that log number. A log reference points to the transcript itself. Corpus file names contain internal identifiers, so public pages name texts only by length.
 '''
 
 [[provenance]]

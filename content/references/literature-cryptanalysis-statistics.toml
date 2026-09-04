@@ -13,7 +13,7 @@ updated = "2026-09-04"
 [[blocks]]
 kind = "notes"
 body = '''
-The validation practices in this atlas (matched nulls that repeat the full selection, family-wise maxima, power measured on plants) are applications of standard resampling and multiple-testing theory to a setting where the "hypotheses" are keys, placements and cipher families. Readers who want the theory behind a specific instrument should pair the instrument's page with the entry here it names.
+This site applies standard resampling and multiple-testing methods to keys, placements, and cipher families. Its matched null tests repeat the full selection step, family-wise tests compare maximum scores, and planted cases measure power. For the theory behind a specific test, open the source named on that test's page.
 '''
 
 [[references]]

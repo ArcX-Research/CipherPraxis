@@ -12,10 +12,46 @@ updated = "2026-09-04"
 lab = "hill"
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Letters are indices 0..25. K is an n x n key matrix (n = 2 or 3) with
+// entries reduced mod 26.
+function DET(K):
+    return the cofactor-expansion determinant of K, reduced mod 26
+
+function INVERSE(K):
+    // exists only when gcd(det K, 26) = 1
+    d_inv = MOD_INVERSE(DET(K), 26)
+    if none: report "this key cannot decrypt" and stop
+    for r in 0..n-1:
+        for c in 0..n-1:
+            // cofactor of (c, r)
+            minor = determinant of K with row c and column r removed
+            sign = +1 if (r + c) is even else -1
+            // adjugate / det
+            Kinv[r][c] = (sign * minor * d_inv) mod 26
+    return Kinv
+
+function ENCRYPT(p, K):
+    // X fills the last block
+    t = LETTERS_ONLY(p); while length(t) mod n != 0: append X to t
+    for each block v of n letters in t:
+        for r in 0..n-1:
+            out[r] = (sum over c in 0..n-1 of K[r][c] * v[c]) mod 26
+        append out to the ciphertext
+    return ciphertext
+
+function DECRYPT(c, K):
+    return ENCRYPT(c, INVERSE(K))
+```
+'''
+
+[[blocks]]
 kind = "notes"
 title = "What to try"
 body = '''
-- Enter the key `2 4 1 2`: the determinant is 0, so no inverse exists and decryption is impossible even though encryption still runs.
-- Enter `1 1 0 1`: an upper-triangular key with determinant 1; the second letter of each block is unchanged, which a known-plaintext attack spots immediately.
-- Switch to 3×3 and note that the inverse is still computed from cofactors; for larger n a solver would use elimination over Z26 with unit pivots.
+- Enter the key `2 4 1 2`. Its determinant is 0, so it has no inverse. Encryption still runs, but the result cannot be decrypted uniquely.
+- Enter `1 1 0 1`. This upper-triangular key has determinant 1 and leaves the second letter of each block unchanged. A known-plaintext attack can spot that pattern at once.
+- Switch to 3×3. The lab still finds the inverse with cofactors. For a larger matrix, a solver would use elimination over Z26 and choose only invertible, or unit, pivots.
 '''

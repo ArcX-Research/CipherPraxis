@@ -36,14 +36,14 @@ Exchange acceptance for a state $a$ at temperature $T_l$ and a state $b$ at $T_{
 
 $$\Pr[\text{swap}] = \min\!\left(1,\ \exp\!\Big[\Big(\tfrac{1}{T_l} - \tfrac{1}{T_{l+1}}\Big)(E_b - E_a)\Big]\right).$$
 
-A better state on the hotter level always moves down the ladder. The state is $(A, k)$ with $A$ a permutation of 26 letters shared by the texts and $k$ one shift vector of length 7 per text; the decrypt of text $j$ is $p_i = A[(A^{-1}(c_i) - k^{(j)}_{i \bmod 7}) \bmod 26]$ (Vigenère relation) or $A[(k^{(j)}_{i \bmod 7} - A^{-1}(c_i)) \bmod 26]$ (Beaufort). The score is the quadgram log-likelihood of all decrypts plus optional bigram and trigram terms with weights $w_2, w_3$ intended to smooth the early landscape.
+A better state on the hotter level always moves down the ladder. The state is $(A, k)$ with $A$ a permutation of 26 letters shared by the texts and $k$ one shift vector of length 7 per text. The decrypt of text $j$ is $p_i = A[(A^{-1}(c_i) - k^{(j)}_{i \bmod 7}) \bmod 26]$ (Vigenère relation) or $A[(k^{(j)}_{i \bmod 7} - A^{-1}(c_i)) \bmod 26]$ (Beaufort). The score is the quadgram log-likelihood of all decrypts plus optional bigram and trigram terms with weights $w_2, w_3$ intended to smooth the early landscape.
 '''
 
 [[blocks]]
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- Exchange only helps if some temperature level mixes across the barriers that separate basins; the ladder ($T_{hot} = 12$, $T_{cold} = 0.4$ by default) is assumed to span that range.
+- Exchange only helps if some temperature level mixes across the barriers that separate basins. The ladder ($T_{hot} = 12$, $T_{cold} = 0.4$ by default) is assumed to span that range.
 - The unknowns are determined in principle: an alphabet (about 84 bits after gauge) and 14 shifts (66 bits) against about 500 bits of redundancy in 159 letters of English. Identifiability is not the issue; reachability is.
 - Polishing (exact per-coset shift descent alternating with an exhaustive 925-neighbour alphabet climb) is applied to the top chains, so the reported number is a polished score.
 '''
@@ -56,6 +56,42 @@ Target family: a period-7 keyed substitution whose single unknown alphabet acts 
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// N_c chains, L temperatures, exchange every x steps. Chain state (A, k): A a
+// permutation of 26 letters shared by the texts, k one shift vector per text;
+// E = score of the decrypts.
+function PARALLEL_TEMPERING(E, N_c, L, T_cold, T_hot, x, steps, p_alpha):
+    // geometric ladder
+    for l in 0..L-1: temps[l] = T_cold * (T_hot / T_cold)^(l / (L - 1))
+    // round-robin levels
+    for c in 0..N_c-1: level[c] = c mod L; state[c] = random (A, k)
+    for t in 1..steps:
+        for each chain c (one vectorised step for all chains):
+            with probability p_alpha: s' = state[c] with an alphabet move
+                    (swap or insertion)
+            otherwise:                s' = state[c] with one shift of one
+                    text redrawn uniformly
+            delta = E(s') - E(state[c])
+            // Metropolis
+            if U(0,1) < min(1, exp(delta / temps[level[c]])): state[c] = s'
+        // replica exchange
+        if t mod x == 0:
+            for l in 0..L-2:
+                pair each chain a at level l with a chain b at level l+1
+                d = (1 / temps[l] - 1 / temps[l+1]) * (E(state[b]) -
+                        E(state[a]))
+                // a better hot state always moves down
+                if U(0,1) < min(1, exp(d)): swap state[a] and state[b]
+    polish the best chains (exact per-coset shift descent alternating with
+            the alphabet climb)
+    // read against shuffled-text nulls
+    return the best polished (A, k) and its score
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
 Cost per step is one vectorised decrypt-and-score of all chains, $O(N_c \cdot n)$. Recorded budgets and wall times on one machine: 2,000 chains $\times$ 60,000 steps $\times$ 8 levels took 920 s for the joint 63+96 control and 599 s for the 96-letter control; at 50,000 steps, 500 / 2,000 / 8,000 chains took 40 / 164 / 655 s. The polish of the top 8 chains is negligible by comparison.
@@ -65,9 +101,9 @@ Cost per step is one vectorised decrypt-and-score of all chains, $O(N_c \cdot n)
 kind = "failure_modes"
 body = '''
 - **Plateau, not tail.** On one planted 96-letter instance the polished best was $-5.045$ with 500 chains, $-4.829$ with 2,000 and $-4.916$ with 8,000 (two other search seeds at 2,000: $-4.971$, $-4.876$), i.e. 29-40% of the alphabet: best-of-$N$ does not improve with $N$. The truth reads near $-4.3$.
-- **Smoothing does not rescue it.** Bigram weight 1 gave $-4.87$ (42% of the alphabet) on the 96-letter control versus $-5.07$ (19%) with weight 3; a bigram ramp with trigrams gave $-5.45$ on the joint control (27% on the 96-letter part); key-word-derived shifts were worse ($-5.57$, 16%). A longer run (2,000 chains $\times$ 100,000 steps, bigram weight 1) ended at $-4.83$ with 35% match.
-- **Why.** The alphabet acts twice, so every swap is both a cryptogram move and a re-slotting of ciphertext letters; the polish basin around the truth is at most three swaps wide while the search's best states are about ten swaps away (see [polish-basin measurement](/search/polish-basin-measurement)).
-- **Consequence.** A target run of this solver cannot distinguish "not this family" from "family present but unreachable"; it was therefore not used as a family negative.
+- **Smoothing does not rescue it.** Bigram weight 1 gave $-4.87$ (42% of the alphabet) on the 96-letter control versus $-5.07$ (19%) with weight 3. A bigram ramp with trigrams gave $-5.45$ on the joint control (27% on the 96-letter part); key-word-derived shifts were worse ($-5.57$, 16%). A longer run (2,000 chains $\times$ 100,000 steps, bigram weight 1) ended at $-4.83$ with 35% match.
+- **Why.** The alphabet acts twice, so every swap is both a cryptogram move and a re-slotting of ciphertext letters. The polish basin around the truth is at most three swaps wide while the search's best states are about ten swaps away (see [polish-basin measurement](/search/polish-basin-measurement)).
+- **Consequence.** A target run of this solver cannot distinguish "not this family" from "family present but unreachable". It was therefore not used as a family negative.
 '''
 
 [[blocks]]

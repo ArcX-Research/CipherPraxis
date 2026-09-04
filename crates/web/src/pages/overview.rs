@@ -1,7 +1,7 @@
 //! Landing page: what the knowledge base is, how statuses read, and the entry points.
 use crate::components::badges::StatusBadge;
 use crate::components::cards::EntryCard;
-use crate::components::motif::CipherField;
+use crate::components::motif::CipherDisc;
 use crate::state::{use_palette, use_state};
 use crate::util::set_title;
 use leptos::prelude::*;
@@ -55,10 +55,7 @@ pub fn Overview() -> impl IntoView {
                         <div><dt>"runtime"</dt><dd>"Rust → WASM"</dd></div>
                     </dl>
                 </div>
-                <div class="hero-visual glass">
-                    <CipherField rows=9 cols=13/>
-                    <div class="hero-caption mono">"tabula recta · row r, column c ↦ (r + c) mod 26"</div>
-                </div>
+                <div class="hero-visual"><CipherDisc/></div>
             </div>
         </section>
 

@@ -12,10 +12,37 @@ updated = "2026-09-04"
 lab = "affine"
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Letters are indices 0..25 (A = 0). The key is (a, b) with 0 <= a, b <= 25.
+function IS_UNIT(a):
+    // true for exactly twelve values of a
+    return gcd(a, 26) == 1
+
+function ENCRYPT(p[0..n-1], a, b):
+    if not IS_UNIT(a): report "a has no inverse modulo 26" and stop
+    for i in 0..n-1: c[i] = (a * p[i] + b) mod 26
+    return c
+
+function DECRYPT(c[0..n-1], a, b):
+    // extended Euclid; exists only when gcd(a, 26) = 1
+    a_inv = MOD_INVERSE(a, 26)
+    for i in 0..n-1: p[i] = (a_inv * (c[i] - b)) mod 26
+    return p
+
+// Unit table shown by the lab: every multiplier that has an inverse, with
+// that inverse.
+function UNITS():
+    return [(a, MOD_INVERSE(a, 26)) for a in 1..25 if gcd(a, 26) == 1]
+```
+'''
+
+[[blocks]]
 kind = "notes"
 title = "What to try"
 body = '''
-- Set a = 1 to obtain a Caesar shift by b.
-- Set a = 25: since 25 ≡ −1, the cipher is a reflection of the alphabet followed by a shift (a = 25, b = 25 is Atbash).
-- Set a = 13 or any even value to see the invertibility error: two plaintext letters would collide on the same ciphertext letter.
+- Set a = 1. The result is a Caesar shift by b.
+- Set a = 25. Because 25 ≡ −1, this reverses the alphabet and then shifts it. With a = 25 and b = 25, you get Atbash.
+- Set a = 13 or any even number. The lab reports that the key has no inverse because two plaintext letters map to the same ciphertext letter.
 '''

@@ -31,7 +31,7 @@ Every letter sits in one of $mq$ classes with plaintext index $\operatorname{pos
 kind = "variants"
 body = '''
 - **Same alphabet**: a single key of period $\operatorname{lcm}(m, q)$; already covered by a periodic solver up to that period.
-- **Two alphabets**: the new family; the program used the straight order and one keyword-mixed order in all four pairings.
+- **Two alphabets**: the new family. The program used the straight order and one keyword-mixed order in all four pairings.
 - **Block drift**: an outer period-7 key plus one constant per block ($m = 2, 3, 4$ blocks).
 - **Sandwich**: a transposition between the two layers; see [Sandwich construction](/ciphers/sandwich-construction).
 '''
@@ -41,7 +41,7 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - Both layers strictly periodic; alphabets from a small fixed set.
-- Invariant: the same-alphabet case leaves a residual periodicity at $q$ after the period-$m$ layer is removed; a residual period-10 signal after alignment was exactly what motivated the lane.
+- Invariant: the same-alphabet case leaves a residual periodicity at $q$ after the period-$m$ layer is removed. A residual period-10 signal after alignment was exactly what motivated the lane.
 - Invariant: in the two-alphabet case the $mq$ class substitutions are all different, so class-level statistics rather than coset statistics carry the information.
 '''
 
@@ -56,23 +56,62 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Inner key v (period q) in alphabet A1, outer key u (period m) in alphabet
+// A2; pos_A is the index in A.
+function ENCRYPT(p[0..n-1], A1, v[0..q-1], A2, u[0..m-1]):
+    for i in 0..n-1:
+        y = A1[(pos_A1(p[i]) + v[i mod q]) mod 26]          // inner layer
+        c[i] = A2[(pos_A2(y) + u[i mod m]) mod 26]          // outer layer
+    return c
+
+function DECRYPT(c[0..n-1], A1, v[0..q-1], A2, u[0..m-1]):
+    for i in 0..n-1:
+        y = A2[(pos_A2(c[i]) - u[i mod m]) mod 26]
+        p[i] = A1[(pos_A1(y) - v[i mod q]) mod 26]
+    return p
+
+// Same alphabet: one additive key of period lcm(m, q) with elements u[i mod
+// m] + v[i mod q].
+
+// Alternating class fit for the m + q shifts (coset alignment is useless: the
+// inner layer flattens cosets).
+function ALTERNATING_FIT(c, A1, A2, m, q):
+    for each random start (u, v):
+        repeat until no shift changes:
+            for b in 0..m-1:
+                u[b] = the s in 0..25 maximising MONOGRAM_LOGLIK(DECRYPT(c,
+                        A1, v, A2, u with u[b] = s))
+            for j in 0..q-1:
+                v[j] = the s in 0..25 maximising MONOGRAM_LOGLIK(DECRYPT(c,
+                        A1, v with v[j] = s, A2, u))
+        keep the best few (u, v)
+    polish the best by quadgram coordinate descent
+    repeat the whole fit on shuffled c for the null
+    return best (u, v)
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-Per $(q, \text{alphabet pair})$: $O(\text{starts} \times \text{sweeps} \times (m + q) \times 26 \times n)$ monogram evaluations; the full sweep over $q = 2 \dots 13$ and four alphabet pairs with nulls took about 30 minutes for two texts.
+Per $(q, \text{alphabet pair})$: $O(\text{starts} \times \text{sweeps} \times (m + q) \times 26 \times n)$ monogram evaluations. The full sweep over $q = 2 \dots 13$ and four alphabet pairs with nulls took about 30 minutes for two texts.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
 - **Selection over many $(q, \text{pair})$ cells.** The live best rates around $-6.0$ to $-6.5$ carried per-cell z up to +3.5 with 5-22% match; against the family of 48 cells that is noise. The controls sit at z +51 and +27.
-- **Same-alphabet degeneracy.** When $A_1 = A_2$ the fit has a large gauge (any constant moved between $u$ and $v$); the solver fixes it by convention.
-- **Short cosets at large lcm.** A period-70 composite on 153 letters has two letters per class; only the factorised fit, not a direct period-70 solve, can recover it.
+- **Same-alphabet degeneracy.** When $A_1 = A_2$ the fit has a large gauge (any constant moved between $u$ and $v$). The solver fixes it by convention.
+- **Short cosets at large lcm.** A period-70 composite on 153 letters has two letters per class. Only the factorised fit, not a direct period-70 solve, can recover it.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Two planted controls at 153 letters (logs/06_compound.log): a same-alphabet composite with periods 7 and 10 recovered at $q = 10$ with 100% match and z +51.1; a two-alphabet composite (keyword-mixed outer over straight inner, periods 7 and 10) recovered at $q = 10$ with 100% match and z +26.7. Both live texts: no cell above noise for $q = 2 \dots 13$ in any of the four alphabet pairings. Block-drift model: the control recovered its planted constants; live texts at noise for $m = 2, 3, 4$ (logs/10_blocks_model.log). Cascade: the two-period composite in a solved corpus text was recovered through decision D2b at 100% published match (logs/145_infer.log).
+Two planted controls at 153 letters (logs/06_compound.log): a same-alphabet composite with periods 7 and 10 recovered at $q = 10$ with 100% match and z +51.1. A two-alphabet composite (keyword-mixed outer over straight inner, periods 7 and 10) recovered at $q = 10$ with 100% match and z +26.7. Both live texts: no cell above noise for $q = 2 \dots 13$ in any of the four alphabet pairings. Block-drift model: the control recovered its planted constants; live texts at noise for $m = 2, 3, 4$ (logs/10_blocks_model.log). Cascade: the two-period composite in a solved corpus text was recovered through decision D2b at 100% published match (logs/145_infer.log).
 '''
 
 [[blocks]]

@@ -34,22 +34,53 @@ A second-order relative is the polynomial key schedule $a_i = \beta i + \alpha\,
 kind = "assumptions"
 body = '''
 - The multiplier is a unit; for routes it must also be coprime to the text length $n$.
-- Recurrence coefficients $(a, L, b)$ are the same at every position; a change point breaks the filter identity.
-- A route gauge exists only when the period divides $n$; otherwise the absolute cut is identifiable and must be compared literally.
+- Recurrence coefficients $(a, L, b)$ are the same at every position. A change point breaks the filter identity.
+- A route gauge exists only when the period divides $n$. Otherwise the absolute cut is identifiable and must be compared literally.
 '''
 
 [[blocks]]
 kind = "attack"
 body = '''
 - **Affine-lag filters.** For each unit $a$ and lag $L = 1..40$ form $c_i - a\,c_{i-L}$, score it by log-likelihood ratio against the $a$-scaled self-convolution of English with the additive constant maximised out, and compare the family-wise maximum with the same scan on shuffled texts.
-- **Affine routes.** Exhaust every unit $u$, every offset $d$ evaluated as a cyclic cut, every divisor period $p \le 42$, both alphabet orders and both relations; the 96 best endpoints receive the quadgram periodic finish; an independent forward rebuilds $X$ and writes it back through $C_{(ui+d) \bmod n} = X_i$.
+- **Affine routes.** Exhaust every unit $u$, every offset $d$ evaluated as a cyclic cut, every divisor period $p \le 42$, both alphabet orders and both relations. The 96 best endpoints receive the quadgram periodic finish. An independent forward rebuilds $X$ and writes it back through $C_{(ui+d) \bmod n} = X_i$.
 - **Polynomial schedules.** Exact deprogression of the schedule followed by a substitution engine.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Affine map f_{u,b}(x) = u x + b mod 26 with u a unit of Z26 and b in 0..25.
+function AFFINE(u, b, x):
+    return (u*x + b) mod 26
+
+function AFFINE_INVERSE(u, b, y):               // requires gcd(u, 26) = 1
+    uinv = INVERSE_MOD(u, 26)                   // extended Euclid
+    return (uinv * (y - b)) mod 26              // f^{-1}(y) = u^{-1}(y - b)
+
+// apply (u2, b2) first, then (u1, b1)
+function COMPOSE((u1, b1), (u2, b2)):
+    return ((u1*u2) mod 26, (u1*b2 + b1) mod 26)
+
+// Affine position route: X_i = C_{(u i + d) mod n}, valid when gcd(u, n) = 1.
+function ROUTE_READ(C[0..n-1], u, d):
+    for i in 0..n-1:
+        X[i] = C[(u*i + d) mod n]
+    return X
+
+// Affine-lag filter: if k_i = a k_{i-L} + b then c_i - a c_{i-L} = (p_i - a
+// p_{i-L}) + b.
+function LAG_FILTER(c[0..n-1], a, L):
+    for i in L..n-1:
+        f[i-L] = (c[i] - a*c[i-L]) mod 26
+    return f
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-$|\mathrm{AGL}(1, \mathbb{Z}_{26})| = 312$. The lag screen runs $12 \times 40 = 480$ filters per text and alphabet order. The route family's cheap stage exhausts all units and cuts before polishing 96 endpoints; the schedule engine passed 112,216 arbitrary-acceleration recurrence checks in its known-answer test.
+$|\mathrm{AGL}(1, \mathbb{Z}_{26})| = 312$. The lag screen runs $12 \times 40 = 480$ filters per text and alphabet order. The route family's cheap stage exhausts all units and cuts before polishing 96 endpoints. The schedule engine passed 112,216 arbitrary-acceleration recurrence checks in its known-answer test.
 '''
 
 [[blocks]]
@@ -65,7 +96,7 @@ kind = "controls"
 body = '''
 Routes: 36 route inversions, three exhaustive cyclic-cut score comparisons and three algebraic rotation-gauge identities passed; held-out controls of 153, 144 and 504 letters (route plus periodic layer at periods 17, 16 and 28) recovered the exact cyclic plaintext class and round-tripped. Targets then gave no candidate: $-6.0616$ (153 letters) and $-6.4356$ (504 letters) failed the language gate, and the 144-letter endpoint lost to its nulls as above.
 
-Polynomial schedules: four full-length controls with accelerations 2, 7, 12 and 24 recovered the hidden plaintext at rank one with independent forwards (rates $-9.62$ to $-10.06$); three live seeds round-tripped but scored $-14.968$, $-14.932$, $-14.931$ against a frozen gate of $-12.5$ and disagreed on the best cell.
+Polynomial schedules: four full-length controls with accelerations 2, 7, 12 and 24 recovered the hidden plaintext at rank one with independent forwards (rates $-9.62$ to $-10.06$). Three live seeds round-tripped but scored $-14.968$, $-14.932$, $-14.931$ against a frozen gate of $-12.5$ and disagreed on the best cell.
 '''
 
 [[blocks]]

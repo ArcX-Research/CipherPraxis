@@ -37,19 +37,63 @@ exactly, including the COMMIT and the terminal.
 kind = "assumptions"
 body = '''
 - Semantic fields are deterministic (integer scores, pinned seeds, one thread or a scheduling-independent pool); elapsed time and memory are either kept out of the committed prefix or accepted as the only fields that may differ between runs.
-- The parser and the generator are separately pinned; a parser inside the generating source is a recorded deviation.
+- The parser and the generator are separately pinned. A parser inside the generating source is a recorded deviation.
 '''
 
 [[blocks]]
 kind = "attack"
 body = '''
-The design answers specific attacks found by audits: a fabricated transcript with plausible values passes structure, so admission replays the selector (seven "plausible-value" mutations were admitted by structure alone and rejected by replay); a permissive grammar admitted `1.00`, `-1E1`, key reorder and unicode escapes, so canonical re-serialisation is required; a post-write failure could leave success-shaped bytes, so nine exception paths were shown to leave the canonical path absent; and `str.splitlines()` admitted CRLF and a missing final newline, so whole-byte render equality was added.
+The design answers specific attacks found by audits: a fabricated transcript with plausible values passes structure, so admission replays the selector (seven "plausible-value" mutations were admitted by structure alone and rejected by replay). A permissive grammar admitted `1.00`, `-1E1`, key reorder and unicode escapes, so canonical re-serialisation is required. A post-write failure could leave success-shaped bytes, so nine exception paths were shown to leave the canonical path absent; and `str.splitlines()` admitted CRLF and a missing final newline, so whole-byte render equality was added.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Records in fixed order: HEADER, LINEAGE/PINS, RELEASE, GATES, METHOD,
+// MODEL, REGISTRY, BANK, CASE x n (or FIXTURE x n), SUMMARY, COMMIT,
+// terminal; each record = fixed prefix + canonical JSON line.
+function RENDER(records, terminal):
+    prefix_bytes = ""
+    for each record from HEADER through SUMMARY:
+        // sorted keys, no whitespace
+        prefix_bytes = prefix_bytes + PFX + " " + canonical_json(record) + LF
+    commit = {evidence_sha256: SHA256(prefix_bytes), evidence_record_count:
+            number of records so far}
+    // final_bytes
+    return prefix_bytes + PFX + " COMMIT " + canonical_json(commit) + LF +
+            terminal + LF
+
+procedure DURABLE_WRITE(temp_path, canonical_path, final_bytes):
+    fd = open(temp_path, O_CREAT | O_EXCL | O_NOFOLLOW, mode 0600)
+    require fstat(fd) is a regular file with one link
+    write all of final_bytes to fd; fsync(fd)
+    seek fd to 0; data = read everything back through the same fd
+    // whole-byte equality
+    require STRICT_PARSE(data) succeeds and data == RENDER(parsed rows)
+    hard-link temp_path to canonical_path; unlink temp_path; fsync(directory)
+    require the no-follow stat of canonical_path gives the expected (dev,
+            ino, mode, nlink)
+    // any failure after the attempt marker: append INCOMPLETE, never unlink
+
+function STRICT_PARSE(data):
+    reject duplicate keys, NaN or Infinity, non-canonical serialisation,
+            bool-for-int, unknown or missing keys,
+           out-of-order records, wrong counts, hashes or censuses, ties
+                   inconsistent with the top set,
+           and any terminal not forced by the records
+    require SHA256(bytes from HEADER through the LF ending SUMMARY) ==
+            COMMIT.evidence_sha256
+    // admission then regenerates the rows from fixed inputs and requires
+    // render == bytes on disk
+    return rows
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-A 34-case transcript with full maps and permutations was 4,051,007 bytes (cap 32 MiB) and was parsed three times in memory and once from the retained descriptor within a 1,200 s wall budget; a 24-fixture controls transcript was 178,969 bytes with 30 records.
+A 34-case transcript with full maps and permutations was 4,051,007 bytes (cap 32 MiB) and was parsed three times in memory and once from the retained descriptor within a 1,200 s wall budget. A 24-fixture controls transcript was 178,969 bytes with 30 records.
 '''
 
 [[blocks]]

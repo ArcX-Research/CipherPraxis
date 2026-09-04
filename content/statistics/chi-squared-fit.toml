@@ -19,7 +19,7 @@ $$\chi^2 = \sum_{x} \frac{(O_x - n p_x)^2}{n p_x}, \qquad \frac{\chi^2}{n} = \su
 
 where $f_x = O_x/n$. Under the hypothesis that the letters are independent draws from $p$, $\chi^2$ is approximately chi-squared distributed with $25$ degrees of freedom when every $n p_x$ is large enough. The normalised form $\chi^2/n$ does not depend on $n$ under the alternative, which is why it serves as a gate at any length.
 
-**Reference levels (English $p$).** An English letter multiset reads $\chi^2/n \approx 0.10$; a periodic substitution flattens the histogram to $0.6$–$1.0$ and more, the raw values on the seven solved reference ciphertexts being $2.4$–$3.3$; an imperfect peel (one or two cosets wrong) reads $0.2$–$0.45$.
+**Reference levels (English $p$).** An English letter multiset reads $\chi^2/n \approx 0.10$. A periodic substitution flattens the histogram to $0.6$–$1.0$ and more, the raw values on the seven solved reference ciphertexts being $2.4$–$3.3$. An imperfect peel (one or two cosets wrong) reads $0.2$–$0.45$.
 '''
 
 [[blocks]]
@@ -34,7 +34,7 @@ over 52 rotations. The gate used in the cascade solver is
 
 $$\chi^2_{\min}/n \le 0.35 \quad\text{or}\quad \big(\chi^2_{\min}/n \le 0.50 \text{ and } \operatorname{IC} \ge 0.058\big).$$
 
-For a per-coset peel of a period-$p$ layer, each coset's shift is the $\operatorname{argmin}$ over 26 shifts of the coset's $\chi^2$; the peel is scored by the $\chi^2/n$ of the reassembled text. A two-period scan over composite keys $k_i = a_{i \bmod p} + b_{i \bmod q}$ uses the penalised criterion $\chi^2 + 0.65 \ln(n)\,(p+q)$, a BIC-like charge for the $p+q$ free shifts.
+For a per-coset peel of a period-$p$ layer, each coset's shift is the $\operatorname{argmin}$ over 26 shifts of the coset's $\chi^2$. The peel is scored by the $\chi^2/n$ of the reassembled text. A two-period scan over composite keys $k_i = a_{i \bmod p} + b_{i \bmod q}$ uses the penalised criterion $\chi^2 + 0.65 \ln(n)\,(p+q)$, a BIC-like charge for the $p+q$ free shifts.
 '''
 
 [[blocks]]
@@ -49,8 +49,8 @@ body = '''
 kind = "assumptions"
 body = '''
 - Expected counts should not be tiny: at $n = 63$ the letters J, Q, X, Z expect fewer than one occurrence each, and their terms dominate $\chi^2$. Pool rare letters, or prefer the multinomial log-likelihood, when the text is short.
-- The reference distribution must be the plaintext language's; a peaked non-prose plaintext (lists, spelled numbers) fails the English gate legitimately.
-- The gate's thresholds were set on solved reference ciphertexts of 224–350 letters and their peels; they are not a universal constant.
+- The reference distribution must be the plaintext language's. A peaked non-prose plaintext (lists, spelled numbers) fails the English gate legitimately.
+- The gate's thresholds were set on solved reference ciphertexts of 224–350 letters and their peels. They are not a universal constant.
 '''
 
 [[blocks]]
@@ -58,30 +58,69 @@ kind = "attack"
 title = "How to attack it"
 body = '''
 1. **Transposition decision.** If $\chi^2_{\min}/n$ is small while the text does not read, the letter multiset is intact: solve for order (width scans, columnar keys) before touching substitution.
-2. **Order-free peel.** When a transposition may sit *below* a periodic layer, quadgrams of the peeled text are meaningless (see [quadgram log-likelihood](/statistics/quadgram-log-likelihood)); the per-coset $\chi^2$ peel is the correct objective, and the peel is accepted only if its reassembled histogram passes the gate.
+2. **Order-free peel.** When a transposition may sit *below* a periodic layer, quadgrams of the peeled text are meaningless (see [quadgram log-likelihood](/statistics/quadgram-log-likelihood)). The per-coset $\chi^2$ peel is the correct objective, and the peel is accepted only if its reassembled histogram passes the gate.
 3. **Composite periods.** Scan pairs $(p,q)$ with the penalised criterion; fire only if the winning peel's monograms pass the gate.
 4. **Change points.** Use the two-sample form to find where the letter set changes, then treat the segments separately.
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// O[x] = observed count of letter x, n = total letters, p[x] = reference
+// distribution.
+function CHI2(O[0..25], p[0..25]):
+    n = sum over x of O[x]
+    return sum over x of (O[x] - n * p[x])^2 / (n * p[x])
+
+// Histogram of the text after a Caesar rotation by r in alphabet order A
+// (straight or keyed): the letter at A-position i moves to A-position i - r.
+function ROTATE(O, A, r):
+    for x in 0..25: R[A[(POS_A(x) - r) mod 26]] = O[x]
+    return R
+
+// Rotation-minimised misfit over the 52 rotations, and the transposition gate
+// built on it.
+function CHI2_MIN(c[0..n-1], p):
+    O = HISTOGRAM(c)
+    return min over A in {straight, keyed}, r in 0..25 of CHI2(ROTATE(O, A,
+            r), p)
+
+function TRANSPOSITION_GATE(c[0..n-1], p):
+    m = CHI2_MIN(c, p) / n
+    return m <= 0.35 or (m <= 0.50 and IC(c) >= 0.058)
+
+// Per-coset peel of a period-q layer: each coset takes the shift that
+// minimises its chi-squared; the peel is scored by the chi-squared/n of the
+// reassembled text and must pass the gate.
+function CHI2_PEEL(c[0..n-1], q, p):
+    for b in 0..q-1:
+        O_b = HISTOGRAM([c[i] for i in 0..n-1 if i mod q == b])
+        s[b] = argmin over r in 0..25 of CHI2(ROTATE(O_b, straight, r), p)
+    for i in 0..n-1: peeled[i] = (c[i] - s[i mod q]) mod 26
+    return s, CHI2(HISTOGRAM(peeled), p) / n
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-$O(26)$ per histogram; the 52-rotation minimisation is $O(52 \cdot 26)$; a per-coset peel is $O(26\,p \cdot 26)$; the two-period scan over $2 \le p < q \le 10$ with coordinate descent is a few thousand histogram evaluations.
+$O(26)$ per histogram. The 52-rotation minimisation is $O(52 \cdot 26)$. A per-coset peel is $O(26\,p \cdot 26)$. The two-period scan over $2 \le p < q \le 10$ with coordinate descent is a few thousand histogram evaluations.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Rare-letter dominance.** For a flat histogram the term for Z alone contributes about $(1/26 - 0.00074)^2 / 0.00074 \approx 1.9$ to $\chi^2/n$; a single unlucky rare letter in a 60-letter text moves the statistic by a large fraction of the gate.
-- **Selection inside the gate.** The minimum over 52 rotations is itself a selection; the thresholds were calibrated on the minimised statistic, so a per-rotation critical value must not be substituted.
-- **Order blindness.** Like the IC, $\chi^2$ cannot see a transposition; it only certifies that the multiset is English.
-- **Maximised change points.** The best split $t$ must be judged against a max-over-$t$ null; a fixed-$t$ critical value overstates significance.
+- **Rare-letter dominance.** For a flat histogram the term for Z alone contributes about $(1/26 - 0.00074)^2 / 0.00074 \approx 1.9$ to $\chi^2/n$. A single unlucky rare letter in a 60-letter text moves the statistic by a large fraction of the gate.
+- **Selection inside the gate.** The minimum over 52 rotations is itself a selection. The thresholds were calibrated on the minimised statistic, so a per-rotation critical value must not be substituted.
+- **Order blindness.** Like the IC, $\chi^2$ cannot see a transposition. It only certifies that the multiset is English.
+- **Maximised change points.** The best split $t$ must be judged against a max-over-$t$ null. A fixed-$t$ critical value overstates significance.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-On the seven solved reference ciphertexts pushed through the cascade solver, the raw texts read $\chi^2/n = 2.41$–$3.26$ (gate quiet) and the correctly peeled residues $0.061$–$0.142$ with IC $0.0567$–$0.0709$ (gate fires); the single-columnar width scans that followed read the single-transposition references at quadgram rates $-4.11$ to $-4.27$, while the double-transposition reference needed the double-columnar escalation. The gate never fired on a text that still carried a substitution layer.
+On the seven solved reference ciphertexts pushed through the cascade solver, the raw texts read $\chi^2/n = 2.41$–$3.26$ (gate quiet) and the correctly peeled residues $0.061$–$0.142$ with IC $0.0567$–$0.0709$ (gate fires). The single-columnar width scans that followed read the single-transposition references at quadgram rates $-4.11$ to $-4.27$, while the double-transposition reference needed the double-columnar escalation. The gate never fired on a text that still carried a substitution layer.
 '''
 
 [[blocks]]

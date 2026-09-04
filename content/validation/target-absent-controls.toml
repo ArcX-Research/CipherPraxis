@@ -26,7 +26,7 @@ Independent audits check these properties **transitively**: a lane that imports 
 [[blocks]]
 kind = "assumptions"
 body = '''
-- Generic corpus material and previously recorded measurements may enter; the live ciphertext may not. The program allows target-derived *constants* (a boundary position measured earlier, an alphabet order) but records them as oracle-supplied parameters that the controls never search over.
+- Generic corpus material and previously recorded measurements may enter. The live ciphertext may not. The program allows target-derived *constants* (a boundary position measured earlier, an alphabet order) but records them as oracle-supplied parameters that the controls never search over.
 - Isolation is a property of bytes, not of intent. The audit rehashes the files and reads the imports rather than trusting the creator's note.
 '''
 
@@ -34,9 +34,52 @@ body = '''
 kind = "attack"
 title = "What isolation buys"
 body = '''
-1. **No target-conditioned tuning.** Thresholds, restart schedules and beam widths are frozen from disclosed calibration before any target read, so a later readable output cannot be an artefact of tuning until something looked like English.
+1. **Do not tune on the target.** Set thresholds, restart schedules, and beam widths from disclosed calibration before reading the target. A later readable result then cannot come from changing settings only after something looked like English.
 2. **Publishable power.** Because nothing secret entered, the control transcript, its seeds and its fixtures can be replayed by anyone.
-3. **A clean handover.** The one-shot target successor is a separate, separately audited artefact that pins the target-absent lane by hash. The target is read exactly once, after a durable attempt marker is written (see [Blind controls](/validation/blind-controls)).
+3. **Use a clean handover.** Put the one-shot target run in a separate, independently audited file that pins the target-absent lane by hash. Read the target exactly once, after writing a durable attempt marker (see [Blind controls](/validation/blind-controls)).
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Inputs: the exact frozen bytes of source, parser and runner, the declared
+// import allow-list, and the frozen predecessors the source imports. Output:
+// ISOLATED or NOT_ISOLATED; only an isolated lane is sealed, audited and
+// released.
+function IS_TARGET_ABSENT(source, parser, runner, allow_list, predecessors):
+    // no module that can load a live text
+    if IMPORTS(source) != allow_list: return NOT_ISOLATED
+    for file in [source, parser, runner]:
+        if HAS_LONG_UPPERCASE_LITERAL(file): return NOT_ISOLATED
+        if HAS_LOADER_NAME_OR_TARGET_FILE_TOKEN(file): return NOT_ISOLATED
+    for flag in ["--target", "--live", "--solve"] + production_basenames:
+        if not REFUSES(runner, flag): return NOT_ISOLATED
+    if not (transcript, manifest and release carry target = "ABSENT"):
+        return NOT_ISOLATED
+    // isolation is inherited transitively
+    for pred in predecessors:
+        if not AUDITED_TO_SAME_STANDARD(pred): return NOT_ISOLATED
+    return ISOLATED
+
+function ISOLATION_KAT(source, parser, runner):
+    // the check must itself be able to fail; refusals are counted
+    assert IS_TARGET_ABSENT(source + loader_import, ...) == NOT_ISOLATED
+    assert IS_TARGET_ABSENT(source + long_uppercase_literal, ...) ==
+            NOT_ISOLATED
+
+function LANE(design):
+    // target never read
+    set thresholds, restart schedules and beam widths from disclosed
+            calibration
+    freeze bytes
+    require IS_TARGET_ABSENT(...) == ISOLATED
+    independent audit
+    publish control power
+    // handover: a separate, independently audited file pins this lane by
+    // hash, writes a durable attempt marker, then reads the target exactly
+    // once
+```
 '''
 
 [[blocks]]
@@ -48,9 +91,9 @@ Isolation costs engineering time, not compute: an allow-list KAT, a forbidden-st
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Accidental exposure.** A broad metadata search displayed archived target fields to a reviewer; the review recorded that it could no longer claim strict blind isolation and could not itself authorise a later target run.
-- **Oracle parameters hidden in "controls".** Plants generated with the target-measured boundary and period never test the selector's behaviour when those are wrong; the program's audit lists such parameters explicitly and marks the corresponding power as within-family only.
-- **A transcript that must carry the target.** A one-shot target transcript needs the ciphertext for loader-free replay; the program flags that such a file will trip other lanes' forbidden-string scans and says so in its note.
+- **Accidental exposure.** A broad metadata search displayed archived target fields to a reviewer. The review recorded that it could no longer claim strict blind isolation and could not itself authorise a later target run.
+- **Oracle parameters hidden in "controls".** Plants generated with the target-measured boundary and period never test the selector's behaviour when those are wrong. The program's audit lists such parameters explicitly and marks the corresponding power as within-family only.
+- **A transcript that must carry the target.** A one-shot target transcript needs the ciphertext for loader-free replay. The program flags that such a file will trip other lanes' forbidden-string scans and says so in its note.
 '''
 
 [[blocks]]

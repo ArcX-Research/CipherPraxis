@@ -19,14 +19,14 @@ $$\rho(i) = (r-1) - \big|\,\big((i+o) \bmod 2(r-1)\big) - (r-1)\,\big|,$$
 
 counted from the top rail. For $r = 3$ the rails of positions $0, 1, 2, 3, 4, \dots$ are $0, 1, 2, 1, 0, \dots$
 
-The ciphertext lists all positions on rail 0 in order, then rail 1, and so on; the permutation $q$ with $c_j = p_{q[j]}$ depends only on $(n, r, o)$.
+The ciphertext lists all positions on rail 0 in order, then rail 1, and so on. The permutation $q$ with $c_j = p_{q[j]}$ depends only on $(n, r, o)$.
 '''
 
 [[blocks]]
 kind = "equations"
 title = "Key space and structure"
 body = '''
-For a text of $n$ letters there are at most $\sum_{r=2}^{r_{\max}} 2(r-1)$ distinct $(r, o)$ pairs, 1,560 for $r \le 40$; each is a fixed permutation that can be precomputed. Under a period-$m$ additive layer applied after the fence, the coset residue of ciphertext position $j$ is $j \bmod m$, while the plaintext neighbour structure is recovered by undoing $q$; the sweep therefore decrypts the periodic layer first for each candidate $q$ and scores the un-fenced text.
+For a text of $n$ letters there are at most $\sum_{r=2}^{r_{\max}} 2(r-1)$ distinct $(r, o)$ pairs, 1,560 for $r \le 40$. Each is a fixed permutation that can be precomputed. Under a period-$m$ additive layer applied after the fence, the coset residue of ciphertext position $j$ is $j \bmod m$, while the plaintext neighbour structure is recovered by undoing $q$. The sweep therefore decrypts the periodic layer first for each candidate $q$ and scores the un-fenced text.
 '''
 
 [[blocks]]
@@ -41,7 +41,7 @@ body = '''
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- Histogram and index of coincidence are preserved; only positions move.
+- Histogram and index of coincidence are preserved. Only positions move.
 - Invariant: rail lengths are fixed by $(n, r, o)$, so a candidate $(r, o)$ is either exactly right or wrong; there is no partial credit.
 '''
 
@@ -51,19 +51,54 @@ title = "How to attack it"
 body = '''
 1. Precompute the permutation for every $(r, o)$.
 2. For each, undo the fence (and, in the layered model, fit the periodic key on the un-fenced text in both alphabet orders and relations), score by quadgrams, and polish the best few.
-3. Compare the best rate against the sweep's own distribution; a real solution reads as English at once.
+3. Compare the best rate against the sweep's own distribution. A real solution reads as English at once.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// r rails and offset o; the zigzag has period 2(r - 1). RAIL(i) is the rail
+// of plaintext position i.
+function RAIL(i, r, o):
+    return (r - 1) - abs(((i + o) mod (2 * (r - 1))) - (r - 1))
+
+// q[j] = plaintext position of ciphertext letter j
+function PERMUTATION(n, r, o):
+    q = empty
+    for rail in 0..r-1:
+        for i in 0..n-1:
+            if RAIL(i, r, o) == rail: append i to q
+    return q
+
+function ENCRYPT(p[0..n-1], r, o):
+    q = PERMUTATION(n, r, o)
+    for j in 0..n-1:
+        c[j] = p[q[j]]
+    return c
+
+function DECRYPT(c[0..n-1], r, o):
+    q = PERMUTATION(n, r, o)
+    for j in 0..n-1:
+        p[q[j]] = c[j]
+    return p
+
+// Attack: precompute q for every (r, o), undo the fence (and fit any periodic
+// layer on the un-fenced text), score by quadgrams; a candidate (r, o) is
+// either exactly right or wrong.
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-1,560 permutations for rails 2-40, each requiring one decrypt and score (or a small periodic fit); the whole family costs seconds and was run alongside 192,853 permutations of other types in about ten minutes.
+1,560 permutations for rails 2-40, each requiring one decrypt and score (or a small periodic fit). The whole family costs seconds and was run alongside 192,853 permutations of other types in about ten minutes.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Wrong offset.** A neighbouring offset yields a nearly right but unreadable text (the control's second-best entries at offsets 3 and 7 matched only 4-6%); the exact $(r, o)$ must be in the enumeration.
+- **Wrong offset.** A neighbouring offset yields a nearly right but unreadable text (the control's second-best entries at offsets 3 and 7 matched only 4-6%). The exact $(r, o)$ must be in the enumeration.
 - **Layered keys.** With a key change inside the periodic layer, the fit of the layer dominates the cost and its own polish is required.
 '''
 

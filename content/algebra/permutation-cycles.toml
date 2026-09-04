@@ -13,22 +13,22 @@ updated = "2026-09-04"
 [[blocks]]
 kind = "definition"
 body = '''
-A permutation $\pi$ of a finite set decomposes uniquely into disjoint cycles; the multiset of cycle lengths is its **cycle type**, and the order of $\pi$ is the lcm of the lengths. Conjugation $\sigma^{-1}\pi\sigma$ relabels the elements and preserves the cycle type. An $n$-cycle has a single cycle of length $n$; its power $\pi^k$ splits into $\gcd(n,k)$ cycles of length $n/\gcd(n,k)$, so for $n = 26$ the only cycle lengths of a power of a 26-cycle are $26, 13, 2$ and $1$.
+A permutation $\pi$ of a finite set decomposes uniquely into disjoint cycles. The multiset of cycle lengths is its **cycle type**, and the order of $\pi$ is the lcm of the lengths. Conjugation $\sigma^{-1}\pi\sigma$ relabels the elements and preserves the cycle type. An $n$-cycle has a single cycle of length $n$; its power $\pi^k$ splits into $\gcd(n,k)$ cycles of length $n/\gcd(n,k)$, so for $n = 26$ the only cycle lengths of a power of a 26-cycle are $26, 13, 2$ and $1$.
 '''
 
 [[blocks]]
 kind = "equations"
 body = '''
-- **Rotations.** $\tau_k(x) = x + k$ on $\mathbb{Z}_{26}$ is a 26-cycle iff $\gcd(k, 26) = 1$; two 13-cycles for even $k \ne 0$; thirteen transpositions for $k = 13$.
+- **Rotations.** $\tau_k(x) = x + k$ on $\mathbb{Z}_{26}$ is a 26-cycle iff $\gcd(k, 26) = 1$. Two 13-cycles for even $k \ne 0$; thirteen transpositions for $k = 13$.
 - **Keyed additive alphabet as a conjugate.** With coordinate function $z$, decryption under shift $k$ is $w = z^{-1}\tau_{-k}z$ (and encryption $z^{-1}\tau_k z$); $w$ has the cycle type of $\tau_k$. Several classes with shifts $ek$ are the powers $w^e = z^{-1}\tau_{-ek}z$ of one cycle.
-- **Reflections.** $\rho_k(x) = k - x$ is an involution with two fixed points when $k$ is even and none when $k$ is odd, and $\rho_k \rho_h = \tau_{k-h}$. In a common-cycle Beaufort-type system every $T_g = f_g f_0$ (two class maps composed) is a rotation of one cycle; all $T_g$ commute, $T_g T_h^{-1} = f_g f_h$, and their cycle lengths lie in $\{1, 2, 13, 26\}$.
+- **Reflections.** $\rho_k(x) = k - x$ is an involution with two fixed points when $k$ is even and none when $k$ is odd, and $\rho_k \rho_h = \tau_{k-h}$. In a common-cycle Beaufort-type system every $T_g = f_g f_0$ (two class maps composed) is a rotation of one cycle. All $T_g$ commute, $T_g T_h^{-1} = f_g f_h$, and their cycle lengths lie in $\{1, 2, 13, 26\}$.
 - **One-cycle extension.** An injective partial map on fewer than 26 letters extends to a single 26-cycle iff its functional graph contains no closed directed cycle (a fixed point is the length-one case). Its components are then directed paths; $m$ paths can be joined into one cycle in $(m-1)!$ rotation-inequivalent ways.
 '''
 
 [[blocks]]
 kind = "assumptions"
 body = '''
-- One shared cycle $z$ across the classes considered; each class differs only by its shift (Vigenère-type) or reflection constant (Beaufort-type).
+- One shared cycle $z$ across the classes considered. Each class differs only by its shift (Vigenère-type) or reflection constant (Beaufort-type).
 - The one-cycle property needs a unit shift; even shifts split the map into two 13-cycles and the completion count changes.
 '''
 
@@ -37,15 +37,58 @@ kind = "attack"
 title = "Prefix conjugacy lift"
 body = '''
 1. Under the unit gauge the shift of a single-class prefix is normalised to $k = 1$, so the prefix decryption map $w$ is a **direct** partial monoalphabetic map: each new cipher symbol adds one edge, and assigning an edge changes one plaintext letter class rather than acting twice through $z$.
-2. A language beam extends the map symbol by symbol; every extension is filtered by the one-cycle test (necessary and sufficient), so the frontier holds only extendible maps.
+2. A language beam extends the map symbol by symbol. Every extension is filtered by the one-cycle test (necessary and sufficient), so the frontier holds only extendible maps.
 3. With 19 distinct symbols in a 40-letter prefix the retained map has seven path components; joining them gives $(7-1)! = 720$ completions, each determining $z$ up to the affine gauge.
 4. Later text enciphered under other powers of the same cycle is verifier material: the class exponents are refitted exactly ($26^3$ for three classes), candidates are ranked, and independent forwards are required.
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Cycle decomposition of a permutation pi of a finite set X.
+function CYCLES(pi):
+    cycles = []; seen = empty set
+    for x in X (in a fixed order):
+        if x in seen: continue
+        cyc = []; y = x
+        while y not in seen: add y to seen; cyc.append(y); y = pi[y]
+        cycles.append(cyc)
+    // cycle type = multiset of the lengths
+    return cycles
+
+// Conjugate w = z^{-1} tau z: tau relabelled through the coordinate map z;
+// same cycle type.
+function CONJUGATE(z, tau):
+    for each letter x: w[x] = z^{-1}[ tau[ z[x] ] ]
+    return w
+// Keyed additive class map with shift k: tau_k(t) = t + k mod 26, so w =
+// CONJUGATE(z, tau_k).
+
+// One-cycle extension test for an injective partial map f on fewer than 26
+// letters: f extends to a single 26-cycle iff its functional graph has no
+// closed directed cycle.
+function EXTENDS_TO_ONE_CYCLE(f):
+    for each x in domain(f):
+        y = f[x]
+        while y in domain(f):
+            // closed cycle (a fixed point is length one)
+            if y == x: return false
+            y = f[y]
+    return true
+
+// f passes EXTENDS_TO_ONE_CYCLE
+function COMPLETION_COUNT(f):
+    m = number of directed-path components of f
+    // rotation-inequivalent ways to join the paths
+    return (m - 1)!
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-$(m-1)!$ completions of an $m$-component map: 720 for $m = 7$. The prefix stage used a 100,000-state bidirectional beam; the end-to-end stage deduplicated 5,000 partial maps and, in the live run, enumerated $5{,}000 \times 720 = 3{,}600{,}000$ one-cycle completions and independently replayed all 256 emitted candidates.
+$(m-1)!$ completions of an $m$-component map: 720 for $m = 7$. The prefix stage used a 100,000-state bidirectional beam. The end-to-end stage deduplicated 5,000 partial maps and, in the live run, enumerated $5{,}000 \times 720 = 3{,}600{,}000$ one-cycle completions and independently replayed all 256 emitted candidates.
 '''
 
 [[blocks]]
@@ -53,14 +96,14 @@ kind = "failure_modes"
 body = '''
 - **The beam loses the truth before its first word completes.** Minimum edge-radius of the truth over the two frontiers, 64 fixtures: radius 0 in 32, then 1:2, 2:6, 3:1, 4:3, 5:4, 6:2, 8:7, 9:3, 10:2, 11:2 — bimodal, so a live miss cannot reject the model. The largest directional rank at which a retained truth survived was 18,205.
 - **Independent optimisation of the class involutions.** A component beam that optimised seven suffix reflections independently admitted an enormous false population: on its first unseen holdout the truth fell to rank 85,690 by raw quadgram at depth 5 and the selected wrong endpoint still round-tripped as a valid family member.
-- **Geometry errors.** Early controls scored a nine-letter bridge region that no measurement licensed; the corrected controls score only the measured zones and carry the bridge in a neutral gauge.
+- **Geometry errors.** Early controls scored a nine-letter bridge region that no measurement licensed. The corrected controls score only the measured zones and carry the bridge in a neutral gauge.
 - **Aliases versus ties.** Parameter aliases that yield the same plaintext must be distinguished from ties between distinct plaintexts.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Completion in isolation (true 19-edge map supplied): 64/64 disjoint 144-letter controls recovered the exact cycle, three suffix shifts, all plaintext letters and an independent forward within the emitted shortlist; rank one in 63/64, rank two once; worst bigram-proxy rank 3. Corrected end-to-end panel: exact solution emitted in 40/64 (62.5 %), rank one in 39/64; the prefix map was in the bank in 32/64 and repair recovered eight further cases. Live one-shot run: 3,600,000 completions, rank-one rate $-5.407562$ (train model), visibly non-English, terminal INCONCLUSIVE_POWER_LIMITED. Discriminability of a second 63-letter text under seven free powers of the same cycle: 8/8 true cycles ranked first among 10,001, minimum $z$ 7.6945, median 11.4502, AUC 1.0. The component-beam Beaufort decoder recovered its development fixture exactly (truth rank 1 from depth 11) but failed closed on its first unseen holdout.
+Completion in isolation (true 19-edge map supplied): 64/64 disjoint 144-letter controls recovered the exact cycle, three suffix shifts, all plaintext letters and an independent forward within the emitted shortlist; rank one in 63/64, rank two once; worst bigram-proxy rank 3. Corrected end-to-end panel: exact solution emitted in 40/64 (62.5 %), rank one in 39/64. The prefix map was in the bank in 32/64 and repair recovered eight further cases. Live one-shot run: 3,600,000 completions, rank-one rate $-5.407562$ (train model), visibly non-English, terminal INCONCLUSIVE_POWER_LIMITED. Discriminability of a second 63-letter text under seven free powers of the same cycle: 8/8 true cycles ranked first among 10,001, minimum $z$ 7.6945, median 11.4502, AUC 1.0. The component-beam Beaufort decoder recovered its development fixture exactly (truth rank 1 from depth 11) but failed closed on its first unseen holdout.
 '''
 
 [[blocks]]
@@ -77,7 +120,7 @@ Joining paths: components $A \to B$, $C \to D$, $E \to F$ close into $(A\,B\,C\,
 [[blocks]]
 kind = "notes"
 body = '''
-The same identities serve as pruning rules in exact depth-first solvers: Vigenère-type class maps must be restrictions of rotations of one cycle, Beaufort-type maps restrictions of reflections, and pair products rotations; a first return of length one is explicitly allowed when classes are tied. Word-level solvers keep the injective residue maps, rotation and reflection identities and the all-different endpoint as invariants.
+The same identities serve as pruning rules in exact depth-first solvers: Vigenère-type class maps must be restrictions of rotations of one cycle, Beaufort-type maps restrictions of reflections, and pair products rotations. A first return of length one is explicitly allowed when classes are tied. Word-level solvers keep the injective residue maps, rotation and reflection identities and the all-different endpoint as invariants.
 '''
 
 [[provenance]]

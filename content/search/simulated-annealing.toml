@@ -27,7 +27,7 @@ for t in 0 .. N-1:
 return best
 ```
 
-The **batch form** keeps $N_c$ chains as rows of an array; each step proposes one move per row, scores all rows in one vectorised decrypt, and accepts per row. Every (crib, offset, relation, restart) combination becomes one chain, so the whole placement sweep is one array computation.
+The **batch form** keeps $N_c$ chains as rows of an array. Each step proposes one move per row, scores all rows in one vectorised decrypt, and accepts per row. Every (crib, offset, relation, restart) combination becomes one chain, so the whole placement sweep is one array computation.
 '''
 
 [[blocks]]
@@ -43,7 +43,7 @@ Objective used throughout the corpus: the quadgram log-likelihood rate of the de
 
 $$\operatorname{rate}(p) = \frac{1}{n-3}\sum_{i=0}^{n-4} \log_{10} q_4(p_i p_{i+1} p_{i+2} p_{i+3}),$$
 
-with $q_4$ an add-$0.01$ smoothed quadgram table from a generic corpus. English scores near $-4.3$ per letter, a random-key decrypt near $-6.5$; a verdict threshold sits $0.7$ below the English reference.
+with $q_4$ an add-$0.01$ smoothed quadgram table from a generic corpus. English scores near $-4.3$ per letter, a random-key decrypt near $-6.5$. A verdict threshold sits $0.7$ below the English reference.
 '''
 
 [[blocks]]
@@ -60,9 +60,45 @@ kind = "attack"
 title = "How to attack it"
 body = '''
 - **Squares over a fixed inner text.** A 5x5 square (Bifid, Playfair) is annealed with the outer periodic layer held fixed: moves are letter swaps (85%), row swaps (5%), column swaps (5%) and a transpose or flip (5%); schedule $T_0 = 12 \to T_1 = 0.08$ over $10^6$ steps, six restarts, best-of-restarts reported.
-- **One-sided unknown alphabet with a crib.** A contiguous crib of at least the period pins every shift, so only the alphabet is annealed (swap or insertion moves); the best chain per placement is finished by an exhaustive 925-neighbour polish and the top placements are re-annealed with more restarts.
-- **Transposition orders under a class solver.** Column orders of widths 10-20 are annealed with a mixed move set (swap 35%, insertion 30%, segment reversal 15%, rotation 10%, relabelling 10%), six restarts of 1,500 steps, then 40 rounds of iterated local search (a three-move kick, a 300-step anneal, a full-neighbourhood finish); the energy is the class solver's quadgram score after refitting all shifts.
+- **One-sided unknown alphabet with a crib.** A contiguous crib of at least the period pins every shift, so only the alphabet is annealed (swap or insertion moves). The best chain per placement is finished by an exhaustive 925-neighbour polish and the top placements are re-annealed with more restarts.
+- **Transposition orders under a class solver.** Column orders of widths 10-20 are annealed with a mixed move set (swap 35%, insertion 30%, segment reversal 15%, rotation 10%, relabelling 10%), six restarts of 1,500 steps, then 40 rounds of iterated local search (a three-move kick, a 300-step anneal, a full-neighbourhood finish). The energy is the class solver's quadgram score after refitting all shifts.
 - **Nulls.** The identical pipeline is run on shuffled ciphertexts; wrong-placement medians of $-6.0$ to $-6.2$ and maxima of $-5.5$ to $-5.9$ are the reference against which a target row is read.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// State space S, objective E(s) to be maximised, move operator m(s) giving a
+// random neighbour. Schedule T_0 > T_1 over N steps: geometric cooling, so
+// log T falls linearly in t.
+function ANNEAL(E, m, T_0, T_1, N):
+    s = random state in S; best = s
+    for t in 0..N-1:
+        T = T_0 * (T_1 / T_0)^(t / N)
+        s' = m(s)
+        d = E(s') - E(s)
+        // Metropolis acceptance, min(1, e^(d/T))
+        if d > 0 or U(0,1) < exp(d / T):
+            s = s'
+            if E(s) > E(best): best = s
+    return best
+
+// Batch form: N_c chains as rows of one array; one proposal per row, one
+// vectorised decrypt-and-score of all rows, per-row acceptance under the same
+// rule and schedule.
+function ANNEAL_BATCH(E, m, T_0, T_1, N, N_c):
+    S = N_c random states (one row per chain); best = S
+    for t in 0..N-1:
+        T = T_0 * (T_1 / T_0)^(t / N)
+        S' = m applied to every row
+        // one array call scores every chain
+        d = E(S') - E(S)
+        accept = (d > 0) or (U(0,1) per row < exp(d / T))
+        S[accept] = S'[accept]
+        best = row-wise better of best and S
+    return best                                   // one state per chain
+```
 '''
 
 [[blocks]]
@@ -96,13 +132,13 @@ Schedule $T_0 = 12$, $T_1 = 0.08$, $N = 10^6$. At the midpoint $t = N/2$:
 
 $$T = 12 \cdot (0.08/12)^{1/2} = \sqrt{12 \cdot 0.08} = \sqrt{0.96} \approx 0.98.$$
 
-A move that lowers the score by $\Delta = -1.0$ is accepted with probability $e^{-1/0.98} \approx 0.36$ at that point, with $e^{-1/12} \approx 0.92$ at the start, and with $e^{-1/0.08} \approx 3.7 \times 10^{-6}$ at the end. A swap move on the alphabet state `ZYXWVUTSRQPONMLKJIHGFEDCBA` at positions 0 and 25 yields `AYXWVUTSRQPONMLKJIHGFEDCBZ`; an insertion of position 0 after position 2 yields `YXZWVUTSRQPONMLKJIHGFEDCBA`. Both are permutations, so the state stays legal.
+A move that lowers the score by $\Delta = -1.0$ is accepted with probability $e^{-1/0.98} \approx 0.36$ at that point, with $e^{-1/12} \approx 0.92$ at the start, and with $e^{-1/0.08} \approx 3.7 \times 10^{-6}$ at the end. A swap move on the alphabet state `ZYXWVUTSRQPONMLKJIHGFEDCBA` at positions 0 and 25 yields `AYXWVUTSRQPONMLKJIHGFEDCBZ`. An insertion of position 0 after position 2 yields `YXZWVUTSRQPONMLKJIHGFEDCBA`. Both are permutations, so the state stays legal.
 '''
 
 [[blocks]]
 kind = "notes"
 body = '''
-The scalar routine is generic (state, energy, move, iterations, schedule); every solver passes its own move set. Batch annealing is followed by a deterministic polish and, on targets, by shuffled-text nulls: the polished score of the best null chain is the noise floor. The two-sided-alphabet limit motivated the exact methods in the constraint-programming section.
+The scalar routine is generic (state, energy, move, iterations, schedule). Every solver passes its own move set. Batch annealing is followed by a deterministic polish and, on targets, by shuffled-text nulls: the polished score of the best null chain is the noise floor. The two-sided-alphabet limit motivated the exact methods in the constraint-programming section.
 '''
 
 [[provenance]]

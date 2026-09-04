@@ -30,15 +30,15 @@ body = '''
 $$R(A) = \sum_b \max_{s,t} \sum_{i \equiv b} \ln P_2\big(A[a(c_i) - s],\, A[a(c_{i+1}) - t]\big),$$
 
 a deliberately optimistic upper relaxation (edge shifts need not agree) that is cheap enough for the whole bank on a GPU and ranked the hidden additive cycle 16th and the hidden reciprocal cycle 2nd.
-- Exact finish: for the top cycles, the exact cyclic order-3 quadgram dynamic programme over the per-residue shortlist restores one globally consistent 26-shift key, followed by an unrestricted polish; the forward encryption must reproduce the zone.
+- Exact finish: for the top cycles, the exact cyclic order-3 quadgram dynamic programme over the per-residue shortlist restores one globally consistent 26-shift key, followed by an unrestricted polish. The forward encryption must reproduce the zone.
 '''
 
 [[blocks]]
 kind = "assumptions"
 body = '''
-- The true cycle is in the bank; the negative excludes the bank, not arbitrary cycles.
+- The true cycle is in the bank. The negative excludes the bank, not arbitrary cycles.
 - The zone and period are right and the inner is language, so that bigrams and quadgrams carry signal.
-- The relaxation's rank of the truth is measured on blind controls at the pre-registered depth (32 fast, 128 full); a truth ranked below the depth is a miss, not a negative.
+- The relaxation's rank of the truth is measured on blind controls at the pre-registered depth (32 fast, 128 full). A truth ranked below the depth is a miss, not a negative.
 '''
 
 [[blocks]]
@@ -46,25 +46,77 @@ kind = "attack"
 title = "How to attack it"
 body = '''
 1. Build the bank from ciphertext only; canonicalise by rotation.
-2. Plant two blind controls: hidden bank cycles, random free keys, unseen generic plaintext; the identities are opened only after blind recovery, and a failed control blocks the target.
+2. Plant two blind controls: hidden bank cycles, random free keys, unseen generic plaintext. The identities are opened only after blind recovery, and a failed control blocks the target.
 3. Score the bank by evidence and by the relaxation; shortlist the top $L$ per relation.
 4. Finish each shortlisted cycle exactly; keep the best rate.
-5. Null: shuffle the zone within its cosets (every histogram, equality pattern and bank candidate preserved; adjacency destroyed) and rerun steps 3 and 4 in full; the family-wise maximum of each replicate is the reference. Accept only a readable, round-tripping finish that beats every null maximum.
+5. Null: shuffle the zone within its cosets (every histogram, equality pattern and bank candidate preserved; adjacency destroyed) and rerun steps 3 and 4 in full. The family-wise maximum of each replicate is the reference. Accept only a readable, round-tripping finish that beats every null maximum.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Zone ciphertext c[0..n-1], period p, source ciphertexts and grid reads for
+// the bank, language tables (E, bigrams P2, quadgrams), shortlist depth L, N
+// nulls.
+function BUILD_BANK(sources, grids):
+    // rotation-canonical: rotations are one hypothesis
+    bank = SET()
+    for stream in sources, their reversals and the column reads of grids, for
+            substring s of stream with |s| >= 3:
+        ADD(bank, ROTATE_TO_CANONICAL(letters of s in first-occurrence order
+                ++ the missing letters in straight or keyed order))
+    return bank
+
+// optimistic: the two edge shifts need not agree
+function RELAXED_BIGRAM(A, c, p):
+    return sum over b in 0..p-1 of max over (s, t) of sum over i with i mod p
+            == b of ln P2(A[(a(c[i]) - s) mod 26], A[(a(c[i+1]) - t) mod 26])
+
+// exact cyclic order-3 quadgram DP over the per-residue shortlist
+function FINISH(A, c, p, relation):
+    // one globally consistent 26-shift key
+    key = POLISH(CYCLIC_QUADGRAM_DP(c, A, relation, per-residue shift
+            shortlist), unrestricted)
+    // the forward must reproduce the zone
+    plain = DECRYPT(c, A, key, relation)
+    assert ENCRYPT(plain, A, key, relation) == c
+    return QUADGRAM_RATE(plain)
+
+function SELECT(c, p, bank, L):
+    for relation in {additive, reciprocal}:
+        // monogram evidence is computed too but is too weak to shortlist
+        shortlist = the top L of bank by RELAXED_BIGRAM(., c, p)
+        best[relation] = max over A in shortlist of FINISH(A, c, p, relation)
+    return max over relation of best[relation]
+
+function SHARED_CYCLE_ATTACK(c, p, sources, grids, L, N):
+    bank = BUILD_BANK(sources, grids)
+    for each of two blind controls (hidden bank cycle, random free key,
+            unseen generic plaintext):
+        // a failed control blocks the target
+        if SELECT(control, p, bank, L) does not recover it: stop
+    observed = SELECT(c, p, bank, L)
+    // histograms, equality pattern and bank preserved; adjacency destroyed
+    for r in 1..N: null[r] = SELECT(SHUFFLE_WITHIN_COSETS(c), p, bank, L)
+    return (observed, accepted only if the finish reads, round-trips and
+            observed > every null[r])
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-Bank construction: $O(\sum |s|^2)$ over source streams, 66,628 cycles. Relaxation: 26 edges $\times$ $26^2$ shift pairs per cycle, batched on a GPU. Exact finish: $8^{26}$ is not enumerated; the cyclic DP over a width-8 shortlist costs $O(p \cdot 8^4)$ per cycle. The full run (128 finishes per relation, 9 null replicates of the whole pipeline) took 764 s.
+Bank construction: $O(\sum |s|^2)$ over source streams, 66,628 cycles. Relaxation: 26 edges $\times$ $26^2$ shift pairs per cycle, batched on a GPU. Exact finish: $8^{26}$ is not enumerated. The cyclic DP over a width-8 shortlist costs $O(p \cdot 8^4)$ per cycle. The full run (128 finishes per relation, 9 null replicates of the whole pipeline) took 764 s.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Selection overfit.** The best of 256 exact finishes on a 126-letter zone reads "fragmented English" at $-4.87$; the same procedure on nine within-coset shuffles produced maxima of $-4.795, -4.819, -4.834, -4.879, -4.811, -4.849, -4.850, -4.835, -4.856$, eight of which beat the target (empirical upper-tail $p = 0.90$, $z = -1.37$). Without the full-pipeline null the candidate would have looked like a solution.
+- **Selection overfit.** The best of 256 exact finishes on a 126-letter zone reads "fragmented English" at $-4.87$. The same procedure on nine within-coset shuffles produced maxima of $-4.795, -4.819, -4.834, -4.879, -4.811, -4.849, -4.850, -4.835, -4.856$, eight of which beat the target (empirical upper-tail $p = 0.90$, $z = -1.37$). Without the full-pipeline null the candidate would have looked like a solution.
 - **Weak screens.** Monogram evidence cannot shortlist a cycle at this length.
 - **Bank scope.** "No solution in this cycle bank" is the only admissible negative.
-- **Blind shared alphabet.** Without a bank, a joint annealer over one alphabet shared by two zones (63 + 96 letters) reached 35% of the alphabet on a planted control (logs/32); an exact anchor-and-join formulation over complete word tokens exceeds ten million records after three anchors at algebraic rank 7 of 32 (token-anchor audit): both are power blockers, not family negatives.
+- **Blind shared alphabet.** Without a bank, a joint annealer over one alphabet shared by two zones (63 + 96 letters) reached 35% of the alphabet on a planted control (logs/32). An exact anchor-and-join formulation over complete word tokens exceeds ten million records after three anchors at algebraic rank 7 of 32 (token-anchor audit): both are power blockers, not family negatives.
 - **Corpus-window meets.** With a finite verbatim plaintext prior the shared-cycle relation between two zones becomes exact linear algebra over $\mathbb{Z}_{26}$ (gauge $z(A) = 0$, GF(2) and GF(13) nullspaces, CRT lift, all-different, unit-orbit canonical join), but the resulting negative would say nothing about paraphrased or original plaintext.
 '''
 

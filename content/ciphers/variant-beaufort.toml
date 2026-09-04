@@ -32,7 +32,7 @@ Vigenère and Variant are the same family with negated keys; Beaufort is the ref
 [[blocks]]
 kind = "variants"
 body = '''
-- **Interrupted key**: a periodic key whose index resets when a chosen interruptor letter appears in the plaintext or ciphertext; the program selected the reset strategy, the interruptor and the period blind.
+- **Interrupted key**: a periodic key whose index resets when a chosen interruptor letter appears in the plaintext or ciphertext. The program selected the reset strategy, the interruptor and the period blind.
 - **Slidefair (Variant)**: the digraphic slide with the Variant bottom-row rule $\operatorname{bottom}_k(j) = j - k$; see [Digraphic slide](/ciphers/digraphic-slide).
 - **Ciphertext autokey (Variant)**: $a(P_i) = x_i + x_{i-m}$ where $x$ is the ciphertext in an unknown order; see [Autokey](/ciphers/autokey).
 '''
@@ -42,34 +42,63 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - Same as Vigenère: periodic key, one alphabet order, language-like plaintext.
-- Invariant: a Variant key is not distinguishable from a Vigenère key unless the key is required to spell a word; only word-key hypotheses separate the two.
+- Invariant: a Variant key is not distinguishable from a Vigenère key unless the key is required to spell a word. Only word-key hypotheses separate the two.
 '''
 
 [[blocks]]
 kind = "attack"
 title = "How to attack it"
 body = '''
-Run the Vigenère attack. If the recovered shifts must be read as a key word, also read the complementary word $26 - k_b$; one of the two is the setter's key. For the interrupted-key form, enumerate periods 4 to 8, both reset strategies and all interruptor letters, and require the control to recover the hidden period, interruptor and keyword before any live text is scored.
+Run the Vigenère attack. If the recovered shifts must be read as a key word, also read the complementary word $26 - k_b$. One of the two is the setter's key. For the interrupted-key form, enumerate periods 4 to 8, both reset strategies and all interruptor letters, and require the control to recover the hidden period, interruptor and keyword before any live text is scored.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Letters are indices 0..25. The key k has length m.
+function ENCRYPT(p[0..n-1], k[0..m-1]):
+    for i in 0..n-1:
+        // Vigenère decryption used as encryption
+        c[i] = (p[i] - k[i mod m]) mod 26
+    return c
+
+function DECRYPT(c[0..n-1], k[0..m-1]):
+    for i in 0..n-1:
+        // Vigenère encryption used as decryption
+        p[i] = (c[i] + k[i mod m]) mod 26
+    return p
+
+// Attack: run the Vigenère attack; a Vigenère key k_v found for the text is
+// the Variant key 26 - k_v.
+function RECOVER_KEY(c[0..n-1], m, E):
+    // per-coset histogram correlation
+    k_v = VIGENERE_RECOVER_KEY(c, m, E)
+    for b in 0..m-1:
+        k[b] = (26 - k_v[b]) mod 26
+    // read both k and k_v if the key must spell a word
+    return k
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-No extra cost over Vigenère. Interrupted key: periods 4 to 8, two reset strategies, 26 interruptors, then an annealed keyword search with 8 restarts of 20,000 steps in the program's declared budget; each 504-letter control gate completed in about three seconds.
+No extra cost over Vigenère. Interrupted key: periods 4 to 8, two reset strategies, 26 interruptors, then an annealed keyword search with 8 restarts of 20,000 steps in the program's declared budget. Each 504-letter control gate completed in about three seconds.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
 - **Key-word ambiguity**: a dictionary key search that assumes Vigenère misses a Variant setter, and vice versa.
-- **Interruptor over-fitting**: with the interruptor and reset strategy free, a short text admits many resets; the audit gates on exact control recovery for that reason.
+- **Interruptor over-fitting**: with the interruptor and reset strategy free, a short text admits many resets. The audit gates on exact control recovery for that reason.
 - Everything that defeats Vigenère (flat inner text, short cosets) defeats the variant identically.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Interrupted-key Variant: the 504-letter held-out control recovered 100% plaintext, the hidden period 6, the ciphertext-interruptor strategy and letter, and the six-letter keyword, passing in 3.11 seconds; the live text scored $-7.467$ (not English), the same value as under the Vigenère relation with the complementary key (COLOSSUS_DYNAMIC_AUDIT.md). Slidefair-Variant: the 504-letter control with a seven-letter key recovered exactly at rate $-4.05$ (DIGRAPHIC_SLIDES_AUDIT.md).
+Interrupted-key Variant: the 504-letter held-out control recovered 100% plaintext, the hidden period 6, the ciphertext-interruptor strategy and letter, and the six-letter keyword, passing in 3.11 seconds. The live text scored $-7.467$ (not English), the same value as under the Vigenère relation with the complementary key (COLOSSUS_DYNAMIC_AUDIT.md). Slidefair-Variant: the 504-letter control with a seven-letter key recovered exactly at rate $-4.05$ (DIGRAPHIC_SLIDES_AUDIT.md).
 '''
 
 [[blocks]]
@@ -92,7 +121,7 @@ Check position 3: $A - H = 0 - 7 = -7 \equiv 19 = T$. Vigenère encryption of `Y
 [[blocks]]
 kind = "notes"
 body = '''
-Because the variant is a sign convention rather than a new mechanism, the program never gave it a lane of its own; it appears wherever a family's setter conventions are enumerated (interrupted key, Slidefair, ciphertext autokey), and its controls are those lanes' controls.
+Because the variant is a sign convention rather than a new mechanism, the program never gave it a lane of its own. It appears wherever a family's setter conventions are enumerated (interrupted key, Slidefair, ciphertext autokey), and its controls are those lanes' controls.
 '''
 
 [[provenance]]

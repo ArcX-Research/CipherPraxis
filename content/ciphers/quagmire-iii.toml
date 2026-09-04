@@ -24,7 +24,7 @@ The Beaufort orientation replaces the sum by $k_b - \operatorname{pos}_A(p_i)$. 
 kind = "equations"
 title = "Why the alphabet acts twice"
 body = '''
-Write $\sigma$ for the permutation $A$. The coset-$b$ substitution is $\sigma \circ \rho_{k_b} \circ \sigma^{-1}$ with $\rho$ the rotation. Swapping two letters of $\sigma$ changes both the domain and the range of every coset map, so the number of corrupted plaintext-to-ciphertext entries per coset is about four rather than the two of a simple substitution. Measured on planted cases: starting two swaps from the planted alphabet, steepest ascent and cold annealing already read $-6.1$ per letter and cannot return; the polish basin is at most three swaps wide with a 13-letter crib and six with a 25-letter crib. Rotations of $A$ are absorbed by the shifts, so the alphabet is identified only up to that gauge.
+Write $\sigma$ for the permutation $A$. The coset-$b$ substitution is $\sigma \circ \rho_{k_b} \circ \sigma^{-1}$ with $\rho$ the rotation. Swapping two letters of $\sigma$ changes both the domain and the range of every coset map, so the number of corrupted plaintext-to-ciphertext entries per coset is about four rather than the two of a simple substitution. Measured on planted cases: starting two swaps from the planted alphabet, steepest ascent and cold annealing already read $-6.1$ per letter and cannot return. The polish basin is at most three swaps wide with a 13-letter crib and six with a 25-letter crib. Rotations of $A$ are absorbed by the shifts, so the alphabet is identified only up to that gauge.
 '''
 
 [[blocks]]
@@ -40,7 +40,7 @@ body = '''
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- Periodic shifts; one alphabet for the whole text.
+- Periodic shifts. One alphabet for the whole text.
 - Invariant: within-coset equality structure is alphabet-free, so the equal-substitution classes among cosets (which cosets share a shift) can be read without the alphabet.
 - Additivity is untestable alphabet-free: every same-coset statistic is identical for "rotations of one alphabet" and "seven unrelated substitutions".
 '''
@@ -50,10 +50,48 @@ kind = "attack"
 title = "How to attack it"
 body = '''
 1. Fix the period from coincidences and read the equal-shift classes from within-coset equalities.
-2. **Bank**: decrypt under every structured alphabet; the true one reads at once.
+2. **Bank**: decrypt under every structured alphabet. The true one reads at once.
 3. **Blind**: a shift-marginalised monogram-evidence climb over the alphabet, then quadgram annealing over (alphabet, shifts) with periodic shift refits; or batched parallel tempering with 8 temperature levels.
 4. **Crib**: derive the shifts from the crib and anneal the alphabet; also an exact linear system when the shifts are tied to a key word, which pins the alphabet only for cribs of roughly 17 to 20 letters.
 5. Treat every blind endpoint as unqualified unless a matched planted control was recovered at the same length.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// One mixed alphabet A on both sides; pos_A is its index map. The shifts k
+// have period m.
+function ENCRYPT(p[0..n-1], A, k[0..m-1]):
+    for i in 0..n-1:
+        c[i] = A[(pos_A(p[i]) + k[i mod m]) mod 26]
+    return c
+
+function DECRYPT(c[0..n-1], A, k[0..m-1]):
+    for i in 0..n-1:
+        p[i] = A[(pos_A(c[i]) - k[i mod m]) mod 26]
+    return p
+
+// Beaufort orientation: c[i] = A[(k[i mod m] - pos_A(p[i])) mod 26], which is
+// its own inverse.
+
+// Blind search over (alphabet, shifts): quadgram annealing with periodic
+// shift refits.
+function BLIND_SEARCH(c, m, restarts, steps):
+    for each restart:
+        A = a random permutation
+        k = the best shift per coset for A by monogram fit
+        for step in 1..steps:
+            // corrupts about four entries of every coset map
+            A' = A with two letters swapped
+            refit k for A' at intervals
+            accept A' by the annealing rule on QUADGRAM_RATE(DECRYPT(c, A',
+                    k))
+        keep the best (A, k)
+    // unqualified unless a matched planted control was recovered at the same
+    // length
+    return best (A, k)
+```
 '''
 
 [[blocks]]
@@ -66,9 +104,9 @@ Bank search is linear in the bank. Blind annealing: 24 restarts of 60,000 steps 
 kind = "failure_modes"
 body = '''
 - **Rugged landscape, not budget.** Best-of-$N$ does not improve with $N$: 500 chains reached 29% of the alphabet, 2,000 chains 27-35%, 8,000 chains 29-33% on the same planted 96-letter instance.
-- **Polish basin.** Restarted $d$ swaps from the truth with shifts refitted at every move, recovery was 3/4 at $d = 3$ and 0/4 at $d \ge 5$; the annealer's best states sit about ten swaps away.
+- **Polish basin.** Restarted $d$ swaps from the truth with shifts refitted at every move, recovery was 3/4 at $d = 3$ and 0/4 at $d \ge 5$. The annealer's best states sit about ten swaps away.
 - **Higher evidence than the truth.** The shift-marginalised monogram climb and the Quagmire IV relaxation overfit to alphabets with higher evidence than the planted one.
-- **Cribs do not rescue it.** Even a 25-letter crib with 200,000 steps and 32 restarts gave 0/3 seeds; the crib widens the basin only to six swaps.
+- **Cribs do not rescue it.** Even a 25-letter crib with 200,000 steps and 32 restarts gave 0/3 seeds. The crib widens the basin only to six swaps.
 '''
 
 [[blocks]]

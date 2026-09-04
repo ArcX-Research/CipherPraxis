@@ -12,10 +12,14 @@ pub struct Matrix {
 impl Matrix {
     pub fn new(n: usize, data: Vec<i64>) -> Result<Matrix, String> {
         if !(2..=3).contains(&n) {
-            return Err("only 2×2 and 3×3 matrices are supported".into());
+            return Err("Choose a 2×2 or 3×3 matrix.".into());
         }
         if data.len() != n * n {
-            return Err(format!("expected {} entries, got {}", n * n, data.len()));
+            return Err(format!(
+                "Enter {} matrix values. You entered {}.",
+                n * n,
+                data.len()
+            ));
         }
         Ok(Matrix {
             n,
@@ -98,9 +102,12 @@ pub fn encrypt(plain: &str, key: &Matrix) -> String {
 }
 
 pub fn decrypt(cipher: &str, key: &Matrix) -> Result<String, String> {
-    let inv = key
-        .inverse()
-        .ok_or_else(|| format!("determinant {} is not a unit modulo 26", key.det()))?;
+    let inv = key.inverse().ok_or_else(|| {
+        format!(
+            "This matrix cannot decrypt because its determinant, {}, has no inverse modulo 26.",
+            key.det()
+        )
+    })?;
     Ok(encrypt(cipher, &inv))
 }
 

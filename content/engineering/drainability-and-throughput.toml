@@ -32,7 +32,7 @@ For $f = 8, n = 61, G = 4{,}096$: 2.0 GiB at $R = 4$, 49 GiB at $R = 98$ and 17 
 [[blocks]]
 kind = "assumptions"
 body = '''
-- Rates are measured in the live cell, not in an easier sibling; a three-shift cell at about 800 pairs/s said nothing about the two-extra-shift cell at 0.5 pairs/s.
+- Rates are measured in the live cell, not in an easier sibling. A three-shift cell at about 800 pairs/s said nothing about the two-extra-shift cell at 0.5 pairs/s.
 - Memory ceilings are enforced by the launcher (`ulimit`, an RSS guard between fixtures, a hard process stop) and a ceiling hit is a resource terminal, never a null win or a rejection.
 '''
 
@@ -43,15 +43,60 @@ Throughput measurement decided three lanes. A shared-cycle full-spelling cell dr
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// A frontier of tasks in the live order; declared caps: wall time, node
+// budget, memory ceiling.
+function RUN_WITH_CAP(frontier, wall_cap, node_budget, rss_ceiling, threads):
+    done = 0; nodes = 0; start = now()
+    for each task in frontier, in the live task order, over threads:
+        if now() - start > wall_cap or nodes > node_budget:
+            return SCOPED(done, frontier)
+        // never a null win or a rejection
+        if resident memory > rss_ceiling:
+            return RESOURCE_BLOCKED(done, frontier)
+        process task; done = done + 1; nodes = nodes + nodes of this task
+    join all workers
+    if complete == 1 and queued == 0 and active == 0 and tasks_complete == 1
+       and endpoint_overcap == 0 and every done/total counter is equal:
+        print the DRAIN counters and the wall time
+        // a statement about exactly this cell or family
+        return EXACT_ZERO if solutions == 0 else solutions
+    return SCOPED(done, frontier)
+
+function SCOPED(done, frontier):
+    // the exact processed prefix, resumable
+    return SCOPED_INCONCLUSIVE with pairs = done + "/" + |frontier|
+
+// measured in the live cell, not a sibling
+function THROUGHPUT(done, nodes, elapsed, frontier):
+    // pairs per second
+    rate = done / elapsed
+    nodes_per_pair = nodes / done
+    // fraction of the frontier covered at the cap
+    coverage = done / |frontier|
+    // decides whether the cell is drainable in budget
+    time_to_drain = |frontier| / rate
+    return rate, nodes_per_pair, coverage, time_to_drain
+
+// memory estimate before a beam is built
+function CAPACITY_BYTES(f, n, G, R):
+    // over the declared gate: close the design, run nothing
+    return B(f, n) * G * R * 248
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-Time to drain is frontier size over rate; the program's frontiers ranged from 55,497 to 1,825,380 pairs across random plants at 0.17 to 16.1 pairs/s on two threads (median 1.21), so drain times spanned minutes to weeks for the same code on different inputs.
+Time to drain is frontier size over rate. The program's frontiers ranged from 55,497 to 1,825,380 pairs across random plants at 0.17 to 16.1 pairs/s on two threads (median 1.21), so drain times spanned minutes to weeks for the same code on different inputs.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Memory ceilings mid-run.** A general-cell lane was stopped by an RSS ceiling and filed as `RESOURCE_BLOCKED-rss-ceiling`; a superseding slice design followed.
+- **Memory ceilings mid-run.** A general-cell lane was stopped by an RSS ceiling and filed as `RESOURCE_BLOCKED-rss-ceiling`. A superseding slice design followed.
 - **Wall measured as CPU.** A bound benchmark that reported wall time as CPU time was filed as invalid.
 - **Partial results read as exclusions.** Runs stopped after 2,000 of 489,600 or 160,000 of 1,958,400 placements are exploratory only in the ledger.
 '''
@@ -59,7 +104,7 @@ body = '''
 [[blocks]]
 kind = "controls"
 body = '''
-Blind controls must drain and find exactly the planted truth with zero false-valid candidates before a live cell is released; the recorded controls drained 149,572/149,572 and 18,346/18,346 tasks. Segment KATs prove that partial drains compose exactly.
+Blind controls must drain and find exactly the planted truth with zero false-valid candidates before a live cell is released. The recorded controls drained 149,572/149,572 and 18,346/18,346 tasks. Segment KATs prove that partial drains compose exactly.
 '''
 
 [[blocks]]

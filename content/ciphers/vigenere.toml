@@ -40,9 +40,9 @@ kind = "variants"
 body = '''
 - **Beaufort**: $c_i = k_{i \bmod m} - p_i$; reciprocal (encrypting twice decrypts). See [Beaufort](/ciphers/beaufort).
 - **Variant Beaufort**: $c_i = p_i - k_{i \bmod m}$, i.e. Vigenère decryption used as encryption.
-- **Keyed alphabets**: replacing the straight alphabet on the plaintext side, ciphertext side, or both gives the Quagmire I–IV family; the coset structure is unchanged, only the reference histogram becomes an unknown permutation of $E$.
+- **Keyed alphabets**: replacing the straight alphabet on the plaintext side, ciphertext side, or both gives the Quagmire I–IV family. The coset structure is unchanged, only the reference histogram becomes an unknown permutation of $E$.
 - **Autokey and running key**: the key stream is the plaintext itself or a long text, which removes the period.
-- **Compound keys**: two periodic keys of lengths $m$ and $q$ compose to one key of period $\operatorname{lcm}(m,q)$; a short text may show both periods as separate coincidence peaks.
+- **Compound keys**: two periodic keys of lengths $m$ and $q$ compose to one key of period $\operatorname{lcm}(m,q)$. A short text may show both periods as separate coincidence peaks.
 '''
 
 [[blocks]]
@@ -62,7 +62,33 @@ body = '''
 2. **Recover shifts per coset.** Correlate each coset histogram with the reference distribution; with $n/m \ge 20$ letters per coset this is reliable for English.
 3. **Polish.** Score the full decrypt with a language model (quadgram log-likelihood) and adjust individual shifts.
 
-With a crib (known plaintext), a crib letter at position $i$ determines $k_{i \bmod m}$ directly; a contiguous crib of length $\ge m$ determines the whole key.
+With a crib (known plaintext), a crib letter at position $i$ determines $k_{i \bmod m}$ directly. A contiguous crib of length $\ge m$ determines the whole key.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Alphabet letters are indices 0..25 (A = 0). Key k has length m ≥ 1.
+function ENCRYPT(p[0..n-1], k[0..m-1]):
+    for i in 0..n-1:
+        c[i] = (p[i] + k[i mod m]) mod 26
+    return c
+
+function DECRYPT(c[0..n-1], k[0..m-1]):
+    for i in 0..n-1:
+        p[i] = (c[i] - k[i mod m]) mod 26
+    return p
+
+// Ciphertext-only recovery of the key once the period m is known. E =
+// reference letter distribution
+function RECOVER_KEY(c[0..n-1], m, E):
+    for b in 0..m-1:
+        coset = [c[i] for i in 0..n-1 if i mod m == b]
+        h = HISTOGRAM(coset)                       // 26 counts
+        k[b] = argmax over s in 0..25 of CORRELATION(ROTATE(E, s), h)
+    return k
+```
 '''
 
 [[blocks]]
@@ -74,15 +100,15 @@ Period test: $O(n \cdot t_{\max})$. Shift recovery: $O(26\, m)$ correlations. Ex
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Flat cosets.** If the material under the periodic layer is not natural language (fractionated, transposed then substituted with a second layer, or random), the histogram correlation has nothing to align; the period may still be visible through coincidence counts while shifts are unrecoverable.
+- **Flat cosets.** If the material under the periodic layer is not natural language (fractionated, transposed then substituted with a second layer, or random), the histogram correlation has nothing to align. The period may still be visible through coincidence counts while shifts are unrecoverable.
 - **Short cosets.** Below roughly 12 letters per coset the argmax shift is often wrong; treat single-coset readings as votes, not facts.
-- **Selection freedom.** Freely fitting $m$ shifts on a short text buys about $0.15$ nats per letter of spurious fit; a model comparison that profiles the shifts will prefer wrong models unless the shifts are marginalised or the gain is calibrated on shuffled nulls.
+- **Selection freedom.** Freely fitting $m$ shifts on a short text buys about $0.15$ nats per letter of spurious fit. A model comparison that profiles the shifts will prefer wrong models unless the shifts are marginalised or the gain is calibrated on shuffled nulls.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Every solver run prints planted controls first: real English of the same length, random keys of the same period, the same pipeline. A control that does not decrypt to readable English (quadgram rate near $-4.3$ per letter, 100% key match) means the instrument is broken and the target rows below it carry no information.
+Every solver run prints planted controls first: real English of the same length, random keys of the same period, the same pipeline. A control that does not decrypt to readable English (quadgram rate near $-4.3$ per letter, 100% key match) means the test is broken and the target rows below it carry no information.
 '''
 
 [[blocks]]

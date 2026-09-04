@@ -26,7 +26,7 @@ Repeated plaintext words add coincidences at the distance between the repeats (t
 kind = "variants"
 body = '''
 - **Per-segment profile.** $\kappa(d)$ computed on a segment, with a null from shuffles of that segment; lags with $|z| \ge 2.5$ are listed. Used to compare the head, middle and tail of a text.
-- **Windowed lag map.** In a window of 42 letters at lag 7 there are 35 pairs; a period-7 substitution of prose expects about $2.3/35 = 0.066$ coincidences, uniform letters $0.038$. Sliding the window (step 7) draws where the periodic layer lives.
+- **Windowed lag map.** In a window of 42 letters at lag 7 there are 35 pairs. A period-7 substitution of prose expects about $2.3/35 = 0.066$ coincidences, uniform letters $0.038$. Sliding the window (step 7) draws where the periodic layer lives.
 - **Pooled same-coset rate.** Lags $7, 14, 21$ pooled against planted prose zones of the same geometry (300 plants) gives one number per zone with a simulated standard error.
 - **Alignment z-profile.** For each candidate period $p$, align the cosets by histogram rotation, take the union [IC](/statistics/index-of-coincidence), and report its $z$ against within-text shuffles. The vector of $z$ over $p \in \{3,4,7,9,14,17,21\}$ is compared with the same vector for planted constructions.
 '''
@@ -34,40 +34,76 @@ body = '''
 [[blocks]]
 kind = "assumptions"
 body = '''
-- The plaintext distribution is non-flat; a flat inner text (fractionated or random) gives no comb even under a true periodic key.
+- The plaintext distribution is non-flat. A flat inner text (fractionated or random) gives no comb even under a true periodic key.
 - Lags are compared against a null that preserves what the hypothesis does not claim: within-segment shuffles for "is there any lag structure", within-coset shuffles for "is there lag structure beyond the coset histograms".
-- The alignment z-profile assumes an additive layer in a known alphabet order; a keyed alphabet on the plaintext side does not change the coincidences, a keyed alphabet on both sides does not change them either, but a fractionation destroys them.
+- The alignment z-profile assumes an additive layer in a known alphabet order. A keyed alphabet on the plaintext side does not change the coincidences, a keyed alphabet on both sides does not change them either, but a fractionation destroys them.
 '''
 
 [[blocks]]
 kind = "attack"
 title = "How to attack it"
 body = '''
-1. Compute $\kappa(d)$ for $d = 1 \dots 70$ and list the lags whose $z$ against shuffles exceeds $2.5$; a comb at $m, 2m, 3m$ is the period.
-2. Slide a window along the text at the candidate lag to find where the periodic layer starts and stops; one zoned 153-letter text showed a lag-7 rate of $0.00$ in its first four 42-letter windows, $0.11$–$0.14$ across its middle and $0.00$ again at the end, and a 144-letter text rose from $0.03$–$0.09$ in its first half to $0.11$–$0.17$ in its second, i.e. periodic layers confined to zones.
-3. Run the alignment z-profile and compare with the planted library. At 153 letters a plain period-7 substitution reads $(p_7, p_{14}, p_{21}) = (+7.4, +4.9, +3.1)$ with nothing at $3, 4, 9, 17$; a period-7 substitution applied *under* a width-9 columnar transposition collapses to $-0.7$ at $p_7$; a Hill layer outside or inside the periodic layer gives $+0.5$. A target whose profile peaks at 7 with the inherited 14/21 tail therefore has its periodic layer outermost, and the magnitude of the peak estimates the inner text's IC.
+1. Compute $\kappa(d)$ for $d = 1 \dots 70$ and list the lags whose $z$ against shuffles exceeds $2.5$. A comb at $m, 2m, 3m$ is the period.
+2. Slide a window along the text at the candidate lag to find where the periodic layer starts and stops. One zoned 153-letter text showed a lag-7 rate of $0.00$ in its first four 42-letter windows, $0.11$–$0.14$ across its middle and $0.00$ again at the end, and a 144-letter text rose from $0.03$–$0.09$ in its first half to $0.11$–$0.17$ in its second, i.e. periodic layers confined to zones.
+3. Run the alignment z-profile and compare with the planted library. At 153 letters a plain period-7 substitution reads $(p_7, p_{14}, p_{21}) = (+7.4, +4.9, +3.1)$ with nothing at $3, 4, 9, 17$. A period-7 substitution applied *under* a width-9 columnar transposition collapses to $-0.7$ at $p_7$. A Hill layer outside or inside the periodic layer gives $+0.5$. A target whose profile peaks at 7 with the inherited 14/21 tail therefore has its periodic layer outermost, and the magnitude of the peak estimates the inner text's IC.
 4. Hand the period to [exact period alignment](/cryptanalysis/exact-period-alignment) and the zone boundaries to [change-point detection](/cryptanalysis/change-point-zone-detection).
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Coincidence rate at lag d: the share of position pairs (i, i+d) holding the
+// same letter.
+function KAPPA(c[0..n-1], d):
+    hits = 0
+    for i in 0..n-d-1:
+        if c[i] == c[i+d]: hits = hits + 1
+    return hits / (n - d)
+
+// Profile with a shuffle null per lag (the scan above uses d = 1..70 and
+// lists lags with z > 2.5).
+function LAG_PROFILE(c[0..n-1], d_max, N, z_min):
+    for d in 1..d_max:
+        observed[d] = KAPPA(c, d)
+    for j in 1..N:
+        // same letters, random order
+        c_shuf = SHUFFLE_POSITIONS(c)
+        for d in 1..d_max:
+            null[d][j] = KAPPA(c_shuf, d)
+    for d in 1..d_max:
+        z[d] = (observed[d] - MEAN(null[d][1..N])) / SD(null[d][1..N])
+    // a comb at m, 2m, 3m marks period m
+    return [d for d in 1..d_max if z[d] > z_min]
+
+// Windowed lag map: where along the text the periodic layer lives.
+function WINDOWED_LAG(c[0..n-1], d, width, step):
+    for start in 0, step, 2*step, ... while start + width <= n:
+        rate[start] = KAPPA(c[start .. start+width-1], d)
+    // read against the prose and uniform rates
+    return rate
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-$O(n \cdot d_{\max})$ for the profile; the windowed map is $O(n)$ per lag; the alignment z-profile costs one heuristic alignment per period per shuffle, about $200$ shuffles $\times$ 7 periods $\times$ 4 planted replicates per library row.
+$O(n \cdot d_{\max})$ for the profile. The windowed map is $O(n)$ per lag. The alignment z-profile costs one heuristic alignment per period per shuffle, about $200$ shuffles $\times$ 7 periods $\times$ 4 planted replicates per library row.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
 - **Plaintext repeats masquerade as key structure.** An excess at lag 28 in a 96-letter zone (rate $0.164$, $z = +2.6$ against a within-coset permutation null and about $+3$ against every planted prose model, including a 28-letter varied-copies key) is plaintext self-similarity at $4 \times 7$, not a period-28 key. A shuffle null also destroys such repeats, so repetition can mimic a key change in a change-point scan.
-- **Granularity.** Thirty-five pairs per window resolve the rate only in steps of $0.029$; a window that reads $0.00$ is compatible with a rate of $0.03$.
-- **Multiplicity.** Seventy lags are tested; a single lag at $z = +2.9$ is not significant on its own. Use a [family-wise null](/statistics/family-wise-null) for "any lag".
-- **Disagreement with alignment.** A text can show no individually significant lag (whole-text lag 7 at $z = +0.0$) while its coset histograms align at $z = +4$; when the key is zoned, the histogram alignment sees the zone and the whole-text lag profile dilutes it.
+- **Granularity.** Thirty-five pairs per window resolve the rate only in steps of $0.029$. A window that reads $0.00$ is compatible with a rate of $0.03$.
+- **Multiplicity.** Seventy lags are tested. A single lag at $z = +2.9$ is not significant on its own. Use a [family-wise null](/statistics/family-wise-null) for "any lag".
+- **Disagreement with alignment.** A text can show no individually significant lag (whole-text lag 7 at $z = +0.0$) while its coset histograms align at $z = +4$. When the key is zoned, the histogram alignment sees the zone and the whole-text lag profile dilutes it.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Per-segment profiles are printed with within-segment shuffle nulls; the pooled same-coset rate of each zone is compared with 300 planted prose zones of identical geometry (one zone read $0.068$ against $0.064 \pm 0.022$, $z = +0.2$; the other $0.081$ against $0.065 \pm 0.017$, $z = +0.9$). The alignment z-profile is calibrated on a 13-model library (plain period 7, 14, 21; compound 7 with 2 or 3; sandwiches at widths 9 and 17; transposition outside; Hill inside and outside) at 153, 144 and 504 letters. At 504 letters the plain period-7 model reads $z = +39$ at $p_7$, which shows how quickly the instrument gains power with length.
+Each segment profile includes a shuffle null made within that segment. The pooled same-coset rate for each zone is compared with 300 planted prose zones of the same shape. One zone gave $0.068$ against $0.064 \pm 0.022$, $z = +0.2$. The other gave $0.081$ against $0.065 \pm 0.017$, $z = +0.9$. The alignment z-profile is calibrated on 13 models at 153, 144, and 504 letters: plain periods 7, 14, and 21; period 7 combined with 2 or 3; sandwiches at widths 9 and 17; an outside transposition; and Hill inside and outside. At 504 letters, the plain period-7 model gives $z = +39$ at $p_7$, showing how quickly the test gains power as text grows.
 '''
 
 [[blocks]]

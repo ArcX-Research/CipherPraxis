@@ -41,7 +41,7 @@ On 1,545 held-out windows: $11$ ($0.71\%$) fall below $-4.832$, $0$ fall below $
 kind = "assumptions"
 body = '''
 - The calibration windows are prose of the same kind as the expected plaintext; orthographically atypical plaintext (deliberate misspellings, archaic text) sits further into the tail than the corpus suggests.
-- The calibration range, the model's training range and the planted-control range are three disjoint corpus regions; a gate calibrated on windows that overlap the table's training data is optimistic.
+- The calibration range, the model's training range and the planted-control range are three disjoint corpus regions. A gate calibrated on windows that overlap the table's training data is optimistic.
 - Length matters: a threshold tuned on 504-letter spans rejected a correctly recovered 152-letter prose fixture, so each admitted length gets its own calibration.
 '''
 
@@ -51,22 +51,61 @@ title = "Use in an attack pipeline"
 body = '''
 1. Before a live pass, publish $\hat\mu$, $\hat\sigma$, $r_{\min}$, the chosen $\theta$ and $\widehat{\mathrm{FN}}(\theta)$ for the exact table and length in use.
 2. Prefer a sub-threshold *disposition* to a terminal verdict: a candidate below $\theta$ proceeds to the [permutation nulls](/statistics/permutation-test) with a typed low-rate label instead of terminating the transaction.
-3. Let the null rank carry the decision. In the audited lanes a candidate is admitted only at strict rank 1 among 99 matched nulls; the English gate is a guard against fluent nonsense, not the evidence.
-4. Never re-tune the gate after seeing a live score ("gate shopping"); a lane that failed its control power must refuse its live pass rather than loosen the gate.
+3. Let the null rank carry the decision. In the audited lanes a candidate is admitted only at strict rank 1 among 99 matched nulls. The English gate is a guard against fluent nonsense, not the evidence.
+4. Never re-tune the gate after seeing a live score ("gate shopping"). A lane that failed its control power must refuse its live pass rather than loosen the gate.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// r(x) = quadgram rate of x under the frozen table; the windows w[1..W] are
+// genuine prose of length n from a corpus range disjoint from the table's
+// training range.
+function CALIBRATE(w[1..W], r):
+    for j in 1..W: rate[j] = r(w[j])
+    mu_hat = MEAN(rate); sigma_hat = SD(rate); r_min = MIN(rate)
+    return mu_hat, sigma_hat, r_min, rate
+
+function FALSE_NEGATIVE_RATE(rate[1..W], theta):
+    // counted directly, never from a normal tail
+    return #{ j : rate[j] < theta } / W
+
+// Anchored gate: the random-letter ceiling at this length plus a declared
+// margin Delta.
+function ANCHORED_GATE(n, R, Delta, r, rng):
+    r_IID = max over i in 1..R of r(RANDOM_LETTERS(rng, n))
+    return r_IID + Delta
+
+function PUBLISH_GATE(w, n, R, Delta, r, rng):
+    mu_hat, sigma_hat, r_min, rate = CALIBRATE(w, r)
+    theta_E = ANCHORED_GATE(n, R, Delta, r, rng)
+    FN = FALSE_NEGATIVE_RATE(rate, theta_E)
+    // before any live score is seen
+    print mu_hat, sigma_hat, r_min, theta_E, FN
+    // never re-tuned after a live score
+    return theta_E
+
+function GATE(x, theta_E):
+    // a disposition: the candidate still meets the nulls
+    if r(x) < theta_E: return LOW_RATE
+    // not evidence: the null rank decides
+    return PASS
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-Scoring $10^4$ windows is seconds; the cost of the protocol is in discipline, not computation.
+Scoring $10^4$ windows is seconds. The cost of the protocol is in discipline, not computation.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Gaussian intuition.** $0.7$ below the mean is $5.9\hat\sigma$; a normal tail would predict about one false rejection in $10^9$, the measured rate is $7$ in $1{,}000$. The prose tail is heavy because short windows land on names, numbers and rare words.
+- **Gaussian intuition.** $0.7$ below the mean is $5.9\hat\sigma$. A normal tail would predict about one false rejection in $10^9$, the measured rate is $7$ in $1{,}000$. The prose tail is heavy because short windows land on names, numbers and rare words.
 - **One-shot cost.** In a design where a live attempt is unique, a false negative is not a wrong conclusion about the cipher family (the terminal was correctly scoped "not a family rejection") but it destroys the only attempt.
-- **Wrong length.** Thresholds do not transplant across lengths; the random-letter ceiling rises as $n$ falls.
+- **Wrong length.** Thresholds do not transplant across lengths. The random-letter ceiling rises as $n$ falls.
 - **Gate as evidence.** A candidate that passes the gate is not thereby correct: at $-4.87$ a bank search produced a passing candidate that eight of nine complete-pipeline nulls beat.
 '''
 
@@ -91,7 +130,7 @@ The second gate is looser on prose and still separates real English from the bes
 [[blocks]]
 kind = "notes"
 body = '''
-This entry records a calibration *failure* turned into a protocol. The general rule ([tautological gate rule](/validation/tautological-gate-rule)) is that a check must be shown able to fail on the wrong thing and able to pass on the right thing; a language gate must be shown to pass real English.
+This entry records a calibration *failure* turned into a protocol. The general rule ([tautological gate rule](/validation/tautological-gate-rule)) is that a check must be shown able to fail on the wrong thing and able to pass on the right thing. A language gate must be shown to pass real English.
 '''
 
 [[provenance]]

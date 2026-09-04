@@ -24,7 +24,7 @@ The inverse expands each ciphertext letter into three coordinates and reads $x_i
 kind = "equations"
 title = "Gauge and the 27th symbol"
 body = '''
-Applying one permutation $\pi \in S_3$ to all three coordinates of every cell, $(a, b, c) \mapsto (\pi(a), \pi(b), \pi(c))$, commutes with the scalar regrouping, so a cube is identified only modulo this six-element class; the audits enumerate the orbit and check ciphertext equality before any search. An arbitrary cube emits its 27th symbol, so a 26-letter outer layer is not closed over the Trifid output; the program instead used explicit 27-symbol orders with arithmetic modulo 27 for the layered variant, and read the absence of the extra symbol from a ciphertext as data rather than a reason to change the model.
+Applying one permutation $\pi \in S_3$ to all three coordinates of every cell, $(a, b, c) \mapsto (\pi(a), \pi(b), \pi(c))$, commutes with the scalar regrouping, so a cube is identified only modulo this six-element class. The audits enumerate the orbit and check ciphertext equality before any search. An arbitrary cube emits its 27th symbol, so a 26-letter outer layer is not closed over the Trifid output. The program instead used explicit 27-symbol orders with arithmetic modulo 27 for the layered variant, and read the absence of the extra symbol from a ciphertext as data rather than a reason to change the model.
 '''
 
 [[blocks]]
@@ -40,7 +40,7 @@ body = '''
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- A 27-symbol alphabet; a plaintext restricted to 26 letters may still produce the extra symbol in the ciphertext.
+- A 27-symbol alphabet. A plaintext restricted to 26 letters may still produce the extra symbol in the ciphertext.
 - Invariant: each ciphertext letter depends on three plaintext letters of the same block, so block boundaries carry a periodic signature.
 - Invariant: a fitted cube always round-trips its own decryption.
 '''
@@ -56,6 +56,44 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Q is a cell-major list of the 27 symbols; the letter in cell u = pos_Q(x)
+// has coordinates COORD(x) = (floor(u / 9), floor(u / 3) mod 3, u mod 3).
+// Blocks have period L; the final block is short and unpadded.
+function ENCRYPT_BLOCK(x[0..L-1], Q):
+    for i in 0..L-1: (a[i], b[i], c[i]) = COORD(x[i])
+    // 3L base-3 digits
+    s = a[0..L-1] || b[0..L-1] || c[0..L-1]
+    for k in 0..L-1:
+        y[k] = Q[9 * s[3k] + 3 * s[3k+1] + s[3k+2]]
+    return y
+
+function DECRYPT_BLOCK(y[0..L-1], Q):
+    for k in 0..L-1:
+        (s[3k], s[3k+1], s[3k+2]) = COORD(y[k])
+    for i in 0..L-1:
+        x[i] = Q[9 * s[i] + 3 * s[L + i] + s[2L + i]]
+    return x
+
+function ENCRYPT(p, Q, period):
+    for each block x of p of length period (the last block shorter):
+        append ENCRYPT_BLOCK(x, Q) to out
+    return out
+
+function DECRYPT(out, Q, period):
+    for each block y of out of length period (the last block shorter):
+        append DECRYPT_BLOCK(y, Q) to p
+    return p
+
+// Attack: for every period in the declared range anneal the cube (cell and
+// plane moves) under a quadgram objective, select the period by score, and
+// compare cubes modulo the six-way coordinate gauge.
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
 Direct: 39 periods times 6 restarts times 300,000 proposals, about 70 million proposals per ciphertext, 55-58 seconds per 504-letter control. Twin: 24 restarts of 500,000 iterations on six threads. Layered: 624 fixed configuration cells (4 outer periods, 2 orders, 2 relations, 39 Trifid periods) screened at 25,000 proposals each before refinement of a predeclared top set.
@@ -65,14 +103,14 @@ Direct: 39 periods times 6 restarts times 300,000 proposals, about 70 million pr
 kind = "failure_modes"
 body = '''
 - **Layered Trifid is not identifiable by this selector.** The hidden configuration cells ranked 456, 220, 147 and 123 of 624 against a top-set cap of 48, so no control reached refinement; even with the correct configuration disclosed and 14.4 million proposals, only 18/504 letters were recovered.
-- **Flat middle stream.** An alphabet-free periodic alignment instrument applied to the 16 outer configurations ranked the truth 13, 6, 5 and 2 of 16 and recovered none of the relative keys; the flat Trifid stream lets a period-26 alternative overfit.
+- **Flat middle stream.** An alphabet-free periodic alignment test applied to the 16 outer configurations ranked the truth 13, 6, 5 and 2 of 16 and recovered none of the relative keys. The flat Trifid stream lets a period-26 alternative overfit.
 - **27th symbol in the output.** The selected live decrypts contained the extra symbol, failing the letters-only language contract before any rate was compared.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Direct (log 191): known-answer vector reproduced; two disjoint 504-letter controls with random cubes and hidden periods 17 and 26 recovered 504/504, the exact period and the cube class, at rates $-4.17$ and $-4.25$; the live text selected period 2 at $-6.95$ with two extra symbols, not English. Twin (log 207): three planted $(7, 7)$ pairs recovered 297/297 letters, periods and cube class (winner scores $-5.17$, $-4.98$, $-4.95$); three unequal-period controls selected the correct orientation each time; live winners $-8.83$ and $-8.78$, non-alphabetic. Layered (log 196): strict gate 0/4, live text never read.
+Direct (log 191): known-answer vector reproduced. Two disjoint 504-letter controls with random cubes and hidden periods 17 and 26 recovered 504/504, the exact period and the cube class, at rates $-4.17$ and $-4.25$. The live text selected period 2 at $-6.95$ with two extra symbols, not English. Twin (log 207): three planted $(7, 7)$ pairs recovered 297/297 letters, periods and cube class (winner scores $-5.17$, $-4.98$, $-4.95$). Three unequal-period controls selected the correct orientation each time; live winners $-8.83$ and $-8.78$, non-alphabetic. Layered (log 196): strict gate 0/4, live text never read.
 '''
 
 [[blocks]]

@@ -12,11 +12,49 @@ updated = "2026-09-04"
 lab = "coincidence"
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Letters only, indices 0..25. IC and IC_SD are as in the
+// index-of-coincidence entry.
+function COINCIDENCE_LAB(text, m_max, t_max, len_min, len_max):
+    c = LETTERS_ONLY(text); n = length(c)
+    // read against the English and uniform references
+    ic_whole = IC(c)
+    // exact standard deviation at this length
+    sd_english = IC_SD(ENGLISH, n)
+
+    // Periodic scan: the mean coset IC for each trial period.
+    for m in 1..m_max:
+        scan[m] = mean over b in 0..m-1 of IC([c[i] for i in 0..n-1 if i mod
+                m == b])
+    best_period = argmax over m in 2..m_max of scan[m]
+
+    // Gap profile: the share of positions i with c[i] == c[i+t].
+    for t in 1..t_max:
+        gap[t] = #{ i in 0..n-t-1 : c[i] == c[i+t] } / (n - t)
+
+    // Kasiski: repeated groups and the distances between their occurrences.
+    repeats = []
+    for len in len_max down to len_min:
+        for every group g of len letters occurring at positions pos[1..r]
+                with r >= 2:
+            if g is not part of an already listed longer repeat at the same
+                    positions:
+                repeats += (g, pos, distances pos[i+1] - pos[i])
+    for q in 2..m_max:
+        votes[q] = #{ distance d over all repeats : d mod q == 0 }
+
+    return ic_whole, sd_english, scan, best_period, gap, repeats, votes
+```
+'''
+
+[[blocks]]
 kind = "notes"
 title = "What to try"
 body = '''
-- Paste plain English: the whole-text IC sits near the English reference and the periodic scan is flat, because there is no period to find.
-- Paste the ciphertext from the [Vigenère lab](/labs/vigenere-lab) encrypted with a seven-letter key: period 7 (and 14) light up.
-- Paste random letters: the IC falls to the uniform reference 0.0385 and no instrument shows structure.
-- Note the exact standard deviation printed next to the English reference: at 150 letters a difference of 0.005 in IC is within one standard deviation.
+- Paste plain English. Its whole-text IC should be near the English reference, while the period scan stays flat because there is no repeating key.
+- Encrypt text with a seven-letter key in the [Vigenère lab](/labs/vigenere-lab), then paste the result here. Periods 7 and 14 should stand out.
+- Paste random letters. The IC should move toward the uniform reference, 0.0385, and the tests should find no clear pattern.
+- Check the standard deviation beside the English reference. At 150 letters, an IC difference of 0.005 is within one standard deviation.
 '''

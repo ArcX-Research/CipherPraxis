@@ -24,14 +24,14 @@ Quagmire I is $C$ straight, Quagmire II is $P$ straight, Quagmire III is $P = C$
 kind = "equations"
 title = "Gauge and equivalent descriptions"
 body = '''
-Rotating $C$ by $r$ and adding $r$ to every shift leaves the cipher unchanged, as does rotating $P$ and subtracting; reversing both alphabets swaps the Vigenère and Beaufort relations. The identifiable object is therefore the pair $(P, C)$ up to a common rotation and reflection together with the shift vector modulo that gauge, and a solver must compare recovered and planted keys modulo this class rather than literally (see [Conjugacy and gauge](/algebra/conjugacy-and-gauge)). Seen from the ciphertext, coset $b$ applies the substitution $C \circ \rho_{k_b} \circ P^{-1}$; if the $k_b$ are unrelated these are seven unrelated substitutions, which is why "seven independent alphabets" and Quagmire IV are indistinguishable by alphabet-free statistics.
+Rotating $C$ by $r$ and adding $r$ to every shift leaves the cipher unchanged, as does rotating $P$ and subtracting; reversing both alphabets swaps the Vigenère and Beaufort relations. The identifiable object is therefore the pair $(P, C)$ up to a common rotation and reflection together with the shift vector modulo that gauge, and a solver must compare recovered and planted keys modulo this class rather than literally (see [Conjugacy and gauge](/algebra/conjugacy-and-gauge)). Seen from the ciphertext, coset $b$ applies the substitution $C \circ \rho_{k_b} \circ P^{-1}$. If the $k_b$ are unrelated these are seven unrelated substitutions, which is why "seven independent alphabets" and Quagmire IV are indistinguishable by alphabet-free statistics.
 '''
 
 [[blocks]]
 kind = "variants"
 body = '''
 - **Vocabulary-by-vocabulary**: both alphabets keyed by words from a bank of 7,438 candidates, both relations, i.e. 55 million alphabet pairs per text.
-- **Fixed-order pairs**: $(P, C)$ from the straight order and one keyword-mixed order in all four combinations, with free shifts; this is the index-alphabet grid used by many of the program's exact lanes.
+- **Fixed-order pairs**: $(P, C)$ from the straight order and one keyword-mixed order in all four combinations, with free shifts. This is the index-alphabet grid used by many of the program's exact lanes.
 - **Keyed plaintext side over a known ciphertext order** with a transposition underneath: the reading the program's first Quagmire IV solver was built for, with an exhaustive columnar stage for widths 3 to 9.
 '''
 
@@ -55,17 +55,55 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// P is the plaintext alphabet and C the ciphertext alphabet, both mixed;
+// pos_P and pos_C are their index maps.
+function ENCRYPT(p[0..n-1], P, C, k[0..m-1]):
+    for i in 0..n-1:
+        c[i] = C[(pos_P(p[i]) + k[i mod m]) mod 26]
+    return c
+
+function DECRYPT(c[0..n-1], P, C, k[0..m-1]):
+    for i in 0..n-1:
+        p[i] = P[(pos_C(c[i]) - k[i mod m]) mod 26]
+    return p
+
+// C straight gives Quagmire I, P straight Quagmire II, P = C Quagmire III,
+// both straight Vigenère.
+
+// Two-stage attack through a candidate ciphertext order.
+function ATTACK(c, m, candidate_orders):
+    for each C in candidate_orders:
+        // index text in the candidate order
+        x = [pos_C(c[i]) for i in 0..n-1]
+        s = the per-coset shifts maximising the aligned index of coincidence
+                of the m cosets of x
+        score[C] = ALIGNED_IC(x, s, m), compared with the same maximum on
+                shuffled c
+    C = the best candidate order
+    x aligned by s is now a simple substitution of p
+    anneal P and refit k jointly under quadgrams, restarting from every
+            near-tie coset shift;
+    or try every keyword alphabet P, 26 offsets and both relations
+    // compared with planted keys modulo the common rotation gauge
+    return P, C, k
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-Vocabulary pairs: $7{,}438^2 \approx 5.5 \times 10^7$ pairs times two relations per text; the sweep ran as a subsampled batch with shuffled tops as the null. Blind two-alphabet annealing: the state has two permutations and $m$ shifts, about $26! \cdot 26! \cdot 26^m$ raw states; no budget the program tried made a dent at 153 letters.
+Vocabulary pairs: $7{,}438^2 \approx 5.5 \times 10^7$ pairs times two relations per text. The sweep ran as a subsampled batch with shuffled tops as the null. Blind two-alphabet annealing: the state has two permutations and $m$ shifts, about $26! \cdot 26! \cdot 26^m$ raw states. No budget the program tried made a dent at 153 letters.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Blind search.** The Quagmire IV relaxation of the blind Quagmire III solver reached 0% success on four planted controls (best rates $-5.48$ to $-5.73$, 1-18% match); it finds alphabets with higher monogram evidence than the truth.
+- **Blind search.** The Quagmire IV relaxation of the blind Quagmire III solver reached 0% success on four planted controls (best rates $-5.48$ to $-5.73$, 1-18% match). It finds alphabets with higher monogram evidence than the truth.
 - **Selection over a huge bank.** 55 million pairs per text produce top scores that sit exactly at the subsampled shuffled maximum; without that null the best pair would look like a lead.
-- **Misaligned coset.** The first solver version pinned one coset and left a control coset misaligned, blocking exact recovery; the repaired version moves every coset and polishes pairwise.
+- **Misaligned coset.** The first solver version pinned one coset and left a control coset misaligned, blocking exact recovery. The repaired version moves every coset and polishes pairwise.
 '''
 
 [[blocks]]
@@ -94,7 +132,7 @@ Check position 6: R is letter 3 of $P$; $3 + 3 = 6$, and letter 6 of $C$ is `B`.
 [[blocks]]
 kind = "notes"
 body = '''
-For the corpus texts the program's conclusion was that every structured $(P, C)$ pair it could enumerate is excluded and the unstructured pair is unreachable; the alphabet-free class structure of one text (three cosets sharing one substitution) is the only Quagmire IV-compatible fact that survived, and it constrains key words rather than alphabets.
+For the corpus texts the program's conclusion was that every structured $(P, C)$ pair it could enumerate is excluded and the unstructured pair is unreachable. The alphabet-free class structure of one text (three cosets sharing one substitution) is the only Quagmire IV-compatible fact that survived, and it constrains key words rather than alphabets.
 '''
 
 [[provenance]]

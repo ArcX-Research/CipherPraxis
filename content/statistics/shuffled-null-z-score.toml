@@ -17,23 +17,23 @@ Let $T$ be a statistic of a text $c$ and $\pi_1, \dots, \pi_N$ independent unifo
 
 $$z = \frac{T(c) - \overline{T(\pi c)}}{\operatorname{sd}\,T(\pi c)}, \qquad \hat p = \frac{\#\{j : T(\pi_j c) \ge T(c)\}}{N}.$$
 
-With $N = 200$ the empirical $p$ resolves to $0.005$; a reported $\hat p = 0.000$ means "above every shuffle", not a probability of zero. When $T$ is itself a maximum over a search (the best shift vector, the best width, the best period) the *same* maximisation is run on each shuffle, so that the null already contains the selection.
+With $N = 200$ the empirical $p$ resolves to $0.005$. A reported $\hat p = 0.000$ means "above every shuffle", not a probability of zero. When $T$ is itself a maximum over a search (the best shift vector, the best width, the best period) the *same* maximisation is run on each shuffle, so that the null already contains the selection.
 '''
 
 [[blocks]]
 kind = "variants"
 body = '''
 - **Whole-text shuffle.** Destroys coset structure, periodicity and order; keeps the histogram. Reference for alignment, periodic IC, lag profiles, evidence gains.
-- **Within-coset shuffle.** Keeps every coset histogram and destroys only order; the valid-model null for language-model scores under a periodic key. See [within-coset null](/statistics/within-coset-null).
+- **Within-coset shuffle.** Keeps every coset histogram and destroys only order. The valid-model null for language-model scores under a periodic key. See [within-coset null](/statistics/within-coset-null).
 - **Within-segment shuffle.** Shuffles inside declared segments; reference for per-segment lag profiles and change-point statistics.
-- **Complete-pipeline null.** The whole solver (fit, candidate selection, EM, width scan, polish) is re-run on each shuffle; the reported $z$ of a width or a key is then honest about every adaptive step.
+- **Complete-pipeline null.** The whole solver (fit, candidate selection, EM, width scan, polish) is re-run on each shuffle. The reported $z$ of a width or a key is then honest about every adaptive step.
 - **Planted-reference scale.** Alongside the null, the same statistic is computed on planted constructions of the same length so that a $z$ can be read as "at the level of construction X" rather than only "above random".
 '''
 
 [[blocks]]
 kind = "assumptions"
 body = '''
-- The hypothesis being tested is one of *order*; a shuffle cannot test a claim about the histogram itself (for that, simulate the alternative or use the exact [standard error](/statistics/estimator-standard-error)).
+- The hypothesis being tested is one of *order*. A shuffle cannot test a claim about the histogram itself (for that, simulate the alternative or use the exact [standard error](/statistics/estimator-standard-error)).
 - The null distribution is roughly symmetric where $z$ is quoted; maxima over many candidates are right-skewed and should be reported with the empirical $p$ and the null maximum, not only $z$.
 - $N$ is large enough for the tail in question: 60 draws cannot certify a $z$ of $+3$ on a skewed maximum.
 '''
@@ -42,10 +42,39 @@ body = '''
 kind = "attack"
 title = "Use in an attack pipeline"
 body = '''
-1. Print every instrument reading as `observed; null mean +- sd; null max; z; empirical p`.
+1. Print every test reading as `observed; null mean +- sd; null max; z; empirical p`.
 2. Put the planted references through the identical code so the reader has a scale: alignment $z$ of $+9.6$ for a plain periodic substitution, $+4.0$ for a flat inner text at 153 letters.
 3. Hand a candidate to the next stage only if it clears the null *maximum* of its own search, not merely the mean.
 4. For any statistic that was maximised over a family, prefer the [family-wise null](/statistics/family-wise-null); for one-shot decisions use the strict-rank [permutation test](/statistics/permutation-test).
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// T is the statistic; when T is itself a maximum over a search, the same
+// maximisation is repeated on every shuffle so that the null already contains
+// the selection.
+function SHUFFLED_NULL(c[0..n-1], T, N, seed):
+    observed = T(c)
+    rng = RNG(seed)
+    for j in 1..N:
+        pi = RANDOM_PERMUTATION(rng, n)
+        // same letters, new order
+        for i in 0..n-1: c_shuf[i] = c[pi[i]]
+        // full search repeated here
+        null[j] = T(c_shuf)
+    mean = MEAN(null[1..N])
+    sd = SD(null[1..N])
+    z = (observed - mean) / sd
+    // 0.000 means "above every shuffle"
+    p_hat = #{ j : null[j] >= observed } / N
+    return observed, mean, sd, max(null), z, p_hat
+
+// Report line: observed; null mean +- sd; null max; z; empirical p. A
+// candidate goes forward only if observed clears max(null), not merely on a
+// large z.
+```
 '''
 
 [[blocks]]
@@ -57,8 +86,8 @@ $N$ evaluations of $T$. For the exact period-7 alignment (all $26^6$ relative sh
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Maxima are not Gaussian.** The maximum of $4 \times 10^4$ to $4 \times 10^5$ permutation draws sits 4–4.5 null standard deviations above the mean *by construction*; a "$z = +4$" for the best of many draws is not a test. Report the empirical rank.
-- **Wrong null for the claim.** A whole-text shuffle also destroys plaintext repeats, so in a change-point scan a repeated word can look like a key change; a within-coset null keeps the repeats where the hypothesis does not concern them.
+- **Maxima are not Gaussian.** The maximum of $4 \times 10^4$ to $4 \times 10^5$ permutation draws sits 4–4.5 null standard deviations above the mean *by construction*. A "$z = +4$" for the best of many draws is not a test. Report the empirical rank.
+- **Wrong null for the claim.** A whole-text shuffle also destroys plaintext repeats, so in a change-point scan a repeated word can look like a key change. A within-coset null keeps the repeats where the hypothesis does not concern them.
 - **Per-trial versus family-wise.** A $+5.7$ against a single-trial null became chance after accounting for the 648–1,296 trials searched (see [family-wise null](/statistics/family-wise-null)).
 - **Invariant statistics.** If the statistic is invariant under the shuffle group in use (coset IC at a width that is a multiple of the period; IC under any shuffle), the null has zero variance and the "z" is 0/0.
 '''
@@ -83,7 +112,7 @@ The observed value also exceeds the null maximum by $0.0025$, one null standard 
 [[blocks]]
 kind = "notes"
 body = '''
-A shuffle null is a permutation test with the full symmetric group; the [permutation test](/statistics/permutation-test) entry covers the exact rank rule and subgroups that preserve more of the hypothesis. The [null lab](/labs/null-lab) draws shuffle distributions interactively.
+A shuffle null is a permutation test with the full symmetric group. The [permutation test](/statistics/permutation-test) entry covers the exact rank rule and subgroups that preserve more of the hypothesis. The [null lab](/labs/null-lab) draws shuffle distributions interactively.
 '''
 
 [[provenance]]

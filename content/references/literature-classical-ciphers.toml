@@ -13,7 +13,7 @@ updated = "2026-09-04"
 [[blocks]]
 kind = "notes"
 body = '''
-Reading order for a newcomer: Kahn for the history and vocabulary; Friedman's four parts for the systematic treatment of monoalphabetic, periodic, aperiodic and transposition/fractionation systems; the ACA type descriptions for the exact conventions (keyed alphabets, Quagmire numbering, Gromark and Condi key streams) used by recreational solvers and by this atlas; then the primary sources for the constructions themselves. Rubin's disclosure of the Chaocipher mechanism is the reference for that model, since Byrne's own book describes the cipher's history but not its algorithm.
+New readers can start with Kahn for history and basic terms. Friedman's four parts then explain monoalphabetic, periodic, aperiodic, transposition, and fractionation systems in a clear order. Use the ACA descriptions for the exact conventions followed by this site, including keyed alphabets, Quagmire numbering, and Gromark and Condi key streams. The original sources describe each construction. For Chaocipher, use Rubin's account of the mechanism; Byrne's book gives its history but not the algorithm.
 '''
 
 [[references]]

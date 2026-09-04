@@ -17,7 +17,7 @@ Let $H$ be a finite family of hypotheses (e.g. all periods $2 \dots 26$ in two a
 
 $$T^*(\pi c) = \max_{h \in H} T_h(\pi c)$$
 
-over shuffles $\pi$, and the family-wise $z$ and empirical $p$ are computed from it. For $N$ independent standard-normal trials the expected maximum is about $2.5$ for $N = 100$ and $3.2$ for $N = 1{,}000$; a "$+3\sigma$" best-of-a-thousand is therefore the null expectation, not a finding.
+over shuffles $\pi$, and the family-wise $z$ and empirical $p$ are computed from it. For $N$ independent standard-normal trials the expected maximum is about $2.5$ for $N = 100$ and $3.2$ for $N = 1{,}000$. A "$+3\sigma$" best-of-a-thousand is therefore the null expectation, not a finding.
 '''
 
 [[blocks]]
@@ -35,8 +35,8 @@ Decision rules in the toolkit are written against the family-wise maximum rather
 kind = "assumptions"
 body = '''
 - The family used in the null is the family actually searched, including any post-hoc choices: a second window added after seeing the first is an uncharged trial unless the null maximises over both windows.
-- Hypotheses may be correlated; the family-wise null handles that automatically because it maximises over the same correlated statistics on each shuffle. A Bonferroni correction would be conservative and is not needed.
-- The shuffle preserves everything the family does not claim; otherwise a subgroup shuffle (within coset, within segment) is required.
+- Hypotheses may be correlated. The family-wise null handles that automatically because it maximises over the same correlated statistics on each shuffle. A Bonferroni correction would be conservative and is not needed.
+- The shuffle preserves everything the family does not claim. Otherwise a subgroup shuffle (within coset, within segment) is required.
 '''
 
 [[blocks]]
@@ -50,6 +50,35 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// H = the family of hypotheses fixed before the scan; T_h = the statistic for
+// hypothesis h. The maximiser is written once and applied to the target and
+// to every shuffle.
+function BEST_OVER_FAMILY(c, H):
+    return max over h in H of T_h(c), together with the argmax h
+
+function FAMILY_WISE_NULL(c, H, N):
+    T_star, h_star = BEST_OVER_FAMILY(c, H)
+    for j in 1..N:
+        // re-selects h on each shuffle
+        null[j], _ = BEST_OVER_FAMILY(SHUFFLE_POSITIONS(c), H)
+    z_fw = (T_star - MEAN(null)) / SD(null)
+    p_hat = (1 + #{ j : null[j] >= T_star }) / (N + 1)
+    return T_star, h_star, z_fw, p_hat, max(null)
+
+// Gate written against the family-wise maximum with a declared margin (0.02
+// nats per letter in the periodic-substitution gate).
+function GATE(c, H, N, margin):
+    T_star, h_star, z_fw, p_hat, null_max = FAMILY_WISE_NULL(c, H, N)
+    if h_star sits at the edge of the scanned range:
+        treat the result as selection, not signal
+    return T_star >= null_max + margin
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
 $N$ times the cost of the full scan. Exhaustive scans that are cheap on one text (a $607{,}776$-row Hill keyword bank in 2 s) remain cheap with 100 shuffles; complete-pipeline solvers with annealing are the expensive case and are run with 9–99 nulls.
@@ -59,15 +88,15 @@ $N$ times the cost of the full scan. Exhaustive scans that are cheap on one text
 kind = "failure_modes"
 body = '''
 - **Per-trial illusion.** A cross-text relation scan reached a coincidence rate of $0.0495$ against a per-trial null of $0.0387 \pm 0.0019$, i.e. $+5.7\sigma$; over the 648 relation-offset trials per pairing the transcript already notes that a maximum near $+3\sigma$ is chance, and the family-wise null over all 1,296 trials put the same value at $+0.8\sigma$.
-- **Largest-period artefact.** A keyword bank scan reported $z = +2.74$, $+2.83$ and $+3.04$ for three targets, all at periods 12–14, the top of the scan, while its planted control ranked its true keyword 1 of $607{,}776$ at $z = +7.6$ and the true period.
+- **False pattern at the largest period.** A keyword-bank scan reported $z = +2.74$, $+2.83$, and $+3.04$ for three targets. Every best result occurred at periods 12–14, the top edge of the scan. By contrast, the planted control ranked its true keyword 1 of $607{,}776$ at $z = +7.6$ and found the true period.
 - **Family too small in the null.** Re-using the observed cycle, sign or key inside the nulls (instead of re-selecting them) shrinks the null and manufactures significance.
-- **Invariant sub-families.** Members whose statistic is invariant under the shuffle contribute a constant; they neither help nor hurt but inflate the family size in a Bonferroni count, another reason to simulate rather than correct.
+- **Invariant sub-families.** Members whose statistic is invariant under the shuffle contribute a constant. They neither help nor hurt but inflate the family size in a Bonferroni count, another reason to simulate rather than correct.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Affine-lag filters (2 alphabet orders, all lags and multipliers): the best per-trial $z$ was $+4.2$, the family-wise maximum log-likelihood ratio $5.0$ against a shuffled maximum $5.1 \pm 0.6$, $z = -0.1$. Order-free substitution scan: a planted period-7 key found at $z = +15.28$ family-wise; a planted composite key of period $\operatorname{lcm}(5, 9) = 45$, outside the scanned range, at $+0.91$ (expected weak). Bank search with nine complete-pipeline nulls: observed $-4.869$ against null $-4.836 \pm 0.024$, maximum $-4.795$, $\hat p \le 0.90$.
+Affine-lag filters (2 alphabet orders, all lags and multipliers): the best per-trial $z$ was $+4.2$, the family-wise maximum log-likelihood ratio $5.0$ against a shuffled maximum $5.1 \pm 0.6$, $z = -0.1$. Order-free substitution scan: a planted period-7 key found at $z = +15.28$ family-wise. A planted composite key of period $\operatorname{lcm}(5, 9) = 45$, outside the scanned range, at $+0.91$ (expected weak). Bank search with nine complete-pipeline nulls: observed $-4.869$ against null $-4.836 \pm 0.024$, maximum $-4.795$, $\hat p \le 0.90$.
 '''
 
 [[blocks]]

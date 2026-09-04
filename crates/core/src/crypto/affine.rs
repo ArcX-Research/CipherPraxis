@@ -11,7 +11,7 @@ pub fn is_unit(a: i64) -> bool {
 pub fn encrypt(plain: &str, a: i64, b: i64) -> Result<String, String> {
     if !is_unit(a) {
         return Err(format!(
-            "a = {a} is not invertible modulo 26 (gcd(a, 26) must be 1)"
+            "a = {a} has no inverse modulo 26. Choose a value with gcd(a, 26) = 1."
         ));
     }
     Ok(normalize(plain)
@@ -22,7 +22,7 @@ pub fn encrypt(plain: &str, a: i64, b: i64) -> Result<String, String> {
 
 /// p = a⁻¹·(c − b) (mod 26).
 pub fn decrypt(cipher: &str, a: i64, b: i64) -> Result<String, String> {
-    let inv = mod_inverse(a, 26).ok_or_else(|| format!("a = {a} is not invertible modulo 26"))?;
+    let inv = mod_inverse(a, 26).ok_or_else(|| format!("a = {a} has no inverse modulo 26."))?;
     Ok(normalize(cipher)
         .bytes()
         .map(|c| (b'A' + ((inv * ((c - b'A') as i64 - b)).rem_euclid(26)) as u8) as char)

@@ -3,7 +3,7 @@ section = "search"
 title = "Beam search over plaintext prefixes"
 subtitle = "Build plaintext from left to right while keeping only the W best partial answers"
 status = "POWER-LIMITED"
-status_note = "Several versions are implemented, including per-residue substitutions, a shared 26-cycle, exact Z3 prefix filtering, and word beams with a local model. Every 63- to 95-letter control lost the true prefix early. Two 63-letter controls recovered 19.0% and 9.5%. The truth left a 40,000-wide beam by character 5 or 13 and survived 0/84 times in a 3,000-wide beam even with an oracle hint. No target runs were allowed."
+status_note = "Several versions are implemented, including per-residue substitutions, a shared 26-cycle, exact Z3 prefix filtering, and word beams with a local model. Every 63- to 95-letter control lost the true prefix early. Two 63-letter controls recovered 19.0% and 9.5%. The truth left a 40,000-wide beam by character 5 or 13 and survived 0/84 times in a 3,000-wide beam even when given the correct hypothesis. No target runs were allowed."
 family = "Deterministic heuristics"
 tags = ["beam", "language model", "prefix", "constrained decoding", "identifiability"]
 related = ["k-best-lists", "meet-in-the-middle", "viterbi-decoding", "cp-sat-and-smt-solvers", "all-different-enumeration", "word-prefix-csp", "quagmire-iii", "local-language-model-prior", "within-coset-null", "planted-controls", "held-out-gates", "g-beam-width"]
@@ -47,7 +47,7 @@ so residue maps are rotations (commuting) or reflections (involutions whose comp
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- The truth's prefix score must stay within the top $W$ at every position; a single early dip is fatal because beams do not backtrack.
+- The truth's prefix score must stay within the top $W$ at every position. A single early dip is fatal because beams do not backtrack.
 - The language model is trained on generic text disjoint from the held-out control windows (training on the first 1,350,000 letters of a corpus; controls drawn beyond letter 1,420,000).
 - Only proven-infeasible prefixes may be removed by an exact filter; `unknown` and timeout states must survive, otherwise the decoder fabricates power.
 - Readability plus an exact roundtrip is not identification: fluent alternative decrypts that reproduce the ciphertext exist at these lengths.
@@ -57,7 +57,34 @@ body = '''
 kind = "attack"
 title = "How to attack it"
 body = '''
-The family is a period-7 polyalphabetic substitution on a 63-95-letter zone whose alphabet is unstructured. Constraints from the ciphertext are the only key information: equal letters in a residue decrypt equally, distinct ones distinctly, and (for a shared cycle) the residue maps are related by group identities. The beam proposes plaintexts consistent with those constraints, ranked by a character GRU (64/192, two layers) or a local word-level language model. Endpoint nulls shuffle letters within each period coset, preserving every coset histogram and equality count while destroying cross-coset order; a fluent output must beat that familywise null. In the word-level variants exact GF(2) and GF(13) null spaces of the position equations are computed for each prefix, and once the nullity is small a CRT all-different enumeration becomes a hard gate.
+The family is a period-7 polyalphabetic substitution on a 63-95-letter zone whose alphabet is unstructured. Constraints from the ciphertext are the only key information: equal letters in a residue decrypt equally, distinct ones distinctly, and (for a shared cycle) the residue maps are related by group identities. The beam proposes plaintexts consistent with those constraints, ranked by a character GRU (64/192, two layers) or a local word-level language model. Endpoint nulls shuffle letters within each period coset, preserving every coset histogram and equality count while destroying cross-coset order. A fluent output must beat that familywise null. In the word-level variants exact GF(2) and GF(13) null spaces of the position equations are computed for each prefix, and once the nullity is small a CRT all-different enumeration becomes a hard gate.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Ciphertext c[0..n-1]; language model giving log p(x | prefix); beam width
+// W. admissible(map, c_t): the plaintext letters x allowed for c_t under the
+// partial key map (equal ciphertext letters in a residue decrypt equally,
+// distinct ones distinctly, plus any group identities between residue maps
+// for a shared cycle).
+function BEAM_DECODE(c[0..n-1], W):
+    B = {(prefix = "", score = 0, map = {})}
+    for t in 0..n-1:
+        C = {}
+        for (prefix, s, map) in B:
+            for x in admissible(map, c[t]):
+                C = C + {(prefix + x, s + log p(x | prefix), map + {c[t] ->
+                        x})}
+        // optional exact checkpoint: pass a ranked pool larger than W through
+        // an exact solver and remove only prefixes proven infeasible (unknown
+        // and timeout states survive) no backtracking: a dropped prefix never
+        // returns
+        B = the W highest-scoring elements of C
+    // optionally checked by an exact solver
+    return B ranked by score
+```
 '''
 
 [[blocks]]
@@ -69,10 +96,10 @@ Per position: $|B_t| \times |\mathcal{A}_t|$ candidates scored by one batched mo
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Truth leaves the beam early.** Seven-substitution beam on two 63-letter controls matched to the target's per-coset distinct counts: fluent, exactly round-tripping alternatives were produced, but only 19.0% and 9.5% of the hidden plaintexts were recovered; the true paths left the beam. Shared-cycle beam: all 12,000 final states were infeasible at the exact endpoint check.
+- **Truth leaves the beam early.** Seven-substitution beam on two 63-letter controls matched to the target's per-coset distinct counts: fluent, exactly round-tripping alternatives were produced, but only 19.0% and 9.5% of the hidden plaintexts were recovered. The true paths left the beam. Shared-cycle beam: all 12,000 final states were infeasible at the exact endpoint check.
 - **Exact prefix filtering cannot rescue it.** With adaptive Z3 checkpoints, four controls failed before feasibility became selective: the 63-letter controls lost the truth at position 5 (outside the top 40,000), the 95-letter controls at position 13 (ranks 34,950 and 30,359 in the pool, then outside the retained 20,000). Pilots at the point of loss returned 48 SAT / 0 UNSAT (n = 63, Vigenère), 44 SAT / 0 UNSAT / 4 unknown (n = 63, Beaufort) and 0 / 0 / 48 unknown (n = 95): nothing was provably infeasible yet.
 - **Oracle hypotheses do not help.** Forcing the true special-residue hypothesis in a 3,000-wide quadgram beam over 6 plants $\times$ 14 cells: truth alive at the end 0/84, first loss at position 2-4. The first letters open free residues before any constraint bites.
-- **Word beams collapse.** A ten-state complete-word beam retained four false lineages at 25-27 letters and exact CRT/all-different filtering then rejected every continuation; a larger run made 3,500 model calls in 1,127.9 s and ended with 64 live partial states and zero complete proposals; a whole-entry variant made 1,800 calls, kept 21 live prefixes and six partials, and produced zero complete entries.
+- **Word beams collapse.** A ten-state complete-word beam retained four false lineages at 25-27 letters and exact CRT/all-different filtering then rejected every continuation. A larger run made 3,500 model calls in 1,127.9 s and ended with 64 live partial states and zero complete proposals. A whole-entry variant made 1,800 calls, kept 21 live prefixes and six partials, and produced zero complete entries.
 - **Lossy intermediate cuts.** A one-front intermediate cut in the bidirectional variant was identified as lossy and replaced by a full $26 \times 26$ product ranking (see [meet in the middle](/search/meet-in-the-middle)).
 '''
 

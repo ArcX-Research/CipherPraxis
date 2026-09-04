@@ -16,8 +16,8 @@ body = '''
 KAT layers observed in the corpus, each with a required exit status and a printed count:
 
 - **Self-KAT (core).** Incremental scoring deltas equal full rescores for all 325 letter-pair swaps; forward followed by inverse of the state schedule reproduces the input over every cell; alias identities (a zero-width variant equals the constant-slope schedule) hold for all parameters.
-- **Static KAT (wrapper).** With a synthetic language and no corpus, the real pipeline runs on two fixtures and must reach its control terminal; the derivation primitives reproduce published seed vectors; the isolation scan rejects planted loader fragments.
-- **Parser KAT.** A clean transcript parses; hundreds of structural and semantic mutations (duplicate key, NaN, non-canonical JSON, bool-for-int, reordered records, wrong count, forged score, dropped tie) are each rejected; a no-op guard checks that every mutation actually changed bytes.
+- **Static KAT (wrapper).** With a synthetic language and no corpus, the real pipeline runs on two fixtures and must reach its control terminal. The derivation primitives reproduce published seed vectors. The isolation scan rejects planted loader fragments.
+- **Parser KAT.** A clean transcript parses; hundreds of structural and semantic mutations (duplicate key, NaN, non-canonical JSON, bool-for-int, reordered records, wrong count, forged score, dropped tie) are each rejected. A no-op guard checks that every mutation actually changed bytes.
 - **Transaction KAT.** Injected failures at every stage of the durable write (before marker, after marker, after placeholder, after write, after fsync, at readback, at publication) must leave the canonical path absent or poisoned and the marker durable; hard link, wrong mode, symlink and parent replacement must be rejected.
 - **Differential KAT.** An instrumented core must match the un-instrumented core on every deterministic counter for a deliberately broken plant.
 - **Segment KAT.** The union of segment runs must equal the full run in nodes and outcome.
@@ -32,13 +32,13 @@ For a state $k$, a move $m$ and an incremental scorer $\Delta$,
 
 $$\operatorname{full}(m(k)) - \operatorname{full}(k) = \Delta(k, m)$$
 
-must hold exactly (integers) for every move in a deterministic sweep; the base core checks it for all $\binom{26}{2} = 325$ swaps on a random stream and random table.
+must hold exactly (integers) for every move in a deterministic sweep. The base core checks it for all $\binom{26}{2} = 325$ swaps on a random stream and random table.
 '''
 
 [[blocks]]
 kind = "assumptions"
 body = '''
-- KATs use synthetic or disclosed inputs only; they never open a hidden fixture or a live text. A static KAT's transcript is admitted under a `KAT` mode flag and is refused at any canonical path.
+- KATs use synthetic or disclosed inputs only. They never open a hidden fixture or a live text. A static KAT's transcript is admitted under a `KAT` mode flag and is refused at any canonical path.
 - A KAT that cannot fail is not a KAT; mutation panels include the no-op guard for that reason.
 '''
 
@@ -49,17 +49,67 @@ Two defects in the corpus were of the kind a control-filter KAT catches. A rotat
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Run before any mode, including production; every layer must exit 0 and
+// print a count.
+procedure KAT_HARNESS():
+    // Self-KAT (core): delta consistency, schedule roundtrips, alias
+    // identities
+    for each of the 325 letter-pair swaps m of a state k, on a random stream
+            and a random table:
+        // exact integers
+        require full(m(k)) - full(k) == Delta(k, m)
+    require inverse(forward(state)) == state over every cell
+    require the alias identities for all parameters
+    print "SELF_KAT PASS checks=" + count
+    // Static KAT (wrapper): the real pipeline on synthetic fixtures; no
+    // corpus, no hidden or live text
+    require pipeline(fixtures) reaches its control terminal and the
+            derivation primitives reproduce the published vectors
+    // Parser KAT: the clean transcript accepted, every mutation rejected,
+    // every mutation changed bytes
+    require parse(clean) accepts; rejected = 0
+    // duplicate key, NaN, non-canonical JSON, bool-for-int, reorder, count,
+    // score, tie
+    for each mutation in panel:
+        // no-op guard
+        bytes' = mutate(clean); require bytes' != clean
+        if parse(bytes') rejects: rejected = rejected + 1
+    require rejected == |panel|
+    print "PARSER_KAT mutations_rejected=" + rejected + "/" + |panel|
+    // Transaction KAT: fail once at each stage of the durable write
+    for each failpoint (before marker, after marker, after placeholder, after
+            write, after fsync, readback, publication):
+        inject the failure
+        require the canonical path absent or poisoned and the marker durable
+    require hard link, wrong mode, symlink and parent replacement are each
+            rejected
+    // Differential, segment and control-filter KATs
+    require the instrumented core == the un-instrumented core on every
+            deterministic counter of a broken plant
+    require the union of segment runs == the full run in nodes and outcome
+    for each control: require filter(planted true maps) == True
+    // a KAT that cannot fail is not a KAT
+    require filter(a genuine non-member) == False
+    // only now may a mode run
+    exit 0
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-Static KATs in the program run in 7 to 51 s; parser KATs with 420 mutations in about 46 s; transaction KATs in about 2 s; a differential KAT is two single-thread runs of a small fixture. They are cheap relative to any solve and are run at the start of every mode, including production.
+Static KATs in the program run in 7 to 51 s; parser KATs with 420 mutations in about 46 s; transaction KATs in about 2 s. A differential KAT is two single-thread runs of a small fixture. They are cheap relative to any solve and are run at the start of every mode, including production.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **A KAT loop that never executed.** A dead KAT loop was found and removed in one successor; a KAT must print a count.
-- **Inherited KATs.** Algebra KATs delegated to a pinned predecessor module are sound only while the pin holds; the auditor re-derived the structural claims independently rather than trusting the delegation.
-- **Bool/float laxity.** Dictionary equality admits `true` for `1` and `504.0` for `504`; the fix is to compare canonical serialisations.
+- **A KAT loop that never executed.** A dead KAT loop was found and removed in one successor. A KAT must print a count.
+- **Inherited KATs.** Algebra KATs delegated to a pinned predecessor module are sound only while the pin holds. The auditor re-derived the structural claims independently rather than trusting the delegation.
+- **Bool/float laxity.** Dictionary equality admits `true` for `1` and `504.0` for `504`. The fix is to compare canonical serialisations.
 '''
 
 [[blocks]]

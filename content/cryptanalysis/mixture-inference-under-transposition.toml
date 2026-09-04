@@ -28,7 +28,7 @@ For a model $f$ and coset histograms $F_b$,
 
 $$\log Z(f) = \sum_{b=0}^{m-1} \log \frac{1}{26} \sum_{u=0}^{25} \prod_x f(x-u)^{F_b(x)}.$$
 
-A family's evidence is the mean of $Z(f)$ over its bank of members (uniform prior), which penalises bank size automatically; the $\delta$-marginal evidence groups the $M_2$ bank by spacing. Profiling $u$ instead of marginalising overfits by about $0.15$ nats per letter at $n = 153$ and lets wrong models win on shuffled texts. Under the winning model each letter gets a class posterior
+A family's evidence is the mean of $Z(f)$ over its bank of members (uniform prior), which penalises bank size automatically. The $\delta$-marginal evidence groups the $M_2$ bank by spacing. Profiling $u$ instead of marginalising overfits by about $0.15$ nats per letter at $n = 153$ and lets wrong models win on shuffled texts. Under the winning model each letter gets a class posterior
 
 $$P_i(\gamma) \propto w_\gamma E\big(y_i - g_\gamma\big), \qquad y_i = c_i - u_{i \bmod m},$$
 
@@ -40,8 +40,8 @@ kind = "assumptions"
 body = '''
 - The outer layer is additive in a known order and the inner is additive in a known (possibly different) order; both orders are tried.
 - The inner period is short ($k = 2$ or $3$): the mixture of many rotated distributions is nearly flat and carries no spacing information.
-- The inner plaintext is language with a peaked distribution; a fractionated or random inner gives $M_2$ and $M_3$ evidence at the null.
-- The text is homogeneous along its length; a zoned text mimics a mixture (see failure modes).
+- The inner plaintext is language with a peaked distribution. A fractionated or random inner gives $M_2$ and $M_3$ evidence at the null.
+- The text is homogeneous along its length. A zoned text mimics a mixture (see failure modes).
 '''
 
 [[blocks]]
@@ -49,43 +49,86 @@ kind = "attack"
 title = "How to attack it"
 body = '''
 1. Coset histograms in the outer order; evidence of $M_1$, $M_2$, $M_3$ with shifts and banks marginalised; $z$ of each evidence against shuffled texts.
-2. Read the top spacings $\delta$ from the $\delta$-marginal (correct on 7/8 planted seeds; the top three are carried).
+2. Read the best spacings $\delta$ from the $\delta$-marginal. It was correct on 7 of 8 planted seeds, and the search keeps the top three values.
 3. Class posteriors, order-free width scan with class-EM refinement, nulls through the identical pipeline.
-4. For widths at $z \ge 3$: fix residue classes from the block phases, order the rest by quadgrams, polish shifts against order; a solve reads at the language rate.
+4. For widths at $z \ge 3$: fix residue classes from the block phases, order the rest by quadgrams, polish shifts against order. A solve reads at the language rate.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Ciphertext c[0..n-1] in the outer order, outer period m, language
+// distribution E, model banks for M1, M2, M3, N shuffles. outer shifts u
+// integrated out under a uniform prior
+function LOG_EVIDENCE(F[0..m-1], f):
+    return sum over b of log( (1/26) * sum over u in 0..25 of product over x
+            of f[(x - u) mod 26]^F[b][x] )
+
+function MIXTURE_INFERENCE(c, m, E, N):
+    for b in 0..m-1: F[b] = HISTOGRAM([c[i] for i in 0..n-1 if i mod m == b])
+    // banks: E rotated; w E(x - g1) + (1 - w) E(x - g2); three components
+    for M in {M1, M2, M3}:
+        // bank size penalised automatically
+        Z[M] = MEAN over members f of bank(M) of exp(LOG_EVIDENCE(F, f))
+        z[M] = (log Z[M] - MEAN over shuffles) / SD over shuffles, from N
+                shuffled texts through the same fit
+    // the delta-marginal
+    for each spacing delta:
+        Zdelta[delta] = MEAN over M2 members with g2 - g1 == delta
+    top_deltas = the top three spacings by Zdelta
+    (w, g, u) = read from the posterior of the winning model
+    // class posteriors, unchanged by any transposition
+    for i in 0..n-1:
+        y[i] = (c[i] - u[i mod m]) mod 26
+        P[i][gamma] proportional to w[gamma] * E[(y[i] - g[gamma]) mod 26]
+    // see the width statistic entry
+    S = ORDER_FREE_WIDTH_SCAN(P, top_deltas, class-EM refinement of u per
+            width)
+    z_width = z of S per width against N shuffled texts through the identical
+            pipeline (fit, deltas, EM, DP)
+    for width w with z_width[w] >= 3:
+        fix the residue classes from the block phases
+        order the remaining columns by quadgrams
+        polish u against the order
+        if the stripped text reads at the language rate:
+            return (w, u, g, decrypt, z_width[w])
+    return (no width at z >= 3, z, top_deltas)
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-Bank sizes: $26$ ($M_1$), $325$ ($M_2$ at one weight), $2{,}600$ ($M_3$); each member costs one $m \times 26$ log-likelihood table, so the fits are seconds. The width scan with sixty null pipelines dominates, about 30 to 40 minutes per text over all order combinations.
+Bank sizes: $26$ ($M_1$), $325$ ($M_2$ at one weight), $2{,}600$ ($M_3$). Each member costs one $m \times 26$ log-likelihood table, so the fits are seconds. The width scan with sixty null pipelines dominates, about 30 to 40 minutes per text over all order combinations.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Zone artefact.** A text made of a 63-letter zone with monoalphabetic cosets and 90 flat letters pools to a coset index of coincidence of about $0.055$ and a pair-coincidence deficit, exactly the "mixed inner" signature; the corpus's whole-text mixture verdicts on the 153-letter text were of this kind and were superseded once the zones were found.
-- **Mixture without a single width.** A double columnar shows $M_2$ at $z +5.8$ but no width; the mixture evidence alone does not identify one transposition.
-- **Flat inner.** Fractionation gives weak $M_2/M_3$ and no width, the correct negative but also the end of the road for this instrument.
-- **Selection.** Profiled shifts, uncentred posteriors and per-width maxima without a full-pipeline null all inflate $z$; the corpus's nulls repeat fit, $\delta$ candidates, EM and DP on every shuffle.
+- **False pattern from mixed zones.** Combining a 63-letter zone with monoalphabetic cosets and 90 flat letters gives a coset index of coincidence near $0.055$ and too few pair coincidences. That looks exactly like the "mixed inner" pattern. The original whole-text results for the 153-letter text had this problem and were replaced once the separate zones were found.
+- **Mixture without a single width.** A double columnar shows $M_2$ at $z +5.8$ but no width. The mixture evidence alone does not identify one transposition.
+- **Flat inner.** Fractionation gives weak $M_2/M_3$ and no width, the correct negative but also the end of the road for this test.
+- **Selection.** Profiled shifts, uncentred posteriors and per-width maxima without a full-pipeline null all inflate $z$. The corpus's nulls repeat fit, $\delta$ candidates, EM and DP on every shuffle.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Four planted sandwiches at 153 letters, all solved from cold with the true width on top (logs/05): outer/inner in one order, width 9 exact grid, $z +12.8$; width 8 ragged, $+11.3$; outer in one order and inner in the other, width 12 with nine long columns, $+4.3$; width 9 with a period-3 inner, $+5.1$; each read at 100% match and rate $-4.34$. Printed alongside: a fractionated inner under the outer layer (weak $M_2/M_3$, no width), a plain periodic substitution ($M_1$ wins, no width), a double columnar ($M_2$ present, no single width). On the two unsolved corpus texts: no preferred spacing for the 153-letter text and no width at $z \ge 3$ for either text in any order combination.
+Four planted sandwiches at 153 letters, all solved from cold with the true width on top (logs/05): outer/inner in one order, width 9 exact grid, $z +12.8$; width 8 ragged, $+11.3$; outer in one order and inner in the other, width 12 with nine long columns, $+4.3$; width 9 with a period-3 inner, $+5.1$. Each read at 100% match and rate $-4.34$. Printed alongside: a fractionated inner under the outer layer (weak $M_2/M_3$, no width), a plain periodic substitution ($M_1$ wins, no width), a double columnar ($M_2$ present, no single width). On the two unsolved corpus texts: no preferred spacing for the 153-letter text and no width at $z \ge 3$ for either text in any order combination.
 '''
 
 [[blocks]]
 kind = "example"
 title = "Worked example"
 body = '''
-Inner period 2 with spacing $\delta = 13$: the inner distribution is $f(x) = \tfrac12\big(E(x) + E(x-13)\big)$, so E and R (13 apart) both have inner frequency $\tfrac12(0.127 + 0.060) = 0.0935$, and every letter is paired with its antipode. The index of coincidence of $f$ is about $0.054$, well below the language value $0.066$ and above uniform $0.0385$; a transposition of any kind leaves that distribution untouched, and an outer period-7 layer shows it rotated in each of its seven cosets. The $\delta$-marginal evidence then peaks at $\delta = 13$ regardless of the transposition, and in plaintext order the classes read `0101...`; a columnar transposition of even width turns that into constant-class columns, of odd width into alternating ones.
+Inner period 2 with spacing $\delta = 13$: the inner distribution is $f(x) = \tfrac12\big(E(x) + E(x-13)\big)$, so E and R (13 apart) both have inner frequency $\tfrac12(0.127 + 0.060) = 0.0935$, and every letter is paired with its antipode. The index of coincidence of $f$ is about $0.054$, well below the language value $0.066$ and above uniform $0.0385$. A transposition of any kind leaves that distribution untouched, and an outer period-7 layer shows it rotated in each of its seven cosets. The $\delta$-marginal evidence then peaks at $\delta = 13$ regardless of the transposition, and in plaintext order the classes read `0101...`. A columnar transposition of even width turns that into constant-class columns, of odd width into alternating ones.
 '''
 
 [[blocks]]
 kind = "notes"
 body = '''
-The likelihood-free family classifier places the mixed-inner families (sandwich, fractionation, unknown-alphabet substitution, several independent alphabets) in one cluster that invariant statistics cannot split at 153 letters; the mixture instrument is the one that decides *within* that cluster whether a single transposition of short-period language is present, and it decided negatively for the corpus texts (see [Family identification](/cryptanalysis/family-identification)).
+The likelihood-free family classifier places the mixed-inner families (sandwich, fractionation, unknown-alphabet substitution, several independent alphabets) in one cluster that invariant statistics cannot split at 153 letters. The mixture test is the one that decides *within* that cluster whether a single transposition of short-period language is present, and it decided negatively for the corpus texts (see [Family identification](/cryptanalysis/family-identification)).
 '''
 
 [[provenance]]

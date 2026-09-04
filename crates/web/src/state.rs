@@ -10,6 +10,16 @@ pub const CONTENT_JSON: &str = include_str!(concat!(env!("OUT_DIR"), "/content.j
 /// Name of the evidence corpus root that provenance paths are relative to.
 pub const CORPUS_ROOT: &str = "poemanalysis";
 
+/// Delivery channel for the evidence-request form (see README, "Evidence requests").
+/// Set ONE of these for production:
+/// - `EVIDENCE_REQUEST_ENDPOINT`: an HTTPS URL that accepts a JSON POST of the request;
+/// - `EVIDENCE_REQUEST_EMAIL`: a mailbox; the form opens the visitor's mail app with the
+///   request pre-filled.
+///
+/// With both `None` the form copies a plain-text request for the visitor to send by hand.
+pub const EVIDENCE_REQUEST_ENDPOINT: Option<&str> = None;
+pub const EVIDENCE_REQUEST_EMAIL: Option<&str> = Some("support@questlyst.com");
+
 #[derive(Clone)]
 pub struct AppState {
     pub catalog: Arc<Catalog>,

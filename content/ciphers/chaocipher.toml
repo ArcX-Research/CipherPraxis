@@ -32,14 +32,14 @@ kind = "variants"
 body = '''
 - **Keyed wheels from a vocabulary**: both wheels drawn from a bank of 396 keyed alphabets ($396^2 = 156{,}816$ ordered pairs).
 - **One wheel free**: left wheel dihedral, right wheel arbitrary (the reduction above).
-- **Both wheels free**: not searched; no validated decoder exists for it in the corpus.
+- **Both wheels free**: not searched. No validated decoder exists for it in the corpus.
 '''
 
 [[blocks]]
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- The classic permutation rule is used unchanged; no interruptor or extra step.
+- The classic permutation rule is used unchanged. No interruptor or extra step.
 - Invariant: the ciphertext determines the left wheel's trajectory once its initial state is known, so a wrong initial state produces a wrong but self-consistent trajectory that still round-trips.
 - Invariant: for a plaintext exposing $m$ right-wheel coordinates, $(26 - m)!$ completions of $R_0$ are unobservable.
 '''
@@ -55,6 +55,42 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// L = left (ciphertext) wheel, R = right (plaintext) wheel: two 26-letter
+// arrays in secret start states. ROTATE_TO(W, x): rotate W until letter x is
+// at position 0. ROTATE(W, 1): one more step the same way. MOVE(W, i, j):
+// extract the letter at position i and reinsert it at position j.
+function PERMUTE(L, R, c, p):
+    L = ROTATE_TO(L, c); L = MOVE(L, 1, 13)
+    R = ROTATE_TO(R, p); R = ROTATE(R, 1); R = MOVE(R, 2, 13)
+    return L, R
+
+function ENCRYPT(p[0..n-1], L, R):
+    for i in 0..n-1:
+        // position of the plaintext letter on the right wheel
+        j = pos_R(p[i])
+        // read the left wheel at the same position
+        c[i] = L[j]
+        L, R = PERMUTE(L, R, c[i], p[i])
+    return c
+
+function DECRYPT(c[0..n-1], L, R):
+    for i in 0..n-1:
+        j = pos_L(c[i])
+        p[i] = R[j]
+        L, R = PERMUTE(L, R, c[i], p[i])
+    return p
+
+// One-wheel reduction used by the attack: a candidate initial L fixes every
+// j[i] = pos_L(c[i]) from the ciphertext alone; applying the right-wheel
+// permutations to rho = (0, ..., 25) gives q[i] = rho_i(j[i]), so p[i] =
+// R_0[q[i]] is one fixed substitution of the computable stream q.
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
 Bank: 156,816 pairs, each a full decrypt and score. One-wheel-free: four distinct substitution problems per text under the frozen schedule; 28 fixtures (6 positives, 3 negatives, 19 nulls) took 54 seconds of selector time. The live one-shot ran in 27.9 seconds.
@@ -64,7 +100,7 @@ Bank: 156,816 pairs, each a full decrypt and score. One-wheel-free: four distinc
 kind = "failure_modes"
 body = '''
 - **Tautological round-trip.** Every fitted state re-encrypts the ciphertext exactly.
-- **Bank limitation.** A negative over keyed wheels excludes only those wheels; the live bank winner scored $-7.59$ with visibly random output.
+- **Bank limitation.** A negative over keyed wheels excludes only those wheels. The live bank winner scored $-7.59$ with visibly random output.
 - **Random-level ambiguity.** On the live text all four one-wheel-free classes scored $-15.23$ to $-15.31$ (the random-negative level) with a class gap of 0.02, so the decision was AMBIGUOUS, which the audit reads as rejection of the family, not as a lead.
 - **Both wheels free** is a genuinely open problem for which readability plus round-trip cannot be evidence.
 '''
@@ -72,7 +108,7 @@ body = '''
 [[blocks]]
 kind = "controls"
 body = '''
-Keyed-wheel bank (log 182): the published test vector passed; the 504-letter hidden-bank control selected its planted wheel pair at rank 1 of 156,816, recovered 100% plaintext and forward-encrypted exactly; live winner $-7.5867$, not English. One-wheel-free (log 359): 6/6 prose fixtures recovered exact plaintext, RGS class, generating alias, observed map and $(26-m)!$ count, rates $-9.96$ to $-9.37$ with class gaps above 5.3; 3/3 valid-family random negatives at $-15.20$ to $-15.17$; 19/19 shuffled-prose nulls at $-13.83$ to $-13.39$ against the frozen gate $-10.0$. Fresh validation (log 361): 2/2 unseen fixtures. Live one-shot (log 363): AMBIGUOUS at $-15.23$ to $-15.31$; no candidate.
+Keyed-wheel bank (log 182): the published test vector passed. The 504-letter hidden-bank control selected its planted wheel pair at rank 1 of 156,816, recovered 100% plaintext and forward-encrypted exactly; live winner $-7.5867$, not English. One-wheel-free (log 359): 6/6 prose fixtures recovered exact plaintext, RGS class, generating alias, observed map and $(26-m)!$ count, rates $-9.96$ to $-9.37$ with class gaps above 5.3; 3/3 valid-family random negatives at $-15.20$ to $-15.17$; 19/19 shuffled-prose nulls at $-13.83$ to $-13.39$ against the frozen gate $-10.0$. Fresh validation (log 361): 2/2 unseen fixtures. Live one-shot (log 363): AMBIGUOUS at $-15.23$ to $-15.31$. No candidate.
 '''
 
 [[blocks]]

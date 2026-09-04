@@ -25,7 +25,7 @@ redundant: same (map, cipher letter) => same U; within a map distinct cipher let
 optional: Inverse(pos, ring); Element(RU_i, ring, U_i)            # rank-to-letter propagation, provably redundant
 ```
 
-A forced model fixes the hidden plaintext literals and must be SAT; a forced-plus-blocked model adds one forbidden full tuple and must be UNSAT; the unforced model is the identification problem.
+A forced model fixes the hidden plaintext literals and must be SAT. A forced-plus-blocked model adds one forbidden full tuple and must be UNSAT. The unforced model is the identification problem.
 '''
 
 [[blocks]]
@@ -44,8 +44,8 @@ Cardinality argument: a residue map is injective, so if one map sees 15 distinct
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- A backend's `max_memory` parameter is not a whole-process bound: recorded peaks were 1,300,611,072 bytes and 3,382,280,192 bytes with the parameter set to 900 MB; an outer resource gate is required.
-- UNKNOWN (timeout) carries no information either way; only `unsat` may remove a candidate, and a forced/blocked panel must pass before an unforced instance is interpreted.
+- A backend's `max_memory` parameter is not a whole-process bound: recorded peaks were 1,300,611,072 bytes and 3,382,280,192 bytes with the parameter set to 900 MB. An outer resource gate is required.
+- UNKNOWN (timeout) carries no information either way. Only `unsat` may remove a candidate, and a forced/blocked panel must pass before an unforced instance is interpreted.
 - Declaration counts do not predict solve time: a 207-variable forced Vigenère instance took 12.489 s where its Beaufort twin took 0.129 s.
 - SAT is existence, not identification: blocking the first model and re-solving is mandatory.
 '''
@@ -56,23 +56,71 @@ title = "How to attack it"
 body = '''
 - **Finite-vocabulary tiling, exact.** Compile a bank to a DFA, encode one shared cycle and five tied shifts as one-hot CNF with three-way channel clauses, decide each window: six bank/window cells UNSAT by cardinality, two cells SAT with an explicit second model after blocking the first (5,186 variables / 3,012,112 clauses, 13-16 s per solve).
 - **Cross-chain with two finite languages.** Element-symbol DFA on one plaintext, top-1,024 generic-word DFA on the other, one cycle and five shifts; encodings from 301,760 CNF variables / 1,778,174 clauses down to 1,950 Z3 declarations / 2,841 assertions (154.75 times fewer) and 411-437 CP-SAT variables; incremental activation of word transitions in 13-character blocks.
-- **Direct optimisation.** A CP-SAT model whose objective is an integer trigram sum over the plaintext under a two-transposition-plus-periodic-key geometry: the forced model proves OPTIMAL at the exact truth score 96,558,285 in 0.73 s; the unforced 36-letter instance returns UNKNOWN after 39.6 s with 3.15 GiB resident.
+- **Direct optimisation.** A CP-SAT model whose objective is an integer trigram sum over the plaintext under a two-transposition-plus-periodic-key geometry: the forced model proves OPTIMAL at the exact truth score 96,558,285 in 0.73 s. The unforced 36-letter instance returns UNKNOWN after 39.6 s with 3.15 GiB resident.
 - **Earlier CP-SAT with quadgram feasibility tables**: cost 2,353 against the truth's 2,042 after 420 s; with top-60,000 quadgram feasibility no feasible point in 400 s.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Abstract interface: build a model, add constraints, solve under a time cap,
+// and read a status in {SAT, UNSAT, UNKNOWN} together with a model when the
+// status is SAT.
+function BUILD_MODEL(ciphertext C, residue map m_i, automata):
+    M = new model
+    for each letter L: pos[L] = M.int_var(0, 25)
+    // unit gauge
+    M.add(AllDifferent(pos[A..Z]));  M.add(pos[A] in {0, 1, 2, 13})
+    for each residue r: k[r] = M.int_var(0, 25)
+    for each position i:
+        U[i] = M.int_var(0, 25); RU[i] = M.int_var(0, 25)
+        // RU_i = pos[U_i]
+        M.add(Element(U[i], pos, RU[i]))
+        // 676 rows
+        M.add(Table(pos[C[i]], RU[i], k[m_i]) in {(x, y, k) : x = y + k mod
+                26})
+    // finite language
+    for each (word variables W, DFA) in automata: M.add(Automaton(W, DFA))
+    return M
+
+function SOLVE(M, time_cap):
+    // (status, model); UNKNOWN carries no information
+    return solver.solve(M, time_cap)
+
+// Known-answer panel, required before any unforced instance is interpreted. S
+// = hidden plaintext literals and full tuple
+function KAT_PANEL(M, planted S, time_cap):
+    // forced
+    require SOLVE(M + force(S.plaintext), time_cap).status == SAT
+    // blocked
+    require SOLVE(M + force(S.plaintext) + forbid(S.full_tuple),
+            time_cap).status == UNSAT
+    return PASS
+
+// SAT is existence, not identification: block the first model and re-solve.
+function IDENTIFY(M, time_cap):
+    (status, model) = SOLVE(M, time_cap)
+    // only UNSAT removes a candidate
+    if status != SAT: return status
+    (status_2, _) = SOLVE(M + forbid(model), time_cap)
+    return (model, unique = (status_2 == UNSAT))
+```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-Model sizes at $n = 95$: one-hot CNF 301,760 variables; bounded-integer Z3 $33 + 8n + \text{arcs}(n)$ variables and $69 + 17n + \text{arcs}(n)$ assertions with $\text{arcs}(95) = 1{,}157$; CP-SAT 411 variables / 429 constraints / 385,320 flattened table values / 6,664 automaton transitions (437 / 613 with the redundant inverse channel). Solve times: light panels 0.03-1.82 s; finite-vocabulary decisions 13-16 s; every unforced 95-letter cross-chain instance UNKNOWN at the 300 s cap.
+Model sizes at $n = 95$: one-hot CNF 301,760 variables; bounded-integer Z3 $33 + 8n + \text{arcs}(n)$ variables and $69 + 17n + \text{arcs}(n)$ assertions with $\text{arcs}(95) = 1{,}157$; CP-SAT 411 variables / 429 constraints / 385,320 flattened table values / 6,664 automaton transitions (437 / 613 with the redundant inverse channel). Solve times: light panels 0.03-1.82 s; finite-vocabulary decisions 13-16 s. Every unforced 95-letter cross-chain instance UNKNOWN at the 300 s cap.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Timeouts at target length.** Z3 CNF: UNKNOWN at 300.17 s and 300.14 s (2.4 GB resident, six threads); compact Z3: UNKNOWN at 300.073 s; incremental Z3: UNKNOWN at the first 13-character checkpoint after 300.047 s; CP-SAT: UNKNOWN at 300.067 s with 1.21 GiB resident. All four lanes stopped at the first failure by their frozen rule; no widening.
+- **Timeouts at target length.** Z3 CNF: UNKNOWN at 300.17 s and 300.14 s (2.4 GB resident, six threads); compact Z3: UNKNOWN at 300.073 s; incremental Z3: UNKNOWN at the first 13-character checkpoint after 300.047 s; CP-SAT: UNKNOWN at 300.067 s with 1.21 GiB resident. All four lanes stopped at the first failure by their frozen rule. No widening.
 - **Non-identifiability.** Broad short-token banks (fourteen one-letter and 104 two-letter tokens) admit many strict tilings: blocking the first plaintext immediately yields another forward-valid one.
-- **Missing backend.** One lane found no importable CP-SAT runtime and stopped at a static model with source-level counts; a later lane installed a pinned wheel into a task-only environment and validated every proto with zero solve calls before any control.
-- **Fabricated power.** Treating `unknown` as `unsat` in a pruning loop would make a decoder look stronger; the audits forbid it.
+- **Missing backend.** One lane found no importable CP-SAT runtime and stopped at a static model with source-level counts. A later lane installed a pinned wheel into a task-only environment and validated every proto with zero solve calls before any control.
+- **Fabricated power.** Treating `unknown` as `unsat` in a pruning loop would make a decoder look stronger. The audits forbid it.
 '''
 
 [[blocks]]

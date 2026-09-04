@@ -18,20 +18,20 @@ A **hot core** is a program `name_core.cpp` with two entry modes:
 - `--self-kat`: deterministic known-answer tests of the core's own algebra and scoring deltas; prints one `SELF_KAT PASS` line with check counts or throws.
 - `--server CORPUS [WORKERS]` (or a batch CLI): builds the language model from the pinned corpus, prints a `READY` event carrying the model checksum, then reads one request per line (`SOLVE <seed> <ciphertext>`) and answers with one JSON line (`RESULT`, or `ERROR` with `BAD_REQUEST` / `BAD_CIPHERTEXT`), until `QUIT`.
 
-The Python driver spawns the core with pipes, reads the `READY` line, sends requests, parses replies, and on exit sends `QUIT` and waits with a timeout. The transcript is written by Python; the core never touches the filesystem beyond the corpus.
+The Python driver spawns the core with pipes, reads the `READY` line, sends requests, parses replies, and on exit sends `QUIT` and waits with a timeout. The transcript is written by Python. The core never touches the filesystem beyond the corpus.
 '''
 
 [[blocks]]
 kind = "equations"
 title = "Integer scoring"
 body = '''
-Log-scores are stored as integers, $q = \operatorname{rint}(10^{s} \cdot \log_{10} p)$ with $s = 3$ or $9$ depending on the lane, and a candidate's score is $Q = \sum_i q[w_i]$ over its windows; the displayed rate is $Q / (10^{s} \cdot \#\text{windows})$. Gates are then exact integer comparisons ($Q \ge -724{,}864{,}974{,}231$ for one frozen threshold), ties are exact, and a replay on another machine reproduces every rank.
+Log-scores are stored as integers, $q = \operatorname{rint}(10^{s} \cdot \log_{10} p)$ with $s = 3$ or $9$ depending on the lane, and a candidate's score is $Q = \sum_i q[w_i]$ over its windows. The displayed rate is $Q / (10^{s} \cdot \#\text{windows})$. Gates are then exact integer comparisons ($Q \ge -724{,}864{,}974{,}231$ for one frozen threshold), ties are exact, and a replay on another machine reproduces every rank.
 '''
 
 [[blocks]]
 kind = "assumptions"
 body = '''
-- One compiler line reproduces the binary's behaviour: `clang++ -std=c++17 -O3 -DNDEBUG -pthread name_core.cpp -o core` (some lanes use C++20). The compiler version and binary hash are recorded where a lane depends on them; one audit noted their absence as a residual.
+- One compiler line reproduces the binary's behaviour: `clang++ -std=c++17 -O3 -DNDEBUG -pthread name_core.cpp -o core` (some lanes use C++20). The compiler version and binary hash are recorded where a lane depends on them. One audit noted their absence as a residual.
 - Work units are independent so that a thread pool with an atomic counter (work-stealing over raw cells) is deterministic in its results regardless of scheduling.
 '''
 
@@ -46,23 +46,58 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// A host script drives one compiled core through pipes; the core never writes
+// files.
+function RUN_LANE(core_source, corpus, workers, requests):
+    // one recorded compiler line
+    binary = compile(core_source)
+    // deterministic known-answer checks, or throw
+    require run(binary, "--self-kat") prints "SELF_KAT PASS"
+    core = spawn(binary, "--server", corpus, workers) with stdin and stdout
+            pipes
+    // READY event carrying the model checksum
+    ready = read one line from core
+    record ready.model_checksum in the transcript
+    for each (seed, ciphertext) in requests:
+        write "SOLVE " + seed + " " + ciphertext + newline to core
+        // RESULT, or ERROR with BAD_REQUEST / BAD_CIPHERTEXT
+        reply = parse one JSON line from core
+        // the transcript is written by the host
+        append reply to the transcript
+    write "QUIT" + newline to core; wait for exit with a timeout
+    return transcript
+
+// Inside the core: integer scores, so ties, ranks and replays are exact
+// across machines. q[w] = rint(10^s * log10 p(w))
+function SCORE(candidate, q, s):
+    Q = 0
+    for each window w_i of candidate: Q = Q + q[w_i]
+    // displayed rate = Q / (10^s * number of windows)
+    return Q
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-Recorded rates: an exhaustive three-shift cell drained 248,405 pairs (494,577 triples) in 307.5 s; a fixed-order structured-plaintext solver benchmarked at 209 ms with 95.7 MB peak memory for 26 first-stage and 104 endpoint states; the same family's largest identity enumerated 2.47 million first-stage and 9.9 million endpoint states inside a 156.7 s suite. Sanitiser builds (ASAN and UBSAN) were run on both oracle and blind paths before one core was frozen.
+Recorded rates: an exhaustive three-shift cell drained 248,405 pairs (494,577 triples) in 307.5 s. A fixed-order structured-plaintext solver benchmarked at 209 ms with 95.7 MB peak memory for 26 first-stage and 104 endpoint states. The same family's largest identity enumerated 2.47 million first-stage and 9.9 million endpoint states inside a 156.7 s suite. Sanitiser builds (ASAN and UBSAN) were run on both oracle and blind paths before one core was frozen.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
 - **Rate extrapolated across cells.** A two-extra-shift cell ran about 300 times slower per pair than its three-shift sibling because the linear pruning fired later; see [Throughput fail](/validation/throughput-fail).
-- **Truth-map arguments.** A core that can be handed the planted truth for oracle KATs must refuse that argument in live mode; the lane's design states that no truth map is passed to the core.
+- **Truth-map arguments.** A core that can be handed the planted truth for oracle KATs must refuse that argument in live mode. The lane's design states that no truth map is passed to the core.
 - **Unrecorded compiler provenance.** A different compiler could fail a deterministic replay at admission (fail-closed, but then permanently incomplete).
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-The self-KAT is mandatory before any mode. Typical contents: for every one of the 325 letter pairs, the incremental swap delta equals the full rescore difference; forward then inverse of the state schedule reproduces the input over all 5,408 cells and 504 positions; a zero-width variant equals the constant-slope schedule for all 26 slopes.
+The self-KAT is mandatory before any mode. Typical contents: for every one of the 325 letter pairs, the incremental swap delta equals the full rescore difference; forward then inverse of the state schedule reproduces the input over all 5,408 cells and 504 positions. A zero-width variant equals the constant-slope schedule for all 26 slopes.
 '''
 
 [[blocks]]

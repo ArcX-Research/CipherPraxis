@@ -39,7 +39,7 @@ Row-word CSP under seven fixed column substitutions. For rows $r, q$ with cipher
 
 $$[\,c_r[b] = c_q[b]\,] \iff [\,w_r[b] = w_q[b]\,],$$
 
-which is injectivity of each column map expressed pairwise; the same test filters a row's domain against every assigned row in one vectorised comparison.
+which is injectivity of each column map expressed pairwise. The same test filters a row's domain against every assigned row in one vectorised comparison.
 
 Crib CSP. With one alphabet $A$ acting on both sides and key shifts $k_b$, a crib letter $p$ at position $i$ under ciphertext $c$ gives the linear equation $\operatorname{idx}_A(c) - \operatorname{idx}_A(p) - k_{i \bmod 7} \equiv 0 \pmod{26}$; with a key word $W$, $k_b = \operatorname{idx}_A(W_b)$ makes it an equation in three letter positions.
 '''
@@ -48,8 +48,8 @@ Crib CSP. With one alphabet $A$ acting on both sides and key shifts $k_b$, a cri
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- The constraints are exact consequences of the cipher model; a solution is a proof of consistency, not of correctness, and is finished (completion of free letters) and read.
-- A node budget converts an open search into an honest "none within budget"; only an exhausted search supports a negative.
+- The constraints are exact consequences of the cipher model. A solution is a proof of consistency, not of correctness, and is finished (completion of free letters) and read.
+- A node budget converts an open search into an honest "none within budget". Only an exhausted search supports a negative.
 - Spurious solutions scale with the bank: a 704-word bank has an expected spurious count near $10^{-28}$ for nine rows, while an unconstrained dictionary bank finds spurious assignments within a few nodes and is uninformative by design.
 '''
 
@@ -57,10 +57,51 @@ body = '''
 kind = "attack"
 title = "How to attack it"
 body = '''
-- **Rows of words.** A period-7 zone read as a list of 7-letter words under seven fixed substitutions; families of 704 (four words with one-letter variations), about 52,000 (two-letter variations) and about 25,000 (all 7-letter dictionary words); every phase of the period; budgets of 2,000,000 and 150,000 nodes; solutions capped at three.
+- **Rows of words.** A period-7 zone read as a list of 7-letter words under seven fixed substitutions; families of 704 (four words with one-letter variations), about 52,000 (two-letter variations) and about 25,000 (all 7-letter dictionary words). Every phase of the period; budgets of 2,000,000 and 150,000 nodes; solutions capped at three.
 - **Crib plus key word.** Cribs of 7-20 letters at every offset for each candidate key word; consistent assignments are ranked by the quadgrams of their pinned letters and completed by a quadgram climb over the free letters; wrong placements die in tens to hundreds of nodes when the key word is right.
-- **Token tilings.** A window is parsed left to right into tokens of a frozen vocabulary while five partial maps (with tied residues) stay consistent; each complete tiling is then checked against the modular position system with all-different positions.
+- **Token tilings.** A window is parsed left to right into tokens of a frozen vocabulary while five partial maps (with tied residues) stay consistent. Each complete tiling is then checked against the modular position system with all-different positions.
 - **Direct letter-guess CSP.** In a chain without a free constant, every guessed plaintext letter is one homogeneous equation; GF(2) and GF(13) null spaces plus the CRT all-different factorisation decide feasibility in about 0.01 s per solve at crib length 26.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Variables X_1..X_n with domains D_i and pairwise constraints C_XY; the
+// values are row words, alphabet positions (with a global all-different), or
+// tokens.
+function SOLVE(assignment, domains, budget):
+    if every variable is assigned: RECORD(assignment); return
+    // minimum remaining values
+    X = unassigned variable with the smallest |domains[X]|
+    for v in domains[X]:
+        nodes = nodes + 1
+        // honest cap, not a negative
+        if nodes > budget: status = NONE_WITHIN_BUDGET; return
+        assignment[X] = v
+        new_domains = copy of domains; dead = false
+        // forward checking
+        for each unassigned Y that shares a constraint with X:
+            new_domains[Y] = { u in domains[Y] : C_XY(v, u) holds }
+            if new_domains[Y] is empty: dead = true; break
+        if not dead: SOLVE(assignment, new_domains, budget)
+        unassign X
+    // every value tried without reaching the budget: this subtree has no
+    // solution
+
+// Row-word constraint under fixed column substitutions: for rows r, q and
+// every column b, c_r[b] = c_q[b] iff w_r[b] = w_q[b] (injectivity of each
+// column map, pairwise).
+function ROW_PAIR_OK(c_r, c_q, w_r, w_q):
+    for b in 0..len-1:
+        if (c_r[b] == c_q[b]) != (w_r[b] == w_q[b]): return false
+    return true
+
+// Crib CSP over alphabet positions: a crib letter p under ciphertext c at
+// position i gives idx_A(c) - idx_A(p) - k_{i mod 7} = 0 mod 26; propagate
+// unit equations first, branch on the most constrained letter, and re-check
+// all-different on positions after every assignment.
+```
 '''
 
 [[blocks]]
@@ -73,9 +114,9 @@ Worst case exponential in the number of variables; forward checking and MRV make
 kind = "failure_modes"
 body = '''
 - **Underdetermined systems.** Without the key word ("free" shifts) the crib CSP never pins the alphabet: completion reads 0% at every crib length 7-20. With the key word, 13- and 15-letter cribs pinned it in 1 of 3 seeds, 17 letters in 2 of 3, and 20 letters read 100% even where the enumeration hit its 300,000-node cap.
-- **Caps hit by short tokens.** Banks of one- and two-letter tokens (element symbols, note names, compass abbreviations, glyph strings) exceeded 2,000,001 nodes because every ambiguous tokenisation is visited separately; the exact closure came from compiling the bank to a DFA and using SAT (see [CP-SAT and SMT solvers](/exact/cp-sat-and-smt-solvers)).
+- **Caps hit by short tokens.** Banks of one- and two-letter tokens (element symbols, note names, compass abbreviations, glyph strings) exceeded 2,000,001 nodes because every ambiguous tokenisation is visited separately. The exact closure came from compiling the bank to a DFA and using SAT (see [CP-SAT and SMT solvers](/exact/cp-sat-and-smt-solvers)).
 - **Homogeneous systems.** A single word guess is always linearly consistent; rejection comes only from the all-different constraint once the null space is small, so single short cribs cannot be refuted exactly.
-- **Spurious solutions.** Large banks produce consistent assignments that are not the plaintext; the solution count within budget is the statistic, and any hit is a candidate until read and reproduced.
+- **Spurious solutions.** Large banks produce consistent assignments that are not the plaintext. The solution count within budget is the statistic, and any hit is a candidate until read and reproduced.
 '''
 
 [[blocks]]

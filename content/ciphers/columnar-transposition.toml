@@ -17,7 +17,7 @@ For width $w$ and a permutation $O$ of the columns, write $p$ row by row into a 
 
 $$T_O(p) = p[O_0 :: w] \,\|\, p[O_1 :: w] \,\|\, \dots \,\|\, p[O_{w-1} :: w].$$
 
-A key word gives $O$ by the alphabetical ranks of its letters. With $n$ not a multiple of $w$ the first $n \bmod w$ columns are one letter longer (irregular columnar); a padded version fills the last row.
+A key word gives $O$ by the alphabetical ranks of its letters. With $n$ not a multiple of $w$ the first $n \bmod w$ columns are one letter longer (irregular columnar). A padded version fills the last row.
 '''
 
 [[blocks]]
@@ -42,7 +42,7 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - Letter identities are preserved: the ciphertext has the plaintext's histogram and index of coincidence.
-- Invariant: the multiset of letters in each column is fixed once the width is fixed; only their order is unknown.
+- Invariant: the multiset of letters in each column is fixed once the width is fixed. Only their order is unknown.
 - Invariant: under a periodic layer applied *before* the transposition, the coset multisets are transposition-invariant; under one applied *after*, the column order fixes the residue pattern above.
 '''
 
@@ -53,6 +53,37 @@ body = '''
 1. **Width.** Scan widths; for plain columnar, score adjacency of candidate column pairs by digram likelihood; under an outer periodic layer use the order-free width statistic (a DP over the long and short columns of the unpadded grid that measures the block pattern of coset classes without knowing the order).
 2. **Order.** Exhaustive for $w \le 9$ (or 10), dictionary words for 10 to 20 letters, restarted annealing with a full-neighbourhood finish beyond; or the exact 90,720-phase profile plus subset DP when a period-7 layer sits on top.
 3. **Joint refit.** A near-exact substitution peel and a nearly right column order polish each other; neither alone reads English, so re-solve the transposition inside every polish round.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Width w and column order O, a permutation of 0..w-1. p[col :: w] is every
+// w-th letter of p from col.
+function KEY_TO_ORDER(keyword):
+    // rank the key letters alphabetically; O lists the columns in order of
+    // rank
+    return the column indices sorted by the rank of the key letter above each
+            column
+
+function ENCRYPT(p[0..n-1], w, O):
+    c = empty
+    for q in 0..w-1:
+        c = c || p[O[q] :: w]                   // column O[q], top to bottom
+    return c
+
+function DECRYPT(c[0..n-1], w, O):
+    // the first `long` columns hold one extra letter
+    rows = ceil(n / w); long = n mod w
+    pos = 0
+    for q in 0..w-1:
+        col = O[q]
+        len = rows if (long == 0 or col < long) else rows - 1
+        for r in 0..len-1:
+            p[r * w + col] = c[pos]; pos = pos + 1
+    return p
+```
 '''
 
 [[blocks]]
@@ -67,13 +98,13 @@ body = '''
 - **Handoff under-power.** One development control (D8 of 24) was lost only because a single monogram-argmax key for its true phase initialised the exact inner DP in the wrong basin; with the true key supplied post hoc the DP returned the exact order at once. The remedy is a top-16 key completion per phase, not a bigger search.
 - **Family-level ties.** When a base cell can be described two ways (simultaneous source reversal), the exact global best has tie multiplicity 2 and a strict unique-rank gate fails even though the recovered order is right.
 - **Width scan misranks.** In the recipe-free cascade the true width of one solved text ranked 4th at $-6.37$ before the joint refit took it to $-4.23$.
-- **Selection.** Undoing every column order of widths 6-9 (409,000 orders) on a 504-letter text never restored a period-7 structure; the maximum coincidence rate of 0.045 versus 0.066 expected is the noise maximum, not evidence.
+- **Selection.** Undoing every column order of widths 6-9 (409,000 orders) on a 504-letter text never restored a period-7 structure. The maximum coincidence rate of 0.045 versus 0.066 expected is the noise maximum, not evidence.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Order-free width statistic (logs/05_mix.log): four planted sandwiches (width 9 exact grid, width 8 ragged, width 12 with nine long columns and mixed alphabets, width 9 with a period-3 inner) all solved 100% from cold with the true width on top at z from +4.3 to +12.8. Width-9 columnar over a period-7 layer at 504 letters (log 192): the column-read control recovered its order, key and both layers exactly; the inverse row-read control likewise; the live text scored $-7.33$, not English. Cross-derived sandwich (log 237): 23/24 development controls recovered the exact outer order, inner order, key and plaintext at rank 1, all 24 truth phases ranked 1 of 90,720. Untranspose-one-source lane (log 236): 24/24 exact recoveries conditioned on the base cell.
+Order-free width statistic (logs/05_mix.log): four planted sandwiches (width 9 exact grid, width 8 ragged, width 12 with nine long columns and mixed alphabets, width 9 with a period-3 inner) all solved 100% from cold with the true width on top at z from +4.3 to +12.8. Width-9 columnar over a period-7 layer at 504 letters (log 192): the column-read control recovered its order, key and both layers exactly. The inverse row-read control likewise. The live text scored $-7.33$, not English. Cross-derived sandwich (log 237): 23/24 development controls recovered the exact outer order, inner order, key and plaintext at rank 1, all 24 truth phases ranked 1 of 90,720. Untranspose-one-source lane (log 236): 24/24 exact recoveries conditioned on the base cell.
 '''
 
 [[blocks]]
@@ -96,7 +127,7 @@ Columns in read order: `EVLN`, `ACDT`, `ESEA`, `ROFO`, `DEEC`, `WIREE`. Cipherte
 [[blocks]]
 kind = "notes"
 body = '''
-The corpus's solved texts include a width-7 columnar, a width-8 columnar under two periodic keys, a double width-9 columnar and a columnar over a running key, all recovered by the same width-scan and joint-refit machinery; the unsolved texts show no width at which any order restores a periodic structure, and the sandwich reading was excluded for them by the transposition-invariant mixture argument.
+The corpus's solved texts include a width-7 columnar, a width-8 columnar under two periodic keys, a double width-9 columnar and a columnar over a running key, all recovered by the same width-scan and joint-refit machinery. The unsolved texts show no width at which any order restores a periodic structure, and the sandwich reading was excluded for them by the transposition-invariant mixture argument.
 '''
 
 [[provenance]]

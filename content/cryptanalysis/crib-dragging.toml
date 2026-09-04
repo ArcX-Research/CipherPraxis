@@ -17,7 +17,7 @@ Let the cipher act as $\operatorname{idx}_C(c_i) = \operatorname{idx}_P(p_i) + k
 
 $$\hat k_{(o+j) \bmod m} = \operatorname{idx}_C(c_{o+j}) - \operatorname{idx}_P(p_j), \qquad j = 0, \dots, L-1.$$
 
-For $L > m$ the same residue is implied more than once; a wrong placement under known alphabets survives that check with probability $26^{-(L-m)}$. Surplus letters in a residue vote for its element; dissenting votes are penalised. What the crib leaves unknown (residues it does not reach, or an unknown alphabet) is completed and the whole decrypt is scored against a language model.
+For $L > m$ the same residue is implied more than once. A wrong placement under known alphabets survives that check with probability $26^{-(L-m)}$. Surplus letters in a residue vote for its element; dissenting votes are penalised. What the crib leaves unknown (residues it does not reach, or an unknown alphabet) is completed and the whole decrypt is scored against a language model.
 '''
 
 [[blocks]]
@@ -28,14 +28,14 @@ With the shifts $\hat k$ derived from the votes and $\nu$ the number of crib let
 
 $$S = \sum_{i} \log_{10} Q_4(p_i p_{i+1} p_{i+2} p_{i+3}) - \mu\,\nu,$$
 
-the quadgram log-probability of the full decrypt minus a penalty $\mu$ (4 in $\log_{10}$ units) per violated crib letter; the rate $S/(n-3)$ is compared with the language level (about $-4.3$) and with the empirical distribution of wrong placements.
+the quadgram log-probability of the full decrypt minus a penalty $\mu$ (4 in $\log_{10}$ units) per violated crib letter. The rate $S/(n-3)$ is compared with the language level (about $-4.3$) and with the empirical distribution of wrong placements.
 '''
 
 [[blocks]]
 kind = "assumptions"
 body = '''
 - The crib really occurs in the plaintext, at some offset in the range swept, in the cipher's own alphabet convention. A negative sweep says nothing about texts whose plaintext does not contain the crib: the corpus records that crib negatives run against a wrong plaintext model "carry no weight".
-- The period (or the segment and its phase) is known; when a segment is attacked alone the coset phase must be carried from the whole text.
+- The period (or the segment and its phase) is known. When a segment is attacked alone the coset phase must be carried from the whole text.
 - The alphabets are known, or at most one of them is unknown (see [Crib-driven alphabet recovery](/cryptanalysis/crib-driven-alphabet-recovery)).
 '''
 
@@ -51,6 +51,48 @@ body = '''
 '''
 
 [[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Ciphertext c[0..n-1], period m, alphabets P and C with index maps idx_P and
+// idx_C, cribs, penalty mu per violated crib letter.
+function IMPLIED_KEY(c, crib[0..L-1], o, m):
+    votes[b] = [] for b in 0..m-1
+    for j in 0..L-1:
+        // reciprocal: idx_C(c) + idx_P(p)
+        APPEND(votes[(o + j) mod m], (idx_C(c[o + j]) - idx_P(crib[j])) mod
+                26)
+    for b in 0..m-1:
+        k[b] = MAJORITY(votes[b])
+        nu = nu + number of dissenting votes in votes[b]
+    // residues the crib never reaches stay unknown
+    return (k, nu)
+
+function CRIB_DRAG(c, cribs, m, mu):
+    for each crib, offset o, alphabet convention and relation:
+        (k, nu) = IMPLIED_KEY(c, crib, o, m)
+        // a wrong placement survives with probability 26^-(L-m)
+        if repeated residues disagree: discard the placement
+        rank survivors by WORD_LIKENESS(the implied key fragment) and by the
+                decrypt of the covered positions
+        complete the untouched residues: chi-square shift fit, then a joint
+                climb
+        p = DECRYPT(c, k)
+        S = sum over i of log10 Q4(p[i], p[i+1], p[i+2], p[i+3]) - mu * nu
+        // compared with the language level
+        rate[placement] = S / (n - 3)
+    // report median, 95th percentile and maximum
+    null = { rate[placement] : placement known to be wrong }
+    candidates = { placement : rate[placement] > MAX(null) and the decrypt
+            reads as language end to end }
+    refine the top placements with more restarts
+    // where an exact solver exists: enumerate the consistent alphabet
+    // assignments per placement (crib plus key-word rule)
+    return (candidates, best rate, MAX(null))
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
 Known alphabets: $O(\text{cribs} \times n \times m)$ implied-key computations, trivial. One unknown alphabet: every (crib, offset, relation, restart) is one annealing chain; 6,701 placements per family with 16 restarts and 40,000 steps, plus a refine of the top 40 with 64 restarts, took about 6 h on 12 cores for two texts and four families (logs/23). Exact crib CSP: a few thousand consistent assignments per true placement at 13 to 17 letters, wrong placements rejected in about 50 to 700 nodes in most cases (logs/42).
@@ -62,15 +104,15 @@ body = '''
 - **Selection over placements.** Thousands of placements produce a tail of good-looking scores: at 95 letters "the 187 lines printed above $-5.0$ are the null" and the best refined placement ($-4.785$, 2 of 64 restarts above $-4.9$) did not read (logs/26). The maximum of the wrong-placement distribution is the bar, not the median.
 - **Short cribs, unknown alphabet.** With the alphabet unknown, 7- to 11-letter cribs leave $10^5$ or more consistent assignments; 13 letters pin the alphabet in about one case in three, 17 letters in two of three, 20 letters in all three; with the key word also free the system never pins (logs/42).
 - **Wrong plaintext model.** A 144-letter zone later found to have a peaked, small-vocabulary plaintext had been swept with prose cribs; those negatives were withdrawn as uninformative.
-- **Phase slips.** Attacking a segment restarts the coset phase at its first letter unless the offset is a multiple of the period; the corpus notes this explicitly.
+- **Phase slips.** Attacking a segment restarts the coset phase at its first letter unless the offset is a multiple of the period. The corpus notes this explicitly.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
 - Planted period-7 keyed substitutions with a random alphabet, random shifts, real English and the true crib at its offset (logs/22): mixed plaintext alphabet with known ciphertext alphabet solved 3/3 seeds at every crib length from 7 to 25 (13 to 16 of 16 restarts converge, rate $-3.962$, 100% match); wrong placements best $-5.568$, mean $-6.058 \pm 0.211$ ($n = 63$). Known plaintext alphabet with mixed ciphertext alphabet: 12/21 seed-length cases (0 to 7 of 16 restarts), wrong placements mean $-6.013 \pm 0.180$.
-- Sweeps on the two texts (logs/23): 6,701 placements per family (46 cribs at every offset plus 66 opening cribs), refine of the top 40 with 64 restarts: best $-5.70$ to $-5.83$ and $-5.53$ to $-5.68$, at the wrong-placement null (medians $-6.0$ to $-6.2$, maxima $-5.5$ to $-5.9$); no chain read language.
-- The 95-letter zone (logs/26): 4,033 placements per family; null median $-5.3$ to $-5.4$, maximum $-4.83$ to $-4.91$; nothing above it read.
+- Sweeps on the two texts (logs/23): 6,701 placements per family (46 cribs at every offset plus 66 opening cribs), refine of the top 40 with 64 restarts: best $-5.70$ to $-5.83$ and $-5.53$ to $-5.68$, at the wrong-placement null (medians $-6.0$ to $-6.2$, maxima $-5.5$ to $-5.9$). No chain read language.
+- The 95-letter zone (logs/26): 4,033 placements per family; null median $-5.3$ to $-5.4$, maximum $-4.83$ to $-4.91$. Nothing above it read.
 - Fixed 26-letter key with unknown alphabet (logs/124, 125): a 17-letter crib pins the alphabet completely (1,152 assignments, completion 100% of 152 letters, $-4.40$); 13-letter cribs leave at least 20k assignments (35 to 39% right); wrong placements give 0 solutions.
 '''
 
@@ -85,7 +127,7 @@ offset 0:  L-A X-T F-T O-A P-C V-K  ->  L E M O N L      consistent for period 5
 offset 1:  X-A F-T O-T P-A V-C E-K  ->  X M V P T U      no repeat agrees with any period 2-5
 ```
 
-At offset 0 the implied fragment is word-like and repeats consistently at period 5, giving the whole key `LEMON`; the decrypt reads. At offset 1 the fragment is not a word and, for period 5, $k_0 = X \ne k_5 = U$, so the placement is discarded before any language scoring. With a 12-letter text the wrong-placement null is a handful of values; at 153 letters it is a distribution whose maximum sets the bar.
+At offset 0 the implied fragment is word-like and repeats consistently at period 5, giving the whole key `LEMON`. The decrypt reads. At offset 1 the fragment is not a word and, for period 5, $k_0 = X \ne k_5 = U$, so the placement is discarded before any language scoring. With a 12-letter text the wrong-placement null is a handful of values; at 153 letters it is a distribution whose maximum sets the bar.
 '''
 
 [[provenance]]

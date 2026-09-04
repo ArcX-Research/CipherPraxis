@@ -84,7 +84,7 @@ updated = "2026-09-04"
 lab = "vigenere"                # labs only: the Rust lab component key
 
 [[blocks]]                      # ordered page blocks
-kind = "definition"             # definition | equations | variants | assumptions | attack
+kind = "definition"             # definition | equations | variants | assumptions | attack | pseudocode
                                 # | complexity | failure_modes | controls | example | notes | history
 title = "Definition"            # optional; defaults to the kind's display name
 body = '''Markdown with $inline$ and $$display$$ LaTeX.'''

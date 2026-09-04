@@ -26,7 +26,7 @@ pub fn columns(text: &str, width: usize) -> Vec<String> {
 pub fn columnar_encrypt(plain: &str, keyword: &str, pad: Option<char>) -> Result<String, String> {
     let order = key_order(keyword);
     if order.is_empty() {
-        return Err("keyword must contain at least one letter".into());
+        return Err("Enter a keyword with at least one letter.".into());
     }
     let mut t = normalize(plain);
     if let Some(p) = pad {
@@ -41,7 +41,7 @@ pub fn columnar_encrypt(plain: &str, keyword: &str, pad: Option<char>) -> Result
 pub fn columnar_decrypt(cipher: &str, keyword: &str) -> Result<String, String> {
     let order = key_order(keyword);
     if order.is_empty() {
-        return Err("keyword must contain at least one letter".into());
+        return Err("Enter a keyword with at least one letter.".into());
     }
     let t = normalize(cipher);
     let width = order.len();

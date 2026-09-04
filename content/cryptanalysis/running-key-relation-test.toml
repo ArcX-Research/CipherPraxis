@@ -15,7 +15,7 @@ kind = "definition"
 body = '''
 Running-key encryption: $c_i = p_i + t_{i+o}$ for a key text $t$ at offset $o$ (with a keyed-alphabet variant $c = A[\operatorname{idx}_A(p) + \operatorname{idx}_A(t) + k_{i \bmod m}]$). Two relations are testable:
 
-- **Known text as key.** For a candidate window $t_{o}, \dots, t_{o+n-1}$ the unknowns are the alphabet (and a short periodic key); each position gives one linear equation over $\mathbb{Z}_{26}$ in the alphabet positions of two letters, $\operatorname{idx}(c_i) - \operatorname{idx}(t_{o+i}) - k_{i \bmod m} \equiv 0$, with the positions all different and one fixed. Sixty to ninety equations on 25 unknowns make a wrong window infeasible within a few nodes and a right window consistent.
+- **Known text as key.** For a candidate window $t_{o}, \dots, t_{o+n-1}$ the unknowns are the alphabet (and a short periodic key). Each position gives one linear equation over $\mathbb{Z}_{26}$ in the alphabet positions of two letters, $\operatorname{idx}(c_i) - \operatorname{idx}(t_{o+i}) - k_{i \bmod m} \equiv 0$, with the positions all different and one fixed. Sixty to ninety equations on 25 unknowns make a wrong window infeasible within a few nodes and a right window consistent.
 - **Two ciphertexts, one key.** $c_i - c'_{i+o} = p_i - p'_{i+o}$: the key cancels and the difference of two plaintexts remains. Its letter distribution is the autocorrelation of the language distribution, with mass $\sum_x E(x)^2 \approx 0.066$ at zero and near-uniform mass elsewhere, so its index of coincidence is only slightly above $1/26$.
 '''
 
@@ -23,14 +23,14 @@ Running-key encryption: $c_i = p_i + t_{i+o}$ for a key text $t$ at offset $o$ (
 kind = "equations"
 title = "Statistics and their nulls"
 body = '''
-Difference-text index of coincidence over all offsets $o$, both orientations of the second text and both signs: the corpus's best values were $0.0455$ to $0.0468$ against a random-pairing level of $0.0383 \pm 0.0017$; with 324 trials the expected maximum is about $+3$ standard deviations above the mean, so the observed maxima are chance (logs/03). The family-wise null shuffles the second text and repeats the full maximisation; a per-trial null had made the same maximum look like $+5.7\sigma$ across 1,296 trials in all index-space pairs (logs/11).
+Difference-text index of coincidence over all offsets $o$, both orientations of the second text and both signs: the corpus's best values were $0.0455$ to $0.0468$ against a random-pairing level of $0.0383 \pm 0.0017$; with 324 trials the expected maximum is about $+3$ standard deviations above the mean, so the observed maxima are chance (logs/03). The family-wise null shuffles the second text and repeats the full maximisation. A per-trial null had made the same maximum look like $+5.7\sigma$ across 1,296 trials in all index-space pairs (logs/11).
 '''
 
 [[blocks]]
 kind = "assumptions"
 body = '''
 - The key text is one of the candidates (for the exact test) or is shared at a fixed offset and orientation (for the difference test).
-- The addition is in a common index order; a keyed alphabet on one text only breaks the cancellation (see [Key cancellation](/cryptanalysis/key-cancellation)).
+- The addition is in a common index order. A keyed alphabet on one text only breaks the cancellation (see [Key cancellation](/cryptanalysis/key-cancellation)).
 - For the difference test the two plaintexts are language; for a structured second plaintext the difference statistics change.
 '''
 
@@ -41,7 +41,44 @@ body = '''
 1. Known-text test: for every candidate text and window, solve the free-alphabet CSP with a node cap; report consistent windows, capped windows (undecided) and dead windows; re-run capped windows with a larger cap.
 2. Difference test: compute $c \pm c'$ at every offset and orientation in each common order; score by IC and by a language model; compare the maximum with the family-wise null.
 3. If a relation is found, hand the difference text to a two-plaintext solver (an exact running-key Viterbi with backtracking over a language model, or a beam), and require a control at the same length to recover both hidden texts before reading a target.
-4. In a series of related texts, test earlier recovered plaintexts as keys of later texts as part of the standard cascade; this is where the relation was found in the solved part of the corpus's series.
+4. In a series of related texts, test earlier recovered plaintexts as keys of later texts as part of the standard cascade. This is where the relation was found in the solved part of the corpus's series.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Ciphertext c[0..n-1]; candidate key texts; a second ciphertext c'; period m
+// of a short extra key; node cap; N shuffles.
+function KNOWN_TEXT_WINDOWS(c, texts, m, cap):
+    for text t in texts, offset o with a full window t[o..o+n-1]:
+        // unknowns: the alphabet positions and k
+        equations: idx(c[i]) - idx(t[o+i]) - k[i mod m] = 0 (mod 26) for i in
+                0..n-1
+        subject to: the 26 positions all different, one position fixed
+        // consistent (solutions found), dead (infeasible), or capped
+        result[t, o] = CSP_SOLVE(equations, cap)
+    // capped is undecided, not consistent
+    re-run the capped windows with a larger cap
+    // a planted window must come back consistent and a wrong one dead
+    return (consistent windows, capped windows, dead windows)
+
+function DIFFERENCE_TEST(c, c', orders, N):
+    for order in orders, orientation of c' in {forward, reversed}, sign in
+            {-, +}, offset o:
+        // the key cancels: v = p - p'
+        v = [ (c[i] sign c'[i + o]) mod 26 for the overlapping i ]
+        stat[order, orientation, sign, o] = (IC(v), LANGUAGE_SCORE(v))
+    observed = max over all trials of stat
+    // family-wise null over all trials
+    for r in 1..N: null[r] = the same maximum with c' replaced by SHUFFLE(c')
+    return (observed, z of observed against null)
+
+// A found relation hands v to a two-plaintext solver (exact running-key
+// Viterbi with backtracking, or a beam) only after a control at the same
+// length recovers both hidden texts. In a series, earlier recovered
+// plaintexts are tested as keys of later texts.
+```
 '''
 
 [[blocks]]
@@ -54,10 +91,10 @@ Difference scan: $O(n)$ per trial, $\approx 10^3$ trials per order pair. Exact w
 kind = "failure_modes"
 body = '''
 - **Low signal in the difference.** The two-plaintext difference has an IC barely above uniform; at 144 to 153 letters the corpus's best difference IC never left the family-wise null band.
-- **Solver power.** A language-model beam on planted two-plaintext differences recovered 41%, 50% and 26% of the hidden pairs, with the truth leaving the beam every time (3/3 FAIL, logs/166); an unknown-shared-key negative on the real texts would therefore be meaningless and was not claimed.
+- **Solver power.** A language-model beam on planted two-plaintext differences recovered 41%, 50% and 26% of the hidden pairs, with the truth leaving the beam every time (3/3 FAIL, logs/166). An unknown-shared-key negative on the real texts would therefore be meaningless and was not claimed.
 - **Undecided windows.** With a small node cap, 166 windows of one zone stayed capped; at 300,000 nodes 16 remained undecided for that zone and none for the others (logs/63). Capped is not consistent.
-- **Multiplicity.** Offsets, orientations, signs and two orders give hundreds of trials per pair; only family-wise nulls are valid.
-- **Necessary-condition violation.** A running key added letter-wise destroys periodic coset structure; a text with a strong period-7 alignment cannot have been produced that way (predicted $z \approx +0.1$ against measured $+4.2$).
+- **Multiplicity.** Offsets, orientations, signs and two orders give hundreds of trials per pair. Only family-wise nulls are valid.
+- **Necessary-condition violation.** A running key added letter-wise destroys periodic coset structure. A text with a strong period-7 alignment cannot have been produced that way (predicted $z \approx +0.1$ against measured $+4.2$).
 '''
 
 [[blocks]]
@@ -73,7 +110,7 @@ body = '''
 kind = "example"
 title = "Worked example"
 body = '''
-Key text `LEMONLEMONLE`; two plaintexts `ATTACKATDAWN` and `HOLDTHEGATES`:
+Key text `LEMONLEMONLE`. Two plaintexts `ATTACKATDAWN` and `HOLDTHEGATES`:
 
 ```
 c   L X F O P V E F R N H R

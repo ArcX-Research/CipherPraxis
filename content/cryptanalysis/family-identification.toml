@@ -13,7 +13,7 @@ updated = "2026-09-04"
 [[blocks]]
 kind = "definition"
 body = '''
-For each family $\mathcal{F}$ in a declared menu, draw $N$ simulations: a random window of language of the target's length, random keys, the family's encryption. Compute a feature vector $\phi \in \mathbb{R}^{19}$ on each: raw IC and distinct-letter count; aligned union IC, within-coset IC, aligned digram IC and residual periodicity after the exact period-7 alignment; periodic IC at 7, 14 and 28; alignment margin; the inner-model evidences $M_1, M_2, M_3$ with the outer shifts marginalised, their differences and the MAP evidence; the mean posterior sharpness and the class-posterior autocorrelations at lags 1 and 2. Each family becomes a cloud $(\mu_\mathcal{F}, \Sigma_\mathcal{F})$ in standardised feature space and the target is scored by
+For each family $\mathcal{F}$ in a declared menu, draw $N$ simulations: a random window of language of the target's length, random keys, the family's encryption. Compute a feature vector $\phi \in \mathbb{R}^{19}$ on each: raw IC and distinct-letter count; aligned union IC, within-coset IC, aligned digram IC and residual periodicity after the exact period-7 alignment; periodic IC at 7, 14 and 28; alignment margin. The inner-model evidences $M_1, M_2, M_3$ with the outer shifts marginalised, their differences and the MAP evidence. The mean posterior sharpness and the class-posterior autocorrelations at lags 1 and 2. Each family becomes a cloud $(\mu_\mathcal{F}, \Sigma_\mathcal{F})$ in standardised feature space and the target is scored by
 
 $$d^2_\mathcal{F} = (\phi_{\text{target}} - \mu_\mathcal{F})^\top \Sigma_\mathcal{F}^{-1} (\phi_{\text{target}} - \mu_\mathcal{F}), \qquad \ell_\mathcal{F} = -\tfrac12\big(d^2_\mathcal{F} + \log\det\Sigma_\mathcal{F}\big),$$
 
@@ -24,15 +24,15 @@ with a shrunk covariance ($0.7\Sigma + 0.3\operatorname{diag}\Sigma$). Per-featu
 kind = "equations"
 title = "Fingerprint and consistency harness"
 body = '''
-A cheaper fingerprint uses one statistic across periods: the alignment-IC $z$ at $p \in \{3, 4, 7, 9, 14, 17, 21\}$ against within-text shuffles, for planted families and the target. A true period peaks at $p$ and inherits at its multiples; a transposition outside the periodic layer flattens the profile; a matrix cipher outside it flattens it too. The **family-consistency harness** inverts the logic: for a proposed family, the 99% prediction interval of each recorded statistic under 200 or more simulations must contain the target's measured value, or the family is marked inconsistent before any expensive selector is built.
+A cheaper fingerprint uses one statistic across periods: the alignment-IC $z$ at $p \in \{3, 4, 7, 9, 14, 17, 21\}$ against within-text shuffles, for planted families and the target. A true period peaks at $p$ and inherits at its multiples. A transposition outside the periodic layer flattens the profile. A matrix cipher outside it flattens it too. The **family-consistency harness** inverts the logic: for a proposed family, the 99% prediction interval of each recorded statistic under 200 or more simulations must contain the target's measured value, or the family is marked inconsistent before any expensive selector is built.
 '''
 
 [[blocks]]
 kind = "assumptions"
 body = '''
-- The menu contains the true family, or at least a family with the same invariant statistics; the classifier reports the nearest cloud, not the truth.
-- Simulations use language of the target's kind and length; a non-prose plaintext moves every cloud.
-- Features are alphabet-free or computed in the hypothesised order; they cannot distinguish "rotations of one alphabet" from "unrelated alphabets per coset".
+- The menu contains the true family, or at least a family with the same invariant statistics. The classifier reports the nearest cloud, not the truth.
+- Simulations use language of the target's kind and length. A non-prose plaintext moves every cloud.
+- Features are alphabet-free or computed in the hypothesised order. They cannot distinguish "rotations of one alphabet" from "unrelated alphabets per coset".
 '''
 
 [[blocks]]
@@ -43,7 +43,54 @@ body = '''
 2. Simulate, standardise, fit clouds; score the target; print the ranked table with per-feature $z$ above 2.
 3. Print the self-classification accuracy; treat any distinction below it as unresolved.
 4. Run the fingerprint as a cross-check and the consistency harness for any family about to receive a hidden bank.
-5. Use the result to prune: families rejected at large $d^2$ with a named disagreeing feature are closed; families inside the target's cluster remain open and need construction-specific instruments (see [Mixture inference under transposition](/cryptanalysis/mixture-inference-under-transposition)).
+5. Use the result to prune: families rejected at large $d^2$ with a named disagreeing feature are closed; families inside the target's cluster remain open and need construction-specific tests (see [Mixture inference under transposition](/cryptanalysis/mixture-inference-under-transposition)).
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Target ciphertext c of length n, a declared family menu, a language corpus,
+// N simulations per family. phi in R^19, key- and transposition-independent
+function FEATURES(text):
+    return [ raw IC, distinct-letter count; aligned union IC, within-coset
+            IC, aligned digram IC and residual periodicity after the
+             exact period-7 alignment
+             periodic IC at 7, 14 and 28
+             alignment margin
+             the M1, M2, M3 evidences with outer shifts
+             marginalised, their differences and the MAP evidence
+             mean posterior sharpness
+             class-posterior autocorrelation at lags 1 and 2 ]
+
+function FAMILY_IDENTIFICATION(c, menu, N):
+    for F in menu, s in 1..N:
+        sample[F][s] = FEATURES(ENCRYPT_F(a random language window of length
+                n, random keys))
+    standardise every feature over all samples
+    for F in menu:
+        // shrunk covariance
+        mu[F] = MEAN(sample[F])
+        Sigma[F] = 0.7 * COV(sample[F]) + 0.3 * DIAG(COV(sample[F]))
+    phi = FEATURES(c), standardised
+    for F in menu:
+        d2[F] = (phi - mu[F])^T * INVERSE(Sigma[F]) * (phi - mu[F])
+        ell[F] = -(1/2) * (d2[F] + log det Sigma[F])
+        // which statistic disagrees
+        zfeat[F][j] = (phi[j] - mu[F][j]) / SD_s(sample[F][s][j])
+    // self-classification: the honest power number
+    accuracy = fraction of samples whose own family has the highest ell
+    print the families ranked by ell with per-feature z above 2
+    any distinction below accuracy is unresolved
+    // cross-checks: the fingerprint (alignment-IC z at p in {3, 4, 7, 9, 14,
+    // 17, 21} against within-text shuffles) for planted families and c; the
+    // consistency harness for a family about to receive a hidden bank: the
+    // 99% prediction interval of each recorded statistic under >= 200
+    // simulations must contain the target's measured value, or the family is
+    // marked inconsistent large d2 with a named disagreeing feature closes a
+    // family; the target's cluster stays open
+    return (ranked (F, d2, ell, zfeat), accuracy)
+```
 '''
 
 [[blocks]]
@@ -56,8 +103,8 @@ Simulation cost dominates: $29 \times 120$ encryptions plus a heuristic alignmen
 kind = "failure_modes"
 body = '''
 - **Inseparable cluster.** For the 153-letter text the nearest families were a fractionation under the layer ($d^2 = 10.7$), four varied rounds (13.2), an unknown-alphabet substitution (13.3) and seven independent alphabets (13.8), with self-classification accuracies of 8%, 42%, 30% and 82% in that run; those families cannot be told apart by invariant statistics at this length.
-- **Zone artefact.** The classifier saw a mixed inner because the text is a 63-letter monoalphabetic-coset zone pooled with 90 flat letters; the coincidence diagnostics support the same conclusion (adjacent same-coset pair coincidences 5 against $11.7 \pm 3.8$ for per-coset substitutions, $z -1.8$, and $4.9 \pm 2.3$ for a transposed period-2 inner, $z 0.0$). Family identification on a non-homogeneous text identifies the mixture, not the construction.
-- **Optimistic power.** Plug-in self-classification overestimates; a held-out split is stricter.
+- **False pattern from mixed zones.** The classifier saw a mixed inner layer because it combined a 63-letter zone with monoalphabetic cosets and 90 flat letters. The coincidence tests support this reading: adjacent same-coset pairs had 5 coincidences, against $11.7 \pm 3.8$ for per-coset substitutions ($z -1.8$) and $4.9 \pm 2.3$ for a transposed period-2 inner ($z 0.0$). On a text with different zones, family identification describes the mixture rather than one construction.
+- **Optimistic power.** Plug-in self-classification overestimates. A held-out split is stricter.
 - **Menu closure.** A construction outside the menu is reported as its nearest neighbour.
 '''
 
@@ -65,15 +112,15 @@ body = '''
 kind = "controls"
 body = '''
 - Cloud classifier (logs/04, first run, 153-letter text): plain language self-classifies at 100%, transposed language under the layer at 78 to 92% across runs, the plain periodic substitution at 30 to 60%, the mixed-inner members at 8 to 42% (fractionation 8%, unknown-alphabet 30 to 48%, sandwich 30 to 52%). Excluded families for the target with named features: transposed language under the layer ($d^2 = 109.8$, $M_1$ evidence $z -7.8$), plain periodic substitution ($d^2 = 159.2$, $M_1$ $z -8.3$), random letters ($d^2 = 30.3$, alignment IC $z +3.8$).
-- Fingerprint (logs/312): plain period-7 substitution $z +7.4$ at 7 (inherited $+4.9$ at 14, $+3.1$ at 21); the same under a width-9 transposition $-0.7$; a matrix layer outside a period-7 layer $+0.5$; period 7 over width 9 over period 2, $+2.6$; the 153-letter text $+4.1$ at 7, $+2.9$ at 14, $+2.6$ at 21 and within $\pm 0.4$ at 3, 4, 9 and 17. A known matrix-outside text of the series showed no spurious period-7 alignment, so the target's $+4.1$ is not a matrix artefact.
-- Consistency harness (coupling note): letter-wise running-key chains predict alignment $z +0.13$ ($-1.1$ to $+2.0$) and zone coset IC $0.040$ for the 153-letter text; a plain period-7 reference predicts $+4.95$ and $0.066$; measured $+4.2$ / $+3.3$ and $0.066$.
+- Fingerprint (logs/312): plain period-7 substitution $z +7.4$ at 7 (inherited $+4.9$ at 14, $+3.1$ at 21). The same construction under a width-9 transposition gave $-0.7$. A matrix layer outside a period-7 layer gave $+0.5$; period 7 over width 9 over period 2 gave $+2.6$. The 153-letter text gave $+4.1$ at 7, $+2.9$ at 14, $+2.6$ at 21, and values within $\pm 0.4$ at 3, 4, 9, and 17. A known text with the matrix outside showed no false period-7 alignment, so a matrix effect does not explain the target's $+4.1$.
+- Consistency harness (coupling note): letter-wise running-key chains predict alignment $z +0.13$ ($-1.1$ to $+2.0$) and zone coset IC $0.040$ for the 153-letter text. A plain period-7 reference predicts $+4.95$ and $0.066$; measured $+4.2$ / $+3.3$ and $0.066$.
 '''
 
 [[blocks]]
 kind = "example"
 title = "Worked example"
 body = '''
-Three of the fingerprint's features for planted families at 153 letters (logs/312; the target row is the corpus's 153-letter text):
+Three fingerprint features for planted families at 153 letters are shown below (logs/312). The target row is the corpus's 153-letter text.
 
 ```
 family                                raw IC   coset IC (p7)   aligned IC (p7)
@@ -85,7 +132,7 @@ matrix (3x3) under a period-7 layer   0.0393   0.0401          0.0524
 153-letter text                       0.0395   0.0536          0.0618
 ```
 
-Coset IC separates constructions with the substitution outermost (about 0.07) from those with a transposition or matrix outside it (about 0.04); the aligned IC separates a language inner (0.071) from a mixed inner (0.058). The target's pair (0.054, 0.062) lies between the mixed-inner row and the language rows, which is what a text made of a monoalphabetic-coset zone and flat ends produces; the per-family Mahalanobis distances quantify the same picture over all 19 features.
+Coset IC separates constructions with the substitution outermost (about 0.07) from those with a transposition or matrix outside it (about 0.04). The aligned IC separates a language inner (0.071) from a mixed inner (0.058). The target's pair (0.054, 0.062) lies between the mixed-inner row and the language rows, which is what a text made of a monoalphabetic-coset zone and flat ends produces. The per-family Mahalanobis distances quantify the same picture over all 19 features.
 '''
 
 [[provenance]]
