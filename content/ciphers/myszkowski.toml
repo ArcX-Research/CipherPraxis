@@ -130,13 +130,13 @@ A dedicated control would be a planted Myszkowski with a tie pattern such as `AA
 '''
 
 [[provenance]]
-path = "withmath/wm_pk9x.py"
+path = "withmath/scripts/wm_pk9x.py"
 kind = "solver"
 note = "Myszkowski read-outs of every dictionary word with repeated letters, both directions, under a period-7 layer with key change; rail-fence control only."
 ref = "logs/29_pk9x.log"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Round 5d: rail fences, routes, block reversals, reversed text and 190k Myszkowski words; live text negative; control rail fence 100%."
 

@@ -115,19 +115,19 @@ The row-count formula is the CRT applied to matrices: a row is primitive iff its
 '''
 
 [[provenance]]
-path = "withmath/HILL2_PERIODIC_AUDIT.md"
+path = "withmath/docs/cipher-methods/HILL2_PERIODIC_AUDIT.md"
 kind = "audit"
 note = "Every row extending to an invertible matrix (504), determinant-unit join, decimated period p/gcd(p,2), repaired selector (192 rows, 400 pairs, 6,400 matrices), controls with hidden D matrices, target results and null panel."
 ref = "logs/206_hill2_periodic.log"
 
 [[provenance]]
-path = "withmath/PK8_PK10_HINTFREE.md"
+path = "withmath/docs/pk8/PK8_PK10_HINTFREE.md"
 kind = "note"
 note = "Arbitrary Hill-3: 15,372 primitive rows, shift-marginalised row statistic Z_b(r), decimated period p/gcd(p,3), unit-determinant join, matrix budget 24 from the 144-letter control (true triple rank 13), target completions -5.72/-5.29/-6.52."
 ref = "logs/149_hillfree.log"
 
 [[provenance]]
-path = "withmath/wm_core.py"
+path = "withmath/scripts/wm_core.py"
 kind = "library"
 note = "hill3_encrypt planted-cipher generator used by the family-identification controls."
 

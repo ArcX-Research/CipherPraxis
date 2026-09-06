@@ -107,7 +107,7 @@ note = "Kasiski screen on a 504-letter text: five repeated trigrams against abou
 ref = "logs/109_misc_tests.log"
 
 [[provenance]]
-path = "withmath/wm_core.py"
+path = "withmath/scripts/wm_core.py"
 kind = "library"
 note = "The exact period alignment objective that replaced repeat counting in the research program."
 

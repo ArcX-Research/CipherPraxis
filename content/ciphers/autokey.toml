@@ -135,7 +135,7 @@ The closure covers straight-alphabet plaintext autokey with Vigenère and Beaufo
 '''
 
 [[provenance]]
-path = "withmath/AUTOKEY_AUDIT.md"
+path = "withmath/docs/cipher-methods/AUTOKEY_AUDIT.md"
 kind = "audit"
 note = "Log 185: plaintext autokey audit design; Vigenère, Beaufort and Porta relations; controls at exact target lengths."
 ref = "logs/185_autokey_audit.log"
@@ -147,19 +147,19 @@ note = "Log 185 RESULT: V/B controls 100% with 17/19-letter primers; live rates 
 ref = "LOG185"
 
 [[provenance]]
-path = "withmath/wm_ctautokey_cycle.py"
+path = "withmath/scripts/wm_ctautokey_cycle.py"
 kind = "solver"
 note = "Unknown-cycle ciphertext autokey: 0/3 controls at 10.46%, 9.24%, 13.32%."
 ref = "logs/189_ctautokey_cycle.log"
 
 [[provenance]]
-path = "withmath/wm_misc.py"
+path = "withmath/scripts/wm_misc.py"
 kind = "solver"
 note = "Test B: period-7 layer over a plaintext autokey with a 7-letter primer; control 86%."
 ref = "logs/11_misc.log"
 
 [[provenance]]
-path = "ck_pk9_autokey.py"
+path = "scripts/ck_pk9_autokey.py"
 kind = "solver"
 note = "Primer-length scan 6-20, chain statistics, ciphertext-fed difference test, dictionary primers, columnar follow-up."
 ref = "ck_logs/42_pk9_autokey.log"

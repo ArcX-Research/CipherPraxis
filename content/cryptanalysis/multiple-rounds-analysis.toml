@@ -128,7 +128,7 @@ Encrypting `ATTACKATDAWN` with the composite gives `AVVBDNAVFBXQ` (for instance 
 '''
 
 [[provenance]]
-path = "withmath/wm_rounds4.py"
+path = "withmath/scripts/wm_rounds4.py"
 kind = "solver"
 note = "1-4 rounds keyed from a small word set in reference and word-keyed alphabets, exact enumeration with quadgram scoring; planted three-round control found exactly."
 ref = "logs/09_rounds4.log"
@@ -139,13 +139,13 @@ kind = "log"
 note = "The same enumeration on the zones; 63-letter control found exactly; targets at noise."
 
 [[provenance]]
-path = "withmath/wm_compound.py"
+path = "withmath/scripts/wm_compound.py"
 kind = "solver"
 note = "Outer period-7 over inner period-q in one or two alphabets; start-free alternating exact monogram fit; controls z +51 / +27."
 ref = "logs/06_compound.log"
 
 [[provenance]]
-path = "withmath/wm_blocks7.py"
+path = "withmath/scripts/wm_blocks7.py"
 kind = "solver"
 note = "Key as a sequence of 7-letter words per block solved by exact Viterbi; constrained-set control and the unfalsifiable dictionary variant."
 ref = "logs/39_blocks7.log"

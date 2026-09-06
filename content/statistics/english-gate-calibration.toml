@@ -146,7 +146,7 @@ note = "Gate lesson: IID-monogram ceiling -6.322 + 0.5 = -5.822; disclosed run h
 ref = "LOG385"
 
 [[provenance]]
-path = "withmath/PK98_SEGCHAIN_LIVE_MEASURE_INDEPENDENT_REVIEW394.md"
+path = "withmath/docs/pk9-pk8/PK98_SEGCHAIN_LIVE_MEASURE_INDEPENDENT_REVIEW394.md"
 kind = "audit"
 note = "Section 4: 1,545 genuine 153-letter windows, 11 (0.71%) below -4.832433, 0 below -5.821933, minimum -5.5584."
 
@@ -163,11 +163,11 @@ note = "Gate at n = 63: theta_E = IID ceiling(1,000) + 0.15 = -5.5635, 0% of 14,
 ref = "LOG403"
 
 [[provenance]]
-path = "withmath/PK10_LOCALIZED_ALBERTI_SPAN_CONTROL_POWER_AUDIT.md"
+path = "withmath/docs/pk10/PK10_LOCALIZED_ALBERTI_SPAN_CONTROL_POWER_AUDIT.md"
 kind = "audit"
 note = "A fixed full-length gate cannot be transplanted to a short span: one exactly recovered 152-letter prose fixture fell below it; length-specific thresholds or a selected-null rank are required."
 
 [[provenance]]
-path = "ck_lib.py"
+path = "scripts/ck_lib.py"
 kind = "library"
 note = "The original verdict rule english_rate - 0.7 that the audits re-examined."

@@ -132,31 +132,31 @@ The corpus's solved texts include a width-7 columnar, a width-8 columnar under t
 '''
 
 [[provenance]]
-path = "withmath/wm_mix.py"
+path = "withmath/scripts/wm_mix.py"
 kind = "solver"
 note = "Bayesian inner-mixture inference, order-free columnar-width DP over long/short columns, class-EM, column solver; four planted sandwich controls."
 ref = "logs/05_mix.log"
 
 [[provenance]]
-path = "withmath/CROSS_SANDWICH9_AUDIT.md"
+path = "withmath/docs/cross-cipher/CROSS_SANDWICH9_AUDIT.md"
 kind = "audit"
 note = "Log 237: 90,720 phase classes, exact subset DP for the inner order, 23/24 development controls, D8 postmortem."
 ref = "LOG237"
 
 [[provenance]]
-path = "withmath/CROSS_PRETRANSPOSE_AUDIT.md"
+path = "withmath/docs/cross-cipher/CROSS_PRETRANSPOSE_AUDIT.md"
 kind = "audit"
 note = "Log 236: exhaustive 9! orders per cell in a compiled 4+5 meet enumerator; 24/24 conditioned controls; provable assignment upper bounds."
 ref = "logs/236_cross_pretranspose.log"
 
 [[provenance]]
-path = "withmath/wm_pk10_t9q7.py"
+path = "withmath/scripts/wm_pk10_t9q7.py"
 kind = "solver"
 note = "Log 192: single width-9 columnar over a free period-7 layer at 504 letters; two exact controls; live -7.3262."
 ref = "logs/192_pk10_t9q7.log"
 
 [[provenance]]
-path = "ck_sandwich.py"
+path = "scripts/ck_sandwich.py"
 kind = "solver"
 note = "Exhaustive orders to width 9-10, dictionary words 10-20, word pairs, restarted anneal with full-neighbourhood finish."
 ref = "ck_logs/121_sandwich.log"

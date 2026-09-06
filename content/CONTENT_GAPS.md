@@ -14,7 +14,7 @@ catalog to 257 entries. Their decisions are recorded in
 `LIVE_DELTA_INVENTORY_2026-09-06.md`. The tables below remain the audit snapshot
 for the earlier 22-entry pass rather than being silently rewritten.
 
-Snapshot: 2026-09-05, after a strict parse of 228 TOML entries. This inventory compares current entry IDs with reusable methods that have stable derivations, controls, software checks, or clearly labelled designs in `../poemanalysis/withmath`. It is not a claim that the source corpus or the external literature has been exhaustively surveyed.
+Snapshot: 2026-09-05, after a strict parse of 228 TOML entries. This inventory compares current entry IDs with reusable methods that have stable derivations, controls, software checks, or clearly labelled designs in `../Cryptanalysis/withmath`. It is not a claim that the source corpus or the external literature has been exhaustively surveyed.
 
 ## Coverage after this pass
 

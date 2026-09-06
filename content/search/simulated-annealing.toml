@@ -144,12 +144,12 @@ The scalar routine is generic (state, energy, move, iterations, schedule). Every
 '''
 
 [[provenance]]
-path = "ck_lib.py"
+path = "scripts/ck_lib.py"
 kind = "library"
 note = "Generic scalar annealer (geometric schedule, Metropolis acceptance on a maximised energy) and the quadgram objective (log10 quadgram table, add-0.01 smoothing, rate per quadgram, English threshold = reference rate - 0.7)."
 
 [[provenance]]
-path = "ck_pfanneal.py"
+path = "scripts/ck_pfanneal.py"
 kind = "solver"
 note = "Square annealer with the outer layer fixed: move mix 85/5/5/5, T 12 -> 0.08, 1,000,000 iterations, 6 restarts, 12 workers."
 
@@ -159,12 +159,12 @@ kind = "log"
 note = "Stage-0 results: Bifid-153 -4.34 ENGLISH match 100%; Playfair-144 -5.20 partial match 60%; joint-297 -4.43 match 100%/100%."
 
 [[provenance]]
-path = "withmath/wm_crib.py"
+path = "withmath/scripts/wm_crib.py"
 kind = "solver"
 note = "Batch numpy annealing over one unknown alphabet with crib-derived shifts; swap/insertion moves; 925-neighbour polish; refine of top placements."
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Round 4 calibration and results: q1K 3/3 seeds at crib length >= 7, q2K 12/21, q3 0/21; 6,701 placements per family; refine 64 restarts x 80k steps; wrong-placement null medians -6.0..-6.2 and maxima -5.5..-5.9; 6.1 h on 12 cores. Step-2 scaling: 500/2000/8000 chains reach 29-40% of the alphabet."
 ref = "logs/22_crib_smoke.log"
@@ -182,7 +182,7 @@ note = "Same planted 96-letter instance, bigram weight 1, 50k steps: polished be
 ref = "logs/36_scaling.log"
 
 [[provenance]]
-path = "ck_sandwich.py"
+path = "scripts/ck_sandwich.py"
 kind = "solver"
 note = "Restarted anneal plus iterated local search over columnar orders: move mix 35/30/15/10/10, 6 restarts x 1,500 steps, 40 ILS rounds x 300 steps, kick of 3 moves, full-neighbourhood finish."
 

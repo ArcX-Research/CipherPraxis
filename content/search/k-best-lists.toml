@@ -124,34 +124,34 @@ Two residues with three candidate shifts each and additive scores: residue 0 $\{
 '''
 
 [[provenance]]
-path = "withmath/wm_periodic_dp.py"
+path = "withmath/scripts/wm_periodic_dp.py"
 kind = "solver"
 note = "Eight best monogram shifts per residue, exact cyclic quadgram DP inside the product, unrestricted 26-way coordinate/pair polish."
 
 [[provenance]]
-path = "withmath/PK8_PK10_HINTFREE.md"
+path = "withmath/docs/pk8/PK8_PK10_HINTFREE.md"
 kind = "note"
 note = "Periodic DP: three blind controls recover 100% at width eight. Cycle bank of 66,628: monogram ranks 7,559 and 7,598 vs bigram-relaxation ranks 16 and 2; top-32/top-128 finishes; controls 100% at -4.217 and -4.135."
 ref = "logs/148_periodic_dp.log"
 
 [[provenance]]
-path = "withmath/CROSSCHAIN_M13_RANKSHARD_VALIDATION291_AUDIT.md"
+path = "withmath/docs/cross-cipher/CROSSCHAIN_M13_RANKSHARD_VALIDATION291_AUDIT.md"
 kind = "audit"
 note = "Cumulative shards 1-32 ... 257-512; positives at truth ranks 40/47/91/155/443 recovered with the quoted rates; sentinel rank 790 missed; 265.004 s first pass; peak RSS 577,585,152 bytes."
 ref = "logs/291_crosschain_m13_rankshard_validation.log"
 
 [[provenance]]
-path = "withmath/CROSSCHAIN_M13_RANK2048_VALIDATION296_AUDIT.md"
+path = "withmath/docs/cross-cipher/CROSSCHAIN_M13_RANK2048_VALIDATION296_AUDIT.md"
 kind = "audit"
 note = "Seven-shard extension to rank 2,048 with the rank-790 construction promoted to a required positive (sealed, canonical run not yet recorded)."
 
 [[provenance]]
-path = "withmath/QTT_RANK_CONSTRUCTOR_FEASIBILITY_AUDIT.md"
+path = "withmath/docs/cross-cipher/QTT_RANK_CONSTRUCTOR_FEASIBILITY_AUDIT.md"
 kind = "audit"
 note = "Rank algebra: key and relation changes only relabel per-residue scores, so the strict truth rank is invariant; constructed a rank-43 fixture."
 
 [[provenance]]
-path = "withmath/CROSS_SANDWICH9_KBEST_AUDIT.md"
+path = "withmath/docs/cross-cipher/CROSS_SANDWICH9_KBEST_AUDIT.md"
 kind = "audit"
 note = "Truth key at exact additive-profile rank 10 on development control D8; exact top-16 key enumeration restores final exact tuple rank 1 of 4,096."
 ref = "logs/239_cross_sandwich9_kbest.log"

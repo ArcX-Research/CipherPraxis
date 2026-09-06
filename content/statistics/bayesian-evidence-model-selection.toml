@@ -137,12 +137,12 @@ The design principle is *evidence, not likelihood*: every parameter that the ana
 '''
 
 [[provenance]]
-path = "withmath/wm_core.py"
+path = "withmath/scripts/wm_core.py"
 kind = "library"
 note = "fit_inner (shifts marginalised under a uniform prior, family evidence as log-mean-exp over the bank), delta_marginal, shift_candidates, membership; docstring records the ~0.15 nats/letter profile-likelihood overfit at n = 153."
 
 [[provenance]]
-path = "withmath/wm_mix.py"
+path = "withmath/scripts/wm_mix.py"
 kind = "solver"
 note = "M1/M2/M3 comparison, delta candidates, class posteriors, class-EM refinement, complete-pipeline shuffled nulls and planted sandwich controls."
 
@@ -153,12 +153,12 @@ note = "Control evidences: plain periodic M1 +0.2849 (z +12.3), M2 - M1 -0.0799 
 ref = "logs/05_mix.log"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "'The mathematics in wm_mix': evidence not likelihood, delta-marginal correct on 7/8 planted seeds, class-EM 7/7, nulls through the identical pipeline."
 
 [[provenance]]
-path = "withmath/wm_infer.py"
+path = "withmath/scripts/wm_infer.py"
 kind = "solver"
 note = "D2 periodic gate: shift-marginalised M1 evidence over periods, orders and relations against the shuffled family-wise maximum with GAIN_MARGIN 0.02."
 

@@ -4,10 +4,11 @@ CARGO ?= cargo
 PYTHON ?= python3
 HOST ?= 127.0.0.1
 PORT ?= 8787
+CORPUS_DIR ?= ../Cryptanalysis
 
 .DEFAULT_GOAL := help
 
-.PHONY: help fmt fmt-check lint lint-rust lint-scripts test content check build build-dev dev serve clean
+.PHONY: help fmt fmt-check lint lint-rust lint-scripts test content provenance check build build-dev dev serve clean
 
 help:
 	@printf '%s\n' \
@@ -17,6 +18,7 @@ help:
 		'  make lint         Run Rust and script linters' \
 		'  make test         Run the workspace test suite' \
 		'  make content      Validate the content catalog' \
+		'  make provenance   Check cited files in the Cryptanalysis corpus' \
 		'  make check        Run the complete project check' \
 		'  make build        Build the release site in dist/' \
 		'  make build-dev    Build the development site in dist/' \
@@ -45,6 +47,9 @@ test:
 
 content:
 	$(CARGO) run --quiet -p praxis-core --features authoring --bin praxis-check -- content --strict
+
+provenance:
+	$(PYTHON) scripts/check_provenance.py --corpus "$(CORPUS_DIR)"
 
 check:
 	./scripts/check.sh

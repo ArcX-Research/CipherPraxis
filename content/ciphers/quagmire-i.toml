@@ -136,25 +136,25 @@ The program regarded Quagmire I with a known ciphertext order as the principled 
 '''
 
 [[provenance]]
-path = "withmath/wm_crib.py"
+path = "withmath/scripts/wm_crib.py"
 kind = "solver"
 note = "Crib attack on period-7 Quagmire I/II/III with an unknown alphabet: batched annealing, 925-neighbour polish, refine pass; calibration table."
 ref = "logs/22_crib_smoke.log"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Round 4 results: q1K solved 3/3 seeds at every crib length >= 7; both live texts negative for q1K/q1S/q2K/q2S."
 ref = "logs/23_crib_pk8_pk9.log"
 
 [[provenance]]
-path = "withmath/wm_phrase.py"
+path = "withmath/scripts/wm_phrase.py"
 kind = "solver"
 note = "Quagmire I/II/III under phrase-keyed alphabets; control 100%."
 ref = "logs/07_phrase.log"
 
 [[provenance]]
-path = "ck_lib.py"
+path = "scripts/ck_lib.py"
 kind = "library"
 note = "Keyed class and solve_periodic: periodic Quagmire decryption in keyed alphabets with quadgram annealing of shifts."
 

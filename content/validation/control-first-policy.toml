@@ -121,22 +121,22 @@ Inside `driver.py` the `--target` branch begins with the control suite and raise
 '''
 
 [[provenance]]
-path = "withmath/run_withmath.sh"
+path = "withmath/scripts/run_withmath.sh"
 kind = "script"
 note = "Header comment states the policy; steps run in fixed order and tee to numbered logs."
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Policy statement; the control-gated beam decoder that does not emit a target guess because its matched controls fail; two earlier jobs found not to have excluded what was believed."
 
 [[provenance]]
-path = "withmath/LOG_AUDIT.md"
+path = "withmath/docs/project-notes/LOG_AUDIT.md"
 kind = "audit"
 note = "Frozen no-repeat checklist: no target run after a failed control; disposition table for failed, interrupted and partial logs; the exact solver whose control returned UNKNOWN."
 
 [[provenance]]
-path = "withmath/run_pk10_quarterpulse490.sh"
+path = "withmath/scripts/run_pk10_quarterpulse490.sh"
 kind = "script"
 note = "Modes controls | smoke | live; core self-KAT before any mode."
 

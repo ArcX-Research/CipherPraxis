@@ -125,25 +125,25 @@ The hypothesis was chosen because it is a concrete, checksum-constrained realisa
 '''
 
 [[provenance]]
-path = "withmath/PK9_BIP39_CRT445_NOTE.md"
+path = "withmath/docs/pk9/PK9_BIP39_CRT445_NOTE.md"
 kind = "note"
 note = "Exact period-7 tied-shift solver: group identities, GF(2)/GF(13) echelon bases, CRT all-different lift, blind power passes, live drains."
 ref = "logs/445_bip39_crt_live_20260902T235019Z_12776.log"
 
 [[provenance]]
-path = "withmath/PK9_BIP39_P4_447_NOTE.md"
+path = "withmath/docs/pk9/PK9_BIP39_P4_447_NOTE.md"
 kind = "note"
 note = "Period-4 lane: blind Vigenère/Beaufort power passes and complete live census."
 ref = "logs/447_bip39_p4_live_20260903T013545Z_67015.log"
 
 [[provenance]]
-path = "withmath/PK9_BIP39_P2_450_NOTE.md"
+path = "withmath/docs/pk9/PK9_BIP39_P2_450_NOTE.md"
 kind = "note"
 note = "Period-2 affine-graph decision procedure; 12/15/18/21-word controls and live zeros."
 ref = "logs/450_bip39_p2_live_20260903T035320Z_4657.log"
 
 [[provenance]]
-path = "withmath/PK9_BIP39_KEYED454_455_NOTE.md"
+path = "withmath/docs/pk9/PK9_BIP39_KEYED454_455_NOTE.md"
 kind = "note"
 note = "Key-word-tied shifts: 56-cell campaign; blind controls recovered in 200.8 s and 346.6 s."
 ref = "logs/454_bip39_keyed_20260903T044914Z_39190.log"

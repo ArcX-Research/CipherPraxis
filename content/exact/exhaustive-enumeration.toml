@@ -125,7 +125,7 @@ Affine maps $x \mapsto ux + d \pmod{26}$: $u$ ranges over the 12 units $\{1, 3, 
 '''
 
 [[provenance]]
-path = "withmath/wm_rounds4.py"
+path = "withmath/scripts/wm_rounds4.py"
 kind = "solver"
 note = "Exact enumeration of 1-4 keyed rounds: permutations of four words x (8 alphabets x 2 relations)^r, scored by quadgrams, no search."
 
@@ -136,7 +136,7 @@ note = "Counts 64 / 3,072 / 98,304 / 1,572,864; control found at -4.34 among 98,
 ref = "logs/09_rounds4.log"
 
 [[provenance]]
-path = "withmath/wm_pk10_quarterpulse490_core.cpp"
+path = "withmath/scripts/wm_pk10_quarterpulse490_core.cpp"
 kind = "solver"
 note = "Compiled core: 2 x 4 x 26 x 26 = 5,408 raw schedules, deprogression, embedded frozen substitution engine, top-192 / top-32 refinement stages, self-KAT over every schedule and the constant-slope alias."
 
@@ -147,17 +147,17 @@ note = "5,251 observable classes; schedule KAT 2,725,632 coordinates; 4/4 contro
 ref = "LOG490"
 
 [[provenance]]
-path = "withmath/QTT_RANK_CONSTRUCTOR_FEASIBILITY_AUDIT.md"
+path = "withmath/docs/cross-cipher/QTT_RANK_CONSTRUCTOR_FEASIBILITY_AUDIT.md"
 kind = "audit"
 note = "Declared rectangle 30 x 32 x 9! = 348,364,800; first hit after 812,617 tested in 5.18 s; peak RSS 169,607,168 bytes; three parity cases."
 ref = "logs/unnumbered_qtt_rank_constructor.log"
 
 [[provenance]]
-path = "withmath/CROSSCHAIN_M13_TARGET286_AUDIT.md"
+path = "withmath/docs/cross-cipher/CROSSCHAIN_M13_TARGET286_AUDIT.md"
 kind = "audit"
 note = "Stage-one census: 104 provenance rows per canonical class; INCOMPLETE / STRUCTURAL ZERO / TIED BEST outcomes; 128 forward / 256 orientation classes -> 26,624 rows."
 
 [[provenance]]
-path = "withmath/wm_core.py"
+path = "withmath/scripts/wm_core.py"
 kind = "library"
 note = "Exact period-7 alignment over all 26^6 shift vectors with a closed-form pairwise objective."

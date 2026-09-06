@@ -168,7 +168,7 @@ Had row 1 been CAR, forward checking of row 2 (needs C, $\ne$A, R) empties its d
 '''
 
 [[provenance]]
-path = "withmath/wm_wordlist.py"
+path = "withmath/scripts/wm_wordlist.py"
 kind = "solver"
 note = "Forward-checking CSP with MRV ordering over word rows; pairwise equality-pattern filter; families 704 / ~52k / ~25k; budgets 2,000,000 and 150,000 nodes; expected spurious count ~1e-28 for the four-word family."
 
@@ -179,7 +179,7 @@ note = "CONTROL: 3 solutions in 244 nodes; wrong phases none (exhausted) in 704-
 ref = "logs/31_wordlist.log"
 
 [[provenance]]
-path = "withmath/probes/step3_cribcsp.py"
+path = "withmath/scripts/probes/step3_cribcsp.py"
 kind = "solver"
 note = "Crib plus key-word CSP: propagate unit equations, branch on the most constrained letter, all-different on positions, quadgram completion of free letters; calibration over crib lengths 7-20 and three seeds."
 
@@ -190,18 +190,18 @@ note = "Calibration table: with the key word, truth pinned and completion 100% a
 ref = "logs/42_cribcsp_calibration.log"
 
 [[provenance]]
-path = "withmath/wm_cribcsp.py"
+path = "withmath/scripts/wm_cribcsp.py"
 kind = "solver"
 note = "Sweep of key words x cribs x offsets on two zones: 14,336 placements, 244 consistent, best -5.42 (noise); planted control reads at -4.14."
 ref = "logs/43_cribcsp_zones.log"
 
 [[provenance]]
-path = "withmath/wm_digits.py"
+path = "withmath/scripts/wm_digits.py"
 kind = "solver"
 note = "Token-tiling CSP with five tied partial maps followed by the exact modular position CSP."
 
 [[provenance]]
-path = "withmath/OBJECT_VOCAB_AUDIT.md"
+path = "withmath/docs/search-language/OBJECT_VOCAB_AUDIT.md"
 kind = "audit"
 note = "Exhaustive tilings with node counts (1,453 to 1,668,079) and capped cells at 2,000,001 nodes for short-token banks."
 ref = "logs/160_objectvocab_fast.log"

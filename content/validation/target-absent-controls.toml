@@ -117,24 +117,24 @@ body = '''
 '''
 
 [[provenance]]
-path = "withmath/PK98_SEGCHAIN_A1S0_CONTROL366_DESIGN.md"
+path = "withmath/docs/pk9-pk8/PK98_SEGCHAIN_A1S0_CONTROL366_DESIGN.md"
 kind = "design"
 note = "Section 10: a target loader/import is forbidden in the controls lane; even after a control PASS any target experiment requires a separately predeclared, sealed and audited successor."
 
 [[provenance]]
-path = "withmath/PK10_ALBERTI_ACCEL13_VALIDATION381_INDEPENDENT_AUDIT389.md"
+path = "withmath/docs/pk10/PK10_ALBERTI_ACCEL13_VALIDATION381_INDEPENDENT_AUDIT389.md"
 kind = "audit"
 note = "Target isolation verified transitively across three linked modules: zero loader imports, zero target file references, zero A-Z literals of length 30 or more; runner refuses --target, --live, --solve."
 ref = "LOG389"
 
 [[provenance]]
-path = "withmath/PK9_STRUCTURED_P7_CHAIN383_INDEPENDENT_AUDIT391.md"
+path = "withmath/docs/pk9/PK9_STRUCTURED_P7_CHAIN383_INDEPENDENT_AUDIT391.md"
 kind = "audit"
 note = "Zero loader imports and zero A-Z literals of length 40 or more in source and parser; refusal KAT guards five reserved names."
 ref = "LOG391"
 
 [[provenance]]
-path = "withmath/SEGCHAIN_CONTROL_MISMATCH399_AUDIT.md"
+path = "withmath/docs/project-notes/SEGCHAIN_CONTROL_MISMATCH399_AUDIT.md"
 kind = "audit"
 note = "Finding D5: oracle-supplied parameters (boundary, period, orders, signs) that plants receive from the target measurement rather than search; power never covers their alternatives."
 ref = "LOG399"
@@ -146,7 +146,7 @@ note = "A static review that accidentally displayed archived target fields recor
 ref = "LOG380"
 
 [[provenance]]
-path = "withmath/CLAUDE_LOG363_REPLACEMENT_AUDIT.md"
+path = "withmath/docs/project-notes/CLAUDE_LOG363_REPLACEMENT_AUDIT.md"
 kind = "audit"
 note = "A one-shot target transcript necessarily carries the ciphertext for loader-free replay; the note records that other lanes' forbidden-string scans will flag it."
 ref = "LOG363"

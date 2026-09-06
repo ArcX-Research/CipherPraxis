@@ -142,7 +142,7 @@ the plaintext from position 1 onward, with no key search at all. Had a period-3 
 '''
 
 [[provenance]]
-path = "withmath/wm_algebra.py"
+path = "withmath/scripts/wm_algebra.py"
 kind = "solver"
 note = "Test A affine-lag filters with family-wise null; test B lag difference/sum texts scored by period-7 alignment against shuffles."
 ref = "logs/03_algebra.log"
@@ -153,18 +153,18 @@ kind = "log"
 note = "Control-qualified plaintext-autokey audit: vig/beau/porta, primer 1-40, exact plaintext + primer + forward gates; 6/9 gates pass, targets no candidate."
 
 [[provenance]]
-path = "withmath/wm_misc.py"
+path = "withmath/scripts/wm_misc.py"
 kind = "solver"
 note = "Periodic layer over plaintext autokey, coordinate descent from many starts; only one of four control variants read."
 ref = "logs/11_misc.log"
 
 [[provenance]]
-path = "withmath/STEP3_FIRST_PRINCIPLES.md"
+path = "withmath/docs/project-notes/STEP3_FIRST_PRINCIPLES.md"
 kind = "note"
 note = "Section 2.1: autokeys excluded for prose-like cosets because each coset is a sum of two or more language letters (IC about 0.045)."
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Round-1 algebra summary (no LCG/affine/drifting key, no autokey signature) and the 504-letter text's lag facts (logs/70)."
 

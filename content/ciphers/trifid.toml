@@ -131,25 +131,25 @@ The closures are precise: whole-message classic Trifid at 504 letters over perio
 '''
 
 [[provenance]]
-path = "withmath/TRIFID_AUDIT.md"
+path = "withmath/docs/cipher-methods/TRIFID_AUDIT.md"
 kind = "audit"
 note = "Log 191: coordinate algebra, six-way gauge, known-answer vector, 2/2 controls at n=504 over periods 2-40, live negative."
 ref = "logs/191_trifid_audit_20260831T183227Z.json"
 
 [[provenance]]
-path = "withmath/TRIFID_Q_AUDIT.md"
+path = "withmath/docs/cipher-methods/TRIFID_Q_AUDIT.md"
 kind = "audit"
 note = "Log 196: Trifid plus outer Z27 layer; 624-cell selector; hidden ranks 456/220/147/123; gate 0/4."
 ref = "logs/196_trifid_q_20260831T192238Z.log"
 
 [[provenance]]
-path = "withmath/TWIN_TRIFID_AUDIT.md"
+path = "withmath/docs/cross-cipher/TWIN_TRIFID_AUDIT.md"
 kind = "audit"
 note = "Log 207: shared cube for 153+144 letters; 3/3 p7/p7 and 3/3 orientation controls; live winners -8.83/-8.78."
 ref = "logs/207_twin_trifid_audit.json"
 
 [[provenance]]
-path = "withmath/wm_trifid_audit.py"
+path = "withmath/scripts/wm_trifid_audit.py"
 kind = "solver"
 note = "Independent forward/inverse Trifid, gauge orbit enumeration, source-generator byte-match, control generation."
 

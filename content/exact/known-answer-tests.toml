@@ -123,7 +123,7 @@ A Vigenère core KAT: encrypt `ATTACKATDAWN` with key `LEMON` and require `LXFOP
 '''
 
 [[provenance]]
-path = "withmath/wm_pk10_quarterpulse490_core.cpp"
+path = "withmath/scripts/wm_pk10_quarterpulse490_core.cpp"
 kind = "solver"
 note = "self_kat490: embedded engine self-test, exhaustive forward/deprogress roundtrip over all 5,408 schedules x 504 positions, constant-slope alias identity 26 x 504 x 4."
 
@@ -134,33 +134,33 @@ note = "Schedule KAT 2,725,632 coordinates; 5,251 observable classes; 4/4 contro
 ref = "LOG490"
 
 [[provenance]]
-path = "withmath/PK9_STAGEB_EXACT_CERTIFIED_CLAUDE_AUDIT.md"
+path = "withmath/docs/pk9/PK9_STAGEB_EXACT_CERTIFIED_CLAUDE_AUDIT.md"
 kind = "audit"
 note = "KAT inventory (3 KATs, flat ties, sentinel, 12/12 type rejections, 6/6 mutations, 5/5 negatives), forced-failure table 7/7, ~1.9 s; defects: exit code 3 misread, parser tests bypassing production, isinstance(True, int) hazard; correction note: tautological forward 200/200."
 ref = "logs/353_pk9_stageb_exact_certified_claude.log"
 
 [[provenance]]
-path = "withmath/CROSSCHAIN_M13_RANKSHARD_VALIDATION288_AUDIT.md"
+path = "withmath/docs/cross-cipher/CROSSCHAIN_M13_RANKSHARD_VALIDATION288_AUDIT.md"
 kind = "audit"
 note = "Static suite: reduced union oracle 2,129 vectors; cyclic DP vs exhaustive width-2 8/8; 12 forwards; 4 scalar scores; 136 classes; 23/23 transcript mutations; 4/4 postcommit poison."
 
 [[provenance]]
-path = "withmath/QTT_RANK_CONSTRUCTOR_FEASIBILITY_AUDIT.md"
+path = "withmath/docs/cross-cipher/QTT_RANK_CONSTRUCTOR_FEASIBILITY_AUDIT.md"
 kind = "audit"
 note = "Three compiled/Python parity cases; 1,092 score cells obeying the relabelling identity; rank 43 under all six fixtures."
 
 [[provenance]]
-path = "withmath/ELEMENT_CROSSCHAIN_COMPACT_Z3_AUDIT.md"
+path = "withmath/docs/cross-cipher/ELEMENT_CROSSCHAIN_COMPACT_Z3_AUDIT.md"
 kind = "audit"
 note = "Toy language equivalence: 254 strings, 207 accepted by both recognisers, 0 mismatches."
 
 [[provenance]]
-path = "withmath/OBJECT_VOCAB_EXACT_AUDIT.md"
+path = "withmath/docs/cross-cipher/OBJECT_VOCAB_EXACT_AUDIT.md"
 kind = "audit"
 note = "DFA languages compared with the literal traversal for lengths 1-3 on four banks, 12/12 exact."
 
 [[provenance]]
-path = "withmath/PK89_CHAIN_CORPUS407_AUDIT.md"
+path = "withmath/docs/pk8-pk9/PK89_CHAIN_CORPUS407_AUDIT.md"
 kind = "audit"
 note = "Filter controls: 256 synthetic chains, 256/256 mutations rejected, 4,096-window scalar/vector agreement."
 
@@ -171,7 +171,7 @@ note = "Factorised feasibility vs brute force: 240 systems / 538,656 solutions /
 ref = "LOG409b"
 
 [[provenance]]
-path = "withmath/CROSS_PRESOURCE_TQ_BOUND_BENCH258_AUDIT.md"
+path = "withmath/docs/cross-cipher/CROSS_PRESOURCE_TQ_BOUND_BENCH258_AUDIT.md"
 kind = "audit"
 note = "A KAT whose reference was wrong (per-position comparison against a summed slice) and its repair."
 

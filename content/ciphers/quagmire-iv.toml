@@ -137,25 +137,25 @@ An exact bank search can exclude every structured $(P,C)$ pair it enumerates, bu
 '''
 
 [[provenance]]
-path = "ck_qiv.py"
+path = "scripts/ck_qiv.py"
 kind = "solver"
 note = "Period-7 Quagmire IV over an unknown fixed substitution, possibly over a columnar transposition: alignment, cryptogram anneal, keyword bank, columnar stage; planted controls."
 ref = "ck_qiv_report.txt"
 
 [[provenance]]
-path = "withmath/wm_q3.py"
+path = "withmath/scripts/wm_q3.py"
 kind = "solver"
 note = "Q-IV annealing calibration: success 0% on four planted 153-letter controls."
 ref = "logs/08_q3.log"
 
 [[provenance]]
-path = "withmath/wm_pk9.py"
+path = "withmath/scripts/wm_pk9.py"
 kind = "solver"
 note = "--q4 mode: both alphabets from a 7,438-word vocabulary, vig/beau, subsampled shuffled tops."
 ref = "logs/28_q4vocab.log"
 
 [[provenance]]
-path = "withmath/wm_pk9_bip39_fullwords472.py"
+path = "withmath/scripts/wm_pk9_bip39_fullwords472.py"
 kind = "solver"
 note = "Exact word-list search under the four fixed-order plaintext/ciphertext alphabet pairs with seven free shifts; 8/8 planted controls."
 ref = "logs/472_pk9_bip39_fullwords_20260903T154646Z_30660.log"

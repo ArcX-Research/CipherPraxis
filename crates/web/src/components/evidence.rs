@@ -22,7 +22,7 @@ pub fn EvidencePanel(
         <section class="evidence" class:evidence-wide=wide aria-labelledby="evidence-h">
             <h2 id="evidence-h" class="side-h"><span class="mono meta">"§"</span>" Evidence"</h2>
             {has_prov.then(|| view! {
-                <p class="evidence-note">"These internal files support the claims on this page. Each path starts at "<code>{CORPUS_ROOT}</code>" unless it begins with "<code>"cipher-praxis/"</code>", which points to this website's repository."</p>
+                <p class="evidence-note">"These internal files support the claims on this page. Each path starts at "<code>{CORPUS_ROOT}</code>" unless it begins with "<code>"CipherPraxis/"</code>", which points to this website's repository."</p>
                 <ul class="prov-list">
                     {provenance.into_iter().map(|p| view! {
                         <li class="prov">

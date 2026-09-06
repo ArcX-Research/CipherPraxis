@@ -153,31 +153,31 @@ and the two letters that occur in both cosets (A at positions 0 and 3, T at posi
 '''
 
 [[provenance]]
-path = "withmath/wm_crib.py"
+path = "withmath/scripts/wm_crib.py"
 kind = "solver"
 note = "Families, crib votes defining the shifts, batch annealing, 925-neighbour polish, calibration table in the docstring."
 ref = "logs/22_crib_smoke.log"
 
 [[provenance]]
-path = "withmath/wm_cribcsp.py"
+path = "withmath/scripts/wm_cribcsp.py"
 kind = "solver"
 note = "Exact crib + key-word CSP with all-different positions, ranked completion and key-word-aware polish; planted control reads at -4.14."
 ref = "logs/43_cribcsp_zones.log"
 
 [[provenance]]
-path = "withmath/probes/step3_cribcsp.py"
+path = "withmath/scripts/probes/step3_cribcsp.py"
 kind = "script"
 note = "Calibration over crib lengths 7-20, key word known or free."
 ref = "logs/42_cribcsp_calibration.log"
 
 [[provenance]]
-path = "withmath/wm_q3.py"
+path = "withmath/scripts/wm_q3.py"
 kind = "solver"
 note = "Why the same-alphabet family does not anneal: a swap corrupts about 4 of 26 entries in every coset; 0% success on planted controls."
 ref = "logs/08_q3.log"
 
 [[provenance]]
-path = "withmath/wm_q3joint.py"
+path = "withmath/scripts/wm_q3joint.py"
 kind = "solver"
 note = "Parallel-tempering annealer over (alphabet, shifts); planted 96-letter control reaches 16-35% of the alphabet."
 ref = "logs/32_q3joint_ctrl.log"
@@ -188,6 +188,6 @@ kind = "log"
 note = "Best-of-N does not improve with N: plateau at about 30-40% of the alphabet from 500 to 8,000 chains."
 
 [[provenance]]
-path = "withmath/STEP3_REVIEW.md"
+path = "withmath/docs/project-notes/STEP3_REVIEW.md"
 kind = "note"
 note = "Section 4 and 7: the CSP formulation, its calibration summary, and the two-crib joint placement idea."

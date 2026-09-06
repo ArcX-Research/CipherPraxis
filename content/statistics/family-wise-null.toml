@@ -144,7 +144,7 @@ note = "Exact six-detector counterexample: 150/216 false rejections under endpoi
 ref = "LOG652"
 
 [[provenance]]
-path = "withmath/wm_grammar.py"
+path = "withmath/scripts/wm_grammar.py"
 kind = "solver"
 note = "familywise_null(text, fn, trials): fn is the same max-over-family statistic applied to shuffled texts; used by align_z, the subst stage and the hill scan."
 
@@ -173,7 +173,7 @@ note = "Cross-text relation scan: best coincidence rate 0.0495 vs random pairing
 ref = "logs/11_misc.log"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Round 3: the same 0.0495 is z +0.8 against the family-wise null; selection over 1,296 trials explains all of it."
 
@@ -184,12 +184,12 @@ note = "CONDITIONAL FAMILYWISE ENDPOINT: obs -4.869; null -4.836 +- 0.024, max -
 ref = "logs/152_crosscycle_full.log"
 
 [[provenance]]
-path = "withmath/wm_infer.py"
+path = "withmath/scripts/wm_infer.py"
 kind = "solver"
 note = "D2 gate: best gain must beat the shuffled family-wise maximum by GAIN_MARGIN = 0.02 nats/letter."
 
 [[provenance]]
-path = "withmath/PK10_LOCALIZED_ALBERTI_SPAN_CONTROL_POWER_AUDIT.md"
+path = "withmath/docs/pk10/PK10_LOCALIZED_ALBERTI_SPAN_CONTROL_POWER_AUDIT.md"
 kind = "audit"
 note = "A second selected window is an uncharged trial unless every null maximises over both; heterogeneous rule families need per-family null banks and the worst-case p."
 

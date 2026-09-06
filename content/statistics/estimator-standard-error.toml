@@ -130,12 +130,12 @@ The phrase "the facts with error bars" in the evidence corpus refers to this pra
 '''
 
 [[provenance]]
-path = "withmath/wm_core.py"
+path = "withmath/scripts/wm_core.py"
 kind = "library"
 note = "ic_sd_monoalphabetic(n, dist): exact s.d. of the IC estimator for n iid letters (pairs sharing one element are correlated)."
 
 [[provenance]]
-path = "withmath/wm_audit.py"
+path = "withmath/scripts/wm_audit.py"
 kind = "solver"
 note = "Docstring: 'a 22-letter coset has s.d. ~0.02; the 7-coset mean ~0.008 - most exclusions so far were ~1.5 sigma'; prints within-coset IC with the exact s.d. per coset and of the mean."
 
@@ -146,7 +146,7 @@ note = "Exact s.d. 0.0210 per coset and 0.0079 of the mean at n = 153 (0.0218/0.
 ref = "logs/01_audit.log"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "'What the numbers mean': the within-coset IC comes with the exact s.d. of the estimator (0.008 for the mean of seven 22-letter cosets); the aligned union IC and aligned digram IC are the sharper instruments."
 
@@ -163,7 +163,7 @@ note = "Simulated IC of one key geometry on real English 0.04326 +- 0.00324 (z +
 ref = "LOG398"
 
 [[provenance]]
-path = "withmath/REVIEW_A.md"
+path = "withmath/docs/project-notes/REVIEW_A.md"
 kind = "audit"
 note = "Section 2.9a: a change-point z +3.3 rests on 60 null draws of a skewed maximum; appendix: max-over-35/877 statistics scored with z against right-skewed nulls."
 

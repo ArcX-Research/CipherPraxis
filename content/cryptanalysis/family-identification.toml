@@ -136,7 +136,7 @@ Coset IC separates constructions with the substitution outermost (about 0.07) fr
 '''
 
 [[provenance]]
-path = "withmath/wm_abc.py"
+path = "withmath/scripts/wm_abc.py"
 kind = "solver"
 note = "Likelihood-free family identification: 29 families x 120 simulations, 19 features, Mahalanobis / Gaussian log-likelihood, per-feature z, self-classification accuracy."
 ref = "logs/04_abc.log"
@@ -147,22 +147,22 @@ kind = "log"
 note = "Alignment-IC z-profile at periods 3-21 for planted families and the three texts; raw, coset and aligned IC columns."
 
 [[provenance]]
-path = "ck_diag.py"
+path = "scripts/ck_diag.py"
 kind = "solver"
 note = "Within-coset adjacent-pair and triple coincidences and pooled coset IC against nine planted models, 400 windows each."
 ref = "ck_diag_report.txt"
 
 [[provenance]]
-path = "withmath/PK89_SHARED_STREAM_COUPLING375_DESIGN.md"
+path = "withmath/docs/pk8-pk9/PK89_SHARED_STREAM_COUPLING375_DESIGN.md"
 kind = "design"
 note = "Family-consistency invariant harness (section 7) and the predicted-versus-measured table for chain families (section 5)."
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "First-run family table: one cluster the invariant statistics cannot split at n = 153; excluded families and their z."
 
 [[provenance]]
-path = "withmath/STEP3_REVIEW.md"
+path = "withmath/docs/project-notes/STEP3_REVIEW.md"
 kind = "note"
 note = "Section 0: why the whole-text statistics identified a mixture that was a zone artefact."

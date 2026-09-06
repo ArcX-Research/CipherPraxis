@@ -127,24 +127,24 @@ For comparison, the same plaintext and key give Vigenère `CBIHGB` and Variant B
 '''
 
 [[provenance]]
-path = "withmath/wm_periodic_dp.py"
+path = "withmath/scripts/wm_periodic_dp.py"
 kind = "solver"
 note = "Exact cyclic periodic solver in both Vigenère and Beaufort orientations and both fixed orders; blind controls at 63/95/126 letters."
 ref = "logs/148_periodic_dp.log"
 
 [[provenance]]
-path = "withmath/PK8_PK10_HINTFREE.md"
+path = "withmath/docs/pk8/PK8_PK10_HINTFREE.md"
 kind = "note"
 note = "Algebra of the two orientations, the within-coset null, and the three control results."
 
 [[provenance]]
-path = "withmath/wm_autokey_audit.py"
+path = "withmath/scripts/wm_autokey_audit.py"
 kind = "solver"
 note = "Beaufort plaintext-autokey controls at n=153/144/504."
 ref = "logs/185_autokey_audit.log"
 
 [[provenance]]
-path = "withmath/DIGRAPHIC_SLIDES_AUDIT.md"
+path = "withmath/docs/cipher-methods/DIGRAPHIC_SLIDES_AUDIT.md"
 kind = "audit"
 note = "Slidefair Beaufort control PASS at rate -4.0054."
 ref = "LOG200"

@@ -142,33 +142,33 @@ positions 10 and 11 wrap onto B's first two letters and fall back into the const
 '''
 
 [[provenance]]
-path = "withmath/wm_pk98_segchain_a1s0_control373.py"
+path = "withmath/scripts/wm_pk98_segchain_a1s0_control373.py"
 kind = "solver"
 note = "Controls-only segment-chain selector: 16 cells, width-8 shortlist cyclic DP, 5,616 finish states, gauge orbit, stratified 99-null replay, strict typed transcript."
 ref = "logs/373_pk98_segchain_a1s0_controls.log"
 
 [[provenance]]
-path = "withmath/PK98_SEGCHAIN_SUCCESSOR_DESIGN.md"
+path = "withmath/docs/pk9-pk8/PK98_SEGCHAIN_SUCCESSOR_DESIGN.md"
 kind = "design"
 note = "Frozen scope (16 cells, fixed t = 53), honest exactness flags, gauge accounting, finish-aware permutation null, leakage firewall, terminals."
 
 [[provenance]]
-path = "withmath/PK98_SEGCHAIN_TARGET384_DESIGN.md"
+path = "withmath/docs/pk9-pk8/PK98_SEGCHAIN_TARGET384_DESIGN.md"
 kind = "design"
 note = "Admitted controls terminal, exact algebra and geometry, gap-gate calibration values, stratified null, claim grammar and sequencing rule for a future one-shot target."
 
 [[provenance]]
-path = "withmath/PK89_SEGMENT_CANCELLATION_REVIEW.md"
+path = "withmath/docs/pk8-pk9/PK89_SEGMENT_CANCELLATION_REVIEW.md"
 kind = "audit"
 note = "Breakpoint and wrap geometry, group counts at t = 45/53/60, the 288-alignment count, minimum target-absent controls and nulls."
 
 [[provenance]]
-path = "withmath/PK89_SHARED_STREAM_COUPLING375_DESIGN.md"
+path = "withmath/docs/pk8-pk9/PK89_SHARED_STREAM_COUPLING375_DESIGN.md"
 kind = "design"
 note = "Family-consistency invariant: chain models predict no periodic alignment for text A; two-regime chain recovered 10/10."
 
 [[provenance]]
-path = "withmath/wm_segments.py"
+path = "withmath/scripts/wm_segments.py"
 kind = "solver"
 note = "The change-point measurement that fixes t = 53."
 ref = "logs/56_segments.log"

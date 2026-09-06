@@ -127,18 +127,18 @@ Check position 2: $T + M = 19 + 12 = 31 \equiv 5 = F$. The [Vigenère family lab
 '''
 
 [[provenance]]
-path = "withmath/wm_core.py"
+path = "withmath/scripts/wm_core.py"
 kind = "library"
 note = "Shared mathematics: exact period alignment over all shift vectors with a closed-form pairwise objective, fast heuristic alignment, planted-cipher generators."
 
 [[provenance]]
-path = "withmath/wm_audit.py"
+path = "withmath/scripts/wm_audit.py"
 kind = "solver"
 note = "Alignment statistics with error bars: exact alignment and its near-optimal set, exact nulls, within-coset index of coincidence with its exact standard deviation."
 ref = "logs/01_audit.log"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "'Evidence, not likelihood': profiling m shifts buys ~0.15 nats/letter of selection freedom at n = 153, so shifts are marginalised under a uniform prior."
 

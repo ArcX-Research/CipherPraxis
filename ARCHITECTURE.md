@@ -7,7 +7,7 @@ Architecture and content-schema note. Read this before adding content or code.
 Cipher Praxis is a public, general-cryptography knowledge base. It preserves and explains the
 classical-cipher models, algebra, cryptanalysis techniques, statistical instruments, search and
 exact solvers, validation protocols, and engineering practice developed during a long
-cryptanalytic research program in this repository (the sibling `../poemanalysis/` repository, especially its `withmath/` directory).
+cryptanalytic research program in this repository (the sibling `../Cryptanalysis/` repository, especially its `withmath/` directory).
 
 The repository is the **evidence corpus**, not the subject. Public content is written as general
 cryptography research:

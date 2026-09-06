@@ -118,12 +118,12 @@ gate      Q_obs > max(Q_null[0:99]) and Q_obs >= frozen English threshold; equal
 '''
 
 [[provenance]]
-path = "withmath/PK98_SEGCHAIN_A1S0_CONTROL366_DESIGN.md"
+path = "withmath/docs/pk9-pk8/PK98_SEGCHAIN_A1S0_CONTROL366_DESIGN.md"
 kind = "design"
 note = "Section 6: two valid-algebra negatives with independent English-monogram plaintext and two no-chain negatives; section 5: identical 99-null replay, equality fails."
 
 [[provenance]]
-path = "withmath/PK98_SEGCHAIN_A1S0_CONTROL373_INDEPENDENT_AUDIT.md"
+path = "withmath/docs/pk9-pk8/PK98_SEGCHAIN_A1S0_CONTROL373_INDEPENDENT_AUDIT.md"
 kind = "audit"
 note = "Disclosed rows: independent-letter and unchained negatives PASS as negatives; parser enforces ties == len(top) and strict Q_obs > max null."
 ref = "LOG373"
@@ -135,18 +135,18 @@ note = "Sealed disclosed run: the independent-letter negative ranks 1/1 with the
 ref = "LOG385"
 
 [[provenance]]
-path = "withmath/PK10_CHAOCIPHER_FOURCLASS_CANDIDATE_NULL_CERTIFICATION_DESIGN.md"
+path = "withmath/docs/pk10/PK10_CHAOCIPHER_FOURCLASS_CANDIDATE_NULL_CERTIFICATION_DESIGN.md"
 kind = "design"
 note = "Conditional histogram-preserving null bank: 99 position permutations accepted before any score, p = (1 + exceedances)/100, equality loses, class multiplicity inside every replicate."
 
 [[provenance]]
-path = "withmath/PK98_SEGCHAIN_CONTROL362_INDEPENDENT_AUDIT.md"
+path = "withmath/docs/pk9-pk8/PK98_SEGCHAIN_CONTROL362_INDEPENDENT_AUDIT.md"
 kind = "audit"
 note = "Blocker: the null replayed a preliminary statistic, not the finishing selector that declares a positive."
 ref = "LOG362"
 
 [[provenance]]
-path = "withmath/PK9_STRUCTURED_P7_CHAIN383_CREATOR_AUDIT.md"
+path = "withmath/docs/pk9/PK9_STRUCTURED_P7_CHAIN383_CREATOR_AUDIT.md"
 kind = "audit"
 note = "Eight sentinels with typed terminals (independent prose, wrong period, structured-versus-random pair, out-of-bank row, variable-length tokens, forced ambiguity, offset chain, wrong endpoint)."
 ref = "LOG383"

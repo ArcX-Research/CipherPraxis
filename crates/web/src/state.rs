@@ -8,7 +8,7 @@ use std::sync::Arc;
 pub const CONTENT_JSON: &str = include_str!(concat!(env!("OUT_DIR"), "/content.json"));
 
 /// Name of the evidence corpus root that provenance paths are relative to.
-pub const CORPUS_ROOT: &str = "poemanalysis";
+pub const CORPUS_ROOT: &str = "Cryptanalysis";
 
 /// Delivery channel for the evidence-request form (see README, "Evidence requests").
 /// Set ONE of these for production:

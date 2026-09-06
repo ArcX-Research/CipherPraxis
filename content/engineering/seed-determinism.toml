@@ -123,28 +123,28 @@ seed = 1 + draw(r, b"SEED/SELECTOR/" + case_label, 2**63 - 1, counters)
 '''
 
 [[provenance]]
-path = "withmath/PK10_ALBERTI_ACCEL13_VALIDATION381_DESIGN.md"
+path = "withmath/docs/pk10/PK10_ALBERTI_ACCEL13_VALIDATION381_DESIGN.md"
 kind = "design"
 note = "Section 3: exact seed-stream repair with two uppercase seed kinds, private counter per label, same-stream duplicate continuation, no reroll; published first pair for the public reveal."
 
 [[provenance]]
-path = "withmath/PK10_ALBERTI_ACCEL13_VALIDATION381_DESIGN_INDEPENDENT_AUDIT.md"
+path = "withmath/docs/pk10/PK10_ALBERTI_ACCEL13_VALIDATION381_DESIGN_INDEPENDENT_AUDIT.md"
 kind = "audit"
 note = "Independent reveal-to-bank replay from the design text; duplicate-continuation vectors; four negative spellings diverge at the first seed."
 ref = "LOG381"
 
 [[provenance]]
-path = "withmath/PK10_CHAOCIPHER_FOURCLASS_CANDIDATE_NULL_CERTIFICATION_DESIGN.md"
+path = "withmath/docs/pk10/PK10_CHAOCIPHER_FOURCLASS_CANDIDATE_NULL_CERTIFICATION_DESIGN.md"
 kind = "design"
 note = "Permutation seed schedule: SHA-256 of a literal domain with %04d index, counter blocks, rejection sampling with x >= floor(2^64/(i+1))*(i+1), descending Fisher-Yates; first 99 eligible proposals; seeds cannot be replaced after observation."
 
 [[provenance]]
-path = "withmath/wm_pk10_quarterpulse490_core.cpp"
+path = "withmath/scripts/wm_pk10_quarterpulse490_core.cpp"
 kind = "solver"
 note = "Per-cell seed = request seed XOR shifted cell coordinates, so a work-stealing pool gives scheduling-independent results."
 
 [[provenance]]
-path = "withmath/PK9_STRUCTURED_P7_CHAIN383_INDEPENDENT_AUDIT391.md"
+path = "withmath/docs/pk9/PK9_STRUCTURED_P7_CHAIN383_INDEPENDENT_AUDIT391.md"
 kind = "audit"
 note = "Fresh re-execution reproduced all 24 fixture records byte-identically; only elapsed and memory fields differed."
 ref = "LOG391"

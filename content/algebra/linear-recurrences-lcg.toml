@@ -118,7 +118,7 @@ Recurrence keys are a "lot of entropy, small structure" family: the LCG has $26 
 '''
 
 [[provenance]]
-path = "withmath/wm_algebra.py"
+path = "withmath/scripts/wm_algebra.py"
 kind = "solver"
 note = "Test A: affine-lag filters c_i - a c_{i-L} for the 12 units and L = 1..40, scaled self-convolution reference, LLR with the constant maximised out, per-cell and family-wise shuffled nulls."
 
@@ -129,12 +129,12 @@ note = "Family-wise affine-lag z: -0.1 and +0.3 (153-letter text, two orders), -
 ref = "logs/03_algebra.log"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Reading of the algebra screen: no LCG, affine or drifting key."
 
 [[provenance]]
-path = "withmath/GROMARK67_RECURRENCE_AUDIT.md"
+path = "withmath/docs/cipher-methods/GROMARK67_RECURRENCE_AUDIT.md"
 kind = "audit"
 note = "Lagged-Fibonacci linearity, Z10 = Z2 x Z5 meet-in-the-middle, substitution-invariant selector, four 504-letter controls with primers and ranks, target rates and verdicts."
 ref = "logs/212_gromark67_recurrence.log"

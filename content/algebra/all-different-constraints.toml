@@ -124,7 +124,7 @@ The corpus's rule of thumb: rank guesses by enumeration cost ($f_{13}$), never b
 '''
 
 [[provenance]]
-path = "withmath/SHARED_CYCLE_CHAIN_EQUATION_AUDIT_CLAUDE.md"
+path = "withmath/docs/cipher-methods/SHARED_CYCLE_CHAIN_EQUATION_AUDIT_CLAUDE.md"
 kind = "audit"
 note = "Ranks alone never reject; 0/40 wrong pairs linearly inconsistent; all-different must range over letters occurring in crib and ciphertext positions; keep every read."
 
@@ -165,17 +165,17 @@ note = "Corpus screen: 40,331 offsets / 39,528 unique prefixes through the exact
 ref = "LOG407"
 
 [[provenance]]
-path = "withmath/PK9_BIP39_CRT445_NOTE.md"
+path = "withmath/docs/pk9/PK9_BIP39_CRT445_NOTE.md"
 kind = "note"
 note = "Incremental injectivity and CRT feasibility in DFS, exact_deferred branches, task and node censuses of the blind controls and the complete live traversals."
 
 [[provenance]]
-path = "withmath/PK9_BLINDEXPONENT443_NOTE.md"
+path = "withmath/docs/pk9/PK9_BLINDEXPONENT443_NOTE.md"
 kind = "note"
 note = "Affine union-find with all-different after every accepted edge; the non-injective potential z' = 2z lesson."
 
 [[provenance]]
-path = "withmath/PK9_POSDIHEDRAL_D48_INDEPENDENT_REVIEW_CLAUDE.md"
+path = "withmath/docs/pk9/PK9_POSDIHEDRAL_D48_INDEPENDENT_REVIEW_CLAUDE.md"
 kind = "audit"
 note = "All-different factorises through CRT; set-identical to full-product enumeration."
 

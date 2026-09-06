@@ -140,13 +140,13 @@ The slide families were audited because a bounded all-family sweep of an externa
 '''
 
 [[provenance]]
-path = "withmath/DIGRAPHIC_SLIDES_AUDIT.md"
+path = "withmath/docs/cipher-methods/DIGRAPHIC_SLIDES_AUDIT.md"
 kind = "audit"
 note = "Log 200: Portax and Slidefair algebra, admission gate, 4/4 controls with rates, live periods and rates."
 ref = "logs/200_digraphic_slides.log"
 
 [[provenance]]
-path = "withmath/wm_digraphic_slides.py"
+path = "withmath/scripts/wm_digraphic_slides.py"
 kind = "solver"
 note = "Independent Python rectangle transforms, control generation, generator byte-match, external search wrapper."
 

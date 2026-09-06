@@ -115,18 +115,18 @@ z = (score.max() - null.mean()) / null.std()
 '''
 
 [[provenance]]
-path = "withmath/wm_core.py"
+path = "withmath/scripts/wm_core.py"
 kind = "library"
 note = "Shared mathematics: alphabet orders with inverse index arrays, IC with exact counts, exact period-7 alignment over all 26^6 shift vectors with a closed-form pairwise objective, mixture fits with shifts profiled out, planted generators; under 500 lines."
 
 [[provenance]]
-path = "withmath/wm_crib.py"
+path = "withmath/scripts/wm_crib.py"
 kind = "solver"
 note = "Batch simulated annealing: every (crib, offset, relation, restart) is a chain; jobs of at most --max-chains 2,400 chains; exhaustive 925-neighbour polish batch-scored."
 ref = "logs/22_crib_smoke.log"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Within-coset IC with exact s.d. 0.008 for seven 22-letter cosets; crib-attack calibration table; degenerate IC-alignment control (594 to 601 versus 383); mixture control z 6 to 13; only smoke_mix_final has the all-control-pass contract."
 ref = "logs/01_audit.log"
@@ -138,7 +138,7 @@ note = "Profiling of the integer feasibility test: cached digit matrices, int16 
 ref = "LOG406"
 
 [[provenance]]
-path = "withmath/wm_audit.py"
+path = "withmath/scripts/wm_audit.py"
 kind = "solver"
 note = "Alignment statistics with error bars; exact nulls."
 ref = "logs/01_audit.log"

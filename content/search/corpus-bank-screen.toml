@@ -116,7 +116,7 @@ Corpus `THEREISATREEBYTHERIVERANDAHILL` (30 letters), window length 5, mask $\{P
 '''
 
 [[provenance]]
-path = "withmath/PK89_CHAIN_CORPUS407_AUDIT.md"
+path = "withmath/docs/pk8-pk9/PK89_CHAIN_CORPUS407_AUDIT.md"
 kind = "audit"
 note = "Collision implications; 2,344,368-letter corpus; live mask P[2]=P[19] plus 23 inequalities; 2,344,345 windows -> 40,331 offsets / 39,528 unique prefixes; zero endpoints under four sign pairs; controls 256 chains, 256/256 mutations rejected, 4,096-window scalar/vector agreement."
 ref = "logs/407_pk89_chain_corpus_live_20260902T111015Z.log"
@@ -128,6 +128,6 @@ note = "Reservation and completion entries for the corpus screen; the pattern ha
 ref = "LOG407"
 
 [[provenance]]
-path = "withmath/PK89_CHAIN_WORDPAIR406_AUDIT.md"
+path = "withmath/docs/pk8-pk9/PK89_CHAIN_WORDPAIR406_AUDIT.md"
 kind = "audit"
 note = "Cycle-free pre-filter KAT: 0/27,544 violations on a plant; the pattern reported as a speed-up for proposal banks."

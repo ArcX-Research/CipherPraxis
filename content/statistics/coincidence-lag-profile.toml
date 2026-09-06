@@ -133,7 +133,7 @@ note = "Per-segment lag profiles with within-segment shuffle nulls; windowed lag
 ref = "logs/38_step3_facts.log"
 
 [[provenance]]
-path = "withmath/probes/review_A_stats.py"
+path = "withmath/scripts/probes/review_A_stats.py"
 kind = "script"
 note = "Independent recomputation: lag rates 7/14/21/28 with within-coset permutation nulls and four planted prose key structures (400 plants each)."
 
@@ -144,7 +144,7 @@ note = "Lag-28 rate 0.164 vs within-coset null 0.085 +- 0.031 (z +2.6) and vs pl
 ref = "logs/46e_review_A_stats.log"
 
 [[provenance]]
-path = "withmath/wm_grammar.py"
+path = "withmath/scripts/wm_grammar.py"
 kind = "solver"
 note = "align_ic, align_z, fingerprint and model_library: the alignment z-profile over periods 3,4,7,9,14,17,21 with within-text shuffle nulls."
 
@@ -155,12 +155,12 @@ note = "Planted library at 153/144/504 letters: plain period-7 (+7.4, +4.9, +3.1
 ref = "logs/312_grammar_fingerprint.log"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Rounds 5c-5d: 'honest lag profiles', the windowed lag-7 zone maps, and the disagreement between whole-text lag z and histogram-alignment z."
 
 [[provenance]]
-path = "withmath/REVIEW_A.md"
+path = "withmath/docs/project-notes/REVIEW_A.md"
 kind = "audit"
 note = "Section 5.4: the lag-28 excess is plaintext self-similarity, not key structure; section 2.9a: shuffle nulls destroy plaintext repeats so repetition mimics a key change."
 

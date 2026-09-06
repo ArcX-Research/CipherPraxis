@@ -121,12 +121,12 @@ Two tables coexist in the corpus (base-10 with $\alpha = 0.01$; natural-log inte
 '''
 
 [[provenance]]
-path = "ck_lib.py"
+path = "scripts/ck_lib.py"
 kind = "library"
 note = "QuadgramLM: log10((count + 0.01)/total) table cached as q4.npy; score, rate = score/(n-3); verdict thresholds english_rate - 0.7 and - 1.7; header states English ~ -4.3, random ~ -7."
 
 [[provenance]]
-path = "withmath/PK9_THIRDS_ENDPOINT_NULL_CONTROL_AUDIT.md"
+path = "withmath/docs/pk9/PK9_THIRDS_ENDPOINT_NULL_CONTROL_AUDIT.md"
 kind = "audit"
 note = "Frozen natural-log Q4 table: corpus range [0, 1,300,000), 1,299,997 quadgrams, smoothing 0.05, x10,000 rounded to int32, extrema -170910 and -56951."
 
@@ -137,7 +137,7 @@ note = "1,545 held-out 153-letter windows: rate median -4.2732, max -3.7588, min
 ref = "LOG394"
 
 [[provenance]]
-path = "withmath/GRAMMAR_SOLVER.md"
+path = "withmath/docs/search-language/GRAMMAR_SOLVER.md"
 kind = "design"
 note = "Statistic-discipline demonstration: correct inner under an unstripped transposition scores -6.9464, -4.3830 after the transposition is stripped; the order-free vs quadgram rule."
 
@@ -148,7 +148,7 @@ note = "Transcript of the demonstration (monogram LL/letter -2.8297 vs English -
 ref = "logs/311_grammar_verify.log"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Wrong-placement nulls at 153 letters (medians -6.0 to -6.2, maxima -5.5 to -5.9) and at 95 letters (median -5.3 to -5.4, max -4.83 to -4.91); free sub-coset shifts overfitting 63-95-letter zones to -4.7/-5.0 nulls."
 

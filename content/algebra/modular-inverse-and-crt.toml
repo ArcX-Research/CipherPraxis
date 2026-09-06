@@ -127,22 +127,22 @@ Because every unit is odd, the $\mathrm{GF}(2)$ part of a unit-ratio system is i
 '''
 
 [[provenance]]
-path = "withmath/PK9_POSDIHEDRAL_D48_INDEPENDENT_REVIEW_CLAUDE.md"
+path = "withmath/docs/pk9/PK9_POSDIHEDRAL_D48_INDEPENDENT_REVIEW_CLAUDE.md"
 kind = "audit"
 note = "R4: all-different factorises through CRT; work 2^d2 + 13^d13; a 2^5 x 13^5 = 11,881,376 geometry resolved in 371,325 units of work (~0.1 s); verified set-identical to full-product enumeration."
 
 [[provenance]]
-path = "withmath/PK9_UNITRATIO_NECESSARY_TARGET308_AUDIT.md"
+path = "withmath/docs/pk9/PK9_UNITRATIO_NECESSARY_TARGET308_AUDIT.md"
 kind = "audit"
 note = "Explicit lift z = 13 z2 + 14 z13; F2 RREF identical across all unit cells."
 
 [[provenance]]
-path = "withmath/PK9_BIP39_CRT445_NOTE.md"
+path = "withmath/docs/pk9/PK9_BIP39_CRT445_NOTE.md"
 kind = "note"
 note = "Incremental GF(2)/GF(13) echelon bases, parity conditions as linear equations on GF(2) coefficients, projective enumeration with a differential KAT against all 13^d vectors, exact_deferred branches, two blind planted recoveries."
 
 [[provenance]]
-path = "withmath/PK89_COMMONPLAIN_INVARIANT_CONTROL_AUDIT.md"
+path = "withmath/docs/pk8-pk9/PK89_COMMONPLAIN_INVARIANT_CONTROL_AUDIT.md"
 kind = "audit"
 note = "KAT counts: 64 GF(2) matrices, 169 GF(13) rows, 64 literal CRT permutations, 1,248 forwards; caps 2^18, 13^5, 1,500,000 as INCOMPLETE boundaries."
 
@@ -159,7 +159,7 @@ note = "Per-system enumeration budget 13^7 in the exact crib-pair tail continuat
 ref = "LOG390"
 
 [[provenance]]
-path = "withmath/GROMARK67_RECURRENCE_AUDIT.md"
+path = "withmath/docs/cipher-methods/GROMARK67_RECURRENCE_AUDIT.md"
 kind = "audit"
 note = "Z/10Z = Z/2Z x Z/5Z split of the lagged digit recurrence; meet-in-the-middle over primer halves; 4/4 controls with exact primers."
 ref = "logs/212_gromark67_recurrence.log"

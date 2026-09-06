@@ -118,7 +118,7 @@ body = '''
 '''
 
 [[provenance]]
-path = "withmath/PK98_SEGCHAIN_A1S0_CONTROL366_DESIGN.md"
+path = "withmath/docs/pk9-pk8/PK98_SEGCHAIN_A1S0_CONTROL366_DESIGN.md"
 kind = "design"
 note = "Sections 7 and 8: hidden fixtures use a fresh authority-supplied seed generated after freeze and audit; attempt record holds SHA256(hidden_seed); any attempt-file creation consumes the bank."
 
@@ -129,13 +129,13 @@ note = "Root transaction: hidden bank POWER_BLOCKED at the fourth case, bank bur
 ref = "LOG381"
 
 [[provenance]]
-path = "withmath/PK10_ALBERTI_ACCEL13_VALIDATION381_CREATOR_AUDIT.md"
+path = "withmath/docs/pk10/PK10_ALBERTI_ACCEL13_VALIDATION381_CREATOR_AUDIT.md"
 kind = "audit"
 note = "Disclosed public bank decision PASS: positives 6/6, sentinels 6/6, iid negatives 3/3, shuffled nulls 19/19; measured resource margin about three times under the caps."
 ref = "LOG381"
 
 [[provenance]]
-path = "withmath/PK10_ALBERTI_ACCEL13_VALIDATION381_DESIGN_INDEPENDENT_AUDIT.md"
+path = "withmath/docs/pk10/PK10_ALBERTI_ACCEL13_VALIDATION381_DESIGN_INDEPENDENT_AUDIT.md"
 kind = "audit"
 note = "Independent reveal-to-bank replay of the complete 34-row public vector from the design text, without importing the implementation."
 ref = "LOG381"
@@ -147,7 +147,7 @@ note = "Ledger amendment reclassifying two front-loaded blind controls from POWE
 ref = "LOG503"
 
 [[provenance]]
-path = "withmath/CLAUDE_LOG363_INDEPENDENT_AUDIT.md"
+path = "withmath/docs/project-notes/CLAUDE_LOG363_INDEPENDENT_AUDIT.md"
 kind = "audit"
 note = "Blocker B1: the one-shot property was process-local; required repair is a durable O_EXCL attempt marker written before the sole target read."
 ref = "LOG363"

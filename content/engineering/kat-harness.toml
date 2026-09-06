@@ -132,35 +132,35 @@ FILTER_KAT  plants=400 accepted=400/400  negative(3-cycle)=rejected
 '''
 
 [[provenance]]
-path = "withmath/wm_pk10_alberti_monosub_core327.cpp"
+path = "withmath/scripts/wm_pk10_alberti_monosub_core327.cpp"
 kind = "solver"
 note = "Self-KAT: every swap delta equals a full rescore for all 325 pairs; deprogress roundtrip for two alphabets and seven slopes."
 
 [[provenance]]
-path = "withmath/wm_pk10_quarterpulse490_core.cpp"
+path = "withmath/scripts/wm_pk10_quarterpulse490_core.cpp"
 kind = "solver"
 note = "Self-KAT: embedded base KAT, forward/deprogress roundtrip over 5,408 cells and 504 positions, constant-slope alias check."
 
 [[provenance]]
-path = "withmath/PK10_ALBERTI_ACCEL13_VALIDATION381_CREATOR_AUDIT.md"
+path = "withmath/docs/pk10/PK10_ALBERTI_ACCEL13_VALIDATION381_CREATOR_AUDIT.md"
 kind = "audit"
 note = "Static KAT 51 s, parser KAT 420 mutations in 46 s, transaction KAT 18 failpoints and 4 filesystem rejections in 2 s, child-environment probe, refusal panel."
 ref = "LOG381"
 
 [[provenance]]
-path = "withmath/PK98_SEGCHAIN_A1S0_CONTROL373_INDEPENDENT_AUDIT.md"
+path = "withmath/docs/pk9-pk8/PK98_SEGCHAIN_A1S0_CONTROL373_INDEPENDENT_AUDIT.md"
 kind = "audit"
 note = "Static KAT 38/38 mutations rejected; false normalised-runner field rejected at three layers; a mixed generator-tie KAT with one flat cell."
 ref = "LOG373"
 
 [[provenance]]
-path = "withmath/SEGCHAIN_CONTROL_MISMATCH399_AUDIT.md"
+path = "withmath/docs/project-notes/SEGCHAIN_CONTROL_MISMATCH399_AUDIT.md"
 kind = "audit"
 note = "Orbit mask defect and the recommended control-filter KATs: filter(true maps) == True for every plant, and a negative KAT that a genuine 3-cycle is rejected."
 ref = "LOG399"
 
 [[provenance]]
-path = "withmath/PK98_SEGCHAIN_A1S0_CONTROL366_INDEPENDENT_AUDIT.md"
+path = "withmath/docs/pk9-pk8/PK98_SEGCHAIN_A1S0_CONTROL366_INDEPENDENT_AUDIT.md"
 kind = "audit"
 note = "Structural parser accepted a transcript with a false null tie count (1 changed to 2); blocked."
 ref = "LOG366"
@@ -172,6 +172,6 @@ note = "Dead KAT loop removed in the successor; bool/float laxity residual and i
 ref = "LOG385"
 
 [[provenance]]
-path = "withmath/wm_pk9_bip39_checkpoint470_kat.py"
+path = "withmath/scripts/wm_pk9_bip39_checkpoint470_kat.py"
 kind = "script"
 note = "Differential KAT of an instrumented core against its predecessor."

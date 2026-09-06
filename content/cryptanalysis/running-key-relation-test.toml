@@ -155,7 +155,7 @@ The key has cancelled: `TFIXJDWNDHSV` is exactly the letter-wise difference of t
 '''
 
 [[provenance]]
-path = "withmath/wm_knowntext.py"
+path = "withmath/scripts/wm_knowntext.py"
 kind = "solver"
 note = "Exact free-alphabet CSP over every window of every known text; planted-window control."
 ref = "logs/60_knowntext.log"
@@ -166,13 +166,13 @@ kind = "log"
 note = "Re-run of capped windows at 300,000 nodes: no solutions; residual undecided counts per zone."
 
 [[provenance]]
-path = "withmath/wm_algebra.py"
+path = "withmath/scripts/wm_algebra.py"
 kind = "solver"
 note = "Test D running-key relations between the two texts: IC and language score at all offsets, both orientations and signs, with the family-wise null."
 ref = "logs/03_algebra.log"
 
 [[provenance]]
-path = "withmath/wm_misc.py"
+path = "withmath/scripts/wm_misc.py"
 kind = "solver"
 note = "Test C: mixed-index-space relations at all offsets with a family-wise null (per-trial +5.7 sigma became +0.8)."
 ref = "logs/11_misc.log"
@@ -183,12 +183,12 @@ kind = "log"
 note = "Language-model beam over two-plaintext differences: 3/3 hidden controls fail."
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Recipe-free cascade (D3 running-key links over plaintexts recovered earlier in the run) with 100% published match on the solved series."
 
 [[provenance]]
-path = "withmath/PK89_SHARED_STREAM_COUPLING375_DESIGN.md"
+path = "withmath/docs/pk8-pk9/PK89_SHARED_STREAM_COUPLING375_DESIGN.md"
 kind = "design"
 note = "Section 5: letter-wise running-key chains predict no periodic alignment; section 8: the identity-aligned shared key reduces to the two-plaintext difference (log 166 power failure)."
 

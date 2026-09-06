@@ -116,32 +116,32 @@ Orbit counting is the quantitative side of [Conjugacy and gauge](/algebra/conjug
 '''
 
 [[provenance]]
-path = "withmath/PK9_BLINDEXPONENT443_NOTE.md"
+path = "withmath/docs/pk9/PK9_BLINDEXPONENT443_NOTE.md"
 kind = "note"
 note = "Gauge z -> u z + b with k -> u k (Vigenère-type) or u k + 2b (Beaufort-type); free action, 312 orbits; 15,600 triples -> 1,300 and 100 canonical cells (proven by enumeration); normaliser 4,056; gauge-invariant scorer KAT; ranker development result 0/20 rank one."
 
 [[provenance]]
-path = "withmath/PK9_POSDIHEDRAL_UNIT_CONTROL_AUDIT.md"
+path = "withmath/docs/pk9/PK9_POSDIHEDRAL_UNIT_CONTROL_AUDIT.md"
 kind = "audit"
 note = "Every solution set partitioned into complete 312-member affine orbits; cycle_count = 312 x orbit_count checked in all 1,728 cells; 12 absolute orientations per orbit."
 
 [[provenance]]
-path = "withmath/PK9_UNITMULT_INDEPENDENT_AUDIT.md"
+path = "withmath/docs/pk9/PK9_UNITMULT_INDEPENDENT_AUDIT.md"
 kind = "audit"
 note = "Free affine action of order 312; orbit completeness requirements; 300 matched selections with one-orbit geometry; degenerate fixture with four multiplier aliases."
 
 [[provenance]]
-path = "withmath/PK9_UNITMULT_ALLORBIT_CLAUDE_BLOCKED.md"
+path = "withmath/docs/pk9/PK9_UNITMULT_ALLORBIT_CLAUDE_BLOCKED.md"
 kind = "note"
 note = "Blocked draft: orbit_partition grouped by canonical key without proving full orbits."
 
 [[provenance]]
-path = "withmath/PK9_POSDIHEDRAL_D48_INDEPENDENT_REVIEW_CLAUDE.md"
+path = "withmath/docs/pk9/PK9_POSDIHEDRAL_D48_INDEPENDENT_REVIEW_CLAUDE.md"
 kind = "audit"
 note = "Relabelling L -> L o h sends g_t -> h^-1 g_t; g_0 = id lossless; 9,216 pairs not an overcount."
 
 [[provenance]]
-path = "withmath/PK89_SHARED_CYCLE_BANK380_AUDIT.md"
+path = "withmath/docs/pk8-pk9/PK89_SHARED_CYCLE_BANK380_AUDIT.md"
 kind = "audit"
 note = "Orbit canonicalisation 312 descriptions -> 1 class."
 

@@ -141,12 +141,12 @@ The chi-squared misfit and the [Bayesian evidence](/statistics/bayesian-evidence
 '''
 
 [[provenance]]
-path = "ck_lib.py"
+path = "scripts/ck_lib.py"
 kind = "library"
 note = "QuadgramLM.chi: sum over letters of (count - n*mono)^2 / (n*mono) with the corpus monogram table."
 
 [[provenance]]
-path = "withmath/wm_infer.py"
+path = "withmath/scripts/wm_infer.py"
 kind = "solver"
 note = "D1 transposition gate (CHI_STRONG 0.35, CHI_GATE 0.50 with IC_GATE 0.058), d1_reading over 26 rotations in two orders, chi_peel per coset, and the D2b criterion chi + 0.65 ln(n)(p+q)."
 
@@ -157,7 +157,7 @@ note = "Seven solved references: raw chi/n 2.406-3.258 (D1 quiet), peeled chi/n 
 ref = "logs/145_infer.log"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Round 5: prefix/suffix histogram chi-squared peak (z +3.7 against a max-over-t null); the 504-letter text's uniform histogram (chi-squared P 0.26, logs/70)."
 

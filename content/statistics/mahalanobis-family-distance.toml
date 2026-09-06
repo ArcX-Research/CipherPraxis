@@ -124,7 +124,7 @@ This is approximate Bayesian computation with a Gaussian synthetic likelihood. I
 '''
 
 [[provenance]]
-path = "withmath/wm_abc.py"
+path = "withmath/scripts/wm_abc.py"
 kind = "solver"
 note = "Feature vector (19 statistics), 29 constructions (30 for even lengths), 120 simulations each, pooled standardisation, shrunk covariance, Mahalanobis d2 and Gaussian log-likelihood, plug-in self-classification."
 
@@ -135,7 +135,7 @@ note = "153-letter target: d2 10.7 (bifid-7) to 19.3 inside the cluster; random 
 ref = "logs/04_abc.log"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Results of the first full run: both texts sit in one cluster that the invariant statistics cannot split at n = 153 (self-classification 8-40%); excluded families and their z."
 

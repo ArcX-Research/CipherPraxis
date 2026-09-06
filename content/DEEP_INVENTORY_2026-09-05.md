@@ -132,7 +132,7 @@ that gate rather than restating the same primitives as a verified attack.
 
 ## Verification
 
-- Every new provenance path was checked to exist under `../poemanalysis`.
+- Every new provenance path was checked to exist under `../Cryptanalysis`.
 - Strict content check: 234 files, 234 entries, zero errors, zero warnings.
 - Math scan: zero unhandled dollar signs.
 - List scan: zero broken list markers.

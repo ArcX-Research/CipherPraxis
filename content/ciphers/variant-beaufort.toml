@@ -125,25 +125,25 @@ Because the variant is a sign convention rather than a new mechanism, the progra
 '''
 
 [[provenance]]
-path = "withmath/wm_colossus_dynamic.py"
+path = "withmath/scripts/wm_colossus_dynamic.py"
 kind = "solver"
 note = "Independent forward transforms and control generation for interrupted-key Vigenère, Variant and Beaufort."
 ref = "logs/186_colossus_dynamic_intkey.log"
 
 [[provenance]]
-path = "withmath/COLOSSUS_DYNAMIC_AUDIT.md"
+path = "withmath/docs/cipher-methods/COLOSSUS_DYNAMIC_AUDIT.md"
 kind = "audit"
 note = "Interrupted Key Variant control PASS (3.11 s); live rate -7.467 identical to Vigenère under complementary keys."
 ref = "LOG186"
 
 [[provenance]]
-path = "withmath/DIGRAPHIC_SLIDES_AUDIT.md"
+path = "withmath/docs/cipher-methods/DIGRAPHIC_SLIDES_AUDIT.md"
 kind = "audit"
 note = "Slidefair Variant control PASS at rate -4.0511."
 ref = "LOG200"
 
 [[provenance]]
-path = "withmath/wm_ctautokey_cycle.py"
+path = "withmath/scripts/wm_ctautokey_cycle.py"
 kind = "solver"
 note = "Ciphertext-autokey screen with Vigenère, Variant and Beaufort feedback relations."
 ref = "logs/189_ctautokey_cycle.log"

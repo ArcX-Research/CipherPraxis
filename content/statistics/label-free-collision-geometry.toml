@@ -1,13 +1,13 @@
 id = "label-free-collision-geometry"
 section = "statistics"
 title = "Label-free collision geometry"
-subtitle = "Rank position schedules by equal-symbol counts without fitting a substitution"
+subtitle = "Rank schedules using symbol and adjacent-pair equality without fitting a substitution"
 status = "VERIFIED"
-status_note = "The monogram expectation identity and exhaustive scanner are verified. An order-sensitive extension that collides adjacent symbol pairs has an exact population identity but remains design-only; both forms are geometry screens, not language tests."
+status_note = "The monogram and adjacent-pair expectation identities and exhaustive score calculations are verified under their stated independence assumptions. Pair counts recover structured, uniform-marginal examples missed by monograms, but periodic nonlanguage defeats both: these are proposal statistics, not language tests."
 family = "Permutation-invariant statistics"
 tags = ["collision counts", "unknown substitution", "schedule recovery", "histograms", "invariants"]
-related = ["index-of-coincidence", "coincidence-lag-profile", "observable-function-fingerprinting", "permutation-test", "family-wise-null", "parameter-versus-plaintext-recovery", "alternating-velocity-disk-cipher"]
-summary = "An unknown monoalphabetic substitution preserves whether two symbols are equal. For a candidate position schedule, undo only the position-dependent motion and count equal-symbol pairs in the resulting coordinate stream. Under a stationary nonuniform source, the true schedule aligns every position to one common marginal distribution and maximises the expected collision score."
+related = ["index-of-coincidence", "coincidence-lag-profile", "observable-function-fingerprinting", "permutation-test", "family-wise-null", "parameter-versus-plaintext-recovery", "alternating-velocity-disk-cipher", "piecewise-constant-velocity-disk-cipher", "valid-model-nulls"]
+summary = "An unknown monoalphabetic substitution preserves equality of symbols and of ordered symbol pairs. Undo a candidate position schedule, then count collisions without naming the latent letters. Single-letter counts use uneven frequencies; adjacent-pair counts can also exploit order when individual letter frequencies are flat. Both need matched controls and explicit failure cases before selecting candidates for a language solver."
 updated = "2026-09-06"
 
 [[blocks]]
@@ -39,6 +39,28 @@ $$\mathbb E[S_{\rm true}-S(\theta)]
 =\frac12\sum_{i\ne j}\lVert p_i-p_j\rVert^2\ge0.$$
 
 For a restricted pair graph, use the same sum over its edges. If that graph is connected, equality again requires one common marginal, apart from relabellings among letters with equal probabilities.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Order-sensitive collisions and exact phase tables"
+body = '''
+Let $H_r(a,b)$ count internal adjacent pairs in peeled block $r$. The cross-block ordered-pair score is
+
+$$J_2=\sum_{r<s}\sum_{a,b}H_r(a,b)H_s(a,b).$$
+
+Assume independent blocks whose internal pairs have one stationary joint distribution $Q$. Position-wise bijections permute its entries, giving pair vectors $Q_i$ of equal norm. Then
+
+$$\mathbb E[J_2(\mathrm{true})-J_2(\theta)]
+=\frac12\sum_{i,j\text{ in different blocks}}\lVert Q_i-Q_j\rVert^2\ge0,$$
+
+counting each cross-block pair once. Uniform letter marginals need not make $Q$ uniform. A noncirculant doubly-stochastic Markov chain can carry information invisible to monograms. This proof allows dependence within blocks, but does not automatically apply to consecutive dependent prose blocks.
+
+For a continuous block-velocity schedule, let $H_{r,d}(a,b)$ be the pair histogram after local drift is removed but before the block's starting phase is subtracted. Precompute
+
+$$E_{r,s}(u,v,\delta)=\sum_{a,b}H_{r,u}(a,b)H_{s,v}(a+\delta,b+\delta).$$
+
+Use $\delta=\phi_s-\phi_r$, where $\phi_r=L\sum_{k<r}d_k$. Only $m/\gcd(L,m)$ phases occur over $m$ coordinates. For four blocks, six table lookups give the exact score after precomputation. Shift both pair endpoints and retain continuous phase carry; resetting a block changes the cipher model.
 '''
 
 [[blocks]]
@@ -100,13 +122,14 @@ A direct implementation costs $O(|\Theta|n+|\Theta||E|)$ for schedule family $\T
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Uniform source:** every permutation of the marginal is identical, so all schedules have the same expected score.
+- **Uniform source:** monograms have no expected discrimination when letter marginals are uniform. Pair counts also lose that argument when the joint distribution is uniform, but uniform marginals alone do not erase pair information.
 - **Equal-probability aliases:** swapping letters with equal probabilities creates additional statistical ties.
 - **Correlated adversary:** a wrong schedule can straighten a periodic source into an unusually concentrated stream and beat the true schedule.
 - **Circulant pair law:** an order-sensitive source whose transition law is unchanged by alphabet rotation can leave additional schedule aliases even when its pair distribution is far from uniform.
 - **Multiple comparisons:** the maximum over a large family can be extreme even when each individual score is noisy.
 - **Post-selected objective:** choosing global or cross-block collisions after seeing which ranks better invalidates the stated control power.
 - **Schedule called plaintext:** equality geometry does not name latent symbols or recover the substitution.
+- **Uncharged extra objective:** adding pair-score seeds enlarges the selector. Preserve all origins and repeat the complete enlarged selection in every decision null; an earlier release gate cannot be inherited unchanged.
 '''
 
 [[blocks]]
@@ -115,6 +138,8 @@ body = '''
 The exhaustive implementation was checked against a separate per-position reference on small schedule spaces and replayed every retained physical origin. In twelve 504-symbol controls with nonuniform independent marginals, both the global and cross-block objectives placed the planted schedule at rank one. In four matched uniform controls, neither objective retained the plant in the top 64. These honest failures confirm the theorem's nonuniformity boundary and motivated the correlated-source gate below.
 
 A later frozen panel added twelve 504-letter correlated prose controls and matched transformations. The planted schedule ranked first for all twelve prose texts, but also for all twenty-four plaintext histogram-shuffle and within-block-sort transformations. Conditional ciphertext-shuffle nulls overlapped the prose score range, and periodic concentration traps could favor a wrong schedule. This confirms that strong retention measures position geometry; it does not identify prose.
+
+An order-sensitive extension tested four public 504-symbol Markov examples with uniform population letter marginals. Pair collisions placed the plant first in all four, preserving a legitimate two-way outer-order tie, while both monogram objectives missed all four top-64 sets. Two peaked independent sources were first under every objective; two uniform independent references were not retained. Two arithmetic-progression traps preferred a wrong schedule that made the coordinates constant. A separate implementation reconstructed every score distribution and retained origin. This demonstrates additional proposal information, not fresh prose power or language/null separation.
 '''
 
 [[blocks]]
@@ -137,7 +162,7 @@ kind = "notes"
 body = '''
 Collision probability and histogram methods are classical. The useful synthesis is to make a schedule search completely label-free, derive its expectation loss as a sum of squared marginal differences, retain exact physical ties, and state the uniform and correlated-source boundaries before combining it with a language model.
 
-The same squared-distance proof applies to adjacent-pair distributions: replace each $q$-component monogram vector by the $q^2$-component vector of ordered pairs. This can expose order when monograms are uniform, but the recorded implementation and public-symbol controls for that extension are still pending. It must not inherit the verified status of the monogram scanner merely from the shared algebra.
+The adjacent-pair extension has its own exhaustive public-symbol implementation and separate-code replay. Its gain is information from order, not merely a larger shortlist. Those controls do not establish the cipher family or the correct latent letter names.
 '''
 
 [[provenance]]
@@ -191,5 +216,17 @@ ref = "LOG665"
 [[provenance]]
 path = "withmath/docs/project-notes/PK10_BIGRAM722.md"
 kind = "design"
-note = "Derives the order-sensitive cross-block adjacent-pair collision tables, squared-distance expectation identity, phase-carry rule, and uniform/circulant failure modes; implementation is pending."
+note = "Derives the order-sensitive cross-block adjacent-pair collision tables, squared-distance expectation identity, phase-carry rule and uniform/circulant failure modes; records the completed symbol panel."
+ref = "LOG722"
+
+[[provenance]]
+path = "withmath/logs/722_public_1788697333978927000.result.json"
+kind = "log"
+note = "SHA256 b237ca93a74842d68d8363a6b0b5210f11d679856c8027543a586a2004645bc7. Four uniform-marginal Markov plants rank first under pair collisions and miss both monogram top64 sets; uniform references and periodic traps preserve honest failures and all rank ties."
+ref = "LOG722"
+
+[[provenance]]
+path = "withmath/logs/722_audit_1788697398677791000.report.json"
+kind = "audit"
+note = "SHA256 b41af7c060a30c5179284ec5872956d02d02849b1264560b22dd3c6f9922bd30. Same-researcher separate code reconstructs 9,151,877 schedule-score triples, 3,766 metric/origin rows, 14 malformed refusals and 12 independent output-corruption refusals."
 ref = "LOG722"

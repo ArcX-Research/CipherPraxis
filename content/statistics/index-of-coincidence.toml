@@ -145,12 +145,12 @@ The kappa notation follows Friedman. The exact variance is the classical U-stati
 '''
 
 [[provenance]]
-path = "withmath/wm_core.py"
+path = "withmath/scripts/wm_core.py"
 kind = "library"
 note = "ic, coset_ics, periodic_ic, digram_ic, union_ic_from_J and ic_sd_monoalphabetic (exact variance with the shared-position covariance)."
 
 [[provenance]]
-path = "withmath/wm_audit.py"
+path = "withmath/scripts/wm_audit.py"
 kind = "solver"
 note = "Exact period-7 alignment with shuffle nulls; within-coset IC printed with the exact s.d. per coset and of the mean."
 
@@ -161,17 +161,17 @@ note = "Planted references: plain period-7 within-coset IC 0.0713 (z +0.8), frac
 ref = "logs/01_audit.log"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "'What the numbers mean': the 1.5-sigma reading of 'cosets are not monoalphabetic'; the degenerate IC-maximising alignment (594-601 coincidences vs the truth's 383) recorded under logs/81."
 
 [[provenance]]
-path = "withmath/wm_infer.py"
+path = "withmath/scripts/wm_infer.py"
 kind = "solver"
 note = "IC_GATE = 0.058 with the chi-squared gate in the transposition decision of the cascade solver."
 
 [[provenance]]
-path = "withmath/wm_crossderive.py"
+path = "withmath/scripts/wm_crossderive.py"
 kind = "solver"
 note = "Complete cross-source sum/difference scan using periodic shift-marginalised monogram evidence, periodic IC, and coset-alignment gain before a bounded endpoint."
 ref = "logs/155_crossderive.log"

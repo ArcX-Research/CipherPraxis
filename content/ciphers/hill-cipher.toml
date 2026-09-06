@@ -139,31 +139,31 @@ Row separability is what turns a $26^{d^2}$ key space into $26^d$ independent ro
 '''
 
 [[provenance]]
-path = "withmath/wm_hillfree.py"
+path = "withmath/scripts/wm_hillfree.py"
 kind = "solver"
 note = "Arbitrary Hill-3: 15,372 primitive rows, shift-marginalised periodic likelihood, unit-determinant joins, exact cyclic-DP finish; letter and block nulls."
 ref = "logs/149_hillfree.log"
 
 [[provenance]]
-path = "withmath/HILL2_PERIODIC_AUDIT.md"
+path = "withmath/docs/cipher-methods/HILL2_PERIODIC_AUDIT.md"
 kind = "audit"
 note = "Log 206: Hill-2 over a periodic layer; repaired two-stage selector; n96/p7 and n126/p26 controls exact; live endpoints and null panel."
 ref = "logs/206_hill2_periodic.log"
 
 [[provenance]]
-path = "withmath/wm_hill4_direct.py"
+path = "withmath/scripts/wm_hill4_direct.py"
 kind = "solver"
 note = "Direct arbitrary Hill-4: 428,400 primitive rows ranked by lag-4 trigram likelihood; two random GL(4) controls exact; live p = .40."
 ref = "LOG171"
 
 [[provenance]]
-path = "ck_runkey.py"
+path = "scripts/ck_runkey.py"
 kind = "solver"
 note = "Mode H: row-separable Hill decryption scored by monogram likelihood and periodic IC per row."
 ref = "ck_logs/43_runkey.log"
 
 [[provenance]]
-path = "withmath/PK8_PK10_HINTFREE.md"
+path = "withmath/docs/pk8/PK8_PK10_HINTFREE.md"
 kind = "note"
 note = "Hill-3 algebra: primitive rows, decimated period q = p / gcd(p, 3), marginalised shifts, control ranks."
 

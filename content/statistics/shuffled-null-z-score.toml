@@ -116,7 +116,7 @@ A shuffle null is a permutation test with the full symmetric group. The [permuta
 '''
 
 [[provenance]]
-path = "withmath/wm_core.py"
+path = "withmath/scripts/wm_core.py"
 kind = "library"
 note = "zscore(x, null) = (x - mean)/(sd + 1e-12); perm_within_cosets; the shuffle loops in wm_audit and wm_mix call the same statistic on rng.permutation(n)."
 
@@ -127,12 +127,12 @@ note = "Exact-alignment nulls (200 shuffles): plain periodic 0.0535 +- 0.0025 ma
 ref = "logs/01_audit.log"
 
 [[provenance]]
-path = "withmath/wm_mix.py"
+path = "withmath/scripts/wm_mix.py"
 kind = "solver"
 note = "Complete-pipeline nulls: shuffled ciphertexts pushed through fit, delta candidates, EM and width DP; width z as the max of MAP and class-EM statistics against those nulls."
 
 [[provenance]]
-path = "withmath/REVIEW_A.md"
+path = "withmath/docs/project-notes/REVIEW_A.md"
 kind = "audit"
 note = "Section 2.4: (max - mean)/sd over 4e4-4e5 permutation draws is not a test (the maximum sits 4-4.5 sd above the mean by construction); section 2.9a: a shuffle null destroys plaintext repeats; appendix: max-over-35/877 statistics have right-skewed nulls."
 

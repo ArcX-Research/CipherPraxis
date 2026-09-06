@@ -149,12 +149,12 @@ Classical repeat-distance (Kasiski) analysis is the coincidence-based ancestor o
 '''
 
 [[provenance]]
-path = "withmath/wm_core.py"
+path = "withmath/scripts/wm_core.py"
 kind = "library"
 note = "align_exact: all 26^6 relative shift vectors with the closed-form pairwise objective, near-optimal set and coset margins; align_heuristic for nulls and simulations."
 
 [[provenance]]
-path = "withmath/wm_audit.py"
+path = "withmath/scripts/wm_audit.py"
 kind = "solver"
 note = "Exact alignment, 200-shuffle nulls, within-coset IC with exact standard deviation, planted plain and transposed-inner references."
 ref = "logs/01_audit.log"
@@ -170,7 +170,7 @@ kind = "log"
 note = "Kasiski repeat counts on the 504-letter text: 5 repeated trigrams (random expectation about 7.2), no tetragrams."
 
 [[provenance]]
-path = "withmath/GRAMMAR_SOLVER.md"
+path = "withmath/docs/search-language/GRAMMAR_SOLVER.md"
 kind = "note"
 note = "Dilution formula (0.054 - 1/26)/(0.0665 - 1/26) = 0.55 for a period-7 layer over an inner of IC 0.054."
 

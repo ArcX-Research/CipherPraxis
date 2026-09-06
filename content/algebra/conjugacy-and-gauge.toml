@@ -122,22 +122,22 @@ Gauge bookkeeping is a validation matter as much as an algebraic one. The invali
 '''
 
 [[provenance]]
-path = "withmath/SHARED_CYCLE_CHAIN_EQUATION_AUDIT_CLAUDE.md"
+path = "withmath/docs/cipher-methods/SHARED_CYCLE_CHAIN_EQUATION_AUDIT_CLAUDE.md"
 kind = "audit"
 note = "Chain equation and its signs (50/50 plants); translation symmetry with kappa -> kappa + b(1 + e8 e9 - e9), verified b = 1, 5, 13; unit symmetry verified u = 3, 5, 25; valid fix = one letter at 0 with kappa free plus unit canonicalisation; fixing kappa invalid."
 
 [[provenance]]
-path = "withmath/PK89_SHARED_CYCLE_BANK380_AUDIT.md"
+path = "withmath/docs/pk8-pk9/PK89_SHARED_CYCLE_BANK380_AUDIT.md"
 kind = "audit"
 note = "Unit gauge 48/48; translation gauge 16/16 with z(P9'') = z(P9) - e8 b; orbit {u z + b}, 312 descriptions -> 1 class; canonical_class = min over units of u(z - z(A)); rotation aliases b = 5 and b = 9 (e8 = -1) give predicted shifts 5 and 17."
 
 [[provenance]]
-path = "withmath/PK89_SHARED_CYCLE_CHAIN380_DESIGN.md"
+path = "withmath/docs/pk8-pk9/PK89_SHARED_CYCLE_CHAIN380_DESIGN.md"
 kind = "design"
 note = "Effective unknowns: 26!/(26*12) ~ 2^80 cycle classes plus ~33 bits of key differences ~ 2^113; ~460 bits of English redundancy in 153 letters."
 
 [[provenance]]
-path = "withmath/PK89_CHAIN_CONSISTENCY_INVARIANT377_DESIGN.md"
+path = "withmath/docs/pk8-pk9/PK89_CHAIN_CONSISTENCY_INVARIANT377_DESIGN.md"
 kind = "design"
 note = "Proposition 2: the 26-fold additive gauge is a symmetry only in same-order cells (KAT 8/8 invariant, 8/8 mixed cells not)."
 
@@ -166,12 +166,12 @@ note = "Shift-free ciphertext-keyed model: translation is not a gauge; unit scal
 ref = "LOG409"
 
 [[provenance]]
-path = "withmath/AFFINE_ROUTE_AUDIT.md"
+path = "withmath/docs/cipher-methods/AFFINE_ROUTE_AUDIT.md"
 kind = "audit"
 note = "Route gauge: cyclic cut unidentifiable when the period divides n; controls compare cyclic classes."
 
 [[provenance]]
-path = "withmath/PK9_POSDIHEDRAL_D48_INDEPENDENT_REVIEW_CLAUDE.md"
+path = "withmath/docs/pk9/PK9_POSDIHEDRAL_D48_INDEPENDENT_REVIEW_CLAUDE.md"
 kind = "audit"
 note = "P3: a repeated 24-letter latent half makes g and rot24 o g indistinguishable; an alias to retain, not to quotient."
 

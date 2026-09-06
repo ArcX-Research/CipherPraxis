@@ -129,31 +129,31 @@ The program's practical conclusion: a running key is attackable exactly when the
 '''
 
 [[provenance]]
-path = "withmath/wm_knowntext.py"
+path = "withmath/scripts/wm_knowntext.py"
 kind = "solver"
 note = "Known-text window CSP: exact alphabet-position equations with seven free shifts; planted and wrong-window controls."
 ref = "logs/60_knowntext.log"
 
 [[provenance]]
-path = "withmath/wm_runkeybeam.py"
+path = "withmath/scripts/wm_runkeybeam.py"
 kind = "solver"
 note = "Joint two-stream GRU beam decoder for an unknown English running key; matched controls 41.3%/49.5%/26.2%; gate FAIL."
 ref = "logs/166_runkeybeam.log"
 
 [[provenance]]
-path = "ck_runkey.py"
+path = "scripts/ck_runkey.py"
 kind = "solver"
 note = "Exact Viterbi over the last three key letters (26^3 states) scoring both streams; shuffled-ciphertext null; order-free mode."
 ref = "ck_logs/43_runkey.log"
 
 [[provenance]]
-path = "withmath/wm_infer.py"
+path = "withmath/scripts/wm_infer.py"
 kind = "solver"
 note = "Decision D3: running-key links over plaintexts recovered earlier in the same run; solved-prefix validation."
 ref = "logs/145_infer.log"
 
 [[provenance]]
-path = "withmath/wm_misc.py"
+path = "withmath/scripts/wm_misc.py"
 kind = "solver"
 note = "Test C: cross-text relations in all index-space pairs with a family-wise null (z +0.8 after selection over 1,296 trials)."
 ref = "logs/11_misc.log"

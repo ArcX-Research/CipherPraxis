@@ -128,18 +128,18 @@ Compressocrat matters to the corpus less as a hypothesis than as a demonstration
 '''
 
 [[provenance]]
-path = "withmath/COMPRESSOCRAT_AUDIT.md"
+path = "withmath/docs/cipher-methods/COMPRESSOCRAT_AUDIT.md"
 kind = "audit"
 note = "Log 199: algebra, control gate (527/527 and 520/520, forward PASS, generator byte-match), live endpoint 559/581 valid, -6.2908, forward FAIL."
 ref = "logs/199_compressocrat.log"
 
 [[provenance]]
-path = "withmath/wm_compressocrat_audit.py"
+path = "withmath/scripts/wm_compressocrat_audit.py"
 kind = "solver"
 note = "Independent encryption/decryption, control generation, external search wrapper."
 
 [[provenance]]
-path = "withmath/COLOSSUS_DYNAMIC_AUDIT.md"
+path = "withmath/docs/cipher-methods/COLOSSUS_DYNAMIC_AUDIT.md"
 kind = "audit"
 note = "Log 186/186b: Fractionated Morse control passes only under the observable-rank quotient; live non-English and forward FAIL."
 ref = "logs/186_colossus_dynamic_fracmorse.log"

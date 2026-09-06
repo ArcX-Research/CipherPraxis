@@ -130,7 +130,7 @@ M-step for the prior: $\pi_0 = (0.857 + 0.143 + 0.857 + 0.5)/4 = 0.589$. A shift
 '''
 
 [[provenance]]
-path = "withmath/wm_mix.py"
+path = "withmath/scripts/wm_mix.py"
 kind = "solver"
 note = "refine(): class-EM over the outer shifts (E-step = block layout to predicted class per position; M-step = 26-way class-conditional re-estimation per coset; up to 4 sweeps, best statistic kept); centred posteriors; evidence fit with marginalised shifts."
 
@@ -141,12 +141,12 @@ note = "Planted sandwiches: w=9 z +12.8 -> -4.34 match 100%; w=8 z +11.3 -> -4.3
 ref = "logs/05_mix.log"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Class-EM corrects the one or two cosets the evidence fit gets wrong (7/7 after EM); delta correct on 7/8 seeds, top three carried; 0.15 nats/letter selection freedom when profiling shifts; double-columnar control still shows the two-class model at z +5.8; ~40 min runtime."
 
 [[provenance]]
-path = "ck_sandwich.py"
+path = "scripts/ck_sandwich.py"
 kind = "solver"
 note = "alt_max: alternating exact monogram maximisation of the 7 + k shifts (four sweeps) from aligned and zero starts, the hard-EM form used by the class solver."
 

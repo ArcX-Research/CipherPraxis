@@ -123,12 +123,12 @@ The entry exists so that the running-key and book-cipher pages have their theore
 '''
 
 [[provenance]]
-path = "poem_pad.py"
+path = "scripts/poem_pad.py"
 kind = "script"
 note = "Encryption utility: a 153-letter pad from word initials, plain or keyed tableau, panel output and decryption check; no cryptanalysis."
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Step 3 facts: random-looking segments with IC 0.037-0.051 and 21-22 distinct letters of 26, consistent with uniform draws."
 

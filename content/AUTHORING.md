@@ -1,7 +1,7 @@
 # Authoring guide for Cipher Praxis content
 
 Cipher Praxis — A Dilate Cryptography Knowledge Base — is a **public, general-cryptography**
-reference. The repository around it (`../poemanalysis/`, its `withmath/` directory) is only the internal evidence
+reference. The sibling repository (`../Cryptanalysis/`, especially its `withmath/` directory) is only the internal evidence
 corpus. Read `../ARCHITECTURE.md` §1 and §4 first, then the exemplar `ciphers/vigenere.toml`.
 
 ## Hard rules (enforced by the build lint and by review)

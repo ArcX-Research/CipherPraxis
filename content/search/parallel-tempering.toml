@@ -132,7 +132,7 @@ The negative calibration is the useful output: it is the reason the two-sided-al
 '''
 
 [[provenance]]
-path = "withmath/wm_q3joint.py"
+path = "withmath/scripts/wm_q3joint.py"
 kind = "solver"
 note = "Batch parallel-tempering annealer over (alphabet, shifts): geometric ladder, round-robin levels, exchange every 20 steps, moves and acceptance as described; polish = exact shift descent alternating with a 925-neighbour alphabet climb."
 
@@ -149,7 +149,7 @@ note = "Scaling law on one planted 96-letter instance: polished best -5.045 / -4
 ref = "logs/36_scaling.log"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Step-2 variants (bigram weight 1 vs 3, ramp plus trigrams, key-word shifts) and the final 2000 x 100k calibration (-4.83, 35% match); unknowns ~84 + 66 bits against ~500 bits of redundancy."
 ref = "logs/32_q3joint_ctrl_w1_100k.log"

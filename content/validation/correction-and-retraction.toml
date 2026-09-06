@@ -127,18 +127,18 @@ note = "Ledger amendment reclassifying two front-loaded blind controls from POWE
 ref = "LOG503"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Cross-text relation maximum: z +0.8 against the family-wise null where the per-trial null had suggested +5.7 sigma over 1,296 trials; two earlier jobs found not to have excluded the shared-square family."
 
 [[provenance]]
-path = "withmath/PK10_ALBERTI_ACCEL13_VALIDATION381_INDEPENDENT_AUDIT.md"
+path = "withmath/docs/pk10/PK10_ALBERTI_ACCEL13_VALIDATION381_INDEPENDENT_AUDIT.md"
 kind = "audit"
 note = "Correction carried forward in the binding receipt: 16 gate records, not 17; sealed bytes deliberately unmodified."
 ref = "LOG389"
 
 [[provenance]]
-path = "withmath/PK9_STRUCTURED_P7_CHAIN383_INDEPENDENT_AUDIT391.md"
+path = "withmath/docs/pk9/PK9_STRUCTURED_P7_CHAIN383_INDEPENDENT_AUDIT391.md"
 kind = "audit"
 note = "Auditor's disclosure of its own incomplete runner-normalisation replica."
 ref = "LOG391"

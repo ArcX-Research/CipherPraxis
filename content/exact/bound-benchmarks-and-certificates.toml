@@ -133,39 +133,39 @@ Depth-first: $k_0 = 0$: complete keys $(0,0) = 4 + 3 - 6 = 1$, $(0,1) = 4 + 2 + 
 '''
 
 [[provenance]]
-path = "withmath/PK9_STAGEB_EXACT_CERTIFIED_CLAUDE_AUDIT.md"
+path = "withmath/docs/pk9/PK9_STAGEB_EXACT_CERTIFIED_CLAUDE_AUDIT.md"
 kind = "audit"
 note = "Branch-and-bound core: proved global maximum over 26^7 = 8,031,810,176 keys with ties; 6/6 plants ties=1 nodes=8 pruned=17675 leaves=1 ~50 ms; incomplete sentinel exit 3; KATs, mutations 6/6, structured negatives 5/5; correction note on the tautological forward (200/200)."
 ref = "logs/353_pk9_stageb_exact_certified_claude.log"
 
 [[provenance]]
-path = "withmath/CROSS_PRESOURCE_TQ_BOUND_BENCH_AUDIT.md"
+path = "withmath/docs/cross-cipher/CROSS_PRESOURCE_TQ_BOUND_BENCH_AUDIT.md"
 kind = "audit"
 note = "Jrel identically zero (126 geometry cases); block-coupled bound definition and inequality; 5+4 and 6+3 ensembles; frozen 4.0 / 12.0 CPU-hour limits; invalid geometry assertion of the first attempt."
 
 [[provenance]]
-path = "withmath/CROSS_PRESOURCE_TQ_BOUND_BENCH258_AUDIT.md"
+path = "withmath/docs/cross-cipher/CROSS_PRESOURCE_TQ_BOUND_BENCH258_AUDIT.md"
 kind = "audit"
 note = "Corrected row-count multisets; sparse-identity KAT defect (per-position comparison) preserved as an invalid attempt."
 
 [[provenance]]
-path = "withmath/CROSS_PRESOURCE_TQ_BOUND_BENCH259_AUDIT.md"
+path = "withmath/docs/cross-cipher/CROSS_PRESOURCE_TQ_BOUND_BENCH259_AUDIT.md"
 kind = "audit"
 note = "Algebra and parity pass; wall clock mislabelled as CPU (4.842 h canonical vs 2.334 h replay); performance verdict invalid."
 
 [[provenance]]
-path = "withmath/CROSS_PRESOURCE_TQ_BOUND_BENCH260_AUDIT.md"
+path = "withmath/docs/cross-cipher/CROSS_PRESOURCE_TQ_BOUND_BENCH260_AUDIT.md"
 kind = "audit"
 note = "Process-CPU benchmark: whole-cell bounds -129.239599 / -131.073283 / -133.256120 and -137.317073 / -140.493078 / -142.467708; projections 2.506529 and 5.837933 CPU-hours; 9.952 s wall; 302.5 MiB; outer RSS 317,227,008 bytes."
 ref = "logs/260_cross_presource_tq_bound_bench.log"
 
 [[provenance]]
-path = "withmath/QTT_RANGE_SHARD_ENGINEERING_AUDIT.md"
+path = "withmath/docs/cipher-methods/QTT_RANGE_SHARD_ENGINEERING_AUDIT.md"
 kind = "audit"
 note = "Majorants F <= U3, U4 within 1e-8 and the exactness argument for shard-local pruning; tie-row certificate design."
 
 [[provenance]]
-path = "withmath/CROSS_PRESOURCE_QT_CERTIFICATE285_AUDIT.md"
+path = "withmath/docs/cross-cipher/CROSS_PRESOURCE_QT_CERTIFICATE285_AUDIT.md"
 kind = "audit"
 note = "Read-only no-candidate certificate: one-literal adapter repair, frozen parser, reconstruction and recomputation gates, ties=1; mutations 8/8 and 4/4 rejected; retained-inode transaction with 4/4 poison injections."
 

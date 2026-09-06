@@ -132,7 +132,7 @@ The semi-Markov formulation is the right one for the word-level question; its pr
 '''
 
 [[provenance]]
-path = "withmath/CYCLEWORD_SEMIMARKOV_AUDIT.md"
+path = "withmath/docs/cipher-methods/CYCLEWORD_SEMIMARKOV_AUDIT.md"
 kind = "audit"
 note = "Exact trie completion bound U(q,r), complete-token declaration at word boundaries, injective per-class maps, frozen top-300,000 generic lexicon, two frozen n = 63 controls required before target access."
 ref = "LOG215"
@@ -144,17 +144,17 @@ note = "Complete-token control: held-out 95-letter word-aligned plant; truth ran
 ref = "LOG438"
 
 [[provenance]]
-path = "ck_lib.py"
+path = "scripts/ck_lib.py"
 kind = "library"
 note = "segment(text, maxw=16): dictionary DP with word cost 1 - 0.15*len and 3.0 per unmatched letter; used for display of candidates."
 
 [[provenance]]
-path = "withmath/ROW_SEMANTIC_CONTROLS_AUDIT.md"
+path = "withmath/docs/search-language/ROW_SEMANTIC_CONTROLS_AUDIT.md"
 kind = "audit"
 note = "Frozen unigram lattice (top-100,000 list, fragment score -3 - 1.55L, max fragment 8); secondary score S_reverse_GRU + 0.55 S_word_lattice; ranks on 40 planted orderings (median 1-2, worst 1,339)."
 
 [[provenance]]
-path = "withmath/REVIEW_A.md"
+path = "withmath/docs/project-notes/REVIEW_A.md"
 kind = "audit"
 note = "Sections 2.7-2.8 and 6: exhaustive vs capped parse negatives; zero-mismatch parses are voided by a single error; 'a parse is a crib'."
 

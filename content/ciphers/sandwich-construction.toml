@@ -142,24 +142,24 @@ The sandwich was the program's leading hypothesis for the two short texts becaus
 '''
 
 [[provenance]]
-path = "withmath/wm_mix.py"
+path = "withmath/scripts/wm_mix.py"
 kind = "solver"
 note = "Bayesian inner-mixture inference, delta marginal, class posteriors, order-free width DP, class-EM, column solver, shuffled-null pipelines; four planted controls."
 ref = "logs/05_mix.log"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Mathematics of wm_mix (transposition invariance, evidence not likelihood, class posteriors, EM, nulls); Round 1 results including the double-columnar control at z +5.8."
 
 [[provenance]]
-path = "ck_sandwich.py"
+path = "scripts/ck_sandwich.py"
 kind = "solver"
 note = "Exhaustive/dictionary/annealed column orders with 7 + k shift fits; three planted controls at 100%."
 ref = "ck_sandwich_report.txt"
 
 [[provenance]]
-path = "withmath/CROSS_SANDWICH9_AUDIT.md"
+path = "withmath/docs/cross-cipher/CROSS_SANDWICH9_AUDIT.md"
 kind = "audit"
 note = "Log 237: T9(Q7(T9(P))) exact solver; 23/24 development controls; D8 postmortem."
 ref = "LOG237"

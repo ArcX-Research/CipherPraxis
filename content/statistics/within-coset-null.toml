@@ -143,12 +143,12 @@ The within-coset null is the general pattern "permute within the fibres of what 
 '''
 
 [[provenance]]
-path = "withmath/wm_core.py"
+path = "withmath/scripts/wm_core.py"
 kind = "library"
 note = "perm_within_cosets(u, p, rng): shuffle positions within each residue class mod p (keeps the coset histograms, kills block structure)."
 
 [[provenance]]
-path = "withmath/PK9_THIRDS_ENDPOINT_NULL_CONTROL_AUDIT.md"
+path = "withmath/docs/pk9/PK9_THIRDS_ENDPOINT_NULL_CONTROL_AUDIT.md"
 kind = "audit"
 note = "99 matched within-residue transformations, invariance proofs (histograms, Stage-A row spaces, key-space geometry), algebra KAT clause counts, 700 selections, positives rank 1/100, negatives 84/55/6, strict rank-1 rule."
 
@@ -165,12 +165,12 @@ note = "99 within-coset nulls; live best -5.9546 vs null max -5.5630, rank 100/1
 ref = "LOG403"
 
 [[provenance]]
-path = "withmath/PK10_LOCALIZED_ALBERTI_SPAN_CONTROL_POWER_AUDIT.md"
+path = "withmath/docs/pk10/PK10_LOCALIZED_ALBERTI_SPAN_CONTROL_POWER_AUDIT.md"
 kind = "audit"
 note = "Minimal matched permutation for a period-26 span: permute positions with equal j mod 26; preserves every coset histogram, the coset IC, the symbol multiset and the de-progressed monogram multiset for every tested slope."
 
 [[provenance]]
-path = "withmath/LOG_AUDIT.md"
+path = "withmath/docs/project-notes/LOG_AUDIT.md"
 kind = "audit"
 note = "Family ledger: 'the period-7 readings of texts A and B and the period-26 reading of text C are at/below within-coset familywise nulls'; no promotion of a string unless the full selected-family null is lower."
 

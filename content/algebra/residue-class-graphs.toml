@@ -118,13 +118,13 @@ The formulation turns "do two periodic keys explain these differences" into a li
 '''
 
 [[provenance]]
-path = "withmath/MIXEDPERIOD_GRAPH282_CONTROL_AUDIT.md"
+path = "withmath/docs/cross-cipher/MIXEDPERIOD_GRAPH282_CONTROL_AUDIT.md"
 kind = "audit"
 note = "Edge equation d_i = K26 + epsilon K7, 33-vertex connected graph, cycle rank n - 32, winding plus four-term basis, 24 topology KATs, four positives, two negatives, caps as INCOMPLETE, 5.85 s / 44 MB."
 ref = "logs/282_mixedperiod_graph_controls.log"
 
 [[provenance]]
-path = "withmath/MIXEDPERIOD_GRAPH292_TARGET_AUDIT.md"
+path = "withmath/docs/cross-cipher/MIXEDPERIOD_GRAPH292_TARGET_AUDIT.md"
 kind = "audit"
 note = "Target successor: 3,128 geometries, 6,256 arbitrary-cycle and 12,512 fixed cells; launcher-census correction without cipher-logic change."
 
@@ -135,22 +135,22 @@ note = "RESULT STRUCTURAL-ZERO FAMILY=COMMON-CYCLE-P26-P7 REJECTED TARGET; metho
 ref = "LOG292"
 
 [[provenance]]
-path = "withmath/PK89_MIXED_P7_P9_RESIDUE_GRAPH_REVIEW.md"
+path = "withmath/docs/pk8-pk9/PK89_MIXED_P7_P9_RESIDUE_GRAPH_REVIEW.md"
 kind = "design"
 note = "K_(7,9): 16 vertices, 63 edges, cycle rank 48, 48 rectangles, incidence rank 15; 132-cell controls-first protocol; potential gauge gives 26 completions."
 
 [[provenance]]
-path = "withmath/PK89_COMMONPLAIN_INVARIANT_CONTROL_AUDIT.md"
+path = "withmath/docs/pk8-pk9/PK89_COMMONPLAIN_INVARIANT_CONTROL_AUDIT.md"
 kind = "audit"
 note = "Equal-period 132-cell family: subtracting the first equation per residue removes h; four hidden controls exact in 1.484 s."
 
 [[provenance]]
-path = "withmath/PK89_SHARED_STREAM_COUPLING375_DESIGN.md"
+path = "withmath/docs/pk8-pk9/PK89_SHARED_STREAM_COUPLING375_DESIGN.md"
 kind = "design"
 note = "Coverage table: equal-period common-plaintext windows, retry-1 invariant, exact STRUCTURAL_ZERO over 132 cells."
 
 [[provenance]]
-path = "withmath/PK9_POSDIHEDRAL_D48_INDEPENDENT_REVIEW_CLAUDE.md"
+path = "withmath/docs/pk9/PK9_POSDIHEDRAL_D48_INDEPENDENT_REVIEW_CLAUDE.md"
 kind = "audit"
 note = "21-vertex key graph, components = free key dimension, singleton-fibre census (52 of 96 elements)."
 

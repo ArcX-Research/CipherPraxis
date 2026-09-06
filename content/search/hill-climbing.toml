@@ -131,17 +131,17 @@ The same climber from `DCBA` ($f = 0$), scanning swaps in index order (0,1), (0,
 '''
 
 [[provenance]]
-path = "withmath/wm_q3joint.py"
+path = "withmath/scripts/wm_q3joint.py"
 kind = "solver"
 note = "neighbour_table (325 swaps + 600 insertions = 925 source-index maps) and polish (alternating exact per-coset shift descent and 925-neighbour climb, max 60 iterations)."
 
 [[provenance]]
-path = "withmath/wm_crib.py"
+path = "withmath/scripts/wm_crib.py"
 kind = "solver"
 note = "Exhaustive first-improvement polish over the 925 swap/insertion neighbours, batch-scored, up to 80 iterations."
 
 [[provenance]]
-path = "ck_sandwich.py"
+path = "scripts/ck_sandwich.py"
 kind = "solver"
 note = "local_finish: steepest ascent over all swaps, insertions and relabellings of every column order; anneal_orders: restarts, 3-move kick, short anneal, full-neighbourhood finish (40 ILS rounds)."
 
@@ -156,13 +156,13 @@ kind = "log"
 note = "Word-pair, triple-columnar and rail-fence planted controls at -4.34, match 100%."
 
 [[provenance]]
-path = "withmath/wm_q3.py"
+path = "withmath/scripts/wm_q3.py"
 kind = "solver"
 note = "Two-sided alphabet calibration: from two swaps away steepest ascent and cold annealing read -6.1 and cannot return; 0 of 24 restarts across four schedules; evidence climb overfits."
 ref = "logs/08_q3.log"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Crib widens the polish basin only to 3 swaps (13-letter crib) or 6 swaps (25-letter crib); IC-maximising climb degenerate (594-601 coincidences vs truth 383, logs/81); q1K controls 3/3 seeds."
 

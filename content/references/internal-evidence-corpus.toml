@@ -71,7 +71,7 @@ A `[[provenance]]` item lists a path from the repository root and a file type, s
 '''
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Toolkit overview and the script table; controls-first policy; rounds of results with log numbers."
 
@@ -81,7 +81,7 @@ kind = "ledger"
 note = "Coordination ledger: 240 level-two headers, 13,552 lines, 1,225,284 bytes on 2026-09-04."
 
 [[provenance]]
-path = "withmath/LOG_AUDIT.md"
+path = "withmath/docs/project-notes/LOG_AUDIT.md"
 kind = "audit"
 note = "Negative-results ledger: corpus accounting of 200 text logs and 106,010 lines at its snapshot; evidence rules; family ledger; open holes; no-repeat checklist."
 
@@ -91,13 +91,13 @@ kind = "log"
 note = "1,334 entries on 2026-09-04: 1,284 numbered transcripts, 21 under failed/, 9 attempt markers, four state_*.json checkpoints, two NumPy alphabet banks (559,743,072 and 26,598,784 uncompressed bytes)."
 
 [[provenance]]
-path = "withmath/PUBLIC_ARTIFACT_AUDIT.md"
+path = "withmath/docs/project-notes/PUBLIC_ARTIFACT_AUDIT.md"
 kind = "audit"
 note = "Inventory of the archived public-page directory: 109 files by type; the generic corpus and NumPy arrays are locally generated artefacts, not served material."
 ref = "LOG173"
 
 [[provenance]]
-path = "withmath/INDEPENDENT_RANGE_FIXTURE_AUDIT_CLAUDE.md"
+path = "withmath/docs/project-notes/INDEPENDENT_RANGE_FIXTURE_AUDIT_CLAUDE.md"
 kind = "audit"
 note = "The generic corpus is 2,344,368 bytes of pure A-Z, so byte and letter offsets coincide."
 ref = "LOG296"

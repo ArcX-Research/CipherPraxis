@@ -132,22 +132,22 @@ The likelihood-free family classifier places the mixed-inner families (sandwich,
 '''
 
 [[provenance]]
-path = "withmath/wm_mix.py"
+path = "withmath/scripts/wm_mix.py"
 kind = "solver"
 note = "Evidence fits M1/M2/M3, delta-marginal, class posteriors, class-EM, order-free width scan, column solver; planted sandwich controls and negative-signature controls."
 ref = "logs/05_mix.log"
 
 [[provenance]]
-path = "withmath/wm_core.py"
+path = "withmath/scripts/wm_core.py"
 kind = "library"
 note = "fit_inner (shifts marginalised), model banks, delta_marginal, membership (class posteriors), planted-cipher generators."
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "The mathematics in wm_mix (items 1-5), first-run results, and the round-1 exclusion of a period-2/3 inner under any transposition for the 153-letter text."
 
 [[provenance]]
-path = "withmath/STEP3_REVIEW.md"
+path = "withmath/docs/project-notes/STEP3_REVIEW.md"
 kind = "note"
 note = "Section 0: the whole-text mixed-inner verdict as a zone artefact."

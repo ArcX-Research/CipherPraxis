@@ -131,7 +131,7 @@ At offset 0 the implied fragment is word-like and repeats consistently at period
 '''
 
 [[provenance]]
-path = "withmath/wm_crib.py"
+path = "withmath/scripts/wm_crib.py"
 kind = "solver"
 note = "Crib votes define the shifts; batch simulated annealing over one unknown alphabet; 925-neighbour polish; refine; wrong-placement null statistics."
 ref = "logs/22_crib_smoke.log"
@@ -147,24 +147,24 @@ kind = "log"
 note = "95-letter zone sweep: 4,033 placements per family; null median/max and the non-reading best refined placement."
 
 [[provenance]]
-path = "withmath/probes/step3_cribcsp.py"
+path = "withmath/scripts/probes/step3_cribcsp.py"
 kind = "script"
 note = "Calibration of the exact crib + key-word CSP over crib lengths 7-20, key word known or free, right and wrong offsets."
 ref = "logs/42_cribcsp_calibration.log"
 
 [[provenance]]
-path = "ck_crib.py"
+path = "scripts/ck_crib.py"
 kind = "solver"
 note = "Crib drag over known keyed-alphabet conventions: implied key fragments ranked by quadgrams, periodic consistency filter, completion."
 ref = "ck_crib_report.txt"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Round 4 results and the 26-letter fixed-key pipeline controls (logs/124-125)."
 
 [[provenance]]
-path = "withmath/STEP3_FIRST_PRINCIPLES.md"
+path = "withmath/docs/project-notes/STEP3_FIRST_PRINCIPLES.md"
 kind = "note"
 note = "Section 6: crib negatives run against the wrong plaintext model carry no weight."
 

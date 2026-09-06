@@ -134,7 +134,7 @@ Bank member from the toy ciphertext `HEXOJXHEKOAA`: first-occurrence order `HEXO
 '''
 
 [[provenance]]
-path = "withmath/wm_crosscycle.py"
+path = "withmath/scripts/wm_crosscycle.py"
 kind = "solver"
 note = "Mechanical cycle bank, shift-marginalised evidence, GPU relaxed-bigram screen, exact cyclic DP finish, blind controls and within-coset nulls."
 ref = "logs/151_crosscycle.log"
@@ -145,22 +145,22 @@ kind = "log"
 note = "Top-128 finishes per relation and nine full-pipeline within-coset nulls; target rejected as selection overfit."
 
 [[provenance]]
-path = "withmath/PK8_PK10_HINTFREE.md"
+path = "withmath/docs/pk8/PK8_PK10_HINTFREE.md"
 kind = "note"
 note = "Ciphertext-derived shared cycles: bank size, control ranks, the nine null maxima and the p = 0.90 endpoint."
 
 [[provenance]]
-path = "withmath/CROSS_ZONE_CYCLE_CORPUS_MEET_STATIC_AUDIT.md"
+path = "withmath/docs/cross-cipher/CROSS_ZONE_CYCLE_CORPUS_MEET_STATIC_AUDIT.md"
 kind = "audit"
 note = "Exact shared-cycle algebra across two zones under a finite corpus prior: gauge, GF(2)/GF(13) decomposition, unit-orbit canonical join; design only."
 
 [[provenance]]
-path = "withmath/COMMON_CYCLE_TOKEN_ANCHOR_STATIC_AUDIT.md"
+path = "withmath/docs/project-notes/COMMON_CYCLE_TOKEN_ANCHOR_STATIC_AUDIT.md"
 kind = "audit"
 note = "Complete-token anchor-and-join formulation; scratch KAT shows 10,479,364 exact records after three anchors at rank 7/7 (power blocker)."
 
 [[provenance]]
-path = "withmath/wm_q3joint.py"
+path = "withmath/scripts/wm_q3joint.py"
 kind = "solver"
 note = "Joint blind annealer over one alphabet shared by two zones; planted control reaches 35% (logs/32)."
 ref = "logs/32_q3joint_ctrl.log"

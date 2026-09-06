@@ -145,17 +145,17 @@ Every number in the sheet points to a log. Every verdict names the statistic and
 '''
 
 [[provenance]]
-path = "withmath/STEP3_ANALYSIS.md"
+path = "withmath/docs/project-notes/STEP3_ANALYSIS.md"
 kind = "note"
 note = "First pass: new measurements T-A to T-D, verdicts on assumptions A1-A5, ranked constructions, what-if-nothing plan."
 
 [[provenance]]
-path = "withmath/STEP3_REVIEW.md"
+path = "withmath/docs/project-notes/STEP3_REVIEW.md"
 kind = "note"
 note = "Independent second pass: reconciliation with the whole-text rounds, assumption verdicts, probe outcomes, the crib-CSP plan."
 
 [[provenance]]
-path = "withmath/STEP3_FIRST_PRINCIPLES.md"
+path = "withmath/docs/project-notes/STEP3_FIRST_PRINCIPLES.md"
 kind = "note"
 note = "Facts table with logs, what the facts force, corrections to earlier verdicts (T-A withdrawn; prose verdict narrowed to one zone; crib negatives on the other zone carry no weight)."
 
@@ -165,37 +165,37 @@ kind = "log"
 note = "Alignment decomposition re-measured with middle-fitted shifts and a planted language tail: mid-tail z +1.9 / +1.5 against +1.4 +/- 1.8 / +1.5 +/- 2.3 planted."
 
 [[provenance]]
-path = "withmath/probes/step3_facts.py"
+path = "withmath/scripts/probes/step3_facts.py"
 kind = "script"
 note = "Model-free re-check of the facts with planted references at the texts' geometry."
 ref = "logs/38_step3_facts.log"
 
 [[provenance]]
-path = "withmath/PK8_PK10_HINTFREE.md"
+path = "withmath/docs/pk8/PK8_PK10_HINTFREE.md"
 kind = "note"
 note = "The ciphertext-only policy: admitted and excluded inputs; roundtrip never accepted as proof; controls and familywise nulls as separate mandatory gates."
 
 [[provenance]]
-path = "withmath/PK10_POST357_IRREGULAR_SUCCESSOR_REVIEW.md"
+path = "withmath/docs/pk10/PK10_POST357_IRREGULAR_SUCCESSOR_REVIEW.md"
 kind = "design"
 note = "Successor-review method: duplicate audit table, exact reduction with proof, alias (RGS) census, ranked decision table, controls-first contract, resource estimate."
 
 [[provenance]]
-path = "withmath/PK10_POST363_CONSTRAINED_SUCCESSOR_REVIEW.md"
+path = "withmath/docs/pk10/PK10_POST363_CONSTRAINED_SUCCESSOR_REVIEW.md"
 kind = "design"
 note = "Read-only alias census before any language scoring; smallest symmetry-complete successor; boundary sentinels and stop rule."
 
 [[provenance]]
-path = "withmath/PK10_POST_UNITACCEL_SUCCESSOR_REVIEW.md"
+path = "withmath/docs/pk10/PK10_POST_UNITACCEL_SUCCESSOR_REVIEW.md"
 kind = "design"
 note = "Conditional successor derived as an exact intersection of declared parents rather than selected from a target score."
 
 [[provenance]]
-path = "withmath/PK89_SEGMENT_CANCELLATION_REVIEW.md"
+path = "withmath/docs/pk8-pk9/PK89_SEGMENT_CANCELLATION_REVIEW.md"
 kind = "audit"
 note = "Section 3.2: a design note's cross-periodic-difference row had no implementation or transcript; section 4: confounders and the falsifiability boundary."
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Step 3 assumption review: facts, exclusions with scope, assumption status, the recommendation to stop family sweeps."

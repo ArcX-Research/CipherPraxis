@@ -134,7 +134,7 @@ Unlike Vigenere, the visible symbols are sums of coordinate numbers, so decimal 
 '''
 
 [[provenance]]
-path = "content/references/literature-classical-ciphers.toml"
+path = "CipherPraxis/content/references/literature-classical-ciphers.toml"
 kind = "note"
 note = "The catalog's classical-cipher bibliography supplies the standard reference trail for this literature-backed definition."
 

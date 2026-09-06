@@ -125,7 +125,7 @@ note = "HELDOUT_GATE cases=24 success=18/24, development buffer 512, seeds and j
 ref = "logs/504_pk89_mapjoin_heldout_gate_20260904T095226Z.log"
 
 [[provenance]]
-path = "withmath/run_pk89_mapjoin504_heldout_gate.sh"
+path = "withmath/scripts/run_pk89_mapjoin504_heldout_gate.sh"
 kind = "script"
 note = "Frozen no-argument gate: refuses arguments, checks eleven SHA-256 pins (corpus, stages, core, wrapper, model checkpoints) and launches with --cases 24 --minimum-power 0.75 --strict."
 
@@ -136,12 +136,12 @@ note = "Gate design: 24 fresh sentence starts as evenly spaced order statistics,
 ref = "LOG504"
 
 [[provenance]]
-path = "withmath/PK98_SEGCHAIN_A1S0_CONTROL366_DESIGN.md"
+path = "withmath/docs/pk9-pk8/PK98_SEGCHAIN_A1S0_CONTROL366_DESIGN.md"
 kind = "design"
 note = "Section 7: leakage-separated reservoirs with a global interval registry and a dead separation gap."
 
 [[provenance]]
-path = "withmath/INDEPENDENT_RANGE_FIXTURE_AUDIT_CLAUDE.md"
+path = "withmath/docs/project-notes/INDEPENDENT_RANGE_FIXTURE_AUDIT_CLAUDE.md"
 kind = "audit"
 note = "Range verification: one proposed range identical to an earlier control range (reused by design, not fresh), one clearing a development window by 37 letters, one with zero margin; corpus 2,344,368 pure letters."
 ref = "LOG296"

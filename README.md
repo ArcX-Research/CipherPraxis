@@ -22,6 +22,7 @@ make serve                  # serve ./dist without rebuilding
 make dev PORT=9000          # use a custom development port
 make check                  # format, lint, test, content and wasm checks
 make content                # content lint only
+make provenance             # check cited paths against ../Cryptanalysis
 ```
 
 The server starts at `http://127.0.0.1:8787/`. If that port is occupied, it reports the conflict

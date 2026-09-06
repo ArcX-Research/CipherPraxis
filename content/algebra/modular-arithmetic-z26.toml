@@ -131,17 +131,17 @@ The ring viewpoint explains three habits of the corpus: solvers pass through $\m
 '''
 
 [[provenance]]
-path = "withmath/wm_core.py"
+path = "withmath/scripts/wm_core.py"
 kind = "library"
 note = "Alphabet orders and index conversion, coset arithmetic, aligned text u minus s, and the exact alignment objective J(s) over all 26^6 relative shift vectors."
 
 [[provenance]]
-path = "withmath/PK89_SHARED_CYCLE_BANK380_AUDIT.md"
+path = "withmath/docs/pk8-pk9/PK89_SHARED_CYCLE_BANK380_AUDIT.md"
 kind = "audit"
 note = "Static KAT: derived stream, both inverses and two independent scalar forwards 32/32 (8 random cycles x 4 sign cells); unit gauge 48/48; translation gauge 16/16."
 
 [[provenance]]
-path = "withmath/SHARED_CYCLE_CHAIN_EQUATION_AUDIT_CLAUDE.md"
+path = "withmath/docs/cipher-methods/SHARED_CYCLE_CHAIN_EQUATION_AUDIT_CLAUDE.md"
 kind = "audit"
 note = "Signs of the eliminated chain equation verified numerically on 50/50 random plants in all four sign cells."
 
@@ -152,17 +152,17 @@ note = "Shift-free ciphertext-keyed model: translation is not a symmetry, unit s
 ref = "LOG409"
 
 [[provenance]]
-path = "withmath/PK9_BLINDEXPONENT443_NOTE.md"
+path = "withmath/docs/pk9/PK9_BLINDEXPONENT443_NOTE.md"
 kind = "note"
 note = "A sign-mismatch cycle pins a root to the two solutions of 2z = c; odd c rejects."
 
 [[provenance]]
-path = "withmath/PK9_POSDIHEDRAL_D48_INDEPENDENT_REVIEW_CLAUDE.md"
+path = "withmath/docs/pk9/PK9_POSDIHEDRAL_D48_INDEPENDENT_REVIEW_CLAUDE.md"
 kind = "audit"
 note = "Two coordinate conventions, inverse to each other: identical census, per-cell values not portable (section P1)."
 
 [[provenance]]
-path = "withmath/PK89_COMMONPLAIN_INVARIANT_CONTROL_AUDIT.md"
+path = "withmath/docs/pk8-pk9/PK89_COMMONPLAIN_INVARIANT_CONTROL_AUDIT.md"
 kind = "audit"
 note = "An int16 base-26 index overflow was exposed and fixed by the exhaustive KAT; letters promoted to int64."
 

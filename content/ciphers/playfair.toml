@@ -142,25 +142,25 @@ For the corpus texts the operative fact is structural: every one of them contain
 '''
 
 [[provenance]]
-path = "withmath/COLOSSUS_AUDIT.md"
+path = "withmath/docs/cipher-methods/COLOSSUS_AUDIT.md"
 kind = "audit"
 note = "Log 184: Playfair n=504 control 504/504 with exact forward; direct 5x5 convention inapplicable to 26-letter targets."
 ref = "logs/184_colossus_audit.log"
 
 [[provenance]]
-path = "withmath/wm_twosquare_q7.py"
+path = "withmath/scripts/wm_twosquare_q7.py"
 kind = "solver"
 note = "Log 165: seriated Playfair (standard/reverse, widths 2..20) with seven free shifts; controls 3.9%/3.5%; gate FAIL."
 ref = "logs/165_twosquare_q7.log"
 
 [[provenance]]
-path = "withmath/wm_pk10_squares.py"
+path = "withmath/scripts/wm_pk10_squares.py"
 kind = "solver"
 note = "Log 181: 504-letter arbitrary-square power check; seriated Playfair 8.1%."
 ref = "logs/181_pk10_squares.log"
 
 [[provenance]]
-path = "ck_lib.py"
+path = "scripts/ck_lib.py"
 kind = "library"
 note = "playfair_decrypt and anneal_square: shared square toolkit."
 

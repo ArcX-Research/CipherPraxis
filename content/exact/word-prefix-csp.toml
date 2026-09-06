@@ -135,22 +135,22 @@ note = "Tail continuation: 23/23 lists reconstructed; boundary ties straddling i
 ref = "LOG390"
 
 [[provenance]]
-path = "withmath/wm_cribcsp2.py"
+path = "withmath/scripts/wm_cribcsp2.py"
 kind = "solver"
 note = "Two-crib exact attack engine: stage 1 long cribs at every offset with exact enumeration and partial-decrypt scoring; stage 2 crib dragging over partial decrypts; quadgram completion; tied-key models."
 
 [[provenance]]
-path = "withmath/PK89_CHAIN_WORDCSP405_AUDIT.md"
+path = "withmath/docs/pk8-pk9/PK89_CHAIN_WORDCSP405_AUDIT.md"
 kind = "audit"
 note = "Word-prefix chain CSP: equations, projection, 2^d2 + 13^d13 feasibility, adaptive particle filter at 18/21/24 letters, proposal-bank scope statement."
 
 [[provenance]]
-path = "withmath/PK89_CHAIN_WORDPAIR406_AUDIT.md"
+path = "withmath/docs/pk8-pk9/PK89_CHAIN_WORDPAIR406_AUDIT.md"
 kind = "audit"
 note = "KAT nullity (5,5) with 144 solutions containing the planted cycle; gauge defect; pre-filter 0/27,544."
 
 [[provenance]]
-path = "withmath/SHARED_CYCLE_CHAIN_EQUATION_AUDIT_CLAUDE.md"
+path = "withmath/docs/cipher-methods/SHARED_CYCLE_CHAIN_EQUATION_AUDIT_CLAUDE.md"
 kind = "audit"
 note = "Nullity table: single words (24,24)/(15,15) undecidable; 15+18-letter pairs (3,3) vs (2,2); 0/40 wrong pairs linearly inconsistent."
 

@@ -155,23 +155,23 @@ and indeed $d = Q - K$: `HOLDTH` shifted back by 3 is `ELIAQE`, and `EGATES` und
 '''
 
 [[provenance]]
-path = "withmath/PK89_SEGMENT_CANCELLATION_REVIEW.md"
+path = "withmath/docs/pk8-pk9/PK89_SEGMENT_CANCELLATION_REVIEW.md"
 kind = "audit"
 note = "Exact algebra (equations 1-2), alphabet compatibility (no affine map between the two orders), breakpoint and wrap geometry, gauge, degenerate-null warning, synthetic KAT of 144 combinations."
 
 [[provenance]]
-path = "withmath/wm_pk98_segchain_a1s0_control373.py"
+path = "withmath/scripts/wm_pk98_segchain_a1s0_control373.py"
 kind = "solver"
 note = "Segment-aware cancellation selector, controls-only: 16 cells, width-8 cyclic DP, 5,616 finish states, stratified 99-null replay."
 ref = "logs/373_pk98_segchain_a1s0_controls.log"
 
 [[provenance]]
-path = "withmath/PK89_SHARED_STREAM_COUPLING375_DESIGN.md"
+path = "withmath/docs/pk8-pk9/PK89_SHARED_STREAM_COUPLING375_DESIGN.md"
 kind = "design"
 note = "Section 5: chain models predict alignment z about +0.13 versus the measured +4.2; section 6: two-regime chain recovered 10/10 synthetic pairs."
 
 [[provenance]]
-path = "withmath/wm_crossderive.py"
+path = "withmath/scripts/wm_crossderive.py"
 kind = "solver"
 note = "Cross-derived streams over every ordered pair, order, sign, orientation and offset with a complete-selection shuffle null."
 ref = "logs/155_crossderive.log"
@@ -187,7 +187,7 @@ kind = "audit"
 note = "Derives the compatible-index condition, periodic and segmented cancellation geometry, and the distinction between source-pairing nulls for histogram gates and within-derived-group nulls for language order."
 
 [[provenance]]
-path = "withmath/wm_algebra.py"
+path = "withmath/scripts/wm_algebra.py"
 kind = "solver"
 note = "Test D: shared-outer-key and running-key relations between the two texts with family-wise nulls."
 ref = "logs/03_algebra.log"

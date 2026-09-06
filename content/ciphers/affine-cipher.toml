@@ -141,19 +141,19 @@ The periodic-affine family was chosen because it is the largest structured subse
 '''
 
 [[provenance]]
-path = "withmath/wm_periodic_affine_dp.py"
+path = "withmath/scripts/wm_periodic_affine_dp.py"
 kind = "solver"
 note = "Periodic affine substitutions: 312 maps per residue, monogram top-8, exact cyclic order-three Q4 DP, coordinate and adjacent-pair polish, within-coset nulls."
 ref = "logs/205_periodic_affine.log"
 
 [[provenance]]
-path = "withmath/PERIODIC_AFFINE_DP_AUDIT.md"
+path = "withmath/docs/cipher-methods/PERIODIC_AFFINE_DP_AUDIT.md"
 kind = "audit"
 note = "Log 205: p7 controls 63/63 and 95/95 PASS; n126/p26 control FAIL with a false ENGLISH state at -4.2767."
 ref = "LOG205"
 
 [[provenance]]
-path = "withmath/wm_patternbeam.py"
+path = "withmath/scripts/wm_patternbeam.py"
 kind = "solver"
 note = "Seven independent substitutions: held-out 63-letter controls recovered only 19.0% and 9.5% of plaintext, so that wider family is not identifiable."
 ref = "logs/150_patternbeam.log"

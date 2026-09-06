@@ -135,6 +135,6 @@ note = "Collision correction: a later claim under an already-reserved number is 
 ref = "LOG265"
 
 [[provenance]]
-path = "withmath/LOG_AUDIT.md"
+path = "withmath/docs/project-notes/LOG_AUDIT.md"
 kind = "audit"
 note = "Negative-results ledger with the frozen no-repeat checklist and the scope rule that a negative closes only the enumerated family and depth."

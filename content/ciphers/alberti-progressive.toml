@@ -137,19 +137,19 @@ The Alberti work is the corpus's cleanest example of reducing a machine-like cip
 '''
 
 [[provenance]]
-path = "withmath/PK10_ALBERTI_PROGRESSIVE_CONTROL295_AUDIT.md"
+path = "withmath/docs/pk10/PK10_ALBERTI_PROGRESSIVE_CONTROL295_AUDIT.md"
 kind = "audit"
 note = "Finite-prior exact meet: RGS(U)=RGS(P), 52 cells, 6/6 positives, 3/3 latent negatives, 1/1 decoy."
 ref = "logs/295_pk10_alberti_progressive_controls.log"
 
 [[provenance]]
-path = "withmath/PK10_ALBERTI_MONOSUB_CONTROL327_AUDIT.md"
+path = "withmath/docs/pk10/PK10_ALBERTI_MONOSUB_CONTROL327_AUDIT.md"
 kind = "audit"
 note = "General constant-advance selector with arbitrary inner substitution: 6/6, 3/3, 19/19; frozen gates rate >= -10.0, gap >= 0.25."
 ref = "logs/327_pk10_alberti_monosub_controls.log"
 
 [[provenance]]
-path = "withmath/PK10_ALBERTI_UNITACCEL_CONTROL367_CREATOR_AUDIT.md"
+path = "withmath/docs/pk10/PK10_ALBERTI_UNITACCEL_CONTROL367_CREATOR_AUDIT.md"
 kind = "audit"
 note = "104-cell unit-acceleration algebra, reversal alias, disclosed calibration D1/D2 exact."
 ref = "LOG367"
@@ -161,7 +161,7 @@ note = "LOG357 live one-shot AMBIGUOUS; LOG368 hidden validation 30/30; LOG381 a
 ref = "logs/368_pk10_alberti_unitaccel_validation.log"
 
 [[provenance]]
-path = "withmath/PK10_ALBERTI_ALLACCEL408_AUDIT.md"
+path = "withmath/docs/pk10/PK10_ALBERTI_ALLACCEL408_AUDIT.md"
 kind = "audit"
 note = "Complete constant-acceleration parent: 1,352 schedules, 4/4 controls, live non-English (-14.97, -14.93, -14.93 vs gate -12.5)."
 ref = "logs/408_pk10_alberti_allaccel_live_20260902T113052Z.log"

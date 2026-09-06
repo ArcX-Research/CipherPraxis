@@ -125,18 +125,18 @@ The rotation/reflection distinction is the algebraic content of "Vigenère versu
 '''
 
 [[provenance]]
-path = "withmath/PK9_POSDIHEDRAL_D48_INDEPENDENT_REVIEW_CLAUDE.md"
+path = "withmath/docs/pk9/PK9_POSDIHEDRAL_D48_INDEPENDENT_REVIEW_CLAUDE.md"
 kind = "audit"
 note = "|D48| = 96, 9,216 ordered pairs, lossless g_0 = id, fibre elimination, 21-vertex key graph, component census, 1,844x reduction, 40/1,600 signatures, heteroscedastic null (R6), multiplicity (R5), convention hazard (P1)."
 
 [[provenance]]
-path = "withmath/PK9_POSDIHEDRAL_UNIT_CONTROL_AUDIT.md"
+path = "withmath/docs/pk9/PK9_POSDIHEDRAL_UNIT_CONTROL_AUDIT.md"
 kind = "audit"
 note = "Sealed controls: physical-index equation, 75 + c equations, 7/7 positives, alias control, matched nulls rank 1/100 and 83/100, q = 6 graph KAT 8/8."
 ref = "logs/pk9_posdihedral_unit_control.log"
 
 [[provenance]]
-path = "withmath/PK9_POSDIHEDRAL_NECESSARY_TARGET358_AUDIT.md"
+path = "withmath/docs/pk9/PK9_POSDIHEDRAL_NECESSARY_TARGET358_AUDIT.md"
 kind = "audit"
 note = "Target successor: equality-first transcript, resource certificates, structural terminals."
 
@@ -147,7 +147,7 @@ note = "All 9,216 raw pairs failed the equality gate; STRUCTURAL_ZERO; POSITIONA
 ref = "LOG358"
 
 [[provenance]]
-path = "withmath/PK9_THIRDS_DIHEDRAL_CONTROL297_AUDIT.md"
+path = "withmath/docs/pk9/PK9_THIRDS_DIHEDRAL_CONTROL297_AUDIT.md"
 kind = "audit"
 note = "Aligned thirds: 423 equality clauses, four sign partitions, 256 random profiles rejected; necessary prefilter only."
 
@@ -164,7 +164,7 @@ note = "Unit-ratio family: zero cycles in all 144 cells."
 ref = "LOG308"
 
 [[provenance]]
-path = "withmath/PK9_PIECECYCLE_BEAU_CONTROL_AUDIT.md"
+path = "withmath/docs/pk9/PK9_PIECECYCLE_BEAU_CONTROL_AUDIT.md"
 kind = "audit"
 note = "Reflections as Beaufort-type class maps; products of reflections are rotations of one cycle."
 

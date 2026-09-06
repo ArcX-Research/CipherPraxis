@@ -133,43 +133,43 @@ LOG b  TRANSACTION       logs/b_name.log(.attempt)     terminal; admission ACCEP
 '''
 
 [[provenance]]
-path = "withmath/PK98_SEGCHAIN_A1S0_CONTROL366_INDEPENDENT_AUDIT.md"
+path = "withmath/docs/pk9-pk8/PK98_SEGCHAIN_A1S0_CONTROL366_INDEPENDENT_AUDIT.md"
 kind = "audit"
 note = "BLOCK with blockers B1 to B4: truncated tie sets, omitted null winner identities and a parser that accepted a false tie count, null precommit after the identity run, absent independent evidence boundary."
 ref = "LOG366"
 
 [[provenance]]
-path = "withmath/PK98_SEGCHAIN_A1S0_CONTROL373_INDEPENDENT_AUDIT.md"
+path = "withmath/docs/pk9-pk8/PK98_SEGCHAIN_A1S0_CONTROL373_INDEPENDENT_AUDIT.md"
 kind = "audit"
 note = "PASS for one released hidden bank: 38/38 parser mutations rejected, three-layer rejection of a false normalized-runner pin, acyclic build to release graph."
 ref = "LOG373"
 
 [[provenance]]
-path = "withmath/PK98_SEGCHAIN_A1S0_CONTROL373_CREATOR_AUDIT.md"
+path = "withmath/docs/pk9-pk8/PK98_SEGCHAIN_A1S0_CONTROL373_CREATOR_AUDIT.md"
 kind = "audit"
 note = "Creator seal: acyclic build stage, exact blocker repairs, executed evidence and the release boundary; the creator does not authorise the full run."
 ref = "LOG373"
 
 [[provenance]]
-path = "withmath/CLAUDE_LOG363_INDEPENDENT_AUDIT.md"
+path = "withmath/docs/project-notes/CLAUDE_LOG363_INDEPENDENT_AUDIT.md"
 kind = "audit"
 note = "First seal BLOCK: one-shot property process-local (B1) and runner unpinned (B2)."
 ref = "LOG363"
 
 [[provenance]]
-path = "withmath/CLAUDE_LOG363_REPLACEMENT_AUDIT.md"
+path = "withmath/docs/project-notes/CLAUDE_LOG363_REPLACEMENT_AUDIT.md"
 kind = "audit"
 note = "Replacement seal PASS with seven recorded residuals; durable attempt marker and one-line release manifest verified."
 ref = "LOG363"
 
 [[provenance]]
-path = "withmath/PK10_ALBERTI_ACCEL13_VALIDATION381_INDEPENDENT_AUDIT.md"
+path = "withmath/docs/pk10/PK10_ALBERTI_ACCEL13_VALIDATION381_INDEPENDENT_AUDIT.md"
 kind = "audit"
 note = "Binding receipt restating the different-agent audit; correction of record from 17 to 16 gates without modifying sealed bytes."
 ref = "LOG389"
 
 [[provenance]]
-path = "withmath/PK10_ALBERTI_ACCEL13_VALIDATION381_CREATOR_AUDIT.md"
+path = "withmath/docs/pk10/PK10_ALBERTI_ACCEL13_VALIDATION381_CREATOR_AUDIT.md"
 kind = "audit"
 note = "Take-over of an interrupted implementation: inherited bytes verified unchanged, manifest and audit written fresh; 420 parser mutations rejected."
 ref = "LOG381"

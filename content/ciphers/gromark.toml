@@ -143,24 +143,24 @@ The corpus result is a control-qualified negative for direct basic Gromark at pr
 '''
 
 [[provenance]]
-path = "withmath/GROMARK5_AUDIT.md"
+path = "withmath/docs/cipher-methods/GROMARK5_AUDIT.md"
 kind = "audit"
 note = "Log 201: complete 100,000-primer enumeration, top-64 alphabet anneal, 2/2 controls exact, live non-language."
 ref = "logs/201_gromark5.log"
 
 [[provenance]]
-path = "withmath/GROMARK67_RECURRENCE_AUDIT.md"
+path = "withmath/docs/cipher-methods/GROMARK67_RECURRENCE_AUDIT.md"
 kind = "audit"
 note = "Log 212: CRT/meet-in-the-middle primer selector, substitution-invariant difference model, 4/4 controls exact including a leading-zero primer, live negative at P=6 and P=7."
 ref = "logs/212_gromark67_recurrence.log"
 
 [[provenance]]
-path = "withmath/wm_gromark67_recurrence.py"
+path = "withmath/scripts/wm_gromark67_recurrence.py"
 kind = "solver"
 note = "Driver for the P=6/7 lane; compiled core wm_gromark67_recurrence_core.cpp."
 
 [[provenance]]
-path = "withmath/COLOSSUS_DYNAMIC_AUDIT.md"
+path = "withmath/docs/cipher-methods/COLOSSUS_DYNAMIC_AUDIT.md"
 kind = "audit"
 note = "Log 186: basic Gromark P=4 and periodic Gromark P=4..8 control PASS; live rates -7.156 and -7.606."
 ref = "LOG186"

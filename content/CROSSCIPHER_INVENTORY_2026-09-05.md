@@ -126,7 +126,7 @@ source families without turning each run into a method.
 Verification results from this lane:
 
 - Every provenance path in the six new TOML files exists under
-  `../poemanalysis`.
+  `../Cryptanalysis`.
 - Strict content check: 240 files, 240 entries, zero errors, zero warnings.
 - Math scan: zero unhandled dollar signs.
 - List scan: zero broken list markers.

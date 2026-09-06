@@ -138,30 +138,30 @@ so $k = 3$ is read off, with H mapped back onto E. Relative to another coset wit
 '''
 
 [[provenance]]
-path = "withmath/wm_core.py"
+path = "withmath/scripts/wm_core.py"
 kind = "library"
 note = "fit_inner: shifts marginalised under a uniform prior, MAP shifts, per-coset posteriors; shift_candidates; the 0.15 nats/letter profiling remark."
 
 [[provenance]]
-path = "withmath/wm_mix.py"
+path = "withmath/scripts/wm_mix.py"
 kind = "solver"
 note = "Class-EM refinement of the outer shifts from class-conditional likelihoods; four planted sandwiches solved at 100%."
 ref = "logs/05_mix.log"
 
 [[provenance]]
-path = "withmath/wm_pk9.py"
+path = "withmath/scripts/wm_pk9.py"
 kind = "solver"
 note = "Vectorised per-coset monogram maximum likelihood over a 2.06M-alphabet table; planted alphabet ranked first."
 ref = "logs/24_pk9_seg48.log"
 
 [[provenance]]
-path = "withmath/wm_phrase.py"
+path = "withmath/scripts/wm_phrase.py"
 kind = "solver"
 note = "Chi-square shift fit, two quadgram sweeps, polish; planted control 100%."
 ref = "logs/07_phrase.log"
 
 [[provenance]]
-path = "withmath/wm_var4.py"
+path = "withmath/scripts/wm_var4.py"
 kind = "solver"
 note = "Quadgram coordinate descent over 7m sub-coset shifts with shuffled-text nulls; control matches and null band."
 ref = "logs/27_var4.log"

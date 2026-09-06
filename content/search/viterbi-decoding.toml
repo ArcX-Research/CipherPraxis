@@ -136,7 +136,7 @@ with back-pointer $3$. Repeating for every target state and every position, then
 '''
 
 [[provenance]]
-path = "ck_pviterbi.py"
+path = "scripts/ck_pviterbi.py"
 kind = "solver"
 note = "Open-chain Viterbi for any period: states = last three key letters, quad and mono emission modes, optional key-letter quadgram prior, coordinate polish repairs the wrap-around terms; shuffled-ciphertext nulls per (period, mode, prior)."
 
@@ -146,12 +146,12 @@ kind = "log"
 note = "A 504-letter run over periods 4-170: 4,676 jobs; best excess over the shuffled null +0.225, decrypts not English."
 
 [[provenance]]
-path = "withmath/wm_periodic_dp.py"
+path = "withmath/scripts/wm_periodic_dp.py"
 kind = "solver"
 note = "Cyclic order-three quadgram DP with an eight-shift monogram shortlist per residue, exact closure by enumerating the first three states, 26-way coordinate/pair polish, within-coset nulls."
 
 [[provenance]]
-path = "withmath/PK8_PK10_HINTFREE.md"
+path = "withmath/docs/pk8/PK8_PK10_HINTFREE.md"
 kind = "note"
 note = "Three blind controls at width eight recover 100% with exact forward reconstruction; measured-zone finishes -6.037 / -6.290 / -5.107 against conditional null maxima -5.770 / -6.185 / -5.021."
 ref = "logs/148_periodic_dp.log"
@@ -163,19 +163,19 @@ note = "POST-HOC CONTROL MATCH 100.0% PASS for all three controls; CONTROL GATE 
 ref = "logs/148_periodic_dp.log"
 
 [[provenance]]
-path = "withmath/PERIODIC_PORTA_DP_AUDIT.md"
+path = "withmath/docs/cipher-methods/PERIODIC_PORTA_DP_AUDIT.md"
 kind = "audit"
 note = "Free periodic Porta by the same DP: controls 63/63, 95/95, 126/126 with exact key/order and forward PASS."
 ref = "logs/204_periodic_porta.log"
 
 [[provenance]]
-path = "withmath/PERIODIC_AFFINE_DP_AUDIT.md"
+path = "withmath/docs/cipher-methods/PERIODIC_AFFINE_DP_AUDIT.md"
 kind = "audit"
 note = "312 affine maps per residue, eight best into the DP: p7 controls 63/63 and 95/95; the p26 control produced a false English state (-4.2767) and failed."
 ref = "logs/205_periodic_affine.log"
 
 [[provenance]]
-path = "withmath/CROSSCHAIN_M13_RANKSHARD_VALIDATION291_AUDIT.md"
+path = "withmath/docs/cross-cipher/CROSSCHAIN_M13_RANKSHARD_VALIDATION291_AUDIT.md"
 kind = "audit"
 note = "Width-8 cyclic DP plus four polish rounds as the stage-two finisher; 5/5 positives; static KAT cyclic DP vs exhaustive width-2 brute 8/8; 265.004 s first pass."
 

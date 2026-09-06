@@ -134,22 +134,22 @@ Suppose the ciphertexts show $C_i = C_r$ but $C'_i \ne C'_r$. The right-hand sid
 '''
 
 [[provenance]]
-path = "withmath/PK89_CHAIN_WORDCSP405_AUDIT.md"
+path = "withmath/docs/pk8-pk9/PK89_CHAIN_WORDCSP405_AUDIT.md"
 kind = "audit"
 note = "Chain equations, class rule j = i mod 144, projection onto observed letters, GF(2)/GF(13) null spaces, all-different at 2^d2 + 13^d13, 312 affine copies canonicalised, adaptive particle-filter stages 18/21/24, roundtrip tautology stated."
 
 [[provenance]]
-path = "withmath/SHARED_CYCLE_CHAIN_EQUATION_AUDIT_CLAUDE.md"
+path = "withmath/docs/cipher-methods/SHARED_CYCLE_CHAIN_EQUATION_AUDIT_CLAUDE.md"
 kind = "audit"
 note = "Equation verified on 50/50 plants; translation gauge with kappa shift (b = 1, 5, 13); unit gauge (u = 3, 5, 25); rank never rejects; two long cribs needed."
 
 [[provenance]]
-path = "withmath/PK89_CHAIN_WORDPAIR406_AUDIT.md"
+path = "withmath/docs/pk8-pk9/PK89_CHAIN_WORDPAIR406_AUDIT.md"
 kind = "audit"
 note = "Pre-filter KAT 0/27,544; word-pair CSP (62 class positions + 53-letter prefix decrypted directly); gauge defect and 406b repair; timings; 144-solution KAT; 105-word vocabulary."
 
 [[provenance]]
-path = "withmath/PK89_CHAIN_CORPUS407_AUDIT.md"
+path = "withmath/docs/pk8-pk9/PK89_CHAIN_CORPUS407_AUDIT.md"
 kind = "audit"
 note = "Oracle deployed as a black box over 2,344,345 corpus windows; 39,528 unique survivors; zero endpoints; 256-chain filter controls."
 ref = "logs/407_pk89_chain_corpus_live_20260902T111015Z.log"

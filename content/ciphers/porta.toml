@@ -146,25 +146,25 @@ Giambattista della Porta's name links two different alphabet mechanisms. His *De
 '''
 
 [[provenance]]
-path = "withmath/wm_periodic_porta_dp.py"
+path = "withmath/scripts/wm_periodic_porta_dp.py"
 kind = "solver"
 note = "Free periodic Porta by cyclic DP; three target-length controls; within-coset nulls."
 ref = "logs/204_periodic_porta.log"
 
 [[provenance]]
-path = "withmath/PERIODIC_PORTA_DP_AUDIT.md"
+path = "withmath/docs/cipher-methods/PERIODIC_PORTA_DP_AUDIT.md"
 kind = "audit"
 note = "Log 204 production result: 3/3 controls exact; zone endpoints -6.2479, -6.3562, -5.7315."
 ref = "LOG204"
 
 [[provenance]]
-path = "withmath/wm_porta.py"
+path = "withmath/scripts/wm_porta.py"
 kind = "solver"
 note = "Word-keyed Porta on both zones, straight and keyword-mixed tableaux, both directions, planted prose controls."
 ref = "logs/55_porta.log"
 
 [[provenance]]
-path = "withmath/AUTOKEY_AUDIT.md"
+path = "withmath/docs/cipher-methods/AUTOKEY_AUDIT.md"
 kind = "audit"
 note = "Porta plaintext-autokey: n153 control PASS; n144/n504 controls reached 97.22%/99.21% and were locked."
 ref = "logs/185_autokey_audit.log"

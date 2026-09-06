@@ -136,36 +136,36 @@ with counts F 7, Y 7, J 5, I 4, M 3: the same frequency multiset, rotated. The i
 '''
 
 [[provenance]]
-path = "withmath/wm_core.py"
+path = "withmath/scripts/wm_core.py"
 kind = "library"
 note = "ic_counts, coset_ics, digram_ic and ic_sd_monoalphabetic (exact IC standard deviation); reference distributions per alphabet order."
 
 [[provenance]]
-path = "withmath/wm_audit.py"
+path = "withmath/scripts/wm_audit.py"
 kind = "solver"
 note = "Within-coset IC with exact s.d., aligned digram IC against shuffles and English windows, planted references."
 ref = "logs/01_audit.log"
 
 [[provenance]]
-path = "withmath/wm_pk9.py"
+path = "withmath/scripts/wm_pk9.py"
 kind = "solver"
 note = "Per-coset monogram maximum likelihood screen; planted alphabet rank 1 of 2.06M."
 ref = "logs/24_pk9_seg48.log"
 
 [[provenance]]
-path = "withmath/wm_phrase.py"
+path = "withmath/scripts/wm_phrase.py"
 kind = "solver"
 note = "Chi-square shift fit and polish; control 100%."
 ref = "logs/07_phrase.log"
 
 [[provenance]]
-path = "withmath/probes/step3_facts.py"
+path = "withmath/scripts/probes/step3_facts.py"
 kind = "script"
 note = "Segment identity/rotation tests with planted references; sorted and pooled coincidence checks."
 ref = "logs/38_step3_facts.log"
 
 [[provenance]]
-path = "ck_diag.py"
+path = "scripts/ck_diag.py"
 kind = "solver"
 note = "Adjacent-pair and triple coincidences within cosets and pooled coset IC against nine planted models, 400 windows each."
 ref = "ck_diag_report.txt"
@@ -176,12 +176,12 @@ kind = "log"
 note = "Maximising decrypt coincidences over ring and shifts collapses letters: 593-601 found versus 383 true, 0-5% match."
 
 [[provenance]]
-path = "withmath/GRAMMAR_SOLVER.md"
+path = "withmath/docs/search-language/GRAMMAR_SOLVER.md"
 kind = "note"
 note = "Section 7 reports 5/5 planted 92-letter monoalphabetic controls solved by a shotgun quadgram hill-climb; transcript not located in the log directory."
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Monoalphabetic solver unreliable at 55 letters (fails its own reference, logs/98-101)."
 

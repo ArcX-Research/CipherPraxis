@@ -140,7 +140,7 @@ note = "Post-hoc controls: two planted cycles recovered at 100% plaintext match 
 ref = "logs/151_crosscycle.log"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Rejected as selection overfit (p = 0.90); profiling seven shifts buys ~0.15 nats/letter at n = 153; free sub-coset shifts overfit short texts."
 
@@ -151,17 +151,17 @@ note = "Keyword-bank scan: control rank 1 of 607,776; targets z +2.74/+2.83/+3.0
 ref = "logs/316_grammar_hill.log"
 
 [[provenance]]
-path = "withmath/GRAMMAR_SOLVER.md"
+path = "withmath/docs/search-language/GRAMMAR_SOLVER.md"
 kind = "design"
 note = "N3 cross-text difference: planted pair at z +9.5, true period, offset 0; every target hit at the largest period tested with a random offset = selection noise; hill scan 'selection-overfit signature'."
 
 [[provenance]]
-path = "withmath/REVIEW_A.md"
+path = "withmath/docs/project-notes/REVIEW_A.md"
 kind = "audit"
 note = "Section 2.1: sweeps as 'the maximum of N hill-climbs' sharing one null; nulls from a different procedure; polish that drops the crib; twelve-fold symmetry multiplicity in enumerated solutions."
 
 [[provenance]]
-path = "withmath/LOG_AUDIT.md"
+path = "withmath/docs/project-notes/LOG_AUDIT.md"
 kind = "audit"
 note = "No-repeat checklist: no promotion of a quadgram/GRU string unless the full selected-family null is lower; window-key z-scores were selection effects; 'close this bank/depth, it does not close an arbitrary unknown cycle'."
 

@@ -110,12 +110,12 @@ so `H` is at (3, 3), `E` at (3, 1) and `Y` at (1, 4): the word `HEY` becomes the
 '''
 
 [[provenance]]
-path = "withmath/TWIN_BIFID_Q7_AUDIT.md"
+path = "withmath/docs/cross-cipher/TWIN_BIFID_Q7_AUDIT.md"
 kind = "audit"
 note = "A shared 25-cell square under two outer periodic layers: the square's coordinate map is the fractionation step, searched by a compiled annealer with planted random-square controls."
 
 [[provenance]]
-path = "withmath/TRIFID_AUDIT.md"
+path = "withmath/docs/cipher-methods/TRIFID_AUDIT.md"
 kind = "audit"
 note = "The three-coordinate cube analogue and its controls."
 

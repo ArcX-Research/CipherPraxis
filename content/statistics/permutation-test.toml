@@ -167,7 +167,7 @@ note = "Target-absent finite-orbit checks: 1,728 ordered triples with conservati
 ref = "LOG652"
 
 [[provenance]]
-path = "withmath/PK9_THIRDS_ENDPOINT_NULL_CONTROL_AUDIT.md"
+path = "withmath/docs/pk9/PK9_THIRDS_ENDPOINT_NULL_CONTROL_AUDIT.md"
 kind = "audit"
 note = "Strict rank-1/100 rule, ties reject, exchangeability argument, 99 transformations from seed, 700 selections, positives rank 1, negatives 84/55/6."
 
@@ -196,7 +196,7 @@ note = "Nine complete-pipeline nulls; candidate p <= 0.90."
 ref = "logs/152_crosscycle_full.log"
 
 [[provenance]]
-path = "withmath/PK10_LOCALIZED_ALBERTI_SPAN_CONTROL_POWER_AUDIT.md"
+path = "withmath/docs/pk10/PK10_LOCALIZED_ALBERTI_SPAN_CONTROL_POWER_AUDIT.md"
 kind = "audit"
 note = "Per-rule-family null banks with the conservative worst-case p when one shuffle is not exchangeable for heterogeneous rules; 19 control nulls are calibration only, a live candidate needs the 99-null successor."
 

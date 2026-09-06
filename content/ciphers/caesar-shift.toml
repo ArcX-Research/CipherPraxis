@@ -140,18 +140,18 @@ The program never treated a Caesar shift as a hypothesis on its own. It appears 
 '''
 
 [[provenance]]
-path = "withmath/wm_core.py"
+path = "withmath/scripts/wm_core.py"
 kind = "library"
 note = "Per-coset shift recovery by histogram correlation; exact alignment over all shift vectors."
 
 [[provenance]]
-path = "withmath/wm_blocks.py"
+path = "withmath/scripts/wm_blocks.py"
 kind = "solver"
 note = "Block-structure instrument: are consecutive blocks Caesar shifts of one distribution; same-key null."
 ref = "logs/02_blocks.log"
 
 [[provenance]]
-path = "withmath/wm_blockadd477.py"
+path = "withmath/scripts/wm_blockadd477.py"
 kind = "solver"
 note = "Base-26 block addition with carries: exact width 3, least-significant-digit beam at width 9, planted target-profile controls, block-permutation nulls."
 ref = "logs/477_blockadd_live_20260903T194147Z.log"

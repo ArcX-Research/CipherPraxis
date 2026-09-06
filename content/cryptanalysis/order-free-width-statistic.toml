@@ -134,13 +134,13 @@ With centred class scores ($+\tfrac12$ for a position whose class matches the bl
 '''
 
 [[provenance]]
-path = "withmath/wm_mix.py"
+path = "withmath/scripts/wm_mix.py"
 kind = "solver"
 note = "class_prefix / pattern_dp / layouts_topk: centred class-posterior block statistic with long/short-column DP; refine (class-EM); shuffled-pipeline nulls."
 ref = "logs/05_mix.log"
 
 [[provenance]]
-path = "withmath/wm_grammar.py"
+path = "withmath/scripts/wm_grammar.py"
 kind = "solver"
 note = "Residue-pattern sandwich fit with alternating exact monogram maximisation and gauge fixed after convergence; statistic-discipline demonstration."
 ref = "logs/300_grammar_sandwich_pk89.log"
@@ -151,11 +151,11 @@ kind = "log"
 note = "Correct inner: monogram -2.8297 per letter, quadgram -6.9464; after stripping -4.3830."
 
 [[provenance]]
-path = "withmath/GRAMMAR_SOLVER.md"
+path = "withmath/docs/search-language/GRAMMAR_SOLVER.md"
 kind = "note"
 note = "The order-free rule, residue-pattern counts, control rank 1 of 504 at z +9.4, and the gauge-collapse remark."
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Mathematics of the mixture attack: transposition invariance, centred posteriors, class-EM, honest nulls."

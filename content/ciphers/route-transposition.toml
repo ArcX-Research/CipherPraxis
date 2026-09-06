@@ -137,25 +137,25 @@ The route lanes are examples of "closing a finite vocabulary": the audits state 
 '''
 
 [[provenance]]
-path = "withmath/SHAPE_ROUTES411_AUDIT.md"
+path = "withmath/docs/search-language/SHAPE_ROUTES411_AUDIT.md"
 kind = "audit"
 note = "Log 411: 78 triangular and 81 square write/read compositions under a two-key additive layer; 4/4 controls exact; live p = .20 and .35."
 ref = "logs/411_shape_routes.log"
 
 [[provenance]]
-path = "withmath/AFFINE_ROUTE_AUDIT.md"
+path = "withmath/docs/cipher-methods/AFFINE_ROUTE_AUDIT.md"
 kind = "audit"
 note = "Log 195: affine position route with every unit and offset; cut gauge; 3/3 controls; selected-family overfit on the 144-letter text."
 ref = "logs/195_affine_route.log"
 
 [[provenance]]
-path = "withmath/wm_pk9x.py"
+path = "withmath/scripts/wm_pk9x.py"
 kind = "solver"
 note = "Routes (spirals, boustrophedon, diagonals) on every width 2-24, block reversals and the reversed text under a period-7 layer with a key change."
 ref = "logs/29_pk9x.log"
 
 [[provenance]]
-path = "ck_rounds.py"
+path = "scripts/ck_rounds.py"
 kind = "solver"
 note = "Section B: route transpositions on 9x17, 17x9, 3x51 and 51x3 grids scored by periodic IC."
 ref = "ck_logs/46_rounds.log"

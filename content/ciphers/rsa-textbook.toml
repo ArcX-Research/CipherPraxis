@@ -130,25 +130,25 @@ The RSA lanes are the corpus's demonstration that a "modern" cipher on a classic
 '''
 
 [[provenance]]
-path = "withmath/wm_smallrsa478.py"
+path = "withmath/scripts/wm_smallrsa478.py"
 kind = "solver"
 note = "Fixed-width small RSA screen: semiprime enumeration below 26^b, exponent bank in both roles, planted controls, literal replay."
 ref = "logs/478b_smallrsa_odd257_live_20260903T195259Z.log"
 
 [[provenance]]
-path = "withmath/wm_rsaallexp481.py"
+path = "withmath/scripts/wm_rsaallexp481.py"
 kind = "solver"
 note = "Every unit exponent class modulo lambda(N) at widths 2-3 with all payload masks."
 ref = "logs/481_rsaallexp_w23_live_20260903T203015Z.log"
 
 [[provenance]]
-path = "withmath/wm_rsamultiprime482.py"
+path = "withmath/scripts/wm_rsamultiprime482.py"
 kind = "solver"
 note = "Squarefree multi-prime moduli with all unit exponents at widths 2-3."
 ref = "logs/482_rsamultiprime_w23_live_20260903T204648Z.log"
 
 [[provenance]]
-path = "withmath/wm_rsaword9_483.py"
+path = "withmath/scripts/wm_rsaword9_483.py"
 kind = "solver"
 note = "Width-9 RSA with word-valued prime factors; blind cross-convention plant; two short hits."
 ref = "logs/483_rsaword9_20260903T222842Z.log"

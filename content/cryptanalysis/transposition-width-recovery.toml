@@ -129,7 +129,7 @@ Reading the columns in the order $\sigma = (2, 0, 3, 1)$ gives `TAW ACD ATN TKA`
 '''
 
 [[provenance]]
-path = "withmath/wm_grammar.py"
+path = "withmath/scripts/wm_grammar.py"
 kind = "solver"
 note = "Residue-pattern sandwich fit, verify demonstration of the statistic error, peel stage with dictionary-word and exhaustive orders."
 ref = "logs/317_grammar_peel.log"
@@ -145,13 +145,13 @@ kind = "log"
 note = "Residue-pattern control (period 7 over width 9 over period 2, 153 letters): CONTROL PASS."
 
 [[provenance]]
-path = "withmath/wm_mix.py"
+path = "withmath/scripts/wm_mix.py"
 kind = "solver"
 note = "Class-posterior width statistic with long/short-column DP; column solver with residue classes fixed by the pattern."
 ref = "logs/05_mix.log"
 
 [[provenance]]
-path = "withmath/wm_pk9x.py"
+path = "withmath/scripts/wm_pk9x.py"
 kind = "solver"
 note = "Rail fences, routes, block reversals and Myszkowski orders under a period-7 layer with a key change; planted rail-fence control passed."
 ref = "logs/29_pk9x.log"
@@ -167,18 +167,18 @@ kind = "log"
 note = "Every column order of widths 6-9 on the 504-letter text: period-7 coset IC maxima at the noise band."
 
 [[provenance]]
-path = "ck_scan.py"
+path = "scripts/ck_scan.py"
 kind = "solver"
 note = "Columnar annealing with a periodic-IC objective and its shuffled-text baseline."
 ref = "ck_scan_report.txt"
 
 [[provenance]]
-path = "withmath/GRAMMAR_SOLVER.md"
+path = "withmath/docs/search-language/GRAMMAR_SOLVER.md"
 kind = "note"
 note = "Residue-pattern counts, the failed plain local search at width 9, exact-grid habit of the setters."
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Joint-refit lesson: a true width ranked fourth at -6.37 before the refit took it to -4.23."
 

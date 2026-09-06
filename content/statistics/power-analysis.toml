@@ -128,7 +128,7 @@ Power is a property of the complete pipeline on the exact hypothesis grid, at th
 '''
 
 [[provenance]]
-path = "withmath/PK98_T9_SELECTOR_POWER396.md"
+path = "withmath/docs/pk9-pk8/PK98_T9_SELECTOR_POWER396.md"
 kind = "audit"
 note = "1,024 trials: S1 41.80% all-seven, S2 100%, S3 1013/1024 = 98.93%, refit rescued 585/596, S4 64/64; multistart repair 255/256 -> 256/256; width-3 successor 256/256 and gate >= 0.95."
 ref = "LOG396"
@@ -140,7 +140,7 @@ note = "Transcript of the stage measurements."
 ref = "logs/396_pk98_t9_selector_power.log"
 
 [[provenance]]
-path = "withmath/PK98_SEGCHAIN_LIVE_MEASURE_INDEPENDENT_REVIEW394.md"
+path = "withmath/docs/pk9-pk8/PK98_SEGCHAIN_LIVE_MEASURE_INDEPENDENT_REVIEW394.md"
 kind = "audit"
 note = "Coverage 8^7/26^7 = 0.026% is not power; 600 trials, all-seven retention 99.83%, 10/10 end-to-end, 97.5% on the 200 hardest windows."
 ref = "LOG394"
@@ -170,7 +170,7 @@ note = "20 random plants recovered 20/20 when scheduled; coverage at the 24 h ca
 ref = "LOG503"
 
 [[provenance]]
-path = "withmath/PK10_LOCALIZED_ALBERTI_SPAN_CONTROL_POWER_AUDIT.md"
+path = "withmath/docs/pk10/PK10_LOCALIZED_ALBERTI_SPAN_CONTROL_POWER_AUDIT.md"
 kind = "audit"
 note = "12/12 structural class selected; exact map 3/6 and 4/6; wrong maps outscore the truth by up to 0.517 rate units; 2 to 5,040 completions ambiguous; BLOCK as a transfer stage."
 

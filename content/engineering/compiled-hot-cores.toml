@@ -117,22 +117,22 @@ QUIT
 '''
 
 [[provenance]]
-path = "withmath/wm_pk10_quarterpulse490_core.cpp"
+path = "withmath/scripts/wm_pk10_quarterpulse490_core.cpp"
 kind = "solver"
 note = "Embeds the validated base core via a renamed main, pins its SHA-256, enumerates 5,408 raw cells with a work-stealing thread pool, three keep stages (192, 32), per-cell seeds by XOR, --self-kat and --server line protocol with JSON events."
 
 [[provenance]]
-path = "withmath/wm_pk10_quarterpulse490.py"
+path = "withmath/scripts/wm_pk10_quarterpulse490.py"
 kind = "solver"
 note = "Driver: subprocess with stdin/stdout pipes, SOLVE seed ciphertext requests, QUIT and communicate with a 30 s timeout."
 
 [[provenance]]
-path = "withmath/wm_pk10_alberti_monosub_core327.cpp"
+path = "withmath/scripts/wm_pk10_alberti_monosub_core327.cpp"
 kind = "solver"
 note = "Base substitution engine: self-KAT checks every swap delta against a full rescore and the deprogress roundtrip for two alphabets and seven slopes."
 
 [[provenance]]
-path = "withmath/wm_shared9_factor_deal_core.cpp"
+path = "withmath/scripts/wm_shared9_factor_deal_core.cpp"
 kind = "solver"
 note = "Batch CLI annealer with restarts, iterations, threads, seed, temperature and staged screening flags; driven by run_shared9_factor_deal.sh and wm_shared9_factor_deal.py."
 
@@ -148,13 +148,13 @@ note = "Drain of 248,405 pairs in 307.522 s; sanitiser builds passed on oracle a
 ref = "LOG475"
 
 [[provenance]]
-path = "withmath/PK9_STRUCTURED_P7_CHAIN383_CREATOR_AUDIT.md"
+path = "withmath/docs/pk9/PK9_STRUCTURED_P7_CHAIN383_CREATOR_AUDIT.md"
 kind = "audit"
 note = "Benchmark 209 ms, 95,731,712 bytes peak RSS; largest identity 2,468,776 first-stage and 9,875,104 endpoint states; suite 156.666 s."
 ref = "LOG383"
 
 [[provenance]]
-path = "withmath/CLAUDE_LOG363_REPLACEMENT_AUDIT.md"
+path = "withmath/docs/project-notes/CLAUDE_LOG363_REPLACEMENT_AUDIT.md"
 kind = "audit"
 note = "Residual 6: compiler version and binary hash not recorded; a different compiler would fail the deterministic replay fail-closed."
 ref = "LOG363"

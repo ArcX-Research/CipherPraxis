@@ -120,12 +120,12 @@ Period 2 on an 8-letter toy, shortlist $W = 2$ per residue: residue 0 candidates
 '''
 
 [[provenance]]
-path = "withmath/wm_periodic_dp.py"
+path = "withmath/scripts/wm_periodic_dp.py"
 kind = "solver"
 note = "Measured zones and periods; W = 8 monogram shortlist; cyclic order-three quadgram DP with exact closure; 26-way coordinate/pair polish; within-coset nulls; planted controls disclosed after blind inference."
 
 [[provenance]]
-path = "withmath/PK8_PK10_HINTFREE.md"
+path = "withmath/docs/pk8/PK8_PK10_HINTFREE.md"
 kind = "note"
 note = "Additive family: three blind controls 100% at width eight; zone finishes -6.037 / -6.290 / -5.107 vs null maxima -5.770 / -6.185 / -5.021; scope of the negative."
 ref = "logs/148_periodic_dp.log"
@@ -137,13 +137,13 @@ note = "POST-HOC CONTROL MATCH 100.0% PASS x3; CONTROL GATE PASS."
 ref = "logs/148_periodic_dp.log"
 
 [[provenance]]
-path = "withmath/PERIODIC_PORTA_DP_AUDIT.md"
+path = "withmath/docs/cipher-methods/PERIODIC_PORTA_DP_AUDIT.md"
 kind = "audit"
 note = "Porta decryption rule; controls 63/63, 95/95, 126/126 with exact key/order and forward PASS; zone finishes -6.2479 / -6.3562 / -5.7315."
 ref = "logs/204_periodic_porta.log"
 
 [[provenance]]
-path = "withmath/PERIODIC_AFFINE_DP_AUDIT.md"
+path = "withmath/docs/cipher-methods/PERIODIC_AFFINE_DP_AUDIT.md"
 kind = "audit"
 note = "312 affine maps per residue, eight best into the DP, all 312 through polish; p7 controls 63/63 and 95/95; p26 control false English state -4.2767; zone finishes -5.2552 / -5.7742."
 ref = "logs/205_periodic_affine.log"

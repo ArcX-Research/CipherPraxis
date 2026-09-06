@@ -27,6 +27,13 @@ echo "▸ math spans"
 cargo run --quiet -p praxis-core --features authoring --bin praxis-check -- content --math | tail -1
 echo "▸ list markers"
 cargo run --quiet -p praxis-core --features authoring --bin praxis-check -- content --lists | tail -1
+echo "▸ provenance paths"
+CORPUS_DIR="${CORPUS_DIR:-../Cryptanalysis}"
+if [ -d "$CORPUS_DIR" ]; then
+  python3 scripts/check_provenance.py --corpus "$CORPUS_DIR"
+else
+  echo "provenance: skipped (corpus not found at $CORPUS_DIR)"
+fi
 
 echo "▸ clippy (web, wasm32)"
 cargo clippy -p praxis-web --target wasm32-unknown-unknown -- -D warnings

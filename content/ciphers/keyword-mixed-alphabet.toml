@@ -130,29 +130,29 @@ In the corpus the keyed alphabet is rarely the whole cipher. It is the alphabet 
 '''
 
 [[provenance]]
-path = "withmath/wm_phrase.py"
+path = "withmath/scripts/wm_phrase.py"
 kind = "solver"
 note = "Quagmire I/II/III under a period-7 key with phrase-keyed alphabets: six keying styles, 202,504 alphabets, planted control first."
 ref = "logs/07_phrase.log"
 
 [[provenance]]
-path = "withmath/wm_rounds4.py"
+path = "withmath/scripts/wm_rounds4.py"
 kind = "solver"
 note = "Keyed-alphabet generator with the six styles (std, kry, rev, cont, col, kcol)."
 
 [[provenance]]
-path = "ck_lib.py"
+path = "scripts/ck_lib.py"
 kind = "library"
 note = "keyed_alphabet(word): keyword followed by the unused letters."
 
 [[provenance]]
-path = "withmath/PK10_ALBERTI_MONOSUB_CONTROL327_AUDIT.md"
+path = "withmath/docs/pk10/PK10_ALBERTI_MONOSUB_CONTROL327_AUDIT.md"
 kind = "audit"
 note = "Frozen arbitrary-substitution solver: 6/6 hidden positives, 3/3 negatives, 19/19 nulls at n=504; slope-0 cell is plain substitution."
 ref = "LOG327"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Round 2 and Step 3 summaries: phrase, text-keyed, prefix-keyed and two-keyword alphabet sweeps and their control results."
 

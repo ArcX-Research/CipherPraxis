@@ -119,7 +119,7 @@ The order 312 recurs as the size of the affine orbit of a cycle solution; see [G
 '''
 
 [[provenance]]
-path = "withmath/wm_algebra.py"
+path = "withmath/scripts/wm_algebra.py"
 kind = "solver"
 note = "Test A: affine-lag filters c_i - a c_{i-L} over the 12 units and lags 1..40, LLR against the a-scaled self-convolution with the constant maximised out, per-cell and family-wise shuffled nulls."
 
@@ -130,12 +130,12 @@ note = "Family-wise affine-lag results: observed max LLR 5.0 vs shuffled 5.1 +- 
 ref = "logs/03_algebra.log"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Round-1 reading: no LCG, affine or drifting key on either short text."
 
 [[provenance]]
-path = "withmath/AFFINE_ROUTE_AUDIT.md"
+path = "withmath/docs/cipher-methods/AFFINE_ROUTE_AUDIT.md"
 kind = "audit"
 note = "Affine position route X_i = C_((u i + d) mod n), route gauge, 36/3/3 primitive checks, three held-out controls, target endpoints and null losses."
 ref = "logs/195_affine_route.log"
@@ -147,12 +147,12 @@ note = "Constant-acceleration schedule a_i = beta i + alpha i(i-1)/2: 1,352 raw 
 ref = "LOG408"
 
 [[provenance]]
-path = "withmath/PK9_UNITMULT_INDEPENDENT_AUDIT.md"
+path = "withmath/docs/pk9/PK9_UNITMULT_INDEPENDENT_AUDIT.md"
 kind = "audit"
 note = "Affine gauge z' = alpha z + beta with k' = alpha k + (1 - a_t) beta; free action of order 312."
 
 [[provenance]]
-path = "withmath/PK9_PIECECYCLE_BEAU_CONTROL_AUDIT.md"
+path = "withmath/docs/pk9/PK9_PIECECYCLE_BEAU_CONTROL_AUDIT.md"
 kind = "audit"
 note = "Beaufort-type gauge a' = u a + b, k' = u k + 2b."
 

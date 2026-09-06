@@ -153,7 +153,7 @@ Start at $(0, 0)$ with $F = 5$. Sweep $k_0$ with $k_1 = 0$: values $5, 6, 2$, ch
 '''
 
 [[provenance]]
-path = "withmath/wm_var4.py"
+path = "withmath/scripts/wm_var4.py"
 kind = "solver"
 note = "Exact period-7 alignment, 26 absolute starts and near-optimal alignment vectors, quadgram coordinate descent over the 7m sub-coset shifts with perturbation restarts; constrained constant-difference variant; shuffled nulls."
 
@@ -164,12 +164,12 @@ note = "Controls at 153 letters: S beau m=3 free -4.296 match 100%; K vig m=4 fr
 ref = "logs/27_var4.log"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Shuffled-null levels for free sub-coset shifts: m=4 -5.8..-5.9, m=5 -5.41..-5.47 at 153 letters; suffix m=4 -4.68..-4.99, m=5 -4.59..-4.76; ~10 min runtime."
 
 [[provenance]]
-path = "withmath/wm_periodic_dp.py"
+path = "withmath/scripts/wm_periodic_dp.py"
 kind = "solver"
 note = "Unrestricted 26-way coordinate and adjacent-pair polish after the cyclic DP."
 
@@ -180,12 +180,12 @@ note = "Three blind controls at 100% with the polish pass included."
 ref = "logs/148_periodic_dp.log"
 
 [[provenance]]
-path = "ck_pviterbi.py"
+path = "scripts/ck_pviterbi.py"
 kind = "solver"
 note = "polish(): per-position 26-way sweeps of the full objective until no improvement, repairing the open-chain wrap-around terms."
 
 [[provenance]]
-path = "ck_sandwich.py"
+path = "scripts/ck_sandwich.py"
 kind = "solver"
 note = "Coordinate polish of all 7 + k shifts under quadgrams for the best transposition candidates."
 
@@ -195,7 +195,7 @@ kind = "log"
 note = "Planted width-8 and width-12 controls at -4.34, match 100%."
 
 [[provenance]]
-path = "withmath/CROSSCHAIN_M13_RANKSHARD_VALIDATION291_AUDIT.md"
+path = "withmath/docs/cross-cipher/CROSSCHAIN_M13_RANKSHARD_VALIDATION291_AUDIT.md"
 kind = "audit"
 note = "Four deterministic polish rounds after the width-8 DP in the validated stage-two finisher."
 

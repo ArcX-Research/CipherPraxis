@@ -139,25 +139,25 @@ The power limit is the central negative result of the program's alphabet work: w
 '''
 
 [[provenance]]
-path = "withmath/wm_q3.py"
+path = "withmath/scripts/wm_q3.py"
 kind = "solver"
 note = "Calibration: blind unknown-alphabet Quagmire III/IV at 153 letters; evidence climb, annealing, Q-IV relaxation; 0/24 restarts."
 ref = "logs/08_q3.log"
 
 [[provenance]]
-path = "withmath/wm_crib.py"
+path = "withmath/scripts/wm_crib.py"
 kind = "solver"
 note = "q3 crib calibration: 0/3 seeds at every crib length 7-25."
 ref = "logs/22_crib_smoke.log"
 
 [[provenance]]
-path = "withmath/wm_q3joint.py"
+path = "withmath/scripts/wm_q3joint.py"
 kind = "solver"
 note = "Batch parallel tempering over (alphabet, two period-7 keys) on planted 63+96-letter controls; plateau at 30-40% of the alphabet."
 ref = "logs/32_q3joint_ctrl.log"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Scaling law (logs/36), polish-basin measurement, crib-CSP calibration (logs/42-43), pattern-beam control failure (logs/150)."
 ref = "logs/36_scaling.log"

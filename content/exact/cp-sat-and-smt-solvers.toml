@@ -137,59 +137,59 @@ Variables $x, y, z \in \{0, 1, 2\}$, constraints $\text{AllDifferent}(x, y, z)$,
 '''
 
 [[provenance]]
-path = "withmath/OBJECT_VOCAB_EXACT_AUDIT.md"
+path = "withmath/docs/cross-cipher/OBJECT_VOCAB_EXACT_AUDIT.md"
 kind = "audit"
 note = "DFA compilation, one-hot CNF with channel clauses, cardinality UNSAT theorem, SAT non-unique cells with blocked alternates, 5,186 vars / 3,012,112 clauses, 13-16 s solves, 8/8 controls."
 ref = "logs/210_objectvocab_exact.json"
 
 [[provenance]]
-path = "withmath/ELEMENT_CROSSCHAIN_EXACT_AUDIT.md"
+path = "withmath/docs/cross-cipher/ELEMENT_CROSSCHAIN_EXACT_AUDIT.md"
 kind = "audit"
 note = "One-hot CNF cross-chain: 301,760 / 1,778,174 (Vigenere), UNKNOWN at 300.17 s and 300.14 s; n=12 KATs SAT/UNSAT."
 ref = "logs/216_element_crosschain_exact.log"
 
 [[provenance]]
-path = "withmath/ELEMENT_CROSSCHAIN_COMPACT_Z3_AUDIT.md"
+path = "withmath/docs/cross-cipher/ELEMENT_CROSSCHAIN_COMPACT_Z3_AUDIT.md"
 kind = "audit"
 note = "Bounded-integer Z3 with carries: closed-form counts, 1,950 / 2,841 / 1,157 at n=95, toy equivalence 254/207/0, forced n=12 12.489 s and 0.129 s, unforced n95 UNKNOWN at 300.073 s."
 ref = "logs/247b_element_crosschain_compact_z3_full.log"
 
 [[provenance]]
-path = "withmath/ELEMENT_CROSSCHAIN_INCREMENTAL_AUDIT.md"
+path = "withmath/docs/cross-cipher/ELEMENT_CROSSCHAIN_INCREMENTAL_AUDIT.md"
 kind = "audit"
 note = "Incremental dual-DFA panel 4/4, worst 1.822802 s; n12 129 vars / 927 assertions; n20 193 / 1,496."
 ref = "logs/251_element_crosschain_incremental.log"
 
 [[provenance]]
-path = "withmath/ELEMENT_CROSSCHAIN_INCREMENTAL_FULL253_AUDIT.md"
+path = "withmath/docs/cross-cipher/ELEMENT_CROSSCHAIN_INCREMENTAL_FULL253_AUDIT.md"
 kind = "audit"
 note = "Target-length C1: UNKNOWN at the first checkpoint (endpoint 13, 793 vars) after 300.047 s; 305 MiB."
 ref = "logs/253_element_crosschain_incremental_full_C1.log"
 
 [[provenance]]
-path = "withmath/ELEMENT_CROSSCHAIN_CPSAT_AUDIT.md"
+path = "withmath/docs/cross-cipher/ELEMENT_CROSSCHAIN_CPSAT_AUDIT.md"
 kind = "audit"
 note = "CP-SAT model (AllDifferent, gauge table, two automata, Element, 676-row tables); backend absent locally; source-level counts 79/56, 111/90, 411/429."
 
 [[provenance]]
-path = "withmath/ELEMENT_CROSSCHAIN_CPSAT256_AUDIT.md"
+path = "withmath/docs/cross-cipher/ELEMENT_CROSSCHAIN_CPSAT256_AUDIT.md"
 kind = "audit"
 note = "Pinned isolated OR-Tools 9.15.6755; light panel 4/4, worst 1.322267 s; n95 proto 411/429 validated with zero solve calls; 385,320 table values; 6,664 transitions."
 ref = "logs/256_element_crosschain_cpsat_light.log"
 
 [[provenance]]
-path = "withmath/ELEMENT_CROSSCHAIN_CPSAT257_AUDIT.md"
+path = "withmath/docs/cross-cipher/ELEMENT_CROSSCHAIN_CPSAT257_AUDIT.md"
 kind = "audit"
 note = "Redundant Inverse/Element channel (437/613); C1 UNKNOWN at 300.067 s; peak RSS 1,300,611,072 bytes above the 900 MB contract."
 ref = "logs/257_element_crosschain_cpsat_C1.log"
 
 [[provenance]]
-path = "withmath/CROSS_PRESOURCE_TQ_CPSAT264_AUDIT.md"
+path = "withmath/docs/cross-cipher/CROSS_PRESOURCE_TQ_CPSAT264_AUDIT.md"
 kind = "audit"
 note = "Direct integer-trigram objective: forced OPTIMAL at 96,558,285 in 0.729620 s; unforced L1 UNKNOWN at 39.632265 s; RSS 3,382,280,192 bytes."
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Earlier CP-SAT with trigram tables: cost 2353 vs truth 2042 after 420 s; with top-60k quadgram feasibility no feasible point in 400 s (logs/69)."
 

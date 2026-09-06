@@ -122,7 +122,7 @@ Differences are also the source of the "residue graph" formulation, in which eac
 '''
 
 [[provenance]]
-path = "withmath/wm_algebra.py"
+path = "withmath/scripts/wm_algebra.py"
 kind = "solver"
 note = "Test B: lag difference/sum texts L = 1..20 scored by period-7 aligned IC vs shuffles; test D: running-key relations c8 -/+ c9 at offsets -40..40, reversed, with a family-wise shuffled maximum."
 
@@ -133,22 +133,22 @@ note = "Lag-difference maxima z +2.5 to +3.9 over 40 lag/sign texts per cell; ru
 ref = "logs/03_algebra.log"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Algebra-screen reading: no running-key relation; no lead recorded from the difference-text screen."
 
 [[provenance]]
-path = "withmath/PK89_SHARED_CYCLE_BANK380_AUDIT.md"
+path = "withmath/docs/pk8-pk9/PK89_SHARED_CYCLE_BANK380_AUDIT.md"
 kind = "audit"
 note = "Derived stream D_i(z) = z(C8_i) - e9 z(C9_j) = e8 z(P8_i) - e9 kappa_j; KAT 32/32; 16 ms per cell compiled inner product."
 
 [[provenance]]
-path = "withmath/SHARED_CYCLE_CHAIN_EQUATION_AUDIT_CLAUDE.md"
+path = "withmath/docs/cipher-methods/SHARED_CYCLE_CHAIN_EQUATION_AUDIT_CLAUDE.md"
 kind = "audit"
 note = "Chain elimination verified on 50/50 plants."
 
 [[provenance]]
-path = "withmath/PK89_COMMONPLAIN_INVARIANT_CONTROL_AUDIT.md"
+path = "withmath/docs/pk8-pk9/PK89_COMMONPLAIN_INVARIANT_CONTROL_AUDIT.md"
 kind = "audit"
 note = "Common-plaintext cancellation z(L) - epsilon z(R) = h(i mod 7); equality-partition gate."
 
@@ -159,12 +159,12 @@ note = "Collision implications validated on 256 synthetic chains, 256/256 mutati
 ref = "LOG407"
 
 [[provenance]]
-path = "withmath/PK89_CHAIN_CONSISTENCY_INVARIANT377_DESIGN.md"
+path = "withmath/docs/pk8-pk9/PK89_CHAIN_CONSISTENCY_INVARIANT377_DESIGN.md"
 kind = "design"
 note = "Counterexample: a repeated seven-letter key text restores period-7 structure (alignment z +6.927); typicality versus necessity."
 
 [[provenance]]
-path = "withmath/PK89_SHARED_CYCLE_CHAIN380_DESIGN.md"
+path = "withmath/docs/pk8-pk9/PK89_SHARED_CYCLE_CHAIN380_DESIGN.md"
 kind = "design"
 note = "Exact same-order cell solve of the derived stream in about 0.5 s."
 

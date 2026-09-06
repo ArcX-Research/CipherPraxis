@@ -143,7 +143,7 @@ Family-identification statistics cannot separate Bifid from a Quagmire with an u
 '''
 
 [[provenance]]
-path = "withmath/COLOSSUS_AUDIT.md"
+path = "withmath/docs/cipher-methods/COLOSSUS_AUDIT.md"
 kind = "audit"
 note = "Log 184: Bifid n=504 control 504/504 with hidden period 7 selected; forward exact."
 ref = "logs/184_colossus_audit.log"
@@ -155,18 +155,18 @@ note = "LOG491 tied-key annealer 0/4; LOG492 exhaustive 105,000-key census and 1
 ref = "LOG493"
 
 [[provenance]]
-path = "withmath/wm_twin_bifid_q7.py"
+path = "withmath/scripts/wm_twin_bifid_q7.py"
 kind = "solver"
 note = "Shared 25-cell square under two period-7 outer keys; compiled joint annealer (log 209 design)."
 
 [[provenance]]
-path = "withmath/wm_abc.py"
+path = "withmath/scripts/wm_abc.py"
 kind = "solver"
 note = "Likelihood-free family identification: Bifid sits in one cluster with unstructured Quagmire III and independent substitutions at n=153."
 ref = "logs/04_abc.log"
 
 [[provenance]]
-path = "ck_lib.py"
+path = "scripts/ck_lib.py"
 kind = "library"
 note = "bifid_encrypt / bifid_decrypt with period handling."
 

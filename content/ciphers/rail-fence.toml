@@ -130,13 +130,13 @@ The rail fence is the simplest member of the enumerable-transposition vocabulary
 '''
 
 [[provenance]]
-path = "withmath/wm_pk9x.py"
+path = "withmath/scripts/wm_pk9x.py"
 kind = "solver"
 note = "Rail fences 2-40 rails with every offset, routes, block reversals, reversal and Myszkowski read-outs under a period-7 layer with key change; planted rail-fence control."
 ref = "logs/29_pk9x.log"
 
 [[provenance]]
-path = "ck_lib.py"
+path = "scripts/ck_lib.py"
 kind = "library"
 note = "railfence_decrypt(ct, rails, offset)."
 

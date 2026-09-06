@@ -117,13 +117,13 @@ VERDICT selection overfit; bank/depth closed; no candidate
 '''
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Cycle bank: target best -4.869 at top-128, eight of nine complete-pipeline within-coset null maxima beat it (mean -4.836, p = 0.90), rejected as selection overfit; cross-text relation +0.8 sigma family-wise versus +5.7 per-trial over 1,296 trials; 0.15 nats per letter of selection freedom from profiling seven shifts."
 ref = "logs/152_crosscycle_full.log"
 
 [[provenance]]
-path = "withmath/LOG_AUDIT.md"
+path = "withmath/docs/project-notes/LOG_AUDIT.md"
 kind = "audit"
 note = "Evidence rule 4: scores selected from many keys, cycles or placements are compared with a null that repeats that full selection; the apparent window-key z-scores were selection effects."
 
@@ -134,6 +134,6 @@ note = "Frozen 100-cycle bank: target rate -6.70, rank 16/20 in each null family
 ref = "LOG402"
 
 [[provenance]]
-path = "withmath/PK10_CHAOCIPHER_FOURCLASS_CANDIDATE_NULL_CERTIFICATION_DESIGN.md"
+path = "withmath/docs/pk10/PK10_CHAOCIPHER_FOURCLASS_CANDIDATE_NULL_CERTIFICATION_DESIGN.md"
 kind = "design"
 note = "One primary statistic already maximised over classes inside every replicate; the gap is a conjunctive guard, not a second route to significance; no choice of the more favourable statistic."

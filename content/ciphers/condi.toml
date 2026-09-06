@@ -128,25 +128,25 @@ Condi is the clearest example in the corpus of a decoder-power failure that is h
 '''
 
 [[provenance]]
-path = "withmath/CONDI_EXACT_AUDIT.md"
+path = "withmath/docs/cipher-methods/CONDI_EXACT_AUDIT.md"
 kind = "audit"
 note = "Log 203: transition-likelihood instrument, 12-unit gauge, strict optimum test (0/325 improving swaps), 0/4 controls."
 ref = "logs/203_condi_exact_20260831T200216Z.log"
 
 [[provenance]]
-path = "withmath/CONDI_GLOBAL_AUDIT.md"
+path = "withmath/docs/cipher-methods/CONDI_GLOBAL_AUDIT.md"
 kind = "audit"
 note = "Log 208: Parseval L2 relaxation, gauge-aligned cycle crossover, Hungarian consensus, exhaustive three-cycles; 0/4."
 ref = "logs/208_condi_global_20260831T205807Z.log"
 
 [[provenance]]
-path = "withmath/CONDI_PARITY_AUDIT.md"
+path = "withmath/docs/cipher-methods/CONDI_PARITY_AUDIT.md"
 kind = "audit"
 note = "Log 213: exhaustive C(26,13) parity stage, GF(13)/CRT lift; hidden mask ranks 91,895 / 19 / 874,906 / 2; 0/4."
 ref = "logs/213_condi_parity_20260831T220442Z.log"
 
 [[provenance]]
-path = "withmath/COLOSSUS_DYNAMIC_AUDIT.md"
+path = "withmath/docs/cipher-methods/COLOSSUS_DYNAMIC_AUDIT.md"
 kind = "audit"
 note = "Log 186: external-engine Condi control 28/504, target locked."
 ref = "LOG186"

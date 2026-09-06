@@ -123,23 +123,23 @@ The corrected group mask (a path stops after its first closure, so identities an
 '''
 
 [[provenance]]
-path = "withmath/wm_patternbeam.py"
+path = "withmath/scripts/wm_patternbeam.py"
 kind = "solver"
 note = "Seven-substitution constrained beam with a character GRU trained on generic text [0, 1,350,000); held-out controls beyond 1,420,000; default beam 40,000 (12,000 fast); within-coset shuffle nulls."
 
 [[provenance]]
-path = "withmath/PK8_PK10_HINTFREE.md"
+path = "withmath/docs/pk8/PK8_PK10_HINTFREE.md"
 kind = "note"
 note = "Seven-substitution beam controls: fluent round-tripping alternatives, only 19.0% and 9.5% recovered, true paths left the beam; control gate failed."
 ref = "logs/150_patternbeam.log"
 
 [[provenance]]
-path = "withmath/wm_cyclebeam.py"
+path = "withmath/scripts/wm_cyclebeam.py"
 kind = "solver"
 note = "Shared-cycle beam with rotation/reflection masks and an exact Z3 endpoint check."
 
 [[provenance]]
-path = "withmath/CYCLEBEAM_EXACTPREFIX_AUDIT.md"
+path = "withmath/docs/cipher-methods/CYCLEBEAM_EXACTPREFIX_AUDIT.md"
 kind = "audit"
 note = "Adaptive exact-prefix beam: beam 20,000, pool 40,000, four 15 ms pilots; controls lost at character 5 (n63) and 13 (n95); pilot SAT/UNSAT/unknown counts; 12,000 final states UNSAT in the earlier lanes; rank 81,978 in a 30,000-wide audit; 400 million pairs for a naive bidirectional join."
 ref = "logs/183_cyclebeam_exactprefix.log"

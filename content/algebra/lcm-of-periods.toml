@@ -115,7 +115,7 @@ The coprime bijection is the same theorem as the Chinese remainder theorem for p
 '''
 
 [[provenance]]
-path = "withmath/wm_algebra.py"
+path = "withmath/scripts/wm_algebra.py"
 kind = "solver"
 note = "Test C: residual periodicity q = 2..30 after the exact period-7 alignment; test E: exact-grid divisors of the three text lengths."
 
@@ -126,7 +126,7 @@ note = "Residual periodicity rows per text and order; period-10 residual z +3.7 
 ref = "logs/03_algebra.log"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Compound solver: controls 100 % (period-70 key and the two-alphabet 7 over 10, z +51/+27); both short texts nothing for q = 2..13; the period-10 residual lead closed."
 
@@ -137,28 +137,28 @@ note = "Control rows: q10 rate -4.34 with z +51.1 match 100 % (one alphabet) and
 ref = "logs/06_compound.log"
 
 [[provenance]]
-path = "withmath/PK89_MIXED_P7_P9_RESIDUE_GRAPH_REVIEW.md"
+path = "withmath/docs/pk8-pk9/PK89_MIXED_P7_P9_RESIDUE_GRAPH_REVIEW.md"
 kind = "design"
 note = "lcm(7,9) = 63; CRT bijection for all 18 phase/orientation maps; K_(7,9) with 63 edges, 16 vertices, cycle rank 48; 48 rectangle basis."
 
 [[provenance]]
-path = "withmath/MIXEDPERIOD_GRAPH282_CONTROL_AUDIT.md"
+path = "withmath/docs/cross-cipher/MIXEDPERIOD_GRAPH282_CONTROL_AUDIT.md"
 kind = "audit"
 note = "Periods 26 and 7 coprime: 33-vertex connected graph, cycle rank n - 32, closed-form basis; four positive controls; wrong-period p26/p9 negative zero over 704 geometries; shuffle negative zero over 884."
 ref = "logs/282_mixedperiod_graph_controls.log"
 
 [[provenance]]
-path = "withmath/PK89_SHARED_STREAM_COUPLING375_DESIGN.md"
+path = "withmath/docs/pk8-pk9/PK89_SHARED_STREAM_COUPLING375_DESIGN.md"
 kind = "design"
 note = "Rank-two period-63 modulation (16 parameters), 2,448 cross pairs, heuristic 25 bits vs 61 bits, 0/6 potential recovery."
 
 [[provenance]]
-path = "withmath/PK89_CHAIN_CONSISTENCY_INVARIANT377_DESIGN.md"
+path = "withmath/docs/pk8-pk9/PK89_CHAIN_CONSISTENCY_INVARIANT377_DESIGN.md"
 kind = "design"
 note = "Correction: the bit-count statement is heuristic, not a formal identifiability theorem."
 
 [[provenance]]
-path = "withmath/HILL2_PERIODIC_AUDIT.md"
+path = "withmath/docs/cipher-methods/HILL2_PERIODIC_AUDIT.md"
 kind = "audit"
 note = "Row-stream decimation q = p/gcd(p,2)."
 

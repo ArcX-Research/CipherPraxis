@@ -152,30 +152,30 @@ Each is a 26-letter permutation. A period-7 keyed substitution in the first of t
 '''
 
 [[provenance]]
-path = "withmath/wm_phrase.py"
+path = "withmath/scripts/wm_phrase.py"
 kind = "solver"
 note = "Phrase-keyed alphabets from all substrings of the known texts in six styles; chi-square shift fit, quadgram sweeps, polish; planted control 100%."
 ref = "logs/07_phrase.log"
 
 [[provenance]]
-path = "withmath/wm_pk9.py"
+path = "withmath/scripts/wm_pk9.py"
 kind = "solver"
 note = "Vectorised screen of a 2.06M structured-alphabet table on the zones, five families, both relations, shuffled-segment nulls; planted alphabet rank 1."
 ref = "logs/24_pk9_seg48.log"
 
 [[provenance]]
-path = "withmath/probes/step3_swaps.py"
+path = "withmath/scripts/probes/step3_swaps.py"
 kind = "script"
 note = "Alphabets within two transpositions of the reference orders; screened with the zone screen and its planted control."
 ref = "logs/38_knbr_zones.log"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Round-2 phrase result (202,504 alphabets; targets -6.54 / -6.35), numeric-grid (logs/41), two-keyword (logs/35) and zone screen (logs/30) figures."
 
 [[provenance]]
-path = "withmath/STEP3_REVIEW.md"
+path = "withmath/docs/project-notes/STEP3_REVIEW.md"
 kind = "note"
 note = "Section 7: near-neighbour family excluded on both zones with the planted control ranked first at -3.94."
 

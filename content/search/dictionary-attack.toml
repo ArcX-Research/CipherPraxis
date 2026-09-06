@@ -123,7 +123,7 @@ Ciphertext `LXFOPVEFRNHR` (the Vigenère exemplar: plaintext `ATTACKATDAWN`, key
 '''
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Bank sweeps and their controls: 202,504 phrase-keyed alphabets (control 100%, targets -6.54/-6.35); 2.06M structured alphabets (control rank 1, best -5.77 vs shuffled max -5.9); 425k two-keyword alphabets; dictionary columnar keys 7-18 and 190k Myszkowski words; 32k nine-letter Hill keywords x 4 conventions; family-wise null +0.8 vs per-trial +5.7 sigma over 1,296 trials; four-round bank 1.57M combinations."
 ref = "logs/07_phrase.log"
@@ -135,7 +135,7 @@ note = "202,504 distinct phrase-keyed alphabets from 11 sources in six styles."
 ref = "logs/07_phrase.log"
 
 [[provenance]]
-path = "withmath/wm_rounds4.py"
+path = "withmath/scripts/wm_rounds4.py"
 kind = "solver"
 note = "Six keyed-alphabet styles (std, kry, rev, cont, col, kcol); exact enumeration of 1-4 rounds keyed by four words in every order."
 
@@ -146,7 +146,7 @@ note = "Combination counts 64 / 3,072 / 98,304 / 1,572,864; control found at -4.
 ref = "logs/09_rounds4.log"
 
 [[provenance]]
-path = "ck_sandwich.py"
+path = "scripts/ck_sandwich.py"
 kind = "solver"
 note = "Dictionary words of 10-20 letters and word pairs as columnar keys under the class solver."
 
@@ -156,7 +156,7 @@ kind = "log"
 note = "Planted word-pair, triple-columnar and rail-fence controls at -4.34, match 100%."
 
 [[provenance]]
-path = "withmath/wm_wordlist.py"
+path = "withmath/scripts/wm_wordlist.py"
 kind = "solver"
 note = "7-letter word banks (704 / ~52k / ~25k) as rows under seven fixed substitutions."
 
@@ -167,7 +167,7 @@ note = "Control solved in 244 nodes."
 ref = "logs/31_wordlist.log"
 
 [[provenance]]
-path = "withmath/OBJECT_VOCAB_AUDIT.md"
+path = "withmath/docs/search-language/OBJECT_VOCAB_AUDIT.md"
 kind = "audit"
 note = "Frozen object vocabularies tiled exactly with node counts per bank and window."
 
@@ -178,6 +178,6 @@ note = "A 100-entry word-derived bank carries about 6.6 bits against a free alph
 ref = "LOG404"
 
 [[provenance]]
-path = "withmath/wm_q3joint.py"
+path = "withmath/scripts/wm_q3joint.py"
 kind = "solver"
 note = "Unknown alphabet ~84 bits after gauge."

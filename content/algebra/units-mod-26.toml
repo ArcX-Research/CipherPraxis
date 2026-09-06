@@ -129,17 +129,17 @@ Unit multiplication appears as a gauge in every cycle solver of the corpus ("can
 '''
 
 [[provenance]]
-path = "withmath/PK9_UNITMULT_INDEPENDENT_AUDIT.md"
+path = "withmath/docs/pk9/PK9_UNITMULT_INDEPENDENT_AUDIT.md"
 kind = "audit"
 note = "Ratio-chart model, anchored equation without inverses, mod-2 invisibility, affine gauge and key transform, Z6 parity 16/16 and 15,552 forwards, three hidden plants, matched 99-null ranks 1/100, 25/100, 8/100."
 
 [[provenance]]
-path = "withmath/PK9_UNITMULT_ALLORBIT_CLAUDE_BLOCKED.md"
+path = "withmath/docs/pk9/PK9_UNITMULT_ALLORBIT_CLAUDE_BLOCKED.md"
 kind = "note"
 note = "Blocked draft: selector covered 1 of 12 absolute orientations; relabelling algebra sigma' = sigma a^-1."
 
 [[provenance]]
-path = "withmath/PK9_UNITRATIO_NECESSARY_TARGET308_AUDIT.md"
+path = "withmath/docs/pk9/PK9_UNITRATIO_NECESSARY_TARGET308_AUDIT.md"
 kind = "audit"
 note = "144 ordered unit cells, 123 anchored equations per cell, identical F2 RREF across cells, CRT lift, 312-member orbits, structural terminals."
 
@@ -156,17 +156,17 @@ note = "Production completion entry for the unit-ratio necessary family: rejecte
 ref = "LOG308"
 
 [[provenance]]
-path = "withmath/PK89_SHARED_CYCLE_BANK380_AUDIT.md"
+path = "withmath/docs/pk8-pk9/PK89_SHARED_CYCLE_BANK380_AUDIT.md"
 kind = "audit"
 note = "Unit gauge (u z, u kappa) gives literally identical ciphertexts, 48/48."
 
 [[provenance]]
-path = "withmath/PK9_BLINDEXPONENT443_NOTE.md"
+path = "withmath/docs/pk9/PK9_BLINDEXPONENT443_NOTE.md"
 kind = "note"
 note = "Normaliser of order 4,056 in the all-even or all-odd shift regimes; affine orbits of 312 otherwise."
 
 [[provenance]]
-path = "withmath/wm_algebra.py"
+path = "withmath/scripts/wm_algebra.py"
 kind = "solver"
 note = "UNITS = residues a with a odd and a not divisible by 13; used as multipliers of the affine-lag filters."
 

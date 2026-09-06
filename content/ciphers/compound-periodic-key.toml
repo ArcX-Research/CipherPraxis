@@ -136,19 +136,19 @@ The two-alphabet composite is the construction the program's solved prefix exhib
 '''
 
 [[provenance]]
-path = "withmath/wm_compound.py"
+path = "withmath/scripts/wm_compound.py"
 kind = "solver"
 note = "Period-7 key over a period-q key (q = 2..13) in one or two alphabets; start-free alternating class fit, quadgram polish, shuffled nulls; --blocks mode for per-block constants."
 ref = "logs/06_compound.log"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Round 2: controls 100% (period-70 key z +51, two-alphabet 7 over 10 z +27); live texts nothing for q = 2..13; block model negative."
 ref = "logs/10_blocks_model.log"
 
 [[provenance]]
-path = "withmath/wm_infer.py"
+path = "withmath/scripts/wm_infer.py"
 kind = "solver"
 note = "Decision D2b: two-period composite escalation; solved-prefix validation with roundtrip."
 ref = "logs/145_infer.log"

@@ -139,7 +139,7 @@ Finding the zones changed how every whole-text statistic was read. Combining a 6
 '''
 
 [[provenance]]
-path = "withmath/wm_segments.py"
+path = "withmath/scripts/wm_segments.py"
 kind = "solver"
 note = "Exact segmentation DP over same-coset coincidence log-likelihood ratios with within-coset shuffle nulls; rates 0.066 / 0.0385 fixed in the source."
 ref = "logs/56_segments.log"
@@ -150,24 +150,24 @@ kind = "log"
 note = "Independent change-point DP at period 7 for all three texts: boundary 53 at z +3.39 for the 144-letter text; nothing significant elsewhere."
 
 [[provenance]]
-path = "withmath/probes/step3_facts.py"
+path = "withmath/scripts/probes/step3_facts.py"
 kind = "script"
 note = "Windowed lag-7 map, letter-set chi-square with max-over-t null, segment identity and rotation tests with planted references, zone prose checks."
 ref = "logs/38_step3_facts.log"
 
 [[provenance]]
-path = "withmath/wm_blocks.py"
+path = "withmath/scripts/wm_blocks.py"
 kind = "solver"
 note = "Equal-block histogram rotation test, block key-change statistic against within-coset shuffles, prefix/suffix split scan, windowed IC."
 ref = "logs/02_blocks.log"
 
 [[provenance]]
-path = "withmath/STEP3_REVIEW.md"
+path = "withmath/docs/project-notes/STEP3_REVIEW.md"
 kind = "note"
 note = "Section 0 explains the whole-text mixed-inner artefact; section 7 records the z -5.2 identity result and the reading of the prefix as a near-monoalphabetic block."
 
 [[provenance]]
-path = "withmath/PK89_SEGMENT_CANCELLATION_REVIEW.md"
+path = "withmath/docs/pk8-pk9/PK89_SEGMENT_CANCELLATION_REVIEW.md"
 kind = "audit"
 note = "Section 4: a change point is not a key proof; the near-monoalphabetic prefix is not a Caesar proof; the 153-letter text's split is weak (z +0.71)."
 

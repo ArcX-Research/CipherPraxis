@@ -123,22 +123,22 @@ The basin of the truth is $\{7, 8, 9, 10\}$, radius $3$. A search whose best sta
 '''
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Polish basin on planted 96 / 63+96: recovery 3/4 at d=3, 0/4 at d>=5 (joint 1/4 at d=3-5) with shifts refit per move and two-swap moves; annealer best ~40% match ~10 swaps away; search plateau 29-42%."
 
 [[provenance]]
-path = "withmath/wm_q3joint.py"
+path = "withmath/scripts/wm_q3joint.py"
 kind = "solver"
 note = "The production polish measured: alternating exact shift descent and 925-neighbour alphabet climb."
 
 [[provenance]]
-path = "withmath/wm_crib.py"
+path = "withmath/scripts/wm_crib.py"
 kind = "solver"
 note = "Crib widens the polish basin only to 3 swaps (13-letter crib) / 6 swaps (25-letter crib) because the alphabet acts twice."
 
 [[provenance]]
-path = "withmath/wm_q3.py"
+path = "withmath/scripts/wm_q3.py"
 kind = "solver"
 note = "153-letter calibration: from two swaps away steepest ascent and cold annealing read -6.1 and cannot return; 0 of 24 restarts across four schedules."
 ref = "logs/08_q3.log"

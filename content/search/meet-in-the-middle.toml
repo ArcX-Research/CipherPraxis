@@ -134,13 +134,13 @@ Forward table: $T_1[k_1] = (3 + k_1) \bmod 26$ for all 26 values of $k_1$. Backw
 '''
 
 [[provenance]]
-path = "withmath/CYCLEBIMEET_AUDIT.md"
+path = "withmath/docs/cross-cipher/CYCLEBIMEET_AUDIT.md"
 kind = "audit"
 note = "Bidirectional exact-meet decoder: forward/reverse GRUs (reverse trained eight epochs, 1.5222 nats/letter), W 40,000, pool 80,000, <= 27,040,000 raw pair scores per macro-step, 48-map pilots at 20 ms; controls 4/4 fail with truth ranks 23,725 / 17,019,599 / 46,523 / 36,145 / 1,445,865; zero UNSAT in every losing pilot; ~52 GB to store 17 million states."
 ref = "logs/187_cyclebimeet.log"
 
 [[provenance]]
-path = "withmath/CYCLEBEAM_EXACTPREFIX_AUDIT.md"
+path = "withmath/docs/cipher-methods/CYCLEBEAM_EXACTPREFIX_AUDIT.md"
 kind = "audit"
 note = "Bounded bidirectional consideration: a naive join of two 20,000-state beams is 400 million pairs; a forward-trained model applied to reversed strings is not a calibrated likelihood."
 ref = "logs/183_cyclebeam_exactprefix.log"

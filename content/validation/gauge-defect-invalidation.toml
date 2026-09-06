@@ -146,17 +146,17 @@ note = "The preserved 492-byte header of the invalidated run."
 ref = "logs/failed/406_pk89_chain_wordpair_controls.INVALID-gauge-defect.20260902T124500Z.log"
 
 [[provenance]]
-path = "withmath/PK98_SEGCHAIN_A1S0_CONTROL366_DESIGN.md"
+path = "withmath/docs/pk9-pk8/PK98_SEGCHAIN_A1S0_CONTROL366_DESIGN.md"
 kind = "design"
 note = "Sections 3 and 4: coupled gauge states (k + delta, c0 + delta), 26-state orbits, truth-orbit completeness required for every positive; mixed orders get no false orbit; 5,616-state complete finish."
 
 [[provenance]]
-path = "withmath/SEGCHAIN_CONTROL_MISMATCH399_AUDIT.md"
+path = "withmath/docs/project-notes/SEGCHAIN_CONTROL_MISMATCH399_AUDIT.md"
 kind = "audit"
 note = "Addendum: orbit filter rejecting identity and half-turn rotations; 30.2% of true complete maps and 21.2% on observed edges rejected for one relation; KAT recommendations."
 ref = "LOG399"
 
 [[provenance]]
-path = "withmath/INSTRUMENT_REPLAY.md"
+path = "withmath/docs/project-notes/INSTRUMENT_REPLAY.md"
 kind = "note"
 note = "Two additive layers collapse into one stream and are not uniquely factored; two shift vectors carry a shared-constant gauge freedom, so displayed vectors need not be the intended representatives."

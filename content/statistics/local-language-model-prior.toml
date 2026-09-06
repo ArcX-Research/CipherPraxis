@@ -118,18 +118,18 @@ Every failure above is a *power* or *capability* failure of a specific frozen mo
 '''
 
 [[provenance]]
-path = "withmath/PK9_NEURALPRIOR442_NOTE.md"
+path = "withmath/docs/pk9/PK9_NEURALPRIOR442_NOTE.md"
 kind = "note"
 note = "Bidirectional character GRU as proposal prior for an exact ring CSP; uniform-marginal partial-window score; development control rank 1 (runner-up 9.5 log-units behind) found to be a training duplicate at offset 575,000; 20-control diagnostic falsified hard top-8 (max true rank 9-23); three duplicates across two runs."
 ref = "LOG442"
 
 [[provenance]]
-path = "withmath/ROW_SEMANTIC_CONTROLS_AUDIT.md"
+path = "withmath/docs/search-language/ROW_SEMANTIC_CONTROLS_AUDIT.md"
 kind = "audit"
 note = "Distilled transformer reranker with frozen caps K_pair = 4,096 and K_secondary = 2,048; pair rank worst 3,479, secondary worst 1,339; end-to-end 24/34 exact rank 1, worst 689; 40/40 gate failed; validation sources left unopened; 194.6 s, peak footprint 7.9 GB."
 
 [[provenance]]
-path = "withmath/ROW_LLAMA_SERVER_CAPABILITY_AUDIT.md"
+path = "withmath/docs/search-language/ROW_LLAMA_SERVER_CAPABILITY_AUDIT.md"
 kind = "audit"
 note = "Server build returns no prompt log-probabilities under echo; boundary pilot 37/72 edges observed, 4/8 planted-path edges, 168 calls in 31.39 s; segmented variant planted edge interval [-inf, -48.21]; adapter trained after the campaign, request-local scale zero."
 
@@ -140,7 +140,7 @@ note = "Complete-word local-model beam: 3,500 local-model calls in 1,127.9 s, 64
 ref = "LOG393"
 
 [[provenance]]
-path = "withmath/LOG_AUDIT.md"
+path = "withmath/docs/project-notes/LOG_AUDIT.md"
 kind = "audit"
 note = "No promotion of a quadgram/GRU string unless the full selected-family null is lower; language beams are a poor objective for peaked non-prose text."
 

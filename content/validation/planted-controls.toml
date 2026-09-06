@@ -161,17 +161,17 @@ The controls in this atlas are planted from a generic English corpus and random 
 '''
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Controls-first policy: every script prints planted controls first; a sandwich control that does not read English means the tool is broken and the target rows below it mean nothing. Records the 0/24 blind unknown-alphabet calibration and the crib-attack control table (one-sided alphabet solved 3/3 seeds, two-sided 0/21)."
 
 [[provenance]]
-path = "withmath/wm_core.py"
+path = "withmath/scripts/wm_core.py"
 kind = "library"
 note = "Shared planted-cipher generators used by every instrument's control block."
 
 [[provenance]]
-path = "withmath/LOG_AUDIT.md"
+path = "withmath/docs/project-notes/LOG_AUDIT.md"
 kind = "audit"
 note = "Family ledger with control status per instrument; evidence rule 3: a failed control identifies a power hole and does not exclude the target family."
 ref = "logs/148_periodic_dp.log"
@@ -183,7 +183,7 @@ note = "Four strengthened planted controls recovered 100% before the arbitrary-m
 ref = "logs/149_hillfree.log"
 
 [[provenance]]
-path = "withmath/SEGCHAIN_CONTROL_MISMATCH399_AUDIT.md"
+path = "withmath/docs/project-notes/SEGCHAIN_CONTROL_MISMATCH399_AUDIT.md"
 kind = "audit"
 note = "Controls matched to selectors; family-versus-target mismatch about 3 sigma, quantified without reading the target; addendum on a control generator that never drew the zero shift and an orbit filter that rejected 21% of planted truths."
 ref = "LOG399"
@@ -195,7 +195,7 @@ note = "Blind unknown-alphabet calibration: 0% on every planted control, as desi
 ref = "logs/08_q3.log"
 
 [[provenance]]
-path = "withmath/PK98_SEGCHAIN_A1S0_CONTROL366_DESIGN.md"
+path = "withmath/docs/pk9-pk8/PK98_SEGCHAIN_A1S0_CONTROL366_DESIGN.md"
 kind = "design"
 note = "Section 6: hidden suite of 16 positives spanning every order/sign cell, two structured-plaintext positives, two valid-algebra negatives and two no-chain negatives, each with the full 99-null selector."
 

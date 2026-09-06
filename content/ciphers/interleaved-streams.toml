@@ -126,7 +126,7 @@ Interleaving is one of the few constructions that reproduces the "mixed cosets" 
 '''
 
 [[provenance]]
-path = "withmath/wm_misc.py"
+path = "withmath/scripts/wm_misc.py"
 kind = "solver"
 note = "Test A: de-interleaved streams (k = 2, 3), each a period-7 keyed cipher in its own alphabet; planted controls; live texts."
 ref = "logs/11_misc.log"
@@ -138,7 +138,7 @@ note = "Logs 161/162/164: shared nine-stream deal across three texts; both contr
 ref = "LOG164"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Round 3: two interleaved period-7 streams (control 100%) noise on the live texts; interleaved-nulls reading of one text (logs/98-101)."
 

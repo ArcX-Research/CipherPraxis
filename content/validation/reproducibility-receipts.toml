@@ -178,13 +178,13 @@ RECEIPT
 '''
 
 [[provenance]]
-path = "withmath/PK9_STRUCTURED_P7_CHAIN383_INDEPENDENT_AUDIT391.md"
+path = "withmath/docs/pk9/PK9_STRUCTURED_P7_CHAIN383_INDEPENDENT_AUDIT391.md"
 kind = "audit"
 note = "Field-level diff of a fresh re-execution against the sealed transcript: three non-semantic differences; COMMIT prefix recomputed over 178,821 bytes; bank rebuilt from source and digest matched; host-file pinning recommendation."
 ref = "LOG391"
 
 [[provenance]]
-path = "withmath/LOG_AUDIT.md"
+path = "withmath/docs/project-notes/LOG_AUDIT.md"
 kind = "audit"
 note = "Corpus accounting: 200 text logs, 106,010 lines; four empty logs prove nothing; table of failed, interrupted and partial records that are not exclusions."
 
@@ -200,13 +200,13 @@ note = "Comparison script kept beside its transcript as logs/503_prefix224_scrip
 ref = "LOG503"
 
 [[provenance]]
-path = "withmath/PK10_ALBERTI_ACCEL13_VALIDATION381_INDEPENDENT_AUDIT389.md"
+path = "withmath/docs/pk10/PK10_ALBERTI_ACCEL13_VALIDATION381_INDEPENDENT_AUDIT389.md"
 kind = "audit"
 note = "Observation O2: a self-computed runner hash in public modes does not attest runner identity; production modes pin the runner via manifest and environment."
 ref = "LOG389"
 
 [[provenance]]
-path = "withmath/PK98_SEGCHAIN_A1S0_CONTROL366_AUDIT.md"
+path = "withmath/docs/pk9-pk8/PK98_SEGCHAIN_A1S0_CONTROL366_AUDIT.md"
 kind = "audit"
 note = "Residual 8: smoke transcripts embed the absolute log path in argv, so the whole-file hash is path-bound; the fixture digest is not."
 ref = "LOG366"

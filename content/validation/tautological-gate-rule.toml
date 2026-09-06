@@ -120,23 +120,23 @@ VERDICT gate is informative; a single violation refutes the form
 '''
 
 [[provenance]]
-path = "withmath/PK9_BLOCKPERM427_NOTE.md"
+path = "withmath/docs/pk9/PK9_BLOCKPERM427_NOTE.md"
 kind = "note"
 note = "Controls section: necessity (0 violations in 400 conforming plants) and power, the test can fail (random zones violate with fraction 0.81 and 0.98)."
 ref = "LOG427"
 
 [[provenance]]
-path = "withmath/CLAUDE_FRESH_PK8910_SYNTHESIS.md"
+path = "withmath/docs/project-notes/CLAUDE_FRESH_PK8910_SYNTHESIS.md"
 kind = "design"
 note = "Control plan item 2: a valid-model null negative that proves the gate can fail (identical algebra, plaintext replaced by independent letters with English monogram statistics)."
 
 [[provenance]]
-path = "withmath/LOG_AUDIT.md"
+path = "withmath/docs/project-notes/LOG_AUDIT.md"
 kind = "audit"
 note = "Evidence rule 2: English-looking and exact roundtrip are separate checks; a freely fitted invertible key always roundtrips; overfits in logs 148, 151 and 152 looked English."
 
 [[provenance]]
-path = "withmath/PK98_SEGCHAIN_CONTROL362_INDEPENDENT_AUDIT.md"
+path = "withmath/docs/pk9-pk8/PK98_SEGCHAIN_CONTROL362_INDEPENDENT_AUDIT.md"
 kind = "audit"
 note = "Blocker B2: the second-stage null never replayed the finishing selector, so every null comparison could fail while PASS was still emitted; within-coset alignment null mathematically invariant."
 ref = "LOG362"

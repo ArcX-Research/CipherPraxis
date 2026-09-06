@@ -137,25 +137,25 @@ The mixed status is deliberate: the two-square annealer is verified and its 504-
 '''
 
 [[provenance]]
-path = "withmath/COLOSSUS_AUDIT.md"
+path = "withmath/docs/cipher-methods/COLOSSUS_AUDIT.md"
 kind = "audit"
 note = "Log 184: two-square H/V controls 504/504; four-square 503/504 (one-letter overfit); direct 5x5 inapplicable to 26-letter texts."
 ref = "logs/184_colossus_audit.log"
 
 [[provenance]]
-path = "withmath/wm_pk10_squares.py"
+path = "withmath/scripts/wm_pk10_squares.py"
 kind = "solver"
 note = "Log 181/181b: 504-letter arbitrary two-square control 100% at 1M x 8; four-square 97.8% forward FAIL; live two-square selection non-English."
 ref = "logs/181b_pk10_squares_target.log"
 
 [[provenance]]
-path = "withmath/wm_twosquare_q7.py"
+path = "withmath/scripts/wm_twosquare_q7.py"
 kind = "solver"
 note = "Log 165: arbitrary squares with seven free shifts at 144-153 letters; transform matrix PASS; six matched controls failed."
 ref = "logs/165_twosquare_q7.log"
 
 [[provenance]]
-path = "ck_two.py"
+path = "scripts/ck_two.py"
 kind = "solver"
 note = "Word-keyed two-square, four-square, seriated Playfair and conjugated-matrix Bifid under a period-7 layer."
 ref = "ck_logs/172_two.log"

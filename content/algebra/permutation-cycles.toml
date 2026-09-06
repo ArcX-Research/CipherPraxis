@@ -170,17 +170,17 @@ note = "Eight-fixture discriminability panel under seven free powers of one cycl
 ref = "LOG500"
 
 [[provenance]]
-path = "withmath/PK9_PIECECYCLE_BEAU_CONTROL_AUDIT.md"
+path = "withmath/docs/pk9/PK9_PIECECYCLE_BEAU_CONTROL_AUDIT.md"
 kind = "audit"
 note = "Beaufort-type prefix as a partial reflection; T_g = f_g f_0 must be commuting rotations of one cycle; component beam passed development, failed first unseen holdout (truth rank 85,690 at depth 5)."
 
 [[provenance]]
-path = "withmath/PK9_BIP39_CRT445_NOTE.md"
+path = "withmath/docs/pk9/PK9_BIP39_CRT445_NOTE.md"
 kind = "note"
 note = "Group identities used as pruning: rotations, reflections, pair products, length-one first return allowed under tied classes."
 
 [[provenance]]
-path = "withmath/CYCLEWORD_AUDIT.md"
+path = "withmath/docs/cipher-methods/CYCLEWORD_AUDIT.md"
 kind = "audit"
 note = "Exact injective residue maps, rotation/reflection identities and the Z26 AllDifferent endpoint retained in the word-level decoder."
 

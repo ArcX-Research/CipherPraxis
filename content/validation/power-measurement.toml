@@ -143,13 +143,13 @@ note = "Ledger amendment: unmeasured power is POWER_UNMEASURED + SCOPED_INCONCLU
 ref = "LOG503"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Scaling law of the blind annealer: chains 500 gave 29%, 2000 gave 35%, 8000 gave 29 to 33% of the alphabet; best-of-N does not improve with N."
 ref = "logs/32_q3joint_ctrl.log"
 
 [[provenance]]
-path = "withmath/PK9_STRUCTURED_P7_CHAIN383_INDEPENDENT_AUDIT391.md"
+path = "withmath/docs/pk9/PK9_STRUCTURED_P7_CHAIN383_INDEPENDENT_AUDIT391.md"
 kind = "audit"
 note = "Observation O2: a rank-one result against a single null is worth p <= 1/2 and must not be read as separation."
 ref = "LOG391"

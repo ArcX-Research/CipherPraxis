@@ -129,12 +129,12 @@ Change the second row to $z(C) - z(A) \equiv 14$: now $z(C) \equiv 1 \pmod{13}$ 
 '''
 
 [[provenance]]
-path = "withmath/SHARED_CYCLE_CHAIN_EQUATION_AUDIT_CLAUDE.md"
+path = "withmath/docs/cipher-methods/SHARED_CYCLE_CHAIN_EQUATION_AUDIT_CLAUDE.md"
 kind = "audit"
 note = "Chain elimination, gauge analysis (translation with kappa shift; unit canonicalisation), nullity table (10-letter (24,24) vs (23,23); 18-letter (15,15); 15+18 (3,3) vs (2,2); 0/40 wrong pairs inconsistent), 50/50 plants, 245,766 linearly consistent pairs."
 
 [[provenance]]
-path = "withmath/PK89_CHAIN_WORDPAIR406_AUDIT.md"
+path = "withmath/docs/pk8-pk9/PK89_CHAIN_WORDPAIR406_AUDIT.md"
 kind = "audit"
 note = "GF(2) x GF(13) enumeration with at most two letters per residue and opposite parities; cap 13^5 x 2^5; nullity histogram over 600 pairs; 0.4-10 ms (f13<=4), ~94 ms (f13=5), 12.4 ms average; 3,860 placements / 299,563 pairs; KAT 144 solutions containing the planted cycle; projection lesson (nullity 8 -> 5); gauge defect and the 406b repair (142 -> 44 ms); P(f13<=5) 0.14/0.74/0.99 at 14/18/20 letters."
 
@@ -151,12 +151,12 @@ note = "Factorised injectivity checked against brute force over 240 systems / 53
 ref = "LOG409b"
 
 [[provenance]]
-path = "withmath/PK9_STAGEB_EXACT_CERTIFIED_CLAUDE_AUDIT.md"
+path = "withmath/docs/pk9/PK9_STAGEB_EXACT_CERTIFIED_CLAUDE_AUDIT.md"
 kind = "audit"
 note = "Anchored residue systems: dim2 = 2, dim13 = 2, raw 676, 312 all-different = one gauge orbit of order 312 on 6/6 plants; correction note: first-match sign selection, single orbit, tautological forward (200/200 wrong keys reproduce)."
 ref = "logs/353_pk9_stageb_exact_certified_claude.log"
 
 [[provenance]]
-path = "withmath/PK89_CHAIN_WORDCSP405_AUDIT.md"
+path = "withmath/docs/pk8-pk9/PK89_CHAIN_WORDCSP405_AUDIT.md"
 kind = "audit"
 note = "Projection onto observed letters; 2^d2 + 13^d13 feasibility; 312 affine copies canonicalised; missing letters receive unused coordinates."

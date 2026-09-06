@@ -130,19 +130,19 @@ Quagmire II was the long shot in the program's reading of the two short texts be
 '''
 
 [[provenance]]
-path = "withmath/wm_crib.py"
+path = "withmath/scripts/wm_crib.py"
 kind = "solver"
 note = "Crib attack; q2K/q2S families (known plaintext alphabet, unknown ciphertext alphabet)."
 ref = "logs/22_crib_smoke.log"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Round 4: q2K solved 12/21 seed-by-length cases with 0-7 of 16 restarts; live texts negative."
 ref = "logs/23_crib_pk8_pk9.log"
 
 [[provenance]]
-path = "withmath/wm_phrase.py"
+path = "withmath/scripts/wm_phrase.py"
 kind = "solver"
 note = "Variant II (keyed ciphertext side) of the phrase-keyed sweep."
 ref = "logs/07_phrase.log"

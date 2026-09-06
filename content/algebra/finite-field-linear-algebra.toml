@@ -120,7 +120,7 @@ The nullity table above is why exact word-guess rejection needs two long cribs: 
 '''
 
 [[provenance]]
-path = "withmath/SHARED_CYCLE_CHAIN_EQUATION_AUDIT_CLAUDE.md"
+path = "withmath/docs/cipher-methods/SHARED_CYCLE_CHAIN_EQUATION_AUDIT_CLAUDE.md"
 kind = "audit"
 note = "Nullity table for word guesses (24,24), (15,15), (3,3); 0/40 wrong pairs linearly inconsistent; ranks never reject; practical rules."
 
@@ -149,22 +149,22 @@ note = "Shift-free exact crib CSP: 32/32 exact recoveries at crib length 26; typ
 ref = "LOG409"
 
 [[provenance]]
-path = "withmath/PK89_COMMONPLAIN_INVARIANT_CONTROL_AUDIT.md"
+path = "withmath/docs/pk8-pk9/PK89_COMMONPLAIN_INVARIANT_CONTROL_AUDIT.md"
 kind = "audit"
 note = "KAT counts (64, 169, 64), four hidden (1,1) controls, 1.484 s, int16 overflow fix."
 
 [[provenance]]
-path = "withmath/PK89_COMMONPLAIN_INVARIANT_VALIDATION_AUDIT.md"
+path = "withmath/docs/pk8-pk9/PK89_COMMONPLAIN_INVARIANT_VALIDATION_AUDIT.md"
 kind = "audit"
 note = "Vacuous n6-at-p7 equality KAT rejected and replaced (65,536 binary pairs, 175 RGS pairs)."
 
 [[provenance]]
-path = "withmath/PK89_MIXED_P7_P9_RESIDUE_GRAPH_REVIEW.md"
+path = "withmath/docs/pk8-pk9/PK89_MIXED_P7_P9_RESIDUE_GRAPH_REVIEW.md"
 kind = "design"
 note = "K_(7,9) incidence rank 15 and 48 rectangle rows of rank 48 over both fields."
 
 [[provenance]]
-path = "withmath/PK9_UNITRATIO_NECESSARY_TARGET308_AUDIT.md"
+path = "withmath/docs/pk9/PK9_UNITRATIO_NECESSARY_TARGET308_AUDIT.md"
 kind = "audit"
 note = "Identical GF(2) RREF across all 144 unit cells."
 

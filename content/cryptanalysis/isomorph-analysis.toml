@@ -96,7 +96,7 @@ body = '''
 '''
 
 [[provenance]]
-path = "withmath/wm_patternbeam.py"
+path = "withmath/scripts/wm_patternbeam.py"
 kind = "solver"
 note = "Pattern-constrained language decoding derives and checks periodic equality patterns without assuming concrete ciphertext-letter identities."
 

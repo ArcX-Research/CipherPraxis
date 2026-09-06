@@ -127,19 +127,19 @@ The one-wheel reduction is what makes the classic Chaocipher tractable: the ciph
 '''
 
 [[provenance]]
-path = "withmath/wm_chaocipher.py"
+path = "withmath/scripts/wm_chaocipher.py"
 kind = "solver"
 note = "Classic Chaocipher with a keyed-wheel bank; published vector KAT; hidden-bank control rank 1 of 156,816."
 ref = "logs/182_chaocipher.log"
 
 [[provenance]]
-path = "withmath/PK10_CHAOCIPHER_ONEWHEEL_CONTROL359_AUDIT.md"
+path = "withmath/docs/pk10/PK10_CHAOCIPHER_ONEWHEEL_CONTROL359_AUDIT.md"
 kind = "audit"
 note = "One-wheel reduction algebra, 104 dihedral left states collapsing to four RGS classes, 6/6 + 3/3 + 19/19 disclosed calibration."
 ref = "logs/359_pk10_chaocipher_onewheel_controls.log"
 
 [[provenance]]
-path = "withmath/PK10_CHAOCIPHER_ONEWHEEL_TARGET363_AUDIT.md"
+path = "withmath/docs/pk10/PK10_CHAOCIPHER_ONEWHEEL_TARGET363_AUDIT.md"
 kind = "audit"
 note = "Target-unread static seal and replacement seal; one-shot transaction design."
 ref = "logs/363_pk10_chaocipher_onewheel_target.log"

@@ -126,19 +126,19 @@ The corpus's solved prefix contains a running key that is a previous plaintext, 
 '''
 
 [[provenance]]
-path = "ck_book.py"
+path = "scripts/ck_book.py"
 kind = "solver"
 note = "Bank sweep: novels, related public texts, recovered plaintexts and ciphertexts, forward and reversed; all offsets; monogram correlation, IC and quadgram re-scoring; shuffled-ciphertext null."
 ref = "ck_book_report.txt"
 
 [[provenance]]
-path = "withmath/wm_knowntext.py"
+path = "withmath/scripts/wm_knowntext.py"
 kind = "solver"
 note = "Exact known-text window CSP with seven free shifts; planted-window and wrong-window controls."
 ref = "logs/63_knowntext2.log"
 
 [[provenance]]
-path = "withmath/README.md"
+path = "withmath/docs/project-notes/README.md"
 kind = "note"
 note = "Alphabet-free probes (logs/91-93): no known text works as a running key over the random-looking segments; top alignment at the multiple-comparison expectation."
 

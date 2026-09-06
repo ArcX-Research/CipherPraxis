@@ -138,7 +138,7 @@ note = "Frontiers 55,497 to 1,825,380 pairs; throughput 0.17 to 16.1 pairs/s on 
 ref = "logs/503_panel_20260904T094538Z.log"
 
 [[provenance]]
-path = "withmath/ROOT_LINEAGE_FEASIBILITY_AUDIT.md"
+path = "withmath/docs/search-language/ROOT_LINEAGE_FEASIBILITY_AUDIT.md"
 kind = "audit"
 note = "Exact capacity geometry: B(f,n) bins times roots times quota times 248 bytes; 2.0 GiB at R=4, 49 GiB at R=98, 17 TiB at the measured R=35,639; lane closed as a feasibility blocker."
 ref = "LOG221"
@@ -150,6 +150,6 @@ note = "A run stopped by the RSS ceiling and filed under failed logs."
 ref = "logs/failed"
 
 [[provenance]]
-path = "withmath/LOG_AUDIT.md"
+path = "withmath/docs/project-notes/LOG_AUDIT.md"
 kind = "audit"
 note = "Runs stopped after 2,000 of 489,600 and 160,000 of 1,958,400 placements are exploratory only."
