@@ -1,0 +1,154 @@
+id = "admissible-bound-selectivity"
+section = "exact"
+title = "Bound validity and selectivity"
+subtitle = "A safe upper bound may still be too loose to make an exact search practical"
+status = "VERIFIED"
+status_note = "Exhaustive small-alphabet checks proved the tested upper bound safe for every descendant. On a 95-symbol consumed control it remained too loose near the root: a 500,000-node search reached only 246 leaves and missed the known optimum. This verifies the distinction between correctness and useful pruning, not the strength of every possible bound."
+family = "Branch-and-bound diagnostics"
+tags = ["admissible bounds", "bound tightness", "branch and bound", "search ordering", "rank product", "incomplete search"]
+related = ["bound-benchmarks-and-certificates", "best-first-frontier-memory", "exact-dynamic-programming", "partial-permutation-completion-bounds", "coherent-endpoint-distance-polynomial", "throughput-fail", "endpoint-specific-control-contracts"]
+summary = "An admissible upper bound proves that a pruned branch cannot contain a winner. It does not prove that many branches will be pruned. Measure both properties. Compare the bound with exact descendant scores on small cases, then record how early it separates branches on realistic controls. Keep proposal probabilities as ordering information unless they are themselves proved bounds. A node cap always means incomplete coverage."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For a partial state $s$, let $F(x)$ be the exact score of a legal completion $x\succeq s$. An upper bound $U$ is **admissible** when
+
+$$U(s)\ge \max_{x\succeq s}F(x).$$
+
+With current kth-best exact score $L_k$, it is safe to prune only when
+
+$$U(s)<L_k.$$
+
+Equality must survive if exact ties matter. Admissibility answers a correctness question. **Selectivity** asks a different question: how often and how early does $U(s)$ fall below $L_k$? A bound can be perfectly correct and equal the same optimistic constant over most of the tree.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Useful diagnostics"
+body = '''
+For a known control completion $x^*$, sort the children at depth $d$ by the frozen traversal rule and let $r_d$ be the rank of the child containing $x^*$. The path-order burden is summarized by
+
+$$R_D=\prod_{d=1}^{D}r_d,
+\qquad
+\log_{10}R_D=\sum_{d=1}^{D}\log_{10}r_d.$$
+
+This is not an exact node prediction, because pruning and merged states change the tree, but it exposes whether an ordering rule consistently puts the useful child late.
+
+Also record the **first separation depth**
+
+$$d_{\rm sep}=\min\{d:U(s_d^{\rm wrong})<F(x^*)\text{ for at least one sibling}\},$$
+
+the maximum bound among skipped nodes, leaves reached per node, and the bound gap along the known path
+
+$$G_d=U(s_d)-F(x^*).$$
+
+Large positive $G_d$ near the root means the relaxation has discarded too much coupling to guide the search.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Rules that keep pruning exact"
+body = '''
+- The proof for $U$ covers the same objective, legal completions, fixed variables, and score scale used by the search.
+- Floating-point tolerance is not allowed to turn a possible tie into a strict prune. Exact integer scores are preferable when available.
+- A proposal posterior, vote count, endpoint distance, or missing edge is only an ordering signal unless a separate proof makes it a bound.
+- All-different, cycle, and other global constraints may be relaxed inside $U$ because relaxation can only raise a maximization bound. Every emitted leaf must still satisfy them.
+- A cap, interruption, or unvisited branch gives `INCOMPLETE`, even when every visited prune was valid.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Test safety and usefulness separately"
+body = '''
+First exhaust small alphabets or short instances. At every reachable partial state, enumerate all legal descendants and require $U(s)$ to dominate the best exact score. Include flat ties and malformed inputs.
+
+Then use a consumed control with hidden truth only for post-output diagnostics. Freeze the traversal order, top-k rule, node and memory caps first. Save the public search output before opening truth. Measure path child ranks, $G_d$, $d_{\rm sep}$, nodes, leaves, prunes, and the largest skipped bound. If the bound is safe but flat, redesign the relaxation rather than merely increasing the cap. A tighter successor should be required to satisfy
+
+$$F^*(s)\le U_{\rm new}(s)\le U_{\rm old}(s)$$
+
+on exhaustive small cases, where $F^*(s)$ is the exact best descendant score.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function AUDIT_BOUND(root, exact_score, legal_completions, bound, kth_score):
+    for partial in EVERY_REACHABLE_SMALL_STATE(root):
+        truth = MAX(exact_score(x) for x in legal_completions(partial))
+        require bound(partial) >= truth
+
+function SEARCH(root, bound, order, node_cap, k):
+    top = empty exact top-k set
+    visit(partial):
+        if nodes == node_cap: return INCOMPLETE
+        nodes += 1
+        if top is full and bound(partial) < top.kth_score:
+            prunes += 1
+            return
+        if partial is complete:
+            require partial satisfies every physical constraint
+            top.insert_with_ties(exact_score(partial))
+            return
+        for child in order(children(partial)):
+            visit(child)
+    visit(root)
+    return COMPLETE only if every unpruned branch was drained
+```
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Admissible means fast:** a proof of $U\ge F^*$ is reported as a performance result without a pruning benchmark.
+- **Coupling erased too early:** overlapping n-gram factors or repeated variables are maximized independently, producing a large optimistic gap.
+- **Posterior as impossibility:** a value absent from a proposal bank is deleted even though the bank is approximate and the exact model permits it.
+- **Tie loss:** `U <= incumbent` is pruned when tied optima must be retained.
+- **Truth-guided traversal:** child order or width is adjusted after the known control path is inspected.
+- **Cap called a miss:** the best observed leaf is treated as the optimum although unvisited nodes still have bounds above it.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The motivating search used exact integer quadgram scores on a repeated-variable permutation problem. Exhaustive degree-5, -6, and -7 tests under two algebraic relations checked every descendant of every tested partial state and found no bound violation. Strict ties survived, exact leaf scores and literal forwards agreed, and malformed and cap paths were refused.
+
+On the frozen 95-symbol consumed control, the search visited 500,000 nodes but reached only 246 leaves. It pruned 223,335 branches, yet the known optimum was absent from the top 16. The initial and largest skipped upper bound was $-519{,}064$, while the known optimum scored $-884{,}464$: the early relaxation was far too optimistic. The known-path child ranks had rank-product $10^{16.222}$ under endpoint-posterior ordering and $10^{14.605}$ under the simpler bound ordering. Six of forty active known cells had no endpoint support, demonstrating why proposal absence could not be used as a legal prune.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Bound correctness and bound strength should appear as separate rows in an experiment report. A failed selectivity test is useful: it localizes the bottleneck to the relaxation or traversal rather than the cipher algebra. Replacing a memory-heavy best-first queue with depth-linear threshold traversal can prove that distinction: if the same hard cases remain incomplete while truth stays rank one, memory was repaired but information was not. Mini-bucket elimination, stronger matching relaxations, retained repeated-variable factors, or separator-aware caching are possible successors, but each tighter bound needs its own dominance and runtime checks.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_ENDPOINTQ4_671.md"
+kind = "design"
+note = "Defines the whole-endpoint-conditioned exact search, its admissible bound, ordering boundary, and fixed pilot contract."
+ref = "LOG671"
+
+[[provenance]]
+path = "withmath/logs/671_endpointq4_20260906T041710Z_1788668230924246000_74454.json"
+kind = "data"
+note = "Durable KAT and consumed-control result with nodes, leaves, prunes, scores, and post-output truth-path diagnostics."
+ref = "LOG671"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk9_endpointq4_671_audit.py"
+kind = "audit"
+note = "Independent replay of exact factors, descendant dominance, strict ties, legal leaves, and cap semantics."
+ref = "LOG671"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_THRESHOLD686.md"
+kind = "note"
+note = "Shows on degree-26 controls that changing to a depth-linear exact traversal does not overcome a nonselective bound."
+ref = "LOG686"
+
+[[references]]
+title = "An Automatic Method of Solving Discrete Programming Problems"
+author = "A. H. Land and A. G. Doig"
+year = 1960

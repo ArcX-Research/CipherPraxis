@@ -1,0 +1,187 @@
+id = "mini-bucket-elimination"
+section = "exact"
+title = "Mini-bucket elimination"
+subtitle = "Keep useful factor coupling while building an affordable upper bound"
+status = "VERIFIED"
+status_note = "Independent exhaustive checks proved the tested max-sum construction admissible and never looser than an independent-factor bound. A fixed larger control improved the search order substantially but still ended incomplete, so the result validates the bound rather than practical recovery power."
+family = "Admissible bounds"
+tags = ["factor graphs", "variable elimination", "mini-buckets", "branch and bound", "upper bounds"]
+related = ["admissible-bound-selectivity", "best-first-frontier-memory", "exact-dynamic-programming", "constraint-satisfaction-forward-checking", "bound-benchmarks-and-certificates", "quadgram-log-likelihood", "exact-chain-oracle"]
+summary = "Exact variable elimination can become too large when many factors share variables. Mini-bucket elimination limits the scope of each intermediate table by splitting a bucket into smaller groups. Maximizing each group separately relaxes consistency, so their sum is a safe upper bound for a maximization problem. It is often tighter than maximizing every local factor alone, but its usefulness still depends on the scope limit and elimination order."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Write a finite maximization objective as a sum of local factors,
+
+$$F(x)=\sum_a f_a(x_{S_a}),$$
+
+where $S_a$ is the set of variables used by factor $a$. Exact max-sum bucket elimination chooses a variable $v$, gathers every active factor containing $v$, adds them, maximizes over $v$, and returns one message on the remaining variables.
+
+Mini-bucket elimination first partitions that bucket into groups $B_1,\ldots,B_r$. It sends one message per group:
+
+$$m_j(x_{T_j})=\max_v\sum_{a\in B_j}f_a(x_{S_a}),$$
+
+where $T_j$ is the joined scope with $v$ removed. The scope limit, often called the **i-bound**, keeps each table small enough to store and evaluate.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Why the result is an upper bound"
+body = '''
+For any fixed values of the variables other than $v$,
+
+$$\max_v\sum_{j=1}^{r}\sum_{a\in B_j}f_a
+\le
+\sum_{j=1}^{r}\max_v\sum_{a\in B_j}f_a.$$
+
+The right side lets each mini-bucket choose its own value of $v$. Removing that agreement constraint cannot lower a maximum. Repeating the argument at every elimination step gives an admissible upper bound $U(x)$ on the best completion.
+
+If the older bound maximizes every factor separately, grouping two or more factors before maximizing also gives
+
+$$F^*(s)\le U_{\rm mini}(s)\le U_{\rm local}(s),$$
+
+for each partial state $s$. The first inequality proves safety; the second proves that the new relaxation is never looser under the same domains and fixed assignments.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Exact bucket elimination:** put the entire bucket in one group. This is strongest but may require a table over too many variables.
+- **Fixed i-bound:** cap every joined mini-bucket scope at a chosen size.
+- **Weighted mini-buckets:** use a different admissible decomposition when the application supplies valid weights.
+- **Static compilation:** build messages once, then evaluate conditioned frontiers during search.
+- **Per-node rebuilding:** condition the graph first and eliminate again. This can be tighter, but it may cost too much inside a large search tree.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Conditions for safe use"
+body = '''
+- Every factor in the exact leaf score appears once in the elimination graph.
+- The domain used by each maximization includes every value allowed by the real search.
+- Global all-different, cycle, or algebraic constraints may be omitted from the bound only as relaxations. Every emitted leaf must still satisfy them.
+- The factor partition, scope limit, elimination order, numeric representation, and tie rule are frozen before evaluation.
+- A compiled frontier is evaluated only when all variables in its message scopes have assigned values.
+- Search prunes only when the upper bound is strictly below the current exact threshold if tied winners must survive.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Build and use the bound"
+body = '''
+Create one variable for every repeated unknown cell and one factor for every local language-score window. Choose a deterministic elimination order, such as minimum fill with stable tie breaking. At each variable, partition its bucket without exceeding the scope limit, produce max-sum messages, and retain the frontier after each elimination step.
+
+For a precompiled conditioned bound, assign search variables in the reverse elimination order. The matching frontier then depends only on the assigned suffix and can be evaluated by table lookup. Using a forward-order partial assignment with a reverse frontier is unsafe: filling unassigned indices with a default value can turn an upper bound into an underestimate.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function COMPILE_MINI_BUCKETS(factors, elimination_order, scope_limit):
+    active = factors
+    frontiers = []
+    for variable in elimination_order:
+        bucket = all factors in active whose scope contains variable
+        groups = DETERMINISTIC_PARTITION(bucket, scope_limit)
+        remove bucket from active
+        for group in groups:
+            joined = SUM_FACTORS(group)
+            message = MAXIMIZE(joined, variable)
+            add message to active
+        frontiers.append(COPY(active))
+    return frontiers
+
+function CONDITIONED_BOUND(partial, reverse_depth, frontiers):
+    frontier = frontiers[variable_count - reverse_depth]
+    require every frontier scope is assigned in partial
+    return SUM(LOOKUP(factor, partial) for factor in frontier)
+
+function MAY_PRUNE(partial, kth_exact_score):
+    upper = CONDITIONED_BOUND(partial)
+    return upper < kth_exact_score
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+For domain size $q$ and maximum joined scope $i$, one dense mini-bucket table has at most $q^i$ entries before eliminating its bucket variable. Time and memory are therefore exponential in the chosen scope limit rather than the full graph width. The number of tables depends on how many groups the partition creates. A larger limit can tighten the bound while increasing compilation cost and memory sharply.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Wrong conditioning direction.** A frontier is looked up before all of its scope is assigned, and missing values are silently filled.
+- **Bound called exact.** Splitting buckets is a relaxation; equality with the best descendant is not guaranteed.
+- **Scope accounting error.** The eliminated variable or a joined dependency is omitted when enforcing the table limit.
+- **Lost factor.** A local score window is dropped or included twice during bucket replacement.
+- **Relaxed leaf.** A high-scoring assignment is emitted without checking the global constraints omitted from the bound.
+- **Unsafe tie prune.** A branch with upper bound equal to the threshold is removed even though complete score ties must be retained.
+- **Tighter called faster.** A stronger root value is reported without node, leaf, memory, and runtime measurements.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Exhaustive checks covered six small-alphabet cases under two algebraic relations. Across 37,411 reachable reverse-order prefixes, an independent oracle verified that the exact best descendant never exceeded the mini-bucket value and that the mini-bucket value never exceeded the older local-window bound; 18,705 of the latter comparisons were strict. A deliberately wrong-direction lookup fell 5,984 score units below a real descendant, providing a regression that would fail if frontiers were conditioned in the wrong order.
+
+On one frozen 95-symbol consumed control, the compiled bound used 133 messages and 1,878,683 entries. A 500,000-node search remained incomplete and did not retain the known answer, but its known-path rank product improved from about $10^{14.605}$ under the older bound order to about $10^{5.384}$. This is a useful selectivity improvement, not a completion or recovery claim.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Two factors that should stay together"
+body = '''
+Suppose two factors share the value $v$:
+
+$$f_1(v,a)+f_2(v,b).$$
+
+Maximizing them separately gives
+
+$$\max_v f_1(v,a)+\max_v f_2(v,b),$$
+
+which may use a different $v$ in each term. If the scope limit permits, one mini-bucket instead uses
+
+$$\max_v\big(f_1(v,a)+f_2(v,b)\big).$$
+
+The second value cannot be larger and still bounds every legal shared choice of $v$. The gain comes from preserving exactly the repeated-variable agreement that the independent-factor bound discarded.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Bucket elimination and mini-bucket approximations are established graphical-model methods. The project evidence here adds a concrete exact-search contract: compare every small-state bound with an independent descendant oracle, prove dominance over the previous relaxation, condition only compatible frontiers, and measure selectivity separately from admissibility.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_MINIBUCKET676.md"
+kind = "design"
+note = "Defines the repeated-cell factor graph, deterministic mini-bucket partition, reverse-frontier conditioning rule, admissibility argument, and fixed pilot limits."
+ref = "LOG676"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk9_minibucket676_core.cpp"
+kind = "solver"
+note = "Native max-sum mini-bucket compiler and branch-and-bound implementation with exact leaf checks and strict tie retention."
+ref = "LOG676"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk9_minibucket676_audit.py"
+kind = "audit"
+note = "Separate implementation of exhaustive descendant maxima, mini-bucket frontiers, dominance checks, direction regression, and consumed-control replay."
+ref = "LOG676"
+
+[[provenance]]
+path = "withmath/logs/676_minibucket_20260906T045317Z_1788670397974626000_35019.json"
+kind = "data"
+note = "Durable exhaustive-prefix results and the single fixed consumed pilot, including bounds, ranks, node cap, memory census, and incomplete verdict."
+ref = "LOG676"
+
+[[provenance]]
+path = "withmath/logs/676_minibucket_20260906T045317Z_1788670397974626000_35019.log"
+kind = "log"
+note = "Controller and independent-audit receipt for the frozen source tuple."
+ref = "LOG676"

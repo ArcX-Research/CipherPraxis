@@ -1,0 +1,153 @@
+id = "columnwise-hamming-radius-invariant"
+section = "cryptanalysis"
+title = "Column-wise Hamming-radius invariant"
+subtitle = "Rule out a near-template model without recovering its substitutions"
+status = "VERIFIED"
+status_note = "The isometry was checked on 80 planted row sets, with equal plaintext and ciphertext radii and equal optimum counts in every case. A separate 200-case check confirmed that an optimum template can be restricted to symbols observed in each column."
+family = "Substitution invariants"
+tags = ["Hamming distance", "covering radius", "periodic substitution", "template model", "exact rejection"]
+related = ["isomorph-analysis", "observable-function-fingerprinting", "all-different-constraints", "exhaustive-enumeration", "family-identification", "within-coset-null"]
+summary = "A different substitution may act in every column of an aligned row table. Even then, each column map preserves equality and inequality, so it preserves every Hamming distance between a row and a template. The exact minimum radius of a common template can therefore be measured directly on ciphertext. If that radius is larger than an allowed variation budget, the whole model is impossible."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Write the data as $n$ aligned rows of width $p$. Column $j$ applies a bijection $f_j$ to every symbol in that column:
+
+$$Y_{r,j}=f_j(X_{r,j}).$$
+
+For a template $T\in\Sigma^p$, its Hamming distance from row $X_r$ is the number of columns where they differ. The **template covering radius** is the smallest worst-row distance,
+
+$$R(X)=\min_T\max_r \operatorname{Ham}(T,X_r).$$
+
+This is an exact structural property. It does not ask whether the rows look like language.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Why the radius survives"
+body = '''
+Map the template column by column: $F(T)_j=f_j(T_j)$. Since every $f_j$ is injective,
+
+$$T_j=X_{r,j}\quad\Longleftrightarrow\quad F(T)_j=Y_{r,j}.$$
+
+Therefore
+
+$$\operatorname{Ham}(T,X_r)=\operatorname{Ham}(F(T),Y_r)$$
+
+for every row, and bijectivity gives $R(X)=R(Y)$.
+
+Let $S_j=\{Y_{r,j}:0\le r<n\}$ be the symbols observed in column $j$. A template symbol outside $S_j$ mismatches every row in that column. Replacing it with any member of $S_j$ cannot increase any row's distance. Hence at least one optimum lies in
+
+$$S_0\times S_1\times\cdots\times S_{p-1},$$
+
+which is often far smaller than the full alphabet power $|\Sigma|^p$.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Bounded variation:** reject the claim that all rows are within distance $d$ of one hidden template when $R>d$.
+- **Weighted columns:** give column $j$ a fixed nonnegative weight. The same proof preserves weighted Hamming distance.
+- **Several templates:** compute a $k$-centre version when the claim allows $k$ recurring prototypes. Exact search is harder, but the column-wise isometry still holds.
+- **Matched-profile comparison:** independently shuffle entries inside each column to ask whether the observed radius is unusual given the same column counts.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and limits"
+body = '''
+- Rows must be aligned so that one fixed injective map acts on each column.
+- Insertions, deletions, column-dependent errors, or a changing map inside one column break the proof.
+- $R>d$ is an exact rejection of the declared radius-$d$ model. $R\le d$ is only compatibility, not evidence that the template model generated the data.
+- A radius may be typical for the observed column multiplicities. Use a matched-profile null before calling a small compatible radius surprising.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Test a hidden-template claim"
+body = '''
+Choose the row origin, width, row count, and allowed distance before looking for a favourable result. Form the aligned ciphertext rows. Enumerate templates using only the symbols seen in each column, compute each template's largest row distance, and retain the exact minimum and every tied optimum. Reject the declared model only when the minimum exceeds its fixed distance budget. If compatibility itself will be treated as evidence, compare the complete statistic with independently shuffled columns that preserve their symbol counts.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function TEMPLATE_RADIUS(rows):
+    choices[j] = distinct values in column j
+    best_radius = infinity
+    best_templates = empty list
+    for template in CARTESIAN_PRODUCT(choices):
+        radius = 0
+        for row in rows:
+            distance = COUNT(j where template[j] != row[j])
+            radius = max(radius, distance)
+            if radius > best_radius: break
+        if radius < best_radius:
+            best_radius = radius
+            best_templates = [template]
+        else if radius == best_radius:
+            APPEND(best_templates, template)
+    return best_radius, best_templates
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+If column $j$ contains $s_j$ distinct symbols, direct exact enumeration examines $B=\prod_j s_j$ templates and costs $O(npB)$ time with $O(p)$ working memory apart from retained ties. Early stopping when a partial distance already exceeds the best radius is safe. A meet-in-the-middle implementation can store half-row distance vectors and remove component-wise dominated vectors, but any such pruning must preserve all vectors that can attain the optimum.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Searching all alphabet symbols unnecessarily.** Unobserved column symbols cannot improve the optimum.
+- **Recovering substitutions first.** The radius is already visible through the unknown maps; fitting them adds avoidable search and overfitting.
+- **Choosing alignment after the result.** Trying many origins or widths creates a selected family and must be reported and calibrated as one search.
+- **Calling compatibility support.** A large fraction of matched-profile shuffles may have the same radius.
+- **Using a non-injective map.** Symbol mergers can turn mismatches into matches, so the invariant no longer holds.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Eighty planted row sets, twenty at each exact radius $2,3,4,5$, were transformed by random column bijections. Plaintext and ciphertext radii, including the number of optimum templates, agreed in every case. On 200 random small tables, minimising over observed symbols gave the same result as minimising over the whole alphabet. A matched-profile diagnostic then showed that one compatible boundary radius occurred in every one of 1,000 column-wise shuffles, correctly preventing a positive claim from a generic value.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Three rows around one template"
+body = '''
+Take rows `ABC`, `ADC`, and `AEC`. The template `ABC` has distances $0,1,1$, so the radius is at most one; no radius-zero template can equal all three rows, so $R=1$. Now map the first column's `A` to `Q`, the second column's `B,D,E` to `R,S,T`, and the third column's `C` to `Z`. The rows become `QRZ`, `QSZ`, and `QTZ`. Template `QRZ` still has distances $0,1,1$, and the exact radius remains one.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The underlying fact is a Hamming-space isometry under independent coordinate relabellings. Its cryptanalytic value is that it converts an unknown-substitution question into a small exact test on the observed rows.
+'''
+
+[[provenance]]
+path = "withmath/docs/pk9/PK9_TEMPLATE_RADIUS428_NOTE.md"
+kind = "note"
+note = "States the invariant, the observed-symbol restriction, the exact scope, and the control and matched-profile counts."
+ref = "LOG428"
+
+[[provenance]]
+path = "withmath/scripts/wm_pk9_templateradius428.py"
+kind = "script"
+note = "Exact observed-symbol enumeration and the independent full-alphabet comparison."
+ref = "LOG428"
+
+[[provenance]]
+path = "withmath/logs/428_templateradius_20260902T165905Z.log"
+kind = "log"
+note = "Frozen transcript for the isometry plants, optimum-count checks, and matched-profile diagnostic."
+ref = "LOG428"
+
+[[references]]
+title = "Error Detecting and Error Correcting Codes"
+author = "Richard W. Hamming"
+year = 1950

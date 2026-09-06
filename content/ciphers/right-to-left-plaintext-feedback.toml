@@ -1,0 +1,153 @@
+id = "right-to-left-plaintext-feedback"
+section = "ciphers"
+title = "Right-to-left plaintext feedback"
+subtitle = "A terminal-state feedback cipher whose nonunit strata cannot be time-reversed away"
+status = "VERIFIED"
+status_note = "Symbolic proofs and exhaustive small-ring checks separate the unit time-reversal aliases from the nonunit branch. A frozen target-absent panel passed all positives, alias and wrong-family sentinels, independent-symbol negatives, and shuffled valid-family nulls."
+family = "Stream and machine ciphers"
+tags = ["plaintext feedback", "right to left", "zero divisors", "boundary identifiability"]
+related = ["plaintext-coordinate-feedback", "ciphertext-coordinate-feedback", "symmetric-second-order-plaintext-feedback", "feedback-state-gauges-and-cells", "units-mod-26", "modular-inverse-and-crt", "latent-label-identifiability", "alberti-progressive"]
+summary = "Run plaintext-coordinate feedback from the final symbol toward the first. When one minus the feedback coefficient is invertible, an affine relabelling turns the construction into ordinary left-to-right feedback. When that multiplier is a zero divisor, the relabelling collapses symbols and a distinct backward-difference branch remains."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For outer ciphertext coordinates $x_i$, terminal state $c_{n-1}=0$, latent coordinates $w_i$, and arbitrary substitution $M$, process positions from right to left:
+
+$$w_i\equiv x_i-c_i,\qquad P_i=M(w_i),$$
+
+$$c_{i-1}\equiv c_i+\beta+\lambda w_i\pmod{26}\qquad(i>0).$$
+
+Encryption follows the same reverse order: obtain $w_i=M^{-1}(P_i)$, emit $x_i=w_i+c_i$, and update the state for the preceding position. The terminal phase is a map gauge and can be fixed to zero.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Backward recurrence and time-reversal boundary"
+body = '''
+Put $r=1-\lambda$. Eliminating the state gives
+
+$$w_{n-1}=x_{n-1},$$
+
+$$w_i\equiv r w_{i+1}+x_i-x_{i+1}-\beta\pmod{26}\qquad(i<n-1).$$
+
+If $r$ is a unit, choose $t=x_0-rw_0$ and set $z_i=rw_i+t$. Then $z_0=x_0$ and $z$ obeys the ordinary forward-feedback recurrence with
+
+$$\lambda'=1-r^{-1}=-\lambda r^{-1},\qquad
+\beta'=-\beta+\lambda r^{-1}t.$$
+
+Because $w\mapsto rw+t$ is then a permutation, the arbitrary map $M$ absorbs it. If $r$ is a zero divisor, multiplication by $r$ is not bijective and this equivalence proof cannot be used.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Unit-$r$ strata:** exact aliases of left-to-right plaintext-coordinate feedback and not a new search family.
+- **Nonunit-$r$ strata:** a distinct reverse branch containing backward-difference behaviour in at least one Chinese-remainder component.
+- **Zero $r$:** $w_i=x_i-x_{i+1}-\beta$ away from the terminal symbol.
+- **Terminal-state gauge:** translating $c$ and $w$ changes $\beta$ and $M$ but preserves the ciphertext.
+- **Outer-coordinate reversal:** reversing alphabet coordinates is different from reversing the sequence-processing direction.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The processing direction and terminal boundary are part of the cipher definition.
+- Unit-$r$ aliases are merged with the forward family before trials or nulls are counted.
+- Nonunit arithmetic is retained; neither encryption nor decryption divides by $r$ or $\lambda$.
+- The final physical plaintext symbol may remain ambiguous across a prefix macroclass and is reported separately.
+- Literal outer alphabets are compared only after their affine coordinate aliases have been removed.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to attack the distinct branch"
+body = '''
+Enumerate only feedback values for which $r=1-\lambda$ is nonunit. Peel right to left, group full equality patterns, then group intercepts whose positions before the terminal symbol differ by one uniform latent translation. Fit the arbitrary substitution and rank complete prefix macroclasses, not isolated rows. Preserve every intercept and final-symbol completion. Include unit-$r$ reverse cases as alias sentinels that must land in the forward family, and independently replay every candidate from right to left.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function PEEL_RIGHT(cipher_coordinates, beta, lambda):
+    state = 0
+    for i in LENGTH(cipher_coordinates)-1 down to 0:
+        latent[i] = (cipher_coordinates[i] - state) mod 26
+        if i > 0:
+            state = (state + beta + lambda * latent[i]) mod 26
+    return latent
+
+function FORWARD_RIGHT(plaintext, inverse_map, beta, lambda):
+    state = 0
+    for i in LENGTH(plaintext)-1 down to 0:
+        latent = inverse_map[plaintext[i]]
+        output[i] = (latent + state) mod 26
+        if i > 0:
+            state = (state + beta + lambda * latent) mod 26
+    return output
+
+function SEARCH_DISTINCT_RIGHT_BRANCH(ciphertext):
+    enumerate only cells where GCD(1 - lambda, 26) is greater than one
+    peel, form full classes, and group prefix-translation macroclasses
+    fit maps, retain all terminal completions, and independently replay
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Over $\mathbb{Z}_{26}$, fourteen nonzero feedback values have nonunit $1-\lambda$. This gives $14\cdot26=364$ raw cells per literal outer representative. The audited two-outer family therefore has 728 raw cells and 318 formal prefix macroclasses. Peeling each cell is linear in text length.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Treating failed inversion as novelty.** Noninvertibility blocks one alias proof, but a separate observable witness is still needed to establish family distinction.
+- **Charging unit aliases twice.** Unit-$r$ reverse cells already occur in the forward family after affine relabelling.
+- **Direction mutation.** A left-to-right loop can still round-trip with a correspondingly wrong generator unless an independent hand vector fixes direction.
+- **Full-text gap at the terminal boundary.** Macroclass members agree before the last symbol but may have different complete equality patterns.
+- **Nonunit deletion.** Restricting to invertible coefficients removes exactly the distinct part of the construction.
+- **Outer reversal confusion.** Reversing alphabet labels does not reverse time indices.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The target-absent panel used six reverse-family positives spanning both outers and all nonunit boundary multiplicities, three unit-$r$ alias sentinels, four outside-family sentinels, three independent-symbol negatives, and nineteen shuffled valid-family nulls. Every endpoint passed. An independent structural audit re-counted the complete raw-cell partition, verified there was no unit-$r$ leakage, checked every emitted row and mapping, and replayed the reverse-family forward equation.
+'''
+
+[[blocks]]
+kind = "example"
+title = "A pure backward-difference example"
+body = '''
+Use the straight outer alphabet, identity $M$, $\beta=1$, and $\lambda=1$, so $r=0$. Encrypt `ATTACK` from right to left. The terminal-to-initial states are $c_5=0$, $c_4=11$, $c_3=14$, $c_2=15$, $c_1=9$, and $c_0=3$. Adding them to the latent coordinates gives ciphertext `DCIONK`.
+
+Peeling illustrates the backward difference directly: $w_4=x_4-x_5-1=13-10-1=2$, $w_3=14-13-1=0$, and continuing left recovers `ATTACK`. Since $r=0$ collapses all coordinates, it cannot be used as an affine label permutation to turn this row into a forward-feedback row.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The exact unit/nonunit time-reversal split, the finite distinctness witness, the prefix-macroclass census, and the control protocol were developed in this project. The statement is intentionally local and does not claim that no equivalent construction appears elsewhere.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_PLAINFEEDBACK624_REVERSE_THEORY.md"
+kind = "design"
+note = "Derives the right-to-left recurrence, unit time-reversal alias, nonunit CRT strata, finite observable witness, and prefix macroclass census."
+ref = "LOG624"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_PLAINFEEDBACK626_REVERSE_CONTROLS.md"
+kind = "audit"
+note = "Frozen distinct-branch definition, exhaustive KAT coverage, complete target-absent panel, structural packet audit, and independent reverse forwards."
+ref = "LOG626"
+
+[[provenance]]
+path = "withmath/logs/626_pk10_reverse_plainfeedback_controls_20260905T140910Z_1788617350010726000.log"
+kind = "log"
+note = "Frozen complete control receipt for the 728-cell reverse branch."
+ref = "LOG626"

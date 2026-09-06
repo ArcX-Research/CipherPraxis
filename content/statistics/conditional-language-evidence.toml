@@ -1,0 +1,216 @@
+id = "conditional-language-evidence"
+section = "statistics"
+title = "Conditional language evidence"
+subtitle = "Compare a normalized language model with simple universal and repetition models"
+status = "VERIFIED"
+status_note = "Exact small-alphabet checks and a separate implementation verify that all four text models are normalized and scored correctly. A disclosed, already-consumed panel separated all 12 prose cases from all 40 nonprose cases, but it does not validate a cutoff or a cipher-level decision."
+family = "Normalized text-model comparison"
+tags = ["likelihood ratio", "KT distribution", "Markov model", "periodic strings", "conditional evidence"]
+related = ["bayesian-evidence-model-selection", "n-gram-language-scoring", "arbitrary-substitution-equality-classes", "all-class-substitution-finishing", "selection-overfit-diagnostic", "family-wise-null", "valid-model-nulls", "fresh-holdout-after-selector-change"]
+summary = "A raw n-gram score can strongly prefer repetitive nonsense. Turn the n-gram table into a proper language probability and compare it with an equal mixture of three normalized alternatives: an integrated iid source, an integrated first-order Markov source, and finite periodic strings. The resulting log-likelihood ratio says which text model better explains one fixed candidate. It is not a false-positive probability after searching many cipher keys."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $x=x_1\ldots x_n$ use an alphabet $\Sigma$ of size $m$. Start with finite order-three log weights $q(a,b,c,d)$. Normalize every three-letter history separately:
+
+$$P_E(x)=m^{-3}\prod_{i=4}^{n}
+\frac{\exp q(x_{i-3},x_{i-2},x_{i-1},x_i)}
+{\sum_{z\in\Sigma}\exp q(x_{i-3},x_{i-2},x_{i-1},z)}.$$
+
+$P_E$ is now a proper order-three Markov distribution, with a uniform first-three-symbol prior. Compare it with
+
+$$P_N(x)=\frac{1}{3}\left(P_{\rm KT0}(x)+P_{\rm KT1}(x)+P_{\rm per}(x)\right).$$
+
+The conditional text evidence is
+
+$$W(x)=\log P_E(x)-\log P_N(x).$$
+
+$W=0$ means that the two declared text distributions give the fixed candidate equal probability. It is not a learned cutoff.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "The three normalized alternatives"
+body = '''
+For counts $c_a$ in the whole sequence, the symmetric Dirichlet-$1/2$ or KT iid probability is
+
+$$P_{\rm KT0}(x)=
+\frac{\Gamma(m/2)}{\Gamma(n+m/2)}
+\prod_{a\in\Sigma}\frac{\Gamma(c_a+1/2)}{\Gamma(1/2)}.$$
+
+An equivalent form that avoids special functions is
+
+$$P_{\rm KT0}(x)=
+\frac{\prod_a\prod_{j=0}^{c_a-1}(2j+1)}
+{\prod_{j=0}^{n-1}(m+2j)}.$$
+
+There is no multinomial coefficient: this is the probability of one ordered sequence, not merely its histogram.
+
+For transition counts $c_{ab}$ and row totals $c_{a\cdot}=\sum_b c_{ab}$, give each transition row an independent Dirichlet-$1/2$ prior and the first symbol a uniform prior:
+
+$$P_{\rm KT1}(x)=m^{-1}\prod_{a\in\Sigma}
+\left[
+\frac{\Gamma(m/2)}{\Gamma(c_{a\cdot}+m/2)}
+\prod_{b\in\Sigma}\frac{\Gamma(c_{ab}+1/2)}{\Gamma(1/2)}
+\right].$$
+
+For the periodic component choose a maximum seed length $D\le n$ and weights
+
+$$w_d=\frac{D+1}{D\,d(d+1)},\qquad d=1,\ldots,D.$$
+
+They sum to one because $\sum_{d=1}^{D}1/[d(d+1)]=D/(D+1)$. Choose a seed of length $d$ uniformly from $\Sigma^d$, repeat it, and truncate to length $n$. If
+
+$$\mathcal D(x)=\{d\le D:x_i=x_{i-d}\text{ for every }i>d\},$$
+
+then
+
+$$P_{\rm per}(x)=\sum_{d\in\mathcal D(x)}w_d m^{-d}.$$
+
+All compatible periods contribute. Periods need not divide $n$.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Different n-gram order:** normalize each history row and use a matching uniform prefix prior.
+- **Different alphabet:** replace $m$ everywhere and rerun exact normalization checks.
+- **Different period cap:** recompute the telescoping weights for the declared $D$.
+- **Unequal null mixture:** fixed prior weights may replace one third each, but they must sum to one and be chosen before evaluation.
+- **Longer-memory alternatives:** add a normalized component rather than taking the best fitted alternative after seeing the candidate.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The n-gram rows are normalized after any integer scaling or rounding in the source table.
+- KT parameters are integrated under their stated priors. They are not maximum-likelihood estimates fitted to each candidate.
+- Every compatible finite-word period contributes to the periodic mixture; the best period is not selected.
+- Mixture weights, alphabet size, period cap, logarithm base, and score quantization are frozen together.
+- Input texts have the same declared length when their total evidence is ranked.
+- The calculation is conditional on a supplied candidate text. It does not include a prior or marginalization over cipher keys, schedules, restarts, or candidate count.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Use it after candidate generation"
+body = '''
+Normalize the language table once. For each completed candidate, compute all four log probabilities with log-sum-exp for the mixtures, record their components, and rank by $W$. Preserve exact score ties and every physical origin attached to an equal plaintext. A prefix-function border walk can list every compatible period in linear time.
+
+Use the result to diagnose whether an n-gram winner is better explained by repetition or a low-order universal source. Before making a cipher decision, freeze the entire upstream candidate search and rerun that full selection on fresh matched controls and nulls. The maximum over many candidate texts has a different sampling distribution from $W$ for one fixed text.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function CONDITIONAL_LANGUAGE_EVIDENCE(text, q4_rows, period_cap):
+    language = UNIFORM_PREFIX_LOGP(length=3, alphabet_size)
+    for each later symbol with three-symbol history h:
+        language += q4_rows[h, symbol] - LOGSUMEXP(q4_rows[h, :])
+
+    iid = KT_INTEGRATED_IID_LOGP(text, alpha=1/2)
+    markov = -LOG(alphabet_size)
+    for each preceding-symbol row a:
+        markov += KT_INTEGRATED_ROW_LOGP(transition_counts[a], alpha=1/2)
+
+    compatible = ALL_FINITE_PERIODS(text, at_most=period_cap)
+    periodic_terms = []
+    for d in compatible:
+        weight = (period_cap + 1) / (period_cap * d * (d + 1))
+        periodic_terms.append(LOG(weight) - d * LOG(alphabet_size))
+    periodic = LOGSUMEXP(periodic_terms)
+
+    null = LOGSUMEXP(iid, markov, periodic) - LOG(3)
+    return language - null, every component, compatible
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Language and KT scores cost $O(n+m^2)$ using symbol and transition counts. All finite-word periods can be found in $O(n)$ with a prefix function, rather than testing every seed position separately. Scoring $K$ completed candidates therefore costs $O(K(n+m^2))$ and does not rerun the cipher optimizer.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Unnormalized n-grams:** raw table weights are treated as a probability without normalizing each history row.
+- **Histogram probability:** a multinomial coefficient is added to the KT iid probability even though an ordered text is being scored.
+- **Plug-in null:** maximum-likelihood symbol or transition frequencies replace integrated KT probabilities and receive no complexity charge.
+- **Best-period fit:** only the most favorable compatible period is kept instead of summing the declared mixture.
+- **Divisor-only periods:** a valid finite-word period is missed because it does not divide the text length.
+- **Universal-null claim:** three simple alternatives are described as every possible kind of non-language.
+- **Cipher-level Bayes-factor claim:** selection over many keys and schedules is ignored.
+- **Consumed separation called a cutoff:** a model designed after seeing known failure cases is declared validated on those same cases.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Exhaustive small-alphabet checks covered 436 words, 1,744 pointwise probabilities, every compatible-period set for those words, 436 relabellings, and twenty complete rational normalization sums. A separate implementation reproduced those calculations. Ten malformed, cap, and role cases were refused.
+
+The frozen scorer then evaluated all 10,449 saved origins, representing 9,591 distinct completed texts and 3,483 equality classes. In the disclosed panel, the intended text was the unique top result in all twelve prose cases. Every prose maximum had $W>0$, with the weakest at $346.098981$ nats; all forty nonprose maxima had $W<0$, with the strongest at $-218.938732$ nats. The observed gap was therefore $565.037713$ nats. A separate implementation recomputed every text, compatible-period set, origin, and tie, with maximum component-log-probability disagreement below $6.83\times10^{-13}$.
+
+This panel was already consumed when the countermodels were chosen. It establishes a useful diagnosis and exact implementation agreement, not a validated zero cutoff, fresh power estimate, false-positive rate, or live release rule.
+'''
+
+[[blocks]]
+kind = "example"
+title = "A repetition can beat raw n-grams and still lose the ratio"
+body = '''
+Consider a text formed by repeating a four-symbol seed. Its order-three n-grams may receive high language weights because the same few transitions recur. Under the periodic alternative, however, $d=4$ is compatible and contributes
+
+$$w_4m^{-4}$$
+
+to $P_{\rm per}$, together with any other compatible periods. The denominator can therefore rise enough to make $W<0$. A varied sentence may have a lower raw n-gram total but a much smaller probability under all three alternatives, giving $W>0$. The comparison asks which declared model explains the whole fixed string better; it does not certify meaning.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+KT universal distributions, normalized Markov models, finite-word periods, and likelihood ratios are established tools. The useful combination here is a transparent countermodel for repetitive n-gram winners, plus an exact label-invariance shortcut and an explicit boundary between fixed-text evidence and whole-cipher selection.
+
+The null probability is invariant under any bijection $\pi$ of symbol labels:
+
+$$P_N(\pi x)=P_N(x).$$
+
+The iid counts are permuted, the Markov transition matrix has its rows and columns permuted, and the equality conditions defining periods are unchanged. Thus $P_N$ is constant on a restricted-growth equality class and may be cached once per class. $P_E$, and therefore $W$, generally changes when labels change; the shortcut does not remove the substitution-fitting stage.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_EVIDENCE670.md"
+kind = "design"
+note = "Defines the normalized order-three language probability, KT iid and Markov alternatives, telescoping finite-period mixture, label invariance, and conditional-evidence boundary."
+ref = "LOG670"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_evidence670.py"
+kind = "solver"
+note = "Implements normalized scoring, integrated KT probabilities, complete finite-period enumeration, evidence quantization, and origin-preserving ranking."
+ref = "LOG670"
+
+[[provenance]]
+path = "withmath/logs/670_kat_20260906T040338Z_1788667418150852000.json"
+kind = "data"
+note = "Frozen exhaustive small-alphabet normalization, point-probability, period-set, relabelling, and refusal checks."
+ref = "LOG670"
+
+[[provenance]]
+path = "withmath/logs/670_public_20260906T040422Z_1788667462234375000.result.json"
+kind = "data"
+note = "Consumed disclosed-panel scores for all saved origins and exact prose/nonprose separation, explicitly marked as conditional rather than cipher-level evidence."
+ref = "LOG670"
+
+[[provenance]]
+path = "withmath/logs/670_full_reference_20260906T0405Z.log"
+kind = "audit"
+note = "Durable separate-code full audit, SHA-256 d4a48a5799b932b79407808adc9dd09677cf785cb314406fd1e7352199627a0b."
+ref = "LOG670"
+
+[[references]]
+title = "The Performance of Universal Encoding"
+author = "R. E. Krichevsky and V. K. Trofimov"
+year = 1981

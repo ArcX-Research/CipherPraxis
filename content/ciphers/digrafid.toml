@@ -1,0 +1,133 @@
+id = "digrafid"
+section = "ciphers"
+title = "Digrafid cipher"
+subtitle = "Give each digraph three coordinates, then fractionate them by period"
+status = "UNTESTED"
+status_note = "The transform is documented by the American Cryptogram Association and was present in the audited external family list, but that sweep did not reach it. No dedicated planted-control solver has qualified Digrafid here."
+family = "Digraphic fractionation ciphers"
+tags = ["digraph", "fractionation", "mixed alphabets", "period", "three coordinates"]
+related = ["trifid", "bifid", "polybius-square", "digraphic-slide", "two-square-four-square"]
+summary = "Digrafid maps each pair of plaintext letters to three digits using one horizontal and one vertical mixed tableau. Within a period, it writes all first coordinates, then all middle coordinates, then all last coordinates, and groups that stream into new triples. Each output digraph can therefore combine parts of several input digraphs."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Arrange one 27-symbol alphabet as three rows of nine and another as nine rows of three. For input digraph $(a,b)$, let $x$ be $a$'s column in the horizontal tableau and $r$ its row. Let $y$ be $b$'s row in the vertical tableau and $c$ its column. Combine $r$ and $c$ into a middle value $z=3(r-1)+c$. The digraph is now the triple $(x,z,y)$, with every coordinate between 1 and 9.
+
+Process a declared number of digraphs at a time. Concatenate their first coordinates, then their middle coordinates, then their last coordinates. Regroup into triples and map each triple back to a digraph.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Digraph coordinates and fractionation"
+body = '''
+For digraph $d_i=(a_i,b_i)$ define
+
+$$q(d_i)=(x_i,z_i,y_i),\qquad z_i=3(r_i-1)+c_i.$$
+
+For a block of $L$ digraphs, form
+
+$$\Gamma=(x_0,\ldots,x_{L-1},z_0,\ldots,z_{L-1},y_0,\ldots,y_{L-1}).$$
+
+Read $\Gamma$ in consecutive triples. A triple $(x,z,y)$ gives horizontal row $r=1+\lfloor(z-1)/3\rfloor$ and vertical column $c=1+((z-1)\bmod3)$, which select the two output letters.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- Use independently keyed horizontal and vertical alphabets or derive both from one phrase.
+- Change the fractionation period; the last block uses its actual number of digraphs.
+- Include a padding symbol to make 27 tableau cells.
+- Reverse one tableau or coordinate order under a separately declared convention.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- Digraph boundaries and fractionation-block boundaries are known or searched.
+- Both 27-symbol tableaus are bijections and use the same padding convention.
+- Coordinates are written and regrouped in one fixed order.
+- A short last block is handled with its real length.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to attack it"
+body = '''
+Estimate the period from repeated block behavior, then search the two tableau permutations under a digraph or n-gram language score. A swap in one tableau changes only the coordinate roles attached to that symbol, so stochastic square search is natural. Cribs supply triples that couple a horizontal row and column with a vertical row and column. Keep the period selector inside the control and independently reapply the full fractionation.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function ENCODE_DIGRAPH(a, b, horizontal, vertical):
+    row_h, x = position(a, horizontal)
+    y, col_v = position(b, vertical)
+    z = 3 * row_h + col_v + 1
+    return (x + 1, z, y + 1)
+
+function TRANSFORM_BLOCK(digraphs, horizontal, vertical):
+    triples = [ENCODE_DIGRAPH(d, horizontal, vertical) for d in digraphs]
+    stream = all first coordinates, then all middle, then all last
+    out = empty
+    for x, z, y in groups_of_three(stream):
+        row_h = (z - 1) div 3
+        col_v = (z - 1) mod 3
+        append horizontal[row_h, x - 1], vertical[y - 1, col_v] to out
+    return out
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Known-tableau encryption and decryption are linear. Two arbitrary 27-symbol tableaus create a search space proportional to $(27!)^2$ before period selection and equivalent gauges, so practical attacks use keyed banks, cribs, or stochastic permutation search.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Confusing letters with coordinates.** Fractionation operates on three digits per digraph, not directly on the letter stream.
+- **Wrong middle coordinate.** The middle value combines the first letter's row with the second letter's column.
+- **Wrong period unit.** The period counts digraphs, not individual letters.
+- **Padding mismatch.** A 27-cell tableau needs one agreed extra symbol.
+- **Tautological inverse.** A fitted pair of tableaus always round-trips; hidden-control recovery is the solver gate.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Generate controls with independent mixed tableaus, several complete periods, and a short final block. Hide both tableaus and the period, then require exact normalized plaintext, observable table cells, period, and forward ciphertext. Include the padding symbol or explicitly mark its cells unobserved. The current catalog entry preserves the transform while that dedicated solver test remains open.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+Use straight 27-symbol tableaus over `A` through `Z` plus `#`: horizontal is three rows of nine and vertical is nine rows of three. With period two, plaintext digraphs `AT ON` have triples
+
+```trace
+plain   AT     ON
+triple  1,2,7  6,5,5
+```
+
+Fractionation gives stream `1 6 / 2 5 / 7 5`, then triples `(1,6,2)` and `(5,7,5)`. These map to ciphertext digraphs `JF WM`. Reversing the coordinate process recovers `ATON`.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Digrafid is to digraphs what Trifid is to letters: both turn units into three coordinates and mix coordinate rows by period. The two-tableau geometry is what makes the inverse lookup different.
+'''
+
+[[provenance]]
+path = "withmath/docs/cipher-methods/COLOSSUS_AUDIT.md"
+kind = "audit"
+note = "Records that the external all-family diagnostic stopped before reaching Digrafid; no negative conclusion is claimed."
+
+[[references]]
+title = "DIGRAFID"
+author = "American Cryptogram Association"
+url = "https://www.cryptogram.org/downloads/aca.info/ciphers/Digrafid.pdf"

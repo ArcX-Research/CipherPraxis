@@ -1,0 +1,132 @@
+id = "ragbaby"
+section = "ciphers"
+title = "Ragbaby cipher"
+subtitle = "Shift through one keyed alphabet by word and letter position"
+status = "UNTESTED"
+status_note = "The word-indexed construction is documented by the American Cryptogram Association and was encountered during the external family audit. No dedicated target-absent control has qualified a Ragbaby solver in this repository."
+family = "Progressive substitution ciphers"
+tags = ["keyed alphabet", "word boundaries", "progressive shift", "24-letter alphabet"]
+related = ["keyword-mixed-alphabet", "caesar-shift", "alberti-progressive", "crib-dragging", "hill-climbing"]
+summary = "Ragbaby keeps the spaces between words. Within a keyed alphabet, the first letter of word one moves one place, the next moves two, and so on. Word two starts at shift two, word three at shift three. The visible word lengths therefore determine the entire shift schedule."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Choose a cyclic keyed alphabet of size $m$. Number words from 1 and letters inside each word from 0. A letter in word $w$ at local position $j$ moves $w+j$ places to the right around the keyed alphabet. The starting word number advances with each word and wraps modulo $m$.
+
+The common historical form uses 24 letters, merging I/J and W/X, but 26- and 36-symbol variants also exist.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Public position-dependent shift"
+body = '''
+If $x_K(a)$ is the position of letter $a$ in keyed alphabet $K$, then
+
+$$c_{w,j}=K\!\left[(x_K(p_{w,j})+w+j)\bmod m\right].$$
+
+Decryption moves left by the same public amount:
+
+$$p_{w,j}=K\!\left[(x_K(c_{w,j})-w-j)\bmod m\right].$$
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- The traditional 24-letter form merges I/J and W/X.
+- Larger alphabets preserve all letters or include digits.
+- A marker may signal proper names under the publishing convention.
+- Hyphenated or apostrophized words may count as one word; this changes later shifts if tokenized differently.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- Word boundaries and their order are preserved.
+- The alphabet size and merged-letter rule are known or searched.
+- Tokenization of punctuation and compound words is fixed.
+- The same cyclic keyed alphabet applies throughout.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to attack it"
+body = '''
+Compute the shift amount at every position directly from the word layout. Search only the cyclic order of the keyed alphabet. A probable word gives exact distance constraints between plaintext and ciphertext letters on that cycle; join overlapping constraints into longer alphabet fragments. Without a crib, swap letters in the cyclic order and score the whole decryption with n-grams.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function TRANSFORM(words, keyed_alphabet, direction):
+    m = length(keyed_alphabet)
+    out_words = empty
+    for word_index, word in enumerate(words, start=1):
+        out = empty
+        for local_index, letter in enumerate(word, start=0):
+            shift = word_index + local_index
+            x = position(letter, keyed_alphabet)
+            y = (x + direction * shift) mod m
+            append keyed_alphabet[y] to out
+        append out to out_words
+    return out_words with the original boundaries
+
+ENCRYPT uses direction +1
+DECRYPT uses direction -1
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Known-key encryption and decryption are linear. An arbitrary keyed alphabet has $(m-1)!$ cyclic orders after fixing one rotational gauge. Crib-derived distance fragments can reduce that space sharply; otherwise a permutation search is needed.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Discarding spaces.** Word starts determine the progressive schedule.
+- **Wrong local index.** The first letter of word $w$ uses shift $w$, not zero or one globally.
+- **Tokenization drift.** Splitting a hyphenated word shifts the remainder of the message.
+- **Merged-letter mismatch.** A 26-letter solver cannot directly reproduce the traditional 24-letter form.
+- **Cyclic aliases.** Rotating the printed alphabet may leave the same distance function.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+A control should contain several word lengths, punctuation cases, both merged-letter pairs, and enough repeated letters to constrain the cycle. Hide the keyword and require exact normalized plaintext plus exact forward text with spaces restored. A solver must also report cyclic-key equivalence rather than treating a rotated alphabet as a different success.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+Use the straight 24-letter alphabet `ABCDEFGHIKLMNOPQRSTUVWYZ`, with I/J and W/X merged. For plaintext `MEET AT NOON`, the public shifts are `1 2 3 4 / 2 3 / 3 4 5 6`:
+
+```trace
+plain   M E E T  /  A T  /  N O O N
+shift   1 2 3 4  /  2 3  /  3 4 5 6
+cipher  N G H Y  /  C W  /  Q S T T
+```
+
+Moving left by the same amounts recovers the plaintext.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Ragbaby is stateful only through public layout. Once tokenization is fixed, the shift schedule is known and the secret is the cyclic alphabet order.
+'''
+
+[[provenance]]
+path = "withmath/docs/cipher-methods/COLOSSUS_AUDIT.md"
+kind = "audit"
+note = "Records the family's 24-letter alias convention during the external solver audit; it does not claim a dedicated search."
+
+[[references]]
+title = "RAGBABY"
+author = "American Cryptogram Association"
+url = "https://www.cryptogram.org/downloads/aca.info/ciphers/Ragbaby.pdf"

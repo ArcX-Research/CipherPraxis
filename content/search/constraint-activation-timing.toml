@@ -1,0 +1,181 @@
+id = "constraint-activation-timing"
+section = "search"
+title = "Constraint activation timing"
+subtitle = "An exact filter cannot rescue a true path that the proposal search discarded earlier"
+status = "VERIFIED"
+status_note = "Three controlled searches exposed the timing failure directly. Exact filters became useful only after an ordinary language or proposal beam had already removed the true path. One full cell-selection test lost truth at rank 566 against a width of 512, six rows before its first exact check."
+family = "Search-stage diagnostics"
+tags = ["beam search", "constraint propagation", "proposal recall", "late pruning", "truth rank", "power measurement"]
+related = ["incremental-two-dial-feasibility", "proposal-bank-recall-audit", "beam-search", "word-prefix-csp", "constraint-satisfaction-forward-checking", "all-different-constraints", "power-measurement", "held-out-gates", "g-beam-width"]
+summary = "A mathematically exact constraint can still add no discovery power if it becomes selective only after an approximate proposal beam has removed the correct path. Measure truth rank and exact rejection rate at every prefix or layer. If truth disappears before the filter activates, raising the final exact-search budget does not repair the pipeline. Change the representation, preserve more early uncertainty, or add a second source that forces constrained variables sooner."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $B_t$ be the proposal frontier after prefix, row, or layer $t$, and let $x^*_t$ be the planted true partial state. Let an exact three-way filter return `FEASIBLE`, `INFEASIBLE`, or `UNDECIDED`.
+
+Define the truth-loss time
+
+$$t_{\rm loss}=\min\{t:x^*_t\notin B_t\}$$
+
+and the first useful-filter time
+
+$$t_{\rm act}=\min\left\{t:
+\frac{|\{x\in B_t:F(x)=\text{INFEASIBLE}\}|}{|B_t|}\ge\rho
+\right\},$$
+
+for a predeclared useful rejection fraction $\rho$. If $t_{\rm loss}<t_{\rm act}$, the exact filter activates too late for that proposal search. Its correctness is unchanged; its pipeline power is poor.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Measurements that reveal the handoff"
+body = '''
+At every stage record
+
+$$r_t=\operatorname{rank}_{B_t}(x^*_t),$$
+
+$$s_t=1-\frac{|\{x\in B_t:F(x)\ne\text{INFEASIBLE}\}|}{|B_t|},$$
+
+and, for modular filters, the remaining factor nullities and exact assignment count. A useful handoff normally has rising selectivity before the truth rank reaches the beam width $W_t$:
+
+$$s_t>0\quad\text{while}\quad r_t\le W_t.$$
+
+If $s_t=0$ until after $r_t>W_t$, then the combined solver is behaviorally identical to the proposal-only solver at the decision that matters. A near-perfect $s_t$ later cannot reinsert the deleted state.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Character prefix:** measure after each proposed character.
+- **Word row:** measure after adding one candidate word or one table row.
+- **Cell assignment:** measure by the number of distinct algebraic variables fixed, which can be more informative than text length.
+- **Constraint closure:** measure when a connected factor component, Hall set, cycle, or modular equation becomes fully determined.
+- **Bidirectional coupling:** allow evidence from a second ciphertext or plaintext stream to assign a constrained cell before either text is complete.
+- **Deferred exact check:** appropriate only when the proposal stage is independently known to retain truth until the check runs.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Rules for a sound timing audit"
+body = '''
+- Use hidden truth only in a post-output control evaluator. It must not alter ranks, widths, branch order, or stopping.
+- `UNDECIDED` remains live. Counting a cap as rejection makes a weak filter appear selective.
+- Compare the exact same proposal frontier with the filter disabled and enabled.
+- Record physical truth rank before deduplication as well as any canonical class rank.
+- A zero-leaf run can be a proposal failure, not an exact family contradiction.
+- A late complete witness proves algebraic correctness, not useful early pruning.
+- Timing conclusions are tied to the fixture distribution, representation, branch order, and resource budget tested.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Repair a late handoff"
+body = '''
+First locate the earliest stage where truth rank starts growing and the earliest stage where exact rejection becomes nonzero. Inspect which variables make the exact system informative: repeated symbols, completed rows, connected components, or enough modular equations.
+
+Then change how uncertainty is represented. Carry sets of compatible cells instead of only complete words; branch on the variable with the largest exact-domain reduction; retain several early paths until the filter activates; or couple another data source that deterministically forces the same constrained cells. Rerun the paired control with identical proposal scores and widths. The repair succeeds only if truth survives through the activation region and total work remains bounded.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function TIMING_AUDIT(control, proposer, exact_filter, widths):
+    frontier = {empty state}
+    for stage in control.stages:
+        proposed = proposer.extend(frontier, stage)
+        ranked = proposer.rank(proposed)
+        statuses = [exact_filter(state) for state in ranked]
+
+        rejected = count(status == INFEASIBLE)
+        undecided = count(status == UNDECIDED)
+        truth_rank = physical_rank(ranked, control.hidden_truth_prefix)
+        record(stage, truth_rank, rejected, undecided, len(ranked))
+
+        admissible = [state for state, status in zip(ranked, statuses)
+                      if status != INFEASIBLE]
+        frontier = admissible[:widths[stage]]
+
+    if truth was lost before exact rejection became useful:
+        return PROPOSAL_POWER_FAIL
+    if any required exact call was undecided at terminal:
+        return INCOMPLETE
+    return measured terminal result
+```
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Final selectivity reported as pipeline power:** a filter rejects 99.9% at the completed text, but truth vanished near the start.
+- **Zero leaves called a family negative:** no retained proposal ever represented the planted solution.
+- **More exact steps prescribed:** the bottleneck is acquisition before the exact stage, so a larger exact cap changes nothing.
+- **Cap as prune:** undecided prefixes are removed and inflate the measured rejection curve.
+- **Frankenstein truth:** separate proposal rows contain different correct cells, but no coherent true path exists.
+- **Truth-tuned width:** the beam is widened only at the observed planted rank.
+- **Stage count confused with information:** ten new characters may repeat known variables, while one cross-text equality may close a whole component.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+In one character-beam control, the true Vigenere path ranked 1,144 at position 3 and 14,942 at position 4, where it left the beam. At the loss pool the exact two-dial filter returned 8,183 feasible, 9 undecided, and zero infeasible states. By position 96 it rejected 8,182 of 8,192 branches. The Beaufort control lost truth at position 5; its position-4 loss pool again had zero exact rejections, while 4,085 of 4,096 branches were rejected by position 70. Both final truths were exact feasible witnesses with full forward replay.
+
+A separate seven-letter-row experiment first proved its QIV cell CSP against 13,122 direct-oracle proposal decisions. On corrected degree-26 controls, one planted path was cut at row layer 4 with rank 1,158; other traversals stalled before assigning the 20 cells needed to call the stronger exact filter. No truth path reached that activation threshold. The terminal was therefore `CONTROL_POWER_FAIL`, not evidence against QIV.
+
+An all-cell word-beam control made the same issue especially clear. The true path ranked 14 after the first row. After the second row it ranked 566, but the frozen beam kept only 512 paths, so the truth was gone. The exact filter was not scheduled until row 8, and the remaining beam emptied at row 6. More work inside that exact filter could not change the result because it never received the true state.
+
+The same frozen pipeline passed another planted fixture: its truth survived the early language cuts, remained `UNDECIDED` when first checked, and later became exactly `FEASIBLE`. The contrast separates filter correctness from proposal power. Controls therefore need the truth's rank, survival flag, and filter status at every row—not only a final success count.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+This diagnosis separates three independent questions: whether the algebra is exact, whether it becomes selective on realistic partial states, and whether the proposal mechanism retains truth until then. Testing only completed states answers the first question and can hide failure on the other two.
+
+The most promising repair often changes variable order rather than the mathematical family. Bidirectional propagation is especially useful: a language proposal in one text can force an unfinished quotient cell in another text, immediately shrinking word domains and adding an exact modular record. That moves algebraic information earlier without treating an approximate language score as an exact prune.
+'''
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/QIV_POWER685_DESIGN.md"
+kind = "design"
+note = "Defines the paired character-beam timing experiment, truth-rank checkpoints, exact QIV status accounting, and power-failure interpretation."
+ref = "LOG685"
+
+[[provenance]]
+path = "withmath/logs/685_qiv_power_controls_20260906T063351Z_12151_22194.json"
+kind = "data"
+note = "Records the early truth losses, feasible/undecided/infeasible counts, late selectivity, exact witnesses, and forwards."
+ref = "LOG685"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_ROWQIV687.md"
+kind = "note"
+note = "Documents the word-cell representation, reduced exact equivalence, degree-26 truth ranks, activation threshold, and proposal-power terminal."
+ref = "LOG687"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk9_rowqiv687.py"
+kind = "solver"
+note = "Implements row domains, cell propagation, Hall support, exact QIV checks, and paired gate-off/gate-on controls."
+ref = "LOG687"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk9_rowqiv687_audit.py"
+kind = "audit"
+note = "Independently enumerates reduced two-dial cases and reconstructs the unbiased control-generation recipe and truth ranks."
+ref = "LOG687"
+
+[[provenance]]
+path = "withmath/logs/687_rowqiv_controls_20260906T070855Z_1788678536014575000_77340.json"
+kind = "data"
+note = "Frozen exact-equivalence and control-power artifact."
+ref = "LOG687"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "A target-absent all-cell control passed one planted fixture, then lost the next truth at row 2 when rank 566 exceeded width 512, before the first exact check at row 8. The independent audit classified the run as a proposal-power failure."
+ref = "LOG693"

@@ -39,7 +39,7 @@ pub fn Overview() -> impl IntoView {
             <div class="wrap hero-grid">
                 <div class="hero-copy">
                     <p class="eyebrow mono">"Dilate · Cryptography knowledge base"</p>
-                    <h1 class="display display-xl">"Learn cryptography."<br/><em class="serif">"Test what you learn."</em></h1>
+                    <h1 class="display display-xl">"Learn cryptography"<br/><em class="serif">"Test what you learn"</em></h1>
                     <p class="lede">
                         "Cipher Praxis explains cipher models, the math behind them, ways to attack them, and the checks that make results trustworthy. Read the guides, check the equations, and run the code in your browser."
                     </p>
@@ -62,7 +62,7 @@ pub fn Overview() -> impl IntoView {
         <section class="wrap section-block" aria-labelledby="ia-h">
             <div class="section-head">
                 <p class="eyebrow mono">"Browse the knowledge base"</p>
-                <h2 id="ia-h" class="display">"Explore ciphers, methods, and tools."</h2>
+                <h2 id="ia-h" class="display">"Explore ciphers, methods, and tools"</h2>
                 <p class="lede-sm">"Each page explains the method, how to test or attack it, when it can fail, which checks were run, and where the numbers came from."</p>
             </div>
             <div class="ia-grid">
@@ -83,7 +83,7 @@ pub fn Overview() -> impl IntoView {
         <section class="wrap section-block" aria-labelledby="status-h">
             <div class="section-head">
                 <p class="eyebrow mono">"Reading a page"</p>
-                <h2 id="status-h" class="display">"A status tells you what the evidence supports."</h2>
+                <h2 id="status-h" class="display">"A status tells you what the evidence supports"</h2>
             </div>
             <div class="status-grid">
                 {Status::ALL.into_iter().map(|s| {
@@ -107,7 +107,7 @@ pub fn Overview() -> impl IntoView {
         <section class="wrap section-block" aria-labelledby="featured-h">
             <div class="section-head">
                 <p class="eyebrow mono">"Entry points"</p>
-                <h2 id="featured-h" class="display">"Start anywhere."</h2>
+                <h2 id="featured-h" class="display">"Start anywhere"</h2>
             </div>
             <div class="card-grid">
                 {featured.into_iter().map(|e| view! { <EntryCard entry=e/> }).collect_view()}
@@ -118,7 +118,7 @@ pub fn Overview() -> impl IntoView {
             <section class="wrap section-block" aria-labelledby="labs-h">
                 <div class="section-head">
                     <p class="eyebrow mono">"Try it yourself"</p>
-                    <h2 id="labs-h" class="display">"Run the labs in your browser."</h2>
+                    <h2 id="labs-h" class="display">"Run the labs in your browser"</h2>
                     <p class="lede-sm">"The labs use the same tested Rust code as the main project. They run on your device and do not send work to a server."</p>
                 </div>
                 <div class="card-grid">

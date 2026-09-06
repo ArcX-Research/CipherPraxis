@@ -1,0 +1,156 @@
+id = "evidence-scope-ladder"
+section = "validation"
+title = "Evidence scope ladder"
+subtitle = "Keep software checks, recovery power, family evidence, and decipherment claims separate"
+status = "VERIFIED"
+status_note = "Independent audits and target-absent gates repeatedly enforce typed outcomes for software correctness, within-family power, observed-text evidence, and final decipherment. Passing one level never authorises the next."
+family = "Evidence and reporting"
+tags = ["evidence scope", "power", "family membership", "live evidence", "reporting"]
+related = ["endpoint-specific-control-contracts", "power-measurement", "power-analysis", "valid-model-nulls", "permutation-test", "family-wise-null", "joint-statistic-release-gates", "tautological-gate-rule", "target-absent-controls", "held-out-gates", "parameter-versus-plaintext-recovery"]
+summary = "Cryptanalysis produces several kinds of evidence that answer different questions. A wiring check asks whether code follows its specification. Planted controls ask whether the frozen method can recover members of a declared family. A matched null asks whether an observed result is unusual under one stated alternative. A decipherment claim needs a complete plaintext, a reproducible key recipe, and an independent forward check. Report each level separately so a strong control result is not mistaken for proof about an unseen text."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Use four explicit evidence levels:
+
+1. **Implementation correctness:** known-answer tests, exact reference comparisons, parser refusals, and forward/inverse replay show that the program implements its declared function.
+2. **Algorithmic power:** fresh planted cases estimate how often that frozen program recovers truth when data really come from a declared family and fixture distribution.
+3. **Observed-text evidence:** a complete family-wise or valid-model null comparison measures how unusual the selected result is under one stated null. An exact complete search may instead give a scoped family exclusion.
+4. **Decipherment:** a coherent complete plaintext, a small reproducible key and algorithm, literal all-position forward encryption, and independent review support the final claim.
+
+The levels depend on earlier ones but are not equivalent to them.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "The conditioning is the claim"
+body = '''
+For frozen algorithm $A$, model family $\mathcal M$, fixture distribution $D$, and budget $B$, planted controls estimate
+
+$$\pi_A=\Pr\{A(C)=P\mid (P,K,C)\sim(\mathcal M,D),B\}.$$
+
+This is a probability of recovery **given** family membership. It is not $\Pr\{C\in\mathcal M\mid A(C)\text{ looks good}\}$ and cannot prove that a separate observed text belongs to $\mathcal M$.
+
+Likewise, a randomisation rank estimates a conditional tail such as
+
+$$\Pr_0\{T(X')\ge T(X)\mid G,A,H(X)\},$$
+
+where $G$ is the transformation group and $H(X)$ denotes preserved invariants. It is not a posterior probability of readable language, the cipher family, or correctness of the selected plaintext.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Component power:** a shortlist or scorer is tested with the true upstream endpoint supplied. This does not measure integrated search power.
+- **Integrated power:** the whole native search, shortlist, scorer, ambiguity rule, and replay path receive only ciphertext.
+- **Heuristic family negative:** a miss is qualified by measured power, length, budget, and fixture distribution.
+- **Exact scoped exclusion:** a complete enumerator or proof certificate covers every member of the declared finite family and rejects all of them.
+- **Conditional candidate:** a null-ranked result passes a numerical gate but still waits for coherent decoding and independent review.
+- **Solve:** every original symbol is accounted for by the stated algorithm and key, with no silent editing.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions"
+body = '''
+- Controls match the claimed family, length, nuisance parameters, preprocessing, and budget.
+- Fresh power cases were not used to tune the selector.
+- A target-absent run has no observed-text evidence by definition.
+- A family-wise null repeats the full decision, not one convenient component.
+- Search completeness is proved before a miss is called an exact family exclusion.
+- Forward replay is necessary but not sufficient when a fitted reversible key makes round trips automatic.
+- Human coherence review happens after numerical gates and does not rewrite undecoded symbols.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Label every receipt before interpreting it"
+body = '''
+Before a run, name its evidence level and terminal vocabulary. Afterward, report the narrowest claim the receipt supports. A scorer-only control can motivate an integrated gate but cannot authorise use on an observed text. An integrated power pass can authorise a separately frozen observed-text test but cannot establish family membership. A small conditional rank can promote a candidate to independent review but cannot print a solve. Only the final complete recipe and replay cross the last boundary.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function CLASSIFY_EVIDENCE(receipt):
+    require receipt declares inputs, code, model, budget, and endpoint
+    if receipt uses only synthetic wiring fixtures:
+        return IMPLEMENTATION_CORRECTNESS_ONLY
+    if receipt uses fresh planted family members and no observed text:
+        return WITHIN_FAMILY_POWER_ONLY
+    if receipt reads an observed text:
+        require implementation and relevant power gates already passed
+        require complete family-wise nulls or an exact completeness proof
+        if numerical gate fails: return OBSERVED_TEXT_NEGATIVE_OR_INCONCLUSIVE
+        if no complete coherent plaintext and reproducible recipe:
+            return CANDIDATE_PENDING_REVIEW
+        require independent all-position forward encryption
+        require no symbols were silently edited or omitted
+        return DECIPHERMENT_SUPPORTED
+    return INSUFFICIENTLY_TYPED_EVIDENCE
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The classification itself is a small receipt check. Its cost comes from the evidence it refuses to collapse: fresh planted controls, complete null reselection, exact completeness certificates where claimed, and independent full replay.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Known-answer test called power.** A tiny or degenerate fixture proves wiring but not recovery on realistic members.
+- **Scorer power called integrated power.** The correct upstream candidate is supplied to a repair stage, bypassing the hard search.
+- **Power pass called membership.** Successful plants are taken to show that an unseen text uses the same family.
+- **Low power called closure.** A heuristic miss is reported as rejection without stating its recovery rate and budget.
+- **Conditional rank called posterior.** A null $p$-value is described as the probability that the selected plaintext is wrong.
+- **Roundtrip called decipherment.** A fitted reversible key re-encrypts its own output, but the output is not independently coherent or uniquely supported.
+- **Readable fragment called plaintext.** Formatting or missing letters are supplied by the reviewer instead of the algorithm.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Give the reporter one receipt of each type: a wiring KAT, a scorer-only plant, a full ciphertext-only plant, a powered heuristic miss, a complete exact exclusion, a numerical null pass with ambiguous plaintext, and a coherent full forward replay. Require a different terminal for each. Mutation tests should reject any record that changes its evidence class, hides a cap, claims target evidence from a target-absent run, or upgrades a numerical candidate to a solve.
+'''
+
+[[blocks]]
+kind = "example"
+title = "A successful repair stage"
+body = '''
+A relabeling stage exactly repairs every fresh candidate it receives. That establishes strong conditional power for the relabeler. It says nothing about whether an upstream search can produce a repairable candidate, and nothing about whether a separate ciphertext belongs to that search family. The next honest experiment is an integrated ciphertext-only power gate. Only after that passes should a separately frozen observed-text null test be considered.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+This ladder extends endpoint-specific control contracts from software outputs to scientific claims. It prevents both directions of overstatement: a failed weak decoder does not close a family, and a powerful decoder does not prove that the family is present.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_NULLRELEASE652_PROTOCOL.md"
+kind = "design"
+note = "Explicitly separates scorer capability, fresh integrated search power, conditional full-selection null ranks, live authority, independent coherence, and final forward verification."
+ref = "LOG652"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_LEXBAND651_CONTROLS.md"
+kind = "audit"
+note = "A fresh target-absent relabeling gate establishes conditional scorer power while refusing any claim of family membership or live decipherment."
+ref = "LOG651"
+
+[[provenance]]
+path = "withmath/docs/project-notes/SEGCHAIN_CONTROL_MISMATCH399_AUDIT.md"
+kind = "audit"
+note = "Requires prose-control recovery to be cited as within-family power only when the observed text lies outside the controls' measured statistical region."
+ref = "LOG399"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_QUARTERVELOCITY640_CONTROLS.md"
+kind = "design"
+note = "Separates exact structural-class recovery, arbitrary label recovery, cap failures, wrong-family sentinels, and observed-text membership."
+ref = "LOG640"

@@ -1,0 +1,159 @@
+id = "maximum-weight-bipartite-assignment"
+section = "exact"
+title = "Maximum-weight bipartite assignment"
+subtitle = "Project independent label evidence onto one exact permutation"
+status = "VERIFIED"
+status_note = "Independent Hungarian implementations agree with exhaustive permutation search on recorded 7-by-7 and 9-by-9 tests. The same primitive has been checked both as a consensus projection and as an admissible relaxation bound."
+family = "Exact combinatorial optimisation"
+tags = ["Hungarian algorithm", "assignment problem", "permutation", "upper bound"]
+related = ["all-different-constraints", "all-different-enumeration", "exact-dynamic-programming", "bound-benchmarks-and-certificates", "conjugacy-and-gauge", "polish-basin-measurement"]
+summary = "When each source item must receive one distinct output label, place the score of assigning item i to label j in a matrix. The maximum-weight perfect matching gives the exact best additive permutation. It can turn elite votes into a legal alphabet or provide an upper bound after coupled constraints are safely relaxed."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $L$ and $R$ be two sets of $q$ items and let $W_{ij}$ be the weight of pairing $i\in L$ with $j\in R$. The maximum-weight assignment problem is
+
+$$\max_{\pi\in S_q}\sum_{i=0}^{q-1}W_{i,\pi(i)},$$
+
+where $\pi$ is a permutation. The all-different constraint is global: choosing the best label independently in every row is generally illegal because several rows may choose the same column. The Hungarian algorithm or an equivalent exact assignment solver returns a legal optimum in polynomial time.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Consensus and relaxation"
+body = '''
+For permutation candidates $\pi^{(r)}$ with nonnegative elite weights $v_r$, a vote matrix
+
+$$W_{ij}=\sum_r v_r[\pi^{(r)}(i)=j]$$
+
+can be projected to the legal consensus permutation that maximises supported assignments.
+
+Assignment also supplies a bound. If a coupled objective $F(\pi,z)$ is no greater than an additive relaxation $\sum_i U_{i,\pi(i)}$ for every $(\pi,z)$, then
+
+$$\max_{\pi,z}F(\pi,z)\le\max_{\pi}\sum_i U_{i,\pi(i)}.$$
+
+The inequality must be proved before the assignment value is used for pruning.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Complete assignment:** every pair is allowed and every row and column is used once.
+- **Forbidden edges:** represent impossible pairs explicitly and fail if no perfect matching exists.
+- **Rectangular assignment:** add declared dummy nodes or require only the smaller side to be matched.
+- **Consensus projection:** weights count or weight votes from several legal permutations.
+- **Relaxation bound:** matrix entries maximise over omitted interactions, producing an optimistic score.
+- **Top-k assignments:** enumerate several best permutations when one optimum is insufficient.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions"
+body = '''
+- The objective being solved is additive across chosen edges; interactions not captured by $W$ must be handled outside the assignment or relaxed with a proved inequality.
+- Row and column conventions are frozen. Returning the inverse permutation without declaring it can still yield a plausible but wrong key.
+- Forbidden edges cannot be represented by a finite penalty that a sufficiently bad legal solution might cross.
+- Numerical tie handling is explicit, and a downstream uniqueness claim counts all optimum assignments rather than only the first one returned.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Use in cryptanalysis"
+body = '''
+Build a matrix from independent letter, chunk, or role evidence, solve the exact assignment, and convert the row-to-column result into the declared key convention. For an elite population, align gauge-equivalent maps first and then project their votes. For a branch-and-bound bound, independently verify on small cases that every exact completion lies below the relaxed assignment value. Rescore and forward-check the resulting literal key under the full, unrelaxed cipher objective.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function ASSIGN_LABELS(weight, forbidden):
+    require weight is a square finite matrix on allowed edges
+    cost = CONVERT_MAX_WEIGHT_TO_MIN_COST(weight, forbidden)
+    permutation, optimum = HUNGARIAN_MIN_COST(cost)
+    require permutation uses every row and column exactly once
+    return permutation, CONVERT_COST_TO_WEIGHT(optimum)
+
+function CONSENSUS(elite_permutations, elite_weights):
+    vote = ZERO_MATRIX(alphabet_size, alphabet_size)
+    for permutation, value in aligned elite inputs:
+        for row in all rows:
+            vote[row][permutation[row]] += value
+    return ASSIGN_LABELS(vote, no forbidden edges)
+
+function AUDIT_RELAXATION(exact_small_cases, build_upper_matrix):
+    for case in exact_small_cases:
+        bound = ASSIGN_LABELS(build_upper_matrix(case)).optimum
+        exact = EXHAUST_ALL_PERMUTATIONS(case)
+        require exact <= bound and assignment agrees with brute force
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The Hungarian algorithm runs in $O(q^3)$ time with $O(q^2)$ matrix storage, far below $q!$ permutation enumeration. Building each relaxed matrix entry may dominate if it maximises over additional key or geometry states.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Independent row maxima.** Duplicate columns make the apparent score infeasible.
+- **Unproved bound.** A matrix drops an interaction in the wrong direction and can prune the true optimum.
+- **Gauge-misaligned votes.** Equivalent alphabets vote for different literal labels and their consensus becomes meaningless.
+- **Convention inversion.** A natural-to-emitted permutation is reported as emitted-to-natural.
+- **Uniqueness overclaim.** One library answer is mistaken for proof that no tied assignment exists.
+- **Relaxation promoted to solution.** The assignment maximises an optimistic matrix, but the returned key is not rescored under the full objective.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Compare the exact assignment value and permutation with exhaustive search on small random, tied, forbidden-edge, and planted matrices. Apply every output convention through an independent forward transform. For relaxation use, exhaust the omitted variables on small cases and require exact score no greater than the bound. Recorded audits include brute-force parity on a held-out 7-by-7 matrix and independent all-$9!$ parity for 9-by-9 role bounds.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Why row-wise choices are not enough"
+body = '''
+Consider
+
+$$W=\begin{pmatrix}9&8&0\\9&1&0\\0&7&6\end{pmatrix}.$$
+
+The independent row maxima choose columns $0,0,1$, which is not a permutation. The legal assignment $0\mapsto1$, $1\mapsto0$, $2\mapsto2$ has total weight $8+9+6=23$. Exact assignment enforces the label bijection while optimising the whole matrix.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The use of exact assignment for gauge-aligned alphabet consensus and nested cryptanalytic bounds was developed and tested in this project. The assignment problem and Hungarian method are established optimisation tools.
+'''
+
+[[provenance]]
+path = "withmath/docs/cipher-methods/CONDI_GLOBAL_AUDIT.md"
+kind = "audit"
+note = "Gauge-aligned elite vote matrices projected to legal permutations; pure-Python Hungarian result checked against brute-force optimum on a held-out 7-by-7 matrix."
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/CROSS_PRETRANSPOSE_AUDIT.md"
+kind = "audit"
+note = "Two provable assignment relaxations, their inequalities, exact-order comparison, and measured limitation as complete-family selectors."
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/CROSS_QTT_HIER269_AUDIT.md"
+kind = "audit"
+note = "Role-wise 9-by-9 Hungarian upper bounds checked against independent exhaustive all-9! enumeration and exact downstream dynamic programming."
+
+[[references]]
+title = "The Hungarian Method for the Assignment Problem"
+author = "Harold W. Kuhn"
+year = 1955
+url = "https://doi.org/10.1002/nav.3800020109"
+
+[[references]]
+title = "Algorithms for the Assignment and Transportation Problems"
+author = "James Munkres"
+year = 1957
+url = "https://doi.org/10.1137/0105003"

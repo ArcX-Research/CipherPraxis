@@ -1,0 +1,175 @@
+id = "two-involution-component-templates"
+section = "exact"
+title = "Two-involution component templates"
+subtitle = "Complete two partial reflections through alternating paths and cycles"
+status = "VERIFIED"
+status_note = "Independent implementations matched all 3,600 complete ordered degree-six pairs and partial-completion sets on 330 cases across degrees six, ten, and twenty-six. A compiled template implementation matched forty further degree-twenty-six cases; its downstream language decoder remained power-limited."
+family = "Exact permutation constraints"
+tags = ["involutions", "alternating paths", "component templates", "reflections", "symmetry breaking"]
+related = ["permutation-cycles", "reflection-product-cycle-lift", "semiregular-common-cycle-criterion", "partial-involution-conjugacy-query", "partial-involution-edit-distance", "constraint-satisfaction-forward-checking", "shared-cycle-attack"]
+summary = "Draw each transposition of two involutions as an edge of its own colour and each fixed point as a loop. If the maps are reflections of one regular cycle, their union has only a few possible alternating path or cycle shapes. Partial components can therefore be placed into exact templates instead of completing both permutations blindly."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $a$ and $b$ be involutions on $n=2p$ symbols, where $p$ is an odd prime. Draw every nontrivial pair of $a$ as an edge of colour $A$, every pair of $b$ as an edge of colour $B$, and each fixed point as a loop of its map's colour.
+
+Each vertex has one incident object of each colour, so every nonloop component alternates colours. When $a$ and $b$ are reflections of one regular cycle and $ba$ has order $p$ or $2p$, the required cycle type fixes the topology of this two-colour graph.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Exact topology theorem"
+body = '''
+For complete maps, the only informative templates are:
+
+| Fixed points of $(a,b)$ | Nonloop union | Cycle type of $ba$ |
+| --- | --- | --- |
+| $(2,0)$ or $(0,2)$ | one alternating Hamiltonian path | one $2p$-cycle |
+| $(0,0)$ | one alternating Hamiltonian cycle | two $p$-cycles |
+| $(2,2)$ | two alternating paths of $p$ vertices | two $p$-cycles |
+
+On an $\ell$-vertex alternating path, applying $ba$ traverses one $\ell$-cycle. On a $2\ell$-vertex alternating cycle, $ba$ has two $\ell$-cycles. These observations prove both necessity and sufficiency of the table.
+
+For partial maps, any shared assigned image makes $ba$ fix a letter and is impossible in an informative branch. A closed proper alternating cycle cannot later join a required Hamiltonian component. Existing path components must occupy contiguous template segments in one of two orientations; loops constrain segment endpoints.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **One-path template:** exactly one reflection has two fixed points; complete one alternating path through every symbol.
+- **One-cycle template:** neither reflection has a fixed point; complete one alternating cycle.
+- **Two-path template:** each reflection has two fixed points; divide path components into two bins of size $p$.
+- **Identity product:** the completed maps are equal. Merge their compatible observations, then treat the result as one reflection; it supplies no relative rotation.
+- **Antipodal product:** if $h=ba$ is fixed-point-free of order two, require $a$ and $h$ to commute. The action $\langle a,h\rangle$ must have one two-symbol orbit and $(p-1)/2$ four-symbol orbits. Complete that orbit template separately before testing $h=w^p$ and $awa=w^{-1}$.
+- **Noisy observed maps:** remove bounded observed components using [Partial-involution edit distance](/exact/partial-involution-edit-distance), then place what remains.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The completed maps are reflections of one regular $2p$-cycle, each with zero or two fixed points.
+- The Hamiltonian path and cycle templates assume an informative product of order $p$ or $2p$; identity and antipodal products use the separate branches above.
+- A partial component is never split. Its alternating order and endpoint colours are preserved.
+- Symmetry breaking removes path reversal, cycle origin, phase, and two-path exchange only when a proof shows they are aliases.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Component-first completion"
+body = '''
+Build the alternating components supplied by two partial maps and reject forbidden local shapes. Choose the template from the fixed-point branch. Place whole path components contiguously, trying both orientations where distinct, while tracking endpoint colours and remaining sizes. Prune a placement when its known images have no support in an upstream map bank. At a leaf, require full bank membership, apply the exact reflection-product lift, canonicalise the cyclic group, and independently replay every completed map.
+
+For noisy map proposals, enumerate a small component-deletion radius before this placement. This is list decoding of structural map errors: one removed two-cycle repairs two directed cells together.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function COMPLETE_REFLECTION_PAIR(partial a, partial b, branch):
+    components = ALTERNATING_COMPONENTS(a, b)
+    if any informative product has a known fixed letter: return empty
+    if any component is a forbidden closed proper cycle: return empty
+    template = CHOOSE_TEMPLATE(branch)  // one path, one cycle, or two paths
+    results = empty set
+    search PLACE(next component, template):
+        for each free contiguous segment of matching size and endpoint colours:
+            for each distinct orientation of the component:
+                place component
+                if PREFIX_SUPPORT_EXISTS(current known images):
+                    if all components placed:
+                        full_pair = FILL_REMAINING_TEMPLATE_EDGES()
+                        if EXACT_TEMPLATE_CHECK(full_pair): ADD(results, full_pair)
+                    else: PLACE(next component, template)
+                undo placement
+    PLACE(first component, template)
+    for pair in results: require independent involution and product checks
+    return DEDUPLICATE_BY_COMPLETE_ORDERED_PAIR(results)
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The algebraic prechecks are linear in the number of known edges. Component placement is combinatorial in the number and lengths of open paths, but it searches path arrangements rather than arbitrary permutations of all unplaced letters. Prefix-support tables can reject a partial placement before leaf completion. Every node, leaf, and output cap remains an explicit completeness boundary.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Completing each map independently:** most pairs of legal involutions do not have the required alternating union.
+- **Ignoring proper cycles:** a closed short component can never be attached later.
+- **Breaking an unproved symmetry:** path orientation or two-path exchange may change a physical map unless the template action proves equivalence.
+- **Reading a capped miss as impossibility:** a component search that reaches a node, leaf, or pair cap is incomplete.
+- **Assuming algebra chooses readable text:** exact completion can retain a wrong map that scores better under a short-text language model.
+- **Forcing a degenerate pair into a Hamiltonian template:** identity and antipodal products are valid but need their own completion branches.
+- **Antipode from cycle type alone:** $p$ transpositions have the right shape for $w^p$, but the candidate must also commute with the anchor and fit the Klein-four orbit template.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The Python theorem check matched all 3,600 complete ordered degree-six reflection pairs. Independent completion sets agreed for 240 degree-six, sixty degree-ten, and thirty degree-twenty-six partial pairs, retaining every planted degree-twenty-six pair. A compiled implementation matched forty further degree-twenty-six cases with and without a synthetic prefix bank. In the unpruned comparison it emitted 8,616 pairs from 9,720 leaves and 51,099 nodes; prefix pruning retained the expected forty pairs. A downstream development decoder selected five of eight exact texts, so that language pipeline remains power-limited even though the component algebra is verified.
+'''
+
+[[blocks]]
+kind = "example"
+title = "One alternating path"
+body = '''
+On six symbols let
+
+$$a=(0)(1\ 2)(3\ 4)(5),\qquad b=(0\ 1)(2\ 3)(4\ 5).$$
+
+The two $a$-loops are the endpoints, and the nonloop edges form the alternating Hamiltonian path
+
+$$0\mathbin{-_B}1\mathbin{-_A}2\mathbin{-_B}3\mathbin{-_A}4\mathbin{-_B}5.$$
+
+Alternating $b$ then $a$ walks through all six symbols, so $ba$ is one six-cycle. Closing any proper subpath into a cycle would make that outcome impossible.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The union of two matchings into alternating paths and cycles is standard graph theory. The complete template table, exact partial-placement rules, symmetry handling, and their component-error decoding application were developed and checked in this project.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_COMPONENT562_EXACT.md"
+kind = "note"
+note = "Exact topology theorem, partial-map consequences, template implementation, support pruning, and capability limits."
+ref = "LOG562"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_dihedral562_components.py"
+kind = "solver"
+note = "Independent template enumerator and small-degree/full-completion reference comparisons."
+
+[[provenance]]
+path = "withmath/logs/562_components_kat_20260904T235125Z.log"
+kind = "log"
+note = "Complete-pair and partial-completion set equalities across degrees six, ten, and twenty-six."
+ref = "LOG562"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_dihedral563_components.hpp"
+kind = "solver"
+note = "Compiled component-template implementation with prefix-projection pruning."
+
+[[provenance]]
+path = "withmath/logs/563_components_kat_20260905T000016Z.log"
+kind = "log"
+note = "Compiled/Python parity with and without prefix-bank pruning."
+ref = "LOG563"
+
+[[references]]
+title = "Graph Theory"
+author = "Reinhard Diestel"
+year = 2017
+
+[[references]]
+title = "Permutation Groups"
+author = "John D. Dixon and Brian Mortimer"
+year = 1996

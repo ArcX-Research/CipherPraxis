@@ -1,0 +1,129 @@
+id = "exact-optimization-admission"
+section = "engineering"
+title = "Exact-optimization admission"
+subtitle = "Require exact behaviour first, then measure speed in every important workload class"
+status = "PROMISING"
+status_note = "A cache optimization was exact on its symbols-only test matrix and ran 1.565 times as fast in aggregate, but won only 44 of 60 cases and regressed on both zero-weight workload classes. It remains a candidate rather than an automatic production change."
+family = "Solver performance engineering"
+tags = ["benchmarking", "regression", "hot path", "exact search", "release gate"]
+related = ["closed-footprint-bound-cache", "pruned-traversal-equivalence-certificates", "bound-benchmarks-and-certificates", "compiled-hot-cores", "drainability-and-throughput", "kat-harness", "fresh-holdout-after-selector-change"]
+summary = "An algebraically exact shortcut is not automatically a useful optimization. First prove that it preserves the required search behaviour. Then time reference and candidate in interleaved order across complete, capped, pruning-heavy, cache-poor, and inactive-bound workloads. A good average cannot hide a critical regression, and a microbenchmark cannot authorize a production change by itself."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+An **exact-optimization admission** has two independent gates:
+
+1. **Correctness:** the candidate passes the declared semantic or traversal-equivalence certificate on every fixture.
+2. **Usefulness:** timing and memory are measured by workload class, and the candidate satisfies frozen acceptance limits in each class that matters in production.
+
+The gates stay separate because an exact optimization can add overhead when its cache has few hits, its pruning bound is inactive, or the search stops before the saved work appears. Conversely, a fast program that changes callbacks, aliases, ties, or cap behaviour is not an exact optimization.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Pure calculation cache:** expected to preserve every pruning decision and callback.
+- **Stronger admissible bound:** may visit fewer nodes; certify the complete accepted set rather than identical counters.
+- **Data-layout optimization:** compare output and counters, then measure allocation, cache misses, and peak memory.
+- **Fast path for inactive work:** bypass bookkeeping when the bound cannot prune, with an explicit equivalence test.
+- **Conditional deployment:** enable the optimization only for workload classes whose preconditions and measured benefit are both present.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Correctness fixtures run before timed repetitions, and a correctness failure stops timing.
+- Reference and candidate use the same compiler mode, process, inputs, caps, and output consumer.
+- Timed pairs alternate execution order to reduce warm-cache and background-load bias.
+- Results are reported by preregistered workload strata as well as in aggregate.
+- A symbols-only kernel benchmark measures that kernel only. Production admission needs representative end-to-end controls and a new release version.
+- A frozen method is not silently edited after its validation; the optimized version receives fresh controls.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Evaluate a proposed optimization"
+body = '''
+Build a matrix that crosses structure, data density, bound activity, and budget mode. Run the exactness certificate on every cell. Only then execute several interleaved reference/candidate timing pairs, keeping callback work identical. Report total time, per-cell wins, cache census, completion status, and each important stratum. If inactive-bound or cache-poor cases regress, either keep the old path there or defer the optimization until representative end-to-end evidence shows a safe benefit.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function ADMIT_OPTIMIZATION(reference, candidate, matrix, policy):
+    records = []
+    for fixture in matrix:
+        base = RUN_AND_CAPTURE(reference, fixture)
+        trial = RUN_AND_CAPTURE(candidate, fixture)
+        require EQUIVALENCE_CERTIFICATE(base, trial, fixture.claim)
+        pair_times = []
+        for repetition in policy.repetitions:
+            if ALTERNATING_ORDER(fixture, repetition):
+                pair_times.append(TIME(candidate), TIME(reference))
+            else:
+                pair_times.append(TIME(reference), TIME(candidate))
+            require each timed result equals its untimed captured result
+        records.append(CLASSIFY_AND_SUMMARIZE(fixture, pair_times))
+    require EVERY_REQUIRED_STRATUM(records) satisfies policy
+    require PEAK_MEMORY(records) <= policy.memory_limit
+    return CANDIDATE_FOR_NEW_RELEASE, records
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The benchmark multiplies fixture count by the number of correctness paths and timed repetitions. This deliberate cost is small compared with deploying a regression into a long exact search. Keep the matrix bounded, deterministic, and rich in boundary cases rather than making it resemble a full production run.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Average-only admission.** A strong cache-heavy gain hides a slowdown in a frequent cache-poor path.
+- **Zero-bound omission.** Every fixture activates the expensive bound, so bookkeeping overhead is never exposed.
+- **Timing before equality.** A wrong candidate appears fast because it skips work.
+- **Hash-only output check.** Compact trace hashes replace full record comparison.
+- **Fixed order bias.** The candidate always runs second with warmer code and data.
+- **Callback drift.** Different callbacks do different downstream work, making kernel times incomparable.
+- **Microbenchmark promotion.** A small same-process result is described as sustained end-to-end throughput.
+- **Frozen-method mutation.** The faster core is inserted into an already validated release without new capability controls.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The recorded benchmark used a 60-cell matrix spanning several structural templates, three weight styles, dense and sparse partial states, and normal versus forced-small budgets. Every timed output was first matched to an untimed exact trace. The candidate took 0.127998098 seconds against 0.200369275 seconds for the reference in aggregate and was faster in 44 cells. However, the two zero-weight classes ran at 0.933 and 0.950 of reference speed, while nonzero classes improved. This supports a bounded optimization candidate and a possible inactive-bound fast path, not unconditional deployment.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Correctness-first benchmarking and stratified performance analysis are established engineering practice. The specific admission contract here joins them to exact-search callbacks, aliases, adaptive thresholds, and cap semantics.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_FOOTPRINT647_TRAVERSAL.md"
+kind = "audit"
+note = "Documents the bounded fixture matrix, exactness-first timing protocol, aggregate gain, workload regressions, and decision not to modify the frozen production method."
+ref = "LOG647"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_dihedral647_footprint_traversal.cpp"
+kind = "script"
+note = "Implements full-record correctness checks followed by three interleaved timing pairs per fixture and workload-stratum counters."
+
+[[provenance]]
+path = "withmath/logs/647_footprint_traversal_20260905T230617Z_1788649577384322000.log"
+kind = "log"
+note = "Frozen timing and correctness receipt for the 60-cell symbols-only workload."
+ref = "LOG647"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_MATCHING579_COST.md"
+kind = "audit"
+note = "Independent example in which a mathematically tighter exact bound had modest pruning potential and was deferred pending a hot-loop cost benefit."
+ref = "LOG579"

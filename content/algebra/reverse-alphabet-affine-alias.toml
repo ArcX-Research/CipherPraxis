@@ -1,0 +1,153 @@
+id = "reverse-alphabet-affine-alias"
+section = "algebra"
+title = "Reverse-alphabet affine alias"
+subtitle = "Reverse the coordinate order by negating the running state and reflecting the substitution"
+status = "VERIFIED"
+status_note = "A compiled known-answer test applies the transformation to random maps and schedules under two base alphabet orders and requires byte-identical ciphertext."
+family = "Equivalence and identifiability"
+tags = ["alphabet reversal", "affine reflection", "alias", "running shift", "substitution"]
+related = ["affine-maps-mod-26", "conjugacy-and-gauge", "group-actions-on-alphabets", "alberti-progressive", "piecewise-running-shift-dp", "latent-label-identifiability"]
+summary = "Reversing an alphabet changes every coordinate by the affine reflection x to minus one minus x. In a running-shift cipher with an unrestricted substitution, negating the state and reflecting the substitution produces the same plaintext and ciphertext. The two parameter descriptions are exact aliases and should be grouped before ranking."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let alphabet order $A$ have size $m$, and let its reversal be $A^R$. Their coordinate functions satisfy
+
+$$x^R(c)=m-1-x(c)\equiv-1-x(c)\pmod m.$$
+
+Consider a running-shift model
+
+$$u_i=x(C_i)-a_i\pmod m,\qquad P_i=M(u_i),$$
+
+where $M$ is an unrestricted permutation. Under the reversed alphabet, set
+
+$$a_i^R=-a_i,\qquad M^R(v)=M(-1-v).$$
+
+Then $u_i^R=-1-u_i$ and $M^R(u_i^R)=M(u_i)$. The plaintext and ciphertext are unchanged, so the two keys are observational aliases.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "The affine-coordinate form"
+body = '''
+Alphabet reversal is the affine change $x'=\alpha x+\beta$ with $\alpha=-1$ and $\beta=-1$. More generally, for any unit $\alpha$,
+
+$$x'=\alpha x+\beta,\qquad a'=\alpha a,$$
+
+gives $u'=\alpha u+\beta$. The relabelled map
+
+$$M'(v)=M\!\left(\alpha^{-1}(v-\beta)\right)$$
+
+therefore preserves the output. In the reversal case, $\alpha^{-1}=-1$ and this reduces to $M^R(v)=M(-1-v)$.
+
+If the state advances by $a_{i+1}=a_i+d_i$, its reversed description advances by
+
+$$a_{i+1}^R=a_i^R-d_i,$$
+
+so every velocity or increment is negated modulo $m$.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Constant velocity:** $d^R=-d$.
+- **Piecewise velocity:** negate every segment velocity while preserving the boundaries and continuous state.
+- **General affine reindexing:** any unit multiplier and offset can be absorbed when the substitution family is closed under the induced relabelling.
+- **Canonical representative:** compare the original and transformed complete descriptions and retain one deterministic representative.
+- **Constrained maps:** if $M$ must be a keyword map, involution, or another restricted type, verify that $M^R$ remains in the declared family before quotienting.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions"
+body = '''
+- Reversal changes only the coordinate description; the physical ciphertext symbols stay fixed.
+- The running state is negated consistently at every position.
+- The substitution map is arbitrary or its constrained family is proved closed under $v\mapsto-1-v$.
+- Any fixed anchors, key words, or literal-map endpoints are transformed too; otherwise the alias may be broken by the extra constraint.
+- Alias grouping is performed on complete observable behaviour, not on one coincidental sample alone.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Remove the duplicate description"
+body = '''
+For every candidate written in alphabet order $A$, construct the reversed description by reversing $A$, negating its state increments, and composing its substitution with the coordinate reflection. Forward both descriptions independently. If they agree for the complete model, place them in one alias class and score the class once. Retain both raw members in the receipt so key recovery can be reported modulo the proved symmetry.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function REVERSE_ALIAS(alphabet, increments, mapping, modulus):
+    reversed_alphabet = REVERSE(alphabet)
+    for each increment d:
+        reversed_increments.append((-d) mod modulus)
+    for v in 0..modulus-1:
+        reversed_mapping[v] = mapping[(-1-v) mod modulus]
+    return reversed_alphabet, reversed_increments, reversed_mapping
+
+function VERIFY_ALIAS(plaintext, key):
+    reversed_key = REVERSE_ALIAS(key.alphabet, key.increments, key.mapping, key.modulus)
+    cipher_a = FORWARD(plaintext, key)
+    cipher_b = FORWARD(plaintext, reversed_key)
+    require cipher_a == cipher_b
+    return CANONICAL_MIN(key, reversed_key)
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Constructing the transformed key costs $O(m+s)$ for alphabet size $m$ and $s$ state increments. Canonicalising one reversal orbit is constant-factor work. Do not divide a raw family count by two blindly: a transformed description can be fixed by the action or can coincide with another declared symmetry.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Reversing symbols instead of coordinates.** The ciphertext letters are changed rather than their positions in the alphabet order.
+- **Negating velocity but not the map.** The plaintext changes because the reflected latent coordinates keep their old labels.
+- **Missing the minus one.** Reversal is $-1-x$, not merely $-x$, under zero-based coordinates.
+- **Quotienting a restricted family.** The reflected map violates a keyword or cycle constraint and is not a legal member.
+- **Literal-key false failure.** A control expects the original raw description and rejects its exact reversed alias.
+- **Blind halving.** Fixed points or overlap with another gauge make the orbit count different from half the raw count.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Generate random substitution maps, running states, and piecewise increments. For each base alphabet, derive the reversed key and require exact ciphertext equality for the same plaintext. Mutate the increment sign, remove the minus-one offset, and leave the map unreflected; each mutation must fail on a discriminating fixture. Repeat under any proposed map restriction before treating reversal as an alias there.
+'''
+
+[[blocks]]
+kind = "example"
+title = "A five-symbol reflection"
+body = '''
+Modulo five, take ciphertext coordinate $x=1$ and state $a=3$, so $u=1-3\equiv3$. In the reversed alphabet, $x^R=-1-1\equiv3$ and $a^R=-3\equiv2$, hence $u^R=3-2=1=-1-u$. If $M(3)=B$, then the reflected map has $M^R(1)=M(-1-1)=M(3)=B$. Both descriptions emit the same letter.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+This is an affine change of coordinates, not a second decryption result. Reporting it as an alias prevents duplicate ranks and makes exact-key checks fair without discarding the raw key descriptions needed for replay.
+'''
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_quartervelocity640_core.cpp"
+kind = "solver"
+note = "Known-answer test constructs the reversed alphabet, negated schedule, and reflected substitution and requires the same forward ciphertext under each tested base order."
+ref = "LOG640"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "LOG640 records the continuous running-state family and its independent algebra checks before any target release."
+ref = "LOG640"
+
+[[references]]
+title = "Abstract Algebra"
+author = "David S. Dummit and Richard M. Foote"
+year = 2004
+

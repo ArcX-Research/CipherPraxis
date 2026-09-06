@@ -1,0 +1,190 @@
+id = "all-class-substitution-finishing"
+section = "search"
+title = "All-class substitution finishing"
+subtitle = "Fit labels for every observable equality class before comparing plaintext scores"
+status = "PROMISING"
+status_note = "A fixed public panel completed every equality class and recovered the exact planted prose as the unique top text in all 12 positive cases. The search is still heuristic, and raw quadgrams did not separate prose from every repetitive nonprose control, so this is strong component evidence rather than a live-release rule."
+family = "Monoalphabetic substitution search"
+tags = ["equality classes", "substitution fitting", "quadgrams", "deterministic restarts", "stationarity"]
+related = ["arbitrary-substitution-equality-classes", "strict-best-improvement-swap-ascent", "n-gram-language-scoring", "factorial-completion-resource-guards", "provenance-preserving-partial-map-join", "parameter-versus-plaintext-recovery", "endpoint-specific-control-contracts", "fresh-holdout-after-selector-change"]
+summary = "A structural search may produce many physical candidates but fewer observable symbol-equality patterns. Canonicalise those patterns, give every distinct class the same frozen substitution-search budget, and keep all physical origins in sidecars. Fit plaintext labels with deterministic restarts and a complete swap polish, then lift each labelled class back to every origin. This avoids fitting duplicate aliases repeatedly and avoids silently discarding a class before the language stage."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $q=(q_0,\ldots,q_{n-1})$ be a canonical restricted-growth string with $k$ observed classes, and let the plaintext alphabet $\Sigma$ have size $m\ge k$. A label fit is an injection
+
+$$\lambda:\{0,\ldots,k-1\}\hookrightarrow\Sigma,$$
+
+which emits
+
+$$P_i=\lambda(q_i).$$
+
+For a fixed order-$d$ language table $\ell$, score the labelling by
+
+$$S(\lambda)=\sum_{i=0}^{n-d}\ell(P_i,P_{i+1},\ldots,P_{i+d-1}).$$
+
+Every physical structural origin with the same $q$ has the same label-fitting problem. Fit the class once, then compose the chosen $\lambda$ with each origin's canonical relabelling.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Observed labels and unused-key freedom"
+body = '''
+The number of injective observed-label assignments is
+
+$$m(m-1)\cdots(m-k+1)=\frac{m!}{(m-k)!}.$$
+
+Once $\lambda$ is fixed, the unused source and output symbols still admit
+
+$$N_{\rm unused}=(m-k)!$$
+
+full substitution-key completions unless other key constraints apply. Those completions all produce the same observed plaintext and should remain a factored family rather than being enumerated or silently reduced to one key.
+
+For a quadgram table, $d=4$. Swapping two output labels changes only windows that touch an occurrence of either label. An incremental scorer may update precisely those windows, but its delta must equal a full rescoring:
+
+$$\Delta_{a,b}=S(\tau_{a,b}\circ\lambda)-S(\lambda),$$
+
+where $\tau_{a,b}$ exchanges plaintext symbols $a$ and $b$.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Known-label constraints:** fix cribbed class labels and search injections for the remaining classes.
+- **Several language models:** freeze one primary objective; use other models only through a separately calibrated joint rule.
+- **Constrained keys:** replace arbitrary injections and factorial unused completions with the legal keyword, involution, or cycle family.
+- **Exact small-class finish:** enumerate all $m!/(m-k)!$ assignments when $k$ is small enough.
+- **Heuristic full-alphabet finish:** use deterministic restarts followed by a complete best-improvement swap scan, preserving all tied endpoints.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Each input row is a canonical equality class with a stable identity and a complete list of physical origins.
+- The same stationary monoalphabetic labelling applies across the whole class stream.
+- Every class receives the same preregistered search budget; upstream support or histogram rank does not change it.
+- The score table, restart derivation, move order, tie rule, and caps are frozen before evaluation.
+- Swap stationarity is a local certificate for the declared neighbourhood, not a global optimum proof.
+- A readable high score, a physical forward replay, and exact plaintext recovery are separate endpoints.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Finish the complete quotient"
+body = '''
+Canonicalise every structural stream by equality pattern and group identical classes before language fitting. Derive deterministic restart seeds from the class identity, not from its hidden truth or list position. Run the same number of steps for every class. Preserve every restart endpoint, then polish each with strict best-improvement swaps until a complete neighbourhood scan is stationary. Keep exact score ties.
+
+After fitting, restore every physical origin. Compose its latent-to-canonical map with each observed label assignment, retain the unused-label family symbolically, and replay the forward cipher at every observed position. Rank across the complete class set only after all classes finish. If any class, restart, stationarity scan, lift, or replay is missing or capped, the all-class comparison is incomplete.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function FINISH_ALL_CLASSES(classes, score_table, restarts, steps):
+    require classes are canonical, distinct, and carry all origins
+    results = []
+    for q in stable class-identity order:
+        endpoints = []
+        for restart in 0..restarts-1:
+            seed = HASH(q.identity, restart)
+            mapping = DETERMINISTIC_SUBSTITUTION_SEARCH(q, seed, steps)
+            mapping = STRICT_BEST_SWAP_UNTIL_STATIONARY(mapping, q)
+            require FULL_SWAP_SCAN_HAS_NO_STRICT_IMPROVEMENT(mapping, q)
+            endpoints.append(mapping with exact score and restart origin)
+        keep every distinct endpoint and every exact score tie
+        for endpoint in endpoints:
+            for physical_origin in q.origins:
+                observed_map = COMPOSE_LABELS(endpoint, physical_origin)
+                unused_family = FACTORED_UNUSED_COMPLETIONS(observed_map)
+                require FORWARD_REPLAY(physical_origin, observed_map)
+                results.append(endpoint, physical_origin, unused_family)
+    require every input class and restart appears in results
+    return stable rank by frozen plaintext score
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+For $K$ equality classes, $R$ restarts, and $T$ heuristic steps, the main work is $O(KRT)$ score updates. A full stationarity scan tests $\binom{m}{2}$ swaps per endpoint; full rescoring costs $O(n)$ per swap, while indexed affected-window updates can be much smaller. Canonical quotienting saves exactly the repeated fits that would otherwise be performed for physical origins sharing one equality class.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Top-class truncation:** only classes favored by a label-free statistic receive a language fit.
+- **Duplicate effort:** physical aliases with one equality pattern are fitted repeatedly and then mistaken for independent support.
+- **Unequal hidden budget:** promising-looking classes receive more restarts or steps after intermediate scores are seen.
+- **First endpoint only:** restart ties and different stationary maps are silently dropped.
+- **Unchecked local optimum:** a step cap expires after an improving move, but the endpoint is reported as stationary.
+- **Incremental-score drift:** cached deltas no longer agree with full rescoring.
+- **Unused key declared unique:** one observed labelling is expanded to one arbitrary full substitution instead of $(m-k)!$ completions.
+- **Forward replay as selection:** many wrong substitution maps reproduce their own generated ciphertext; replay checks implementation consistency, not truth.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The frozen preflight checked every one of the 325 pair swaps for incremental-score agreement, repeated twelve restart-order runs, and compared 676 small observed-label assignments with a complete objective oracle. Both heuristic gaps were zero on those small cases. Two real-table symbol fixtures produced eighteen stationary endpoints; separate code replayed all 5,850 terminal swap scores and recovered the same order-independent endpoints and exact tiny optima. Parser, saved-output mutation, role, and cap refusals were also exercised.
+
+The fixed public run then completed 52 cases covering 3,483 canonical classes, 10,449 stationary restart endpoints, and 11,022 physical lifts. It recovered the exact 504-letter planted prose as the unique top-scoring text in all 12 positive prose cases. Separate code reconstructed 3,395,925 complete swapped plaintexts and 5,555,088 scalar forward letters with exact agreement, and no class or endpoint hit a cap.
+
+That success does not turn the raw language score into a rejection test. The best repetitive nonprose control scored higher than the weakest prose maximum: $-4{,}745{,}868>-4{,}906{,}023$. The search therefore demonstrates broad plaintext acquisition on the disclosed family, while the score still needs a separately frozen prose-versus-structured-null decision rule. It does not establish a global optimum, fresh integrated power, the correctness of an upstream family, or a live solve.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Fit one class, restore three origins"
+body = '''
+Suppose three structural schedules all reduce to
+
+$$q=(0,1,1,2,0).$$
+
+A language finish chooses $\lambda(0)=A$, $\lambda(1)=L$, and $\lambda(2)=E$, giving `ALLEA`. The label fit runs once because the observable substitution problem is the same. Each schedule still keeps its own map from physical symbols to $0,1,2$, so the chosen labels are composed back into three distinct physical substitution maps and each is replayed separately. If the alphabet has five symbols, two labels remain unused and each observed map represents $2!=2$ full-key completions.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Substitution hill climbing and restricted-growth strings are established techniques. The reusable workflow here is their boundary: quotient exact observational aliases first, give the entire quotient a uniform search contract, require a checked local optimum, then restore all physical provenance and factored unused-key freedom.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_CLASSFINISH669.md"
+kind = "design"
+note = "Defines the all-class input contract, deterministic fixed-budget fitting, terminal swap audit, origin restoration, and incomplete boundaries."
+ref = "LOG669"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_classfinish669_core.cpp"
+kind = "solver"
+note = "Implements deterministic observed-class substitution fitting, exact incremental score deltas, and complete terminal swap scans."
+ref = "LOG669"
+
+[[provenance]]
+path = "withmath/logs/669_prepare_20260906T034409Z_1788666249476499000.prepared.json"
+kind = "data"
+note = "Prepared pure-symbol and real-table preflight artifact binding every class, restart, stationarity endpoint, and cap."
+ref = "LOG669"
+
+[[provenance]]
+path = "withmath/logs/669_preflight_reference_20260906T0344Z.log"
+kind = "audit"
+note = "Separate-code replay of score deltas, restart-order invariance, tiny exact optima, all terminal swaps, and refusal cases."
+ref = "LOG669"
+
+[[provenance]]
+path = "withmath/logs/669_public_20260906T034536Z_1788666336609139000.result.json"
+kind = "data"
+note = "Complete public result for all 52 cases, including exact 12/12 positive recovery and the nonprose score-overlap boundary."
+ref = "LOG669"
+
+[[provenance]]
+path = "withmath/logs/669_full_reference_20260906T0346Z.log"
+kind = "audit"
+note = "Separate-code full replay of all endpoints, complete swap neighborhoods, physical lifts, and forward letters."
+ref = "LOG669"

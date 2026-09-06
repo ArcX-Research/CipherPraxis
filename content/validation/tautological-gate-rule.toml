@@ -8,7 +8,7 @@ family = "Power and calibration"
 tags = ["gates", "roundtrip", "nulls", "self-deception"]
 related = ["valid-model-nulls", "planted-controls", "power-measurement", "selection-overfit-check", "kat-harness", "shuffled-null-z-score", "english-gate-calibration"]
 summary = "A check that every candidate passes tells us nothing. Before citing a gate, show both sides: valid input passes, and input that should fail does fail at a measured rate. A common empty check is forward round-trip. If a key was fitted by reversing the ciphertext, it will re-encrypt that fitted plaintext by construction. False keys pass too, so the round trip alone does not prove correctness."
-updated = "2026-09-04"
+updated = "2026-09-06"
 
 [[blocks]]
 kind = "definition"
@@ -47,6 +47,7 @@ Three tautologies recur in cryptanalytic pipelines and each appears in the progr
 - **Fitted roundtrip.** Fluent-looking overfits with exact two-layer roundtrips were produced by several lanes. The ledger rule "English-looking and exact roundtrip are separate checks. A freely fitted invertible key always roundtrips" was written after three such logs.
 - **A null the decision cannot lose to.** An audit of a two-stage selector found that its null replayed only a preliminary monogram statistic, never the finishing stage that declared a positive, so "every null comparison can fail and the immutable PASS can still be emitted". The lane was blocked.
 - **A structural check that cannot fire.** A within-coset alignment null was found to be mathematically invariant under the shuffles that generated it. An exact-solver certificate was noted to be unable to fail for any candidate that reached it.
+- **Feasibility after forward construction.** If a candidate plaintext is made by choosing hidden parameters and applying the model's own forward equation, the model-feasibility test must accept it. The check remains valuable as an independent implementation replay, but it cannot prune that proposal space. To gain search power, enforce a constraint not already guaranteed by the parameterization or test independently supplied endpoints.
 
 The cure in each case was the same: add an input class on which the check must fail, run it, and print the failure fraction.
 '''
@@ -151,3 +152,9 @@ path = "withmath/COORDINATION.md"
 kind = "ledger"
 note = "GATE LESSON: a prose-tail order-statistic gate fails real English; threshold re-anchored to the independent-letter ceiling plus 0.5."
 ref = "LOG385"
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/PK89_PORTADELTA714.md"
+kind = "note"
+note = "An exact CRT feasibility selector was informative for independently supplied complete endpoints, but tautological for plaintexts derived by first choosing the same hidden permutation and applying the model equation. It was retained only for independent replay, not pruning."
+ref = "LOG714"

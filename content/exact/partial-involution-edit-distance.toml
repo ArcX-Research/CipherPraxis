@@ -1,0 +1,144 @@
+id = "partial-involution-edit-distance"
+section = "exact"
+title = "Partial-involution edit distance"
+subtitle = "Compute the fewest observed components that must be removed for a conjugate completion"
+status = "VERIFIED"
+status_note = "The closed-form minimum matched independent full-extension enumeration in all 12,000 recorded comparisons across degrees six, ten, and twenty-six. Every proposed deletion witness was also checked to admit a complete extension."
+family = "Exact permutation constraints"
+tags = ["partial involution", "edit distance", "component deletion", "conjugacy", "error radius"]
+related = ["partial-involution-conjugacy-query", "bounded-permutation-shells", "two-involution-component-templates", "constraint-satisfaction-forward-checking", "bound-benchmarks-and-certificates", "reflection-product-cycle-lift"]
+summary = "When an observed reflection map is noisy, searching every subset of removed pairs is wasteful. Relative to a partially labelled template, conflicts are forced deletions, while excess unplaced loops and pairs are limited only by the template's remaining capacities. Adding those three terms gives the exact minimum component distance."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $q$ be an observed partial involution, $t$ a complete template involution, and $\phi$ a partial one-to-one assignment from template slots to letters. Components of $q$ are fixed loops or reciprocal two-letter pairs, each counted once.
+
+The **component deletion distance** is the minimum number of observed components that must be removed so that the remaining partial involution extends to some conjugate $\phi' t(\phi')^{-1}$ with $\phi'\supseteq\phi$.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Closed-form minimum"
+body = '''
+From the current partial labelling compute the remaining capacities $F$ for unused fixed slots and $E$ for unused two-cycle orbits, as in [Partial-involution conjugacy query](/exact/partial-involution-conjugacy-query).
+
+Let $C$ be the number of observed components that conflict with a determined template image or touch a placed endpoint whose image is already determined incorrectly. Every such component must be removed. Among the nonconflicting components wholly outside the placed-letter set, let $L$ be the number of loops and $P$ the number of pairs. Then
+
+$$d_{\min}=C+\max(0,L-F)+\max(0,P-E).$$
+
+Necessity follows from forced conflicts and orbit capacities. For sufficiency, delete those conflicts and just enough outside loops and pairs to fit; the retained components then satisfy the exact conjugacy completion criterion.
+
+For nonnegative component costs, replace the two excess counts by the sums of the cheapest excess outside loops and pairs. Forced conflicts always contribute their full costs.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Unweighted radius:** every observed loop or pair costs one.
+- **Weighted evidence:** assign confidence-dependent nonnegative costs to components and remove the cheapest excess ones.
+- **Bank query:** compute the minimum over several observed partial maps without enumerating their deletion subsets.
+- **Joint-map search:** this distance is exact for one map against one partial template; geometry between several maps can only add constraints.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- $q$ is reciprocal and injective on its observed domain; $t$ is a complete involution.
+- Distance counts components, not directed assignments. Deleting a pair removes both directions at one cost.
+- Component costs are nonnegative in the weighted form.
+- The chosen radius is an external support assumption. The exact distance oracle does not prove that a small radius contains the truth.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Query an error ball"
+body = '''
+Classify each observed component as a forced conflict, a compatible touching component, an outside loop, or an outside pair. Compute the two remaining orbit capacities and evaluate the formula. Reject a candidate template immediately when $d_{\min}$ exceeds the declared radius. If a witness is needed, delete all forced conflicts plus the cheapest excess loops and pairs, then run the exact conjugacy query on what remains. This gives an exact lower bound and an attaining witness without subset enumeration.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function MIN_COMPONENT_DELETIONS(template t, partial_label phi, observed q):
+    state = TEMPLATE_CAPACITIES(t, phi)
+    conflicts = []
+    outside_loops = []
+    outside_pairs = []
+    for component e of q, counted once:
+        class = CLASSIFY(e, state.placed, state.partial_image)
+        if class == CONFLICT: conflicts.append(e)
+        if class == OUTSIDE_LOOP: outside_loops.append(e)
+        if class == OUTSIDE_PAIR: outside_pairs.append(e)
+    need_l = max(0, size(outside_loops) - state.free_fixed_slots)
+    need_p = max(0, size(outside_pairs) - state.free_pair_orbits)
+    delete = conflicts
+    delete += CHEAPEST(outside_loops, need_l)
+    delete += CHEAPEST(outside_pairs, need_p)
+    require COMPATIBLE(t, phi, q without delete)
+    return SUM(cost(e) for e in delete), delete
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The unweighted calculation is linear in the number of observed components. The weighted form additionally sorts the outside loop and pair costs, for $O(m\log m)$ time with $m$ observed components. It replaces a search over as many as $2^m$ deletion subsets.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Directed Hamming distance:** counting both directions of a reciprocal pair doubles the intended radius.
+- **Only counting current conflicts:** a conflict-free set can still contain more outside loops or pairs than the template can hold.
+- **Negative costs:** the weighted proof relies on nonnegative costs; negative rewards change the optimisation problem.
+- **Calling a radius miss a family rejection:** the oracle closes only the declared error ball around the supplied proposal bank.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Independent references enumerated complete involutions at small degree and all missing-slot bijections at degree twenty-six. The closed form matched all 12,000 exact minimum-cost comparisons: 4,800 at degree six, 2,400 at degree ten, and 4,800 at degree twenty-six. The reference pools contained 256,243 full images in total. Tests included empty and full placements, too many observed loops, both legal fixed-point types, zero component costs, and up to six missing slots at degree twenty-six.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Forced and capacity deletions"
+body = '''
+Suppose the current template has room for one outside loop and one outside pair. An observed map contains one touching conflict, two compatible outside loops, and one compatible outside pair. The exact distance is
+
+$$1+\max(0,2-1)+\max(0,1-1)=2.$$
+
+Delete the touching conflict and either outside loop. The remaining loop and pair fit the available orbit types, so the lower bound is attained.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Edit distances and matching capacities are established combinatorial ideas. This component-level closed form for partial involution conjugacy, together with its weighted extension and independently checked witness construction, was derived in this project.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_EDIT573_EXACT.md"
+kind = "note"
+note = "Exact deletion formula, weighted extension, proof, support-radius boundary, and test counts."
+ref = "LOG573"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_dihedral573_edit_bound.py"
+kind = "solver"
+note = "Reference distance implementation and independent extension enumerators."
+
+[[provenance]]
+path = "withmath/logs/573_edit_kat_20260905T014857Z.log"
+kind = "log"
+note = "Twelve thousand exact minimum comparisons with independently verified extension witnesses."
+ref = "LOG573"
+
+[[references]]
+title = "Combinatorial Optimization: Algorithms and Complexity"
+author = "Christos H. Papadimitriou and Kenneth Steiglitz"
+year = 1982

@@ -1,0 +1,127 @@
+id = "baconian"
+section = "ciphers"
+title = "Baconian cipher"
+subtitle = "Hide five-symbol binary letter codes inside two visible classes"
+status = "UNTESTED"
+status_note = "The standard 24-letter construction is documented by the American Cryptogram Association, and the repository contains a bounded multi-class extractor. It has no dedicated planted-control panel or qualified hidden-message detector."
+family = "Steganographic encodings"
+tags = ["binary code", "biliteral", "cover text", "steganography", "two classes"]
+related = ["book-cipher", "frequency-analysis", "exhaustive-enumeration", "family-wise-null"]
+summary = "Baconian encoding writes every secret letter as five choices between two symbols, often called a and b. Those choices can be hidden in two typefaces, two alphabets, or any other visible binary property of a cover message. Solving means identifying the property, polarity, starting offset, and five-symbol grouping."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+The classical 24-letter form merges I/J and U/V, numbers the remaining letters from 0 to 23, and writes each number as five binary choices. Conventionally `a` means 0 and `b` means 1. The resulting unit stream may be shown directly or concealed in two distinguishable classes of cover symbols.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Five biliteral units per letter"
+body = '''
+For normalized secret-letter index $x\in\{0,\ldots,23\}$, write
+
+$$x=16b_0+8b_1+4b_2+2b_3+b_4,\qquad b_j\in\{0,1\}.$$
+
+Replace each zero with `a` and each one with `b`. Decoding reverses this map after splitting the extracted unit stream into groups of five.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- The historical 24-letter alphabet merges I/J and U/V.
+- A modern 26-letter form uses binary values 0 through 25 without merges.
+- Units can be hidden by typeface, capitalization, initial-letter range, shape, color, or another binary feature.
+- Some covers contain null symbols or begin between five-unit boundaries; those choices must be stated.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- Every selected cover symbol can be assigned to exactly one of two classes.
+- The polarity and five-unit phase are fixed across the extracted stream.
+- The 24- or 26-letter codebook is known or included in the search.
+- Cover formatting has not destroyed the distinguishing feature.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to attack it"
+body = '''
+List plausible binary properties of the cover. For each property, extract its units under both polarities, try all five starting phases, decode complete groups, and score the result as language. If many properties were invented after seeing the output, calibrate the maximum over the entire property-and-phase search with matched covers; otherwise short accidental words will look meaningful.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function ENCODE(secret, alphabet_variant):
+    units = empty
+    for letter in NORMALIZE(secret, alphabet_variant):
+        value = letter_index(letter, alphabet_variant)
+        append FIVE_BITS(value), using a for 0 and b for 1, to units
+    return units
+
+function SEARCH_COVER(cover, classifiers):
+    for classifier in classifiers:
+        bits = [classifier(symbol) for symbol in SELECTED_SYMBOLS(cover)]
+        for polarity in {normal, inverted}:
+            for phase in 0 .. 4:
+                text = DECODE_FIVE_BIT_GROUPS(bits, polarity, phase)
+                retain text with its full classifier and phase
+    return candidates ranked under the declared complete selector
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Encoding and one extraction are linear in the number of units. A declared scan over $q$ binary classifiers, both polarities, and five phases is $O(qn)$. The statistical cost comes from calibrating the best result over all those choices.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Wrong alphabet version.** The merge rules shift codes after I or U.
+- **Formatting loss.** Plain-text copying can erase fonts, case, spacing, or color.
+- **Phase fishing.** Trying many offsets and classifiers without a family-wise null produces chance words.
+- **Cover-language confusion.** The visible cover text is not the hidden plaintext.
+- **Incomplete final group.** Padding or trailing cover symbols need an explicit rule.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Hide a known message in a fresh cover with one predeclared classifier and include distractor binary properties. Require exact recovery of the message, property, polarity, phase, and merge convention. Repeat the complete selector on covers with no planted message to set a family-wise threshold. The repository's current extractor tries several letter classes, both polarities, and all phases but lacks this control contract.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+In the 24-letter form,
+
+```trace
+plain   C      O      D      E
+units   aaaba  abbab  aaabb  aabaa
+```
+
+The direct unit stream for `CODE` is `aaabaabbabaaabbaabaa`. A cover author can now represent each `a` and `b` with either of two visible styles. Reading those styles back in the same order recovers the four groups.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The cryptographic payload is small relative to the cover: every secret letter needs five binary carrier choices. The main uncertainty is often not the codebook but which visible property carries those choices.
+'''
+
+[[provenance]]
+path = "scripts/poem_final.py"
+kind = "solver"
+note = "Bounded extractor for several binary letter classes, both polarities, all five-unit phases, and language screening."
+
+[[references]]
+title = "BACONIAN"
+author = "American Cryptogram Association"
+url = "https://www.cryptogram.org/downloads/aca.info/ciphers/Baconian.pdf"

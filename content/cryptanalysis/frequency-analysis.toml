@@ -6,9 +6,9 @@ status = "VERIFIED"
 status_note = "The basic tests include single-letter likelihood, chi-square, correlation, coincidence rates with exact errors, and alphabet-free count comparisons. Planted checks calibrate each one. A coset-likelihood screen ranked the planted alphabet first of 2.06 million. A chi-square fit recovered a keyed text at 100%, and segment checks reproduced the expected z-scores (logs/24, 07, 38, 01)."
 family = "Period and structure recovery"
 tags = ["monogram", "histogram", "index of coincidence", "chi-square", "monoalphabetic", "calibration"]
-related = ["caesar-shift", "keyword-mixed-alphabet", "index-of-coincidence", "chi-squared-fit", "estimator-standard-error", "coset-shift-recovery", "exact-period-alignment", "family-identification", "hill-climbing", "g-coset"]
+related = ["caesar-shift", "keyword-mixed-alphabet", "homophonic-substitution", "index-of-coincidence", "chi-squared-fit", "estimator-standard-error", "coset-shift-recovery", "exact-period-alignment", "family-identification", "hill-climbing", "g-coset"]
 summary = "Frequency analysis compares a ciphertext's letter patterns with those of the expected language. A simple substitution keeps the same counts under different labels. A Caesar shift rotates those labels. A repeating cipher does the same within each coset. Letter counts and the index of coincidence can therefore suggest the outer cipher before any key search. Every result here includes an exact or simulated error range and planted comparisons at the same length."
-updated = "2026-09-04"
+updated = "2026-09-05"
 
 [[blocks]]
 kind = "definition"

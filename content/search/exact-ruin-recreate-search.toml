@@ -1,0 +1,158 @@
+id = "exact-ruin-recreate-search"
+section = "search"
+title = "Exact ruin-and-recreate search"
+subtitle = "Rebuild a selected part of a permutation exactly while keeping the rest fixed"
+status = "POWER-LIMITED"
+status_note = "The exact neighbourhood, masked n-gram bound, key refit, score deltas, deterministic schedule, cap refusal, and forward transform passed exhaustive small-alphabet checks. One frozen longer-control pilot drained its declared neighbourhood but made no improvement, so the implementation is sound while recovery power remains unproved."
+family = "Large-neighbourhood search"
+tags = ["large neighbourhood search", "permutations", "ruin and recreate", "masked n-grams", "exact key refit", "local optimum"]
+related = ["bounded-permutation-shells", "coordinate-descent", "strict-best-improvement-swap-ascent", "admissible-bound-selectivity", "quadgram-log-likelihood", "permutation-cycles", "power-analysis"]
+summary = "Small swaps can become trapped because several permutation positions must change together. Ruin-and-recreate search chooses a small set of positions, removes their current values, and searches every legal reassignment of those same values. An n-gram mask table gives an admissible branch bound, while any small periodic key can be refitted exactly after a completed move. A drained neighbourhood proves only that no improving move exists in that declared neighbourhood."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $\pi$ be a permutation of $m$ symbols and choose a destroy set $S\subseteq\{0,\ldots,m-1\}$ of size $r$. Remove the values $V=\{\pi(s):s\in S\}$. The exact recreate neighbourhood is
+
+$$\mathcal N_S(\pi)=\{\pi':\pi'(j)=\pi(j)\text{ for }j\notin S,
+\ \{\pi'(s):s\in S\}=V\}.$$
+
+It contains at most $r!$ complete permutations. Every candidate remains a permutation because the recreate step reuses exactly the removed values. If the cipher also has a small key $k$, score a completed permutation by its exact conditional optimum
+
+$$F(\pi')=\max_{k\in K}S(\operatorname{Dec}(C;\pi',k)).$$
+
+Enumerating all of $K$ after each complete recreate prevents stale key coordinates from hiding a useful large move.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Masked n-gram upper bound"
+body = '''
+For an order-$d$ score table $Q(x_1,\ldots,x_d)$, precompute one table for every known/unknown mask $M\in\{0,1\}^d$:
+
+$$B_M(y)=\max_{x:\,x_j=y_j\text{ whenever }M_j=1} Q(x_1,\ldots,x_d).$$
+
+At a partial recreate node, each plaintext window has some known letters and some letters that depend on unassigned permutation positions. Sum its matching masked maximum:
+
+$$U(s)=\sum_{i=1}^{n-d+1} B_{M_i(s)}(y_i(s)).$$
+
+Each window is maximized independently, so overlap consistency and the remaining permutation restrictions are relaxed. Therefore $U(s)$ is an admissible upper bound on every completion below $s$. The relaxation may be loose; its selectivity must be measured separately.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Bad-window destroy:** rank current low-scoring n-gram windows and include the permutation positions responsible for their letters.
+- **Influence destroy:** choose positions that affect the largest number or total weight of score windows.
+- **Randomized destroy:** use a seed fixed before evaluation and preserve every sampled set in the receipt.
+- **Joint key-coordinate move:** change one key coordinate, recreate a smaller permutation set exactly, then refit the full key.
+- **Iterated LNS:** after accepting a strict improvement, rebuild the deterministic destroy schedule from the new state and repeat until a full sweep has no improvement.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The destroy-set rule, set size, number of sets, key-refit domain, acceptance rule, and node cap are fixed before the evaluated truth is opened.
+- Partial bounds use the same score table and exact arithmetic convention as complete leaves.
+- Equal-bound branches survive; only a strict upper-bound loss permits pruning.
+- Every complete recreate is checked against the required permutation or cycle type and replayed through the forward cipher.
+- A cap withholds the candidate and makes the neighbourhood incomplete.
+- No improvement proves local stationarity only for the exact union of destroy sets and joint moves that was drained.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Escape a small-move basin"
+body = '''
+Start from a complete, legal candidate produced independently. Score every n-gram window and build a deterministic list of destroy sets. For each set, enumerate its value permutations with branch and bound using the masked table. At every complete leaf, enforce the full structural constraints and refit all small key coordinates exactly. Accept only a strict score increase, then independently recompute the plaintext, score, and forward ciphertext.
+
+Large neighbourhoods are most useful when the current error is coupled: two or more wrong positions must change together and every intermediate single swap scores worse. They do not repair a wrong cipher family, wrong language model, or proposal bank that never reaches the right basin.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function EXACT_RUIN_RECREATE(cipher, permutation, destroy_sets, keys, score):
+    current = EXACT_REFIT_KEYS(cipher, permutation, keys, score)
+    for S in destroy_sets:
+        values = permutation[S]
+        best_move = current
+        search(partial_assignment):
+            if node cap reached: return INCOMPLETE and withhold candidate
+            if MASKED_NGRAM_BOUND(partial_assignment) < best_move.score:
+                return
+            if every position in S is assigned:
+                candidate_perm = REPLACE(permutation, S, partial_assignment)
+                require candidate_perm is a legal permutation or cycle
+                candidate = EXACT_REFIT_KEYS(cipher, candidate_perm, keys, score)
+                if candidate.score > best_move.score:
+                    best_move = candidate
+                return
+            for unused value in stable order:
+                search(partial_assignment + value)
+        search(empty)
+        if best_move.score > current.score:
+            require FULL_SCORE(best_move.plaintext) == best_move.score
+            require FORWARD(best_move) == cipher
+            current = best_move
+    return current
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+A raw recreate over $r$ positions has $r!$ leaves: $8!=40{,}320$, $10!=3{,}628{,}800$, and $12!\approx4.79\times10^8$. Masked-window pruning can reduce that sharply when assigned positions determine strong n-grams. Exact refitting over $p$ key coordinates on an alphabet of size $m$ costs $m^p$ per completed move unless max-sum elimination or cached factors are used. The useful size depends on bound tightness, not only on $r!$.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Recreate is only a sequence of greedy swaps:** intermediate losses are rejected, so the method never crosses the barrier it was meant to cross.
+- **Values may duplicate or disappear:** the recreated mapping is no longer a permutation.
+- **Key left stale:** a good permutation move is rejected because the old periodic key is not refitted.
+- **Truth-shaped destroy set:** known wrong positions from a control are used to design the measured schedule.
+- **Loose bound sold as exact recovery:** the branch bound is valid, but a node cap leaves most leaves unexplored.
+- **One neighbourhood called global:** a drained $r$-position set says nothing about other destroy sets or another family.
+- **Forward replay called correctness:** any internally consistent wrong key can replay; plaintext recovery or a calibrated decision still needs independent evidence.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The implementation behind this entry matched complete permutation enumeration at alphabet sizes 5, 6, and 7 under two cipher relations, including a 24-way flat tie. Every masked bound dominated every legal descendant score in 130 partial states. Exact key refits covered 250 key triples, a joint key-coordinate neighbourhood covered 120 representations, and 42 incremental swap deltas matched full rescoring. Deterministic scheduling, scalar forwards, malformed inputs, and the candidate-withholding cap path also passed.
+
+The sole frozen 95-symbol consumed-control pilot searched five declared neighbourhoods. It visited 178,948 nodes, reached 262 leaves, pruned 104,627 branches, evaluated 17,576 key triples, and did not hit its cap. It accepted no move: the exact score gain was zero and known plaintext agreement remained 6/95. This is a clean bounded non-improvement. It closes that starting point and neighbourhood schedule, not ruin-and-recreate search in general and not the cipher family.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Ruin-and-recreate is a form of large-neighbourhood search. The reusable cryptanalytic pattern is to combine a heuristic choice of what to destroy with an exact solver for what was destroyed. Saving both the starting endpoint and the complete neighbourhood contract makes a non-improvement scientifically useful.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_CYCLE_LNS_672.md"
+kind = "design"
+note = "Defines the permutation destroy/recreate neighbourhood, exact key refit, masked quadgram bound, scheduling, and bounded interpretation."
+ref = "LOG672"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk9_cycle_lns672_core.cpp"
+kind = "solver"
+note = "Implements exact recreate enumeration, masked-score pruning, key-coordinate moves, and complete key refits."
+ref = "LOG672"
+
+[[provenance]]
+path = "withmath/logs/672_cycle_lns_pilot_20260906T043327Z_46514.log"
+kind = "data"
+note = "Frozen KAT, sole consumed-control pilot, bounded non-improvement result, and independent audit receipt."
+ref = "LOG672"
+
+[[references]]
+title = "Using Constraint Programming and Local Search Methods to Solve Vehicle Routing Problems"
+author = "Paul Shaw"
+year = 1998

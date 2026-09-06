@@ -1,0 +1,158 @@
+id = "observable-function-fingerprinting"
+section = "cryptanalysis"
+title = "Observable-function fingerprinting"
+subtitle = "Compare cipher families through the exact equality patterns they expose"
+status = "VERIFIED"
+status_note = "Independent implementations agree on exhaustive small-ring fingerprints and expected family intersections; fixed larger-ring probes supply explicit separation witnesses. Probe agreement alone is not treated as a universal proof."
+family = "Cipher-family discrimination"
+tags = ["function fingerprints", "equality patterns", "restricted growth strings", "family separation", "finite rings"]
+related = ["isomorph-analysis", "family-identification", "group-actions-on-alphabets", "latent-label-identifiability", "feedback-state-gauges-and-cells", "exhaustive-enumeration", "known-answer-tests", "reproducibility-receipts"]
+summary = "When an unknown substitution can relabel every internal symbol, raw coordinate values are not observable but their equality pattern is. Canonically encode that quotient for every input in a small finite domain, or for fixed probes in a larger one. The resulting function fingerprints reveal parameter aliases, exact intersections between tested families, and individual inputs that prove two transforms differ."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let a parameterized cipher layer produce an internal sequence $T_\theta(x)$. If an arbitrary bijection may relabel its output symbols, the relevant observable is not the literal sequence but its equality partition.
+
+The **restricted growth string** $Q(y)$ labels the first new value in $y$ by $0$, the next previously unseen value by $1$, and so on. Thus
+
+$$Q(y)_i=Q(y)_j\quad\Longleftrightarrow\quad y_i=y_j,$$
+
+and $Q(\sigma(y))=Q(y)$ for every bijection $\sigma$. Replace $Q$ with another proved quotient when the nuisance group is different.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "A fingerprint of the quotient-observable function"
+body = '''
+For a declared probe domain $D$, define
+
+$$\Phi_D(\theta)=\big(Q(T_\theta(x))\big)_{x\in D},$$
+
+using a canonical order and unambiguous length-delimited serialization. Parameters with equal fingerprints are aliases on $D$. For families $A$ and $B$, the tested observable intersection is
+
+$$\{\Phi_D^A(\alpha):\alpha\in\Theta_A\}\cap
+\{\Phi_D^B(\beta):\beta\in\Theta_B\}.$$
+
+If $D$ is the complete finite input domain, this is an exact comparison of the quotient-observable functions on that domain. If $D$ is only a probe set, a differing component is a valid witness that two functions are not equal, but matching fingerprints mean only “not separated by these probes.”
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Complete small-ring exhaustion:** enumerate every input over a small modulus and obtain a finite proof for that ring and length.
+- **Deterministic larger-ring probes:** use a committed probe set to find cheap non-equivalence witnesses without claiming complete equivalence.
+- **Symbolic witness search:** derive an input algebraically from the first recurrence coefficient where two families differ.
+- **Other quotients:** canonicalize under rotation, affine relabelling, reversal, or a proved gauge group instead of arbitrary monoalphabetic relabelling.
+- **Dynamic data classes:** even globally separated parameter cells can coincide on one observed text, so group exact data-specific outputs again during solving.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- $Q$ removes exactly the nuisance freedom of the fitted layer. Resetting labels per input is correct only when each observation may choose its own nuisance relabelling.
+- Input order, parameter order, ring arithmetic, boundary state, and serialization are frozen.
+- Exact bytes, not hashes alone, define equality; hashes are compact receipts.
+- Claims are limited to the enumerated parameter banks, input domain, sequence length, and modulus.
+- Composite rings are tested directly because zero divisors and nilpotents can create collisions absent over fields.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Separate families before language scoring"
+body = '''
+Write independent forward or peel functions for each candidate family. Choose a small domain that retains the relevant modular behaviour, enumerate its inputs and parameter cells, and canonicalize each output under the observable quotient. Reverse-index the fingerprints to measure aliases and family intersections. Confirm known boundary overlaps, save one differing input for every claimed separation, and only then spend language-model search on genuinely distinct cells.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function EQUALITY_PATTERN(values):
+    labels = empty map
+    pattern = empty sequence
+    for value in values:
+        if value is not in labels:
+            labels[value] = SIZE(labels)
+        APPEND(pattern, labels[value])
+    return pattern
+
+function FINGERPRINT(transform, parameter, ordered_inputs):
+    pieces = empty sequence
+    for input in ordered_inputs:
+        output = transform(input, parameter)
+        APPEND_LENGTH_DELIMITED(pieces, EQUALITY_PATTERN(output))
+    return CANONICAL_BYTES(pieces)
+
+function COMPARE_FAMILIES(family_a, family_b, ordered_inputs):
+    bank_a = {parameter: FINGERPRINT(family_a, parameter, ordered_inputs)}
+    bank_b = {parameter: FINGERPRINT(family_b, parameter, ordered_inputs)}
+    aliases_a = REVERSE_INDEX(bank_a)
+    aliases_b = REVERSE_INDEX(bank_b)
+    overlap = KEYS(aliases_a) INTERSECT KEYS(aliases_b)
+    witnesses = FIND_FIRST_DIFFERING_INPUTS(bank_a, bank_b, ordered_inputs)
+    return aliases_a, aliases_b, overlap, witnesses
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+For $|\Theta|$ parameter cells, $|D|$ inputs, and output length $L$, direct fingerprinting costs $O(|\Theta||D|L)$. Streaming hashes reduce memory but must not replace exact byte comparison when declaring equality. Exhaustive input domains grow exponentially with $L$, which is why small rings and short sequences are useful algebraic instruments.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Raw-label comparison.** Coordinate aliases are reported as different families even though an unknown substitution absorbs them.
+- **Wrong quotient scope.** Labels are reset per input when one global relabelling should link all inputs, or kept global when each fitted instance is independent.
+- **Finite-probe overclaim.** Two cells agree on the probes and are declared universally identical.
+- **Hash-only equality.** A digest is treated as the mathematical object without retaining canonical bytes or an independent encoding.
+- **Field-only testing.** A composite modulus introduces a collision that prime-ring tests cannot show.
+- **Observed-text overclaim.** Distinct functions happen to agree on one ciphertext and their data-specific alias is ignored.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Use complete input exhaustion on several tiny rings, including at least one composite ring. Check every parameter cell, known shared boundary, and family intersection with an independently written transform and serializer. Mutate sign, state seed, update order, and quotient scope so each defect changes a pinned result. On the full modulus, use deterministic fixed probes and store the first differing input as a witness; report any matching pair as unresolved unless a symbolic or exhaustive proof closes it.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Relabelled sequences share one observable"
+body = '''
+The sequences $(7,2,7,9)$ and $(4,8,4,3)$ both have equality pattern $(0,1,0,2)$, so an arbitrary symbol substitution can map either pattern to the other. The sequence $(7,2,9,7)$ has pattern $(0,1,2,0)$ and is observably different. If two transforms produce these two different patterns on one common input, that input alone witnesses non-equivalence under monoalphabetic relabelling.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Restricted growth strings are a standard canonical encoding of set partitions. The systematic use of complete quotient-function fingerprints, family intersections, and one-sided larger-ring witnesses described here was developed as a reusable algebra test in this project; it is not presented as a claim of worldwide novelty.
+'''
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_plainfeedback623_controls.py"
+kind = "script"
+note = "Implements complete small-ring quotient-function fingerprints, independent encodings, expected boundary intersections, and composite-ring collision checks."
+ref = "LOG623"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_PLAINFEEDBACK623_INDEPENDENT_DESIGN_NOVELTY_AUDIT.md"
+kind = "audit"
+note = "Separates affine-form comparison from the true equality-pattern observable and independently reproduces the exhaustive fingerprint result."
+ref = "LOG623"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_plainfeedback630_secondorder_theory.py"
+kind = "script"
+note = "Extends the method to a second-order recurrence with complete tiny-ring domains and deterministic larger-ring separation probes."
+ref = "LOG630"
+
+[[provenance]]
+path = "withmath/logs/630_pk10_plainfeedback_theory_20260905T144704Z_1788619624826808000.log"
+kind = "log"
+note = "Frozen target-absent algebra receipt for exact fingerprints, family intersections, and explicit separation witnesses."
+ref = "LOG630"

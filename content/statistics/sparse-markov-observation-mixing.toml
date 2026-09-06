@@ -1,0 +1,150 @@
+id = "sparse-markov-observation-mixing"
+section = "statistics"
+title = "Sparse Markov observation mixing"
+subtitle = "Long gaps can reduce exact language evidence to little more than letter frequency"
+status = "VERIFIED"
+status_note = "The exact marginal was checked against direct route enumeration and a separate implementation. In two-row proposal controls, adding every long-gap transition changed scores but not any top-1,024 pool or top-512 frontier. This verifies the calculation and demonstrates one low-power sparse regime; it is not a universal rejection of partial language scoring."
+family = "Partial language evidence"
+tags = ["Markov chain", "sparse observations", "transition powers", "mixing", "partial plaintext", "beam search"]
+related = ["n-gram-language-scoring", "transposed-running-key-endpoint-scoring", "constraint-activation-timing", "exact-dynamic-programming", "power-measurement"]
+summary = "When a partial key reveals plaintext letters far apart, score them with transition-matrix powers rather than pretending that the revealed letters are adjacent. For a mixing Markov model, a large power of the transition matrix approaches the stationary distribution. The link between distant letters then carries very little extra information, so an exact route-aware score may rank proposals almost like a monogram score. Measure this loss before trusting sparse language evidence at an early beam cut."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let a first-order language model have initial distribution $\pi$ and transition matrix $T$. Suppose a partial decryption reveals symbols $x_1,\ldots,x_m$ only at positions
+
+$$0\le i_1<i_2<\cdots<i_m.$$
+
+The exact marginal probability of these observations is
+
+$$P(x_1,\ldots,x_m)
+=(\pi T^{i_1})_{x_1}
+\prod_{j=1}^{m-1}(T^{i_{j+1}-i_j})_{x_j,x_{j+1}}.$$
+
+Every unobserved letter has been summed out. Scoring $x_1x_2\cdots x_m$ as if those symbols were consecutive instead uses $T$, not the required powers $T^g$, and describes a different observation process.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Why long gaps lose dependence"
+body = '''
+For an irreducible, aperiodic finite-state chain with stationary distribution $\mu$,
+
+$$T^g(a,b)\longrightarrow \mu(b)$$
+
+as the gap $g$ grows. One useful bound uses the Dobrushin contraction coefficient
+
+$$\delta(T)=\frac12\max_{a,a'}\sum_b|T(a,b)-T(a',b)|.$$
+
+Then the distance between two rows contracts as
+
+$$\lVert T^g(a,\cdot)-T^g(a',\cdot)\rVert_{\rm TV}
+\le \delta(T)^g.$$
+
+When this bound is small, the next observed symbol depends little on the previous observed symbol. Its term is close to $\mu(x_{j+1})$, so the exact marginal approaches a product of one-letter probabilities. A hidden route can still change which letters appear at which positions, but it receives little help from language boundaries until observations become dense enough.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "What the calculation proves"
+body = '''
+- $T$ is row-normalized and uses the same alphabet and direction as the decoded observations.
+- Positions are absolute positions in the modeled text; route boundaries and cycled tails are not silently omitted.
+- Unknown letters are marginalized through $T^g$, not filled with a best guess.
+- The route maximum is an exact selector only over the declared finite route set. It is not a probability marginal over routes unless route probabilities are summed.
+- A mixing bound describes the chosen language model. It does not prove that real language is first-order Markov.
+- Weak early ranking does not disprove the cipher family. It shows that this score and proposal representation do not expose enough information before the tested cut.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Audit a sparse partial score"
+body = '''
+Build the normalized transition matrix before examining target outcomes. For each candidate geometry, list the absolute positions and symbols that the current partial state implies. Score them with the exact matrix-power marginal. Optimise any small hidden route exactly and keep a canonical route witness.
+
+At every pruning cut, compare this score with a simpler monogram or local proxy over the identical proposal universe. Record the truth rank in planted controls, selected-set overlap, the distribution of observation gaps, and a mixing diagnostic such as the largest row-to-row total-variation distance of every used $T^g$. If the exact score cannot retain linked truths better than the proxy before the cut, it has no demonstrated proposal power at that stage.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function SPARSE_MARKOV_LOGP(observations, initial, transition):
+    sort observations by absolute position
+    score = log((initial * POWER(transition, first.position))[first.symbol])
+    for previous, current in consecutive(observations):
+        gap = current.position - previous.position
+        score += log(POWER(transition, gap)[previous.symbol, current.symbol])
+    return score
+
+function EARLY_POWER_AUDIT(proposals, routes, width):
+    for proposal in proposals:
+        proposal.score = max(
+            SPARSE_MARKOV_LOGP(IMPLIED_OBSERVATIONS(proposal, route))
+            for route in routes)
+    rank every proposal with fixed tie-breaking
+    record planted rank, selected IDs, gaps, route witness and mixing diagnostics
+    return first width proposals
+```
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Gap deletion:** sparse observations are concatenated and scored as adjacent text.
+- **Boundary deletion:** only within-column or within-block pairs are scored, while route boundaries are ignored.
+- **Exact-but-empty complexity:** a full marginal is implemented, but transition powers have already mixed and add almost no ranking information.
+- **Endpoint success called proposal power:** a complete planted endpoint scores well, although the early generator discards it.
+- **Changed proposal universe:** two scoring arms enumerate different candidates, so a rank improvement cannot be attributed to the score.
+- **Width tuning:** the beam is enlarged after seeing the planted rank instead of adding information.
+- **Power failure called a family negative:** the tested selector loses truth and is wrongly used to reject the underlying cipher.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+First verify transition powers against direct summation over all missing symbols on a small alphabet. Check gaps zero and one, long gaps, deterministic and nearly deterministic chains, stationary starts, nonstationary starts, and exact score ties. For a hidden route, compare the route optimiser with direct permutation enumeration and replay its reported witness.
+
+A target-absent two-row experiment then compared four arms over identical exhaustive word-extension universes: a relaxed proxy, that proxy plus an exact algebraic filter, the sparse route marginal, and both additions. In the only linked control reaching row two, the relaxed and route-aware scores both ranked truth 1,271 among 13,132 legal extensions. The algebraic filter moved it only to 1,266. Across all linked and unlinked controls, the exact route marginal produced the same top-1,024 pools and top-512 frontiers as the proxy. A separate program rebuilt 29,516 proxy extensions, verified 5,130 route witnesses and 2,565 algebraic decisions, and reproduced every decisive rank.
+
+These controls demonstrate a concrete sparse, long-gap regime where a more exact language calculation does not add early selection power. Denser observations, a slower-mixing model, or a structural cross-text constraint can behave differently and needs fresh controls.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The main design question is not only whether a partial-language score is mathematically valid, but when it becomes informative. Plot truth rank and selected-set overlap against observation density and the used gap powers. If dependence vanishes before the first beam cut, spend effort on a representation that reveals adjacent letters earlier or on an algebraic constraint that survives the gaps.
+
+Higher-order models do not automatically fix sparse observation. Exact marginalization then uses a larger hidden-state transition matrix, but powers of that matrix can still mix over long gaps. Measure the model's actual contraction and control power rather than assuming that extra order preserves context indefinitely.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK89_T9EARLY704.md"
+kind = "design"
+note = "Derives the exact sparse Markov marginal, corrected routed geometry, early algebraic ablation, and measured proposal-power boundary."
+ref = "LOG704"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk89_t9early704.py"
+kind = "solver"
+note = "Implements the four-arm target-absent proposal test and records every pre-cut truth rank."
+ref = "LOG704"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk89_t9early704_audit.py"
+kind = "audit"
+note = "Separately rebuilds proposal universes, checks route witnesses and algebraic decisions, and proves decisive rank bounds."
+ref = "LOG704"
+
+[[provenance]]
+path = "withmath/logs/704_pk89_t9early_controls_20260906T095010Z_12151_10660.json"
+kind = "data"
+note = "Frozen target-absent ablation results and truth-rank telemetry."
+ref = "LOG704"
+
+[[references]]
+title = "Markov Chains and Mixing Times"
+author = "David A. Levin, Yuval Peres, and Elizabeth L. Wilmer"
+year = 2009

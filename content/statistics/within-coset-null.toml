@@ -8,7 +8,7 @@ family = "Null distributions and calibration"
 tags = ["null distribution", "permutation", "coset", "valid-model null", "matched null"]
 related = ["permutation-test", "shuffled-null-z-score", "family-wise-null", "selection-overfit-diagnostic", "valid-model-nulls", "vigenere", "quagmire-iii", "exact-period-alignment", "g-coset", "g-null-distribution"]
 summary = "For a period-p substitution over language-like plaintext, shuffling the whole text destroys patterns the model itself predicts. A within-coset null shuffles positions only inside each class i mod p. This keeps every coset histogram, coset IC, total letter count, and the single-letter counts after removing any tested progressive slope. It destroys language order within and across cosets. Each key still decrypts to the same letters in another order, so any extra score in the original comes from order alone."
-updated = "2026-09-04"
+updated = "2026-09-06"
 
 [[blocks]]
 kind = "definition"
@@ -27,6 +27,22 @@ body = '''
 - Per-coset letter histograms $F_r(x)$ and hence the coset IC, the union IC of any alignment, and every shift-marginalised [evidence](/statistics/bayesian-evidence-model-selection).
 - For a progressive key $k_j = k_{j \bmod p} + d \cdot \lfloor j/p \rfloor$ the term $d \cdot j \bmod 26$ is *not* constant within a residue class of $p$. But for a period-26 coset structure with slope $d$, $d \cdot j \bmod 26$ is constant inside $j \bmod 26 = r$, so the de-progressed monogram multiset of every tested slope is preserved by the period-26 within-coset null.
 - Same-residue equality partitions: the multiset of pair indicators $[c_i = c_j]$ over pairs in one coset is preserved as a multiset but re-based to different positions, which re-orders (without changing) the row space of exact key-cancellation equations.
+'''
+
+[[blocks]]
+kind = "variants"
+title = "Two-source conditional nulls"
+body = '''
+When a statistic combines two texts, shuffling both at once answers a weak question: whether the pairing beats inputs with the order of both texts destroyed. A high score can then come entirely from serial structure in either source, even when there is no cross-text relation.
+
+Use two conditional strata instead:
+
+1. Keep the left source byte-for-byte fixed and shuffle only the right source within the declared cosets.
+2. Keep the right source fixed and shuffle only the left source within the declared cosets.
+3. Re-run the complete cross-text selector in every replicate of both strata.
+4. Require the observation to beat every null maximum in each stratum separately; report the two ranks separately and let equality reject.
+
+This tests whether the observed pairing contributes information beyond the structure already present in either source. Both-source shuffles may still be recorded as a diagnostic, but they should not replace the two conditional decisions.
 '''
 
 [[blocks]]
@@ -95,6 +111,7 @@ body = '''
 - **Reusing the observed selection.** Scoring the observed key on shuffled texts (instead of re-fitting) measures a different, smaller null and inflates significance.
 - **Wrong period.** A within-coset null at the wrong $p$ neither preserves the true cosets nor randomises them fully. The resulting $\hat p$ is uninterpretable.
 - **Exchangeability across a union of hypotheses.** If the hypothesis family includes a re-indexing of the text (dihedral or affine re-orderings), one shuffle group is exchangeable for one indexing only. The null must either be proved exchangeable for the whole union or be run as separate matched tests with the worst-case $p$.
+- **Shuffling both sources in a cross-text test.** This destroys each source's own order as well as their pairing, so a one-source language signal can masquerade as cross-text evidence. Use two one-source-fixed strata.
 - **Too few nulls.** One null gives $\hat p \le 1/2$ and proves nothing about a 1% rate; nine give $\hat p \ge 0.10$.
 '''
 
@@ -156,6 +173,12 @@ note = "Minimal matched permutation for a period-26 span: permute positions with
 path = "withmath/LOG_AUDIT.md"
 kind = "audit"
 note = "Family ledger: 'the period-7 readings of texts A and B and the period-26 reading of text C are at/below within-coset familywise nulls'; no promotion of a string unless the full selected-family null is lower."
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/CROSSDERIVE_ZONE691_DESIGN.md"
+kind = "design"
+note = "Two-source correction: separate left-fixed/right-shuffled and right-fixed/left-shuffled period-preserving strata, with the full 1,056-cell selector repeated and both strict ranks required."
+ref = "LOG691"
 
 [[references]]
 title = "Permutation Tests: A Practical Guide to Resampling Methods for Testing Hypotheses"

@@ -1,0 +1,165 @@
+id = "zero-aware-cartesian-product-cap"
+section = "exact"
+title = "Zero-aware Cartesian-product caps"
+subtitle = "Compute empty products before declaring a large exact enumeration impossible"
+status = "VERIFIED"
+status_note = "An exact enumerator matched an independent Cartesian-product oracle and passed a regression in which a large partial product was followed by a zero factor. A later replay also verified that an over-cap branch withheld its complete union rather than emitting a biased subset."
+family = "Exact enumeration"
+tags = ["Cartesian product", "caps", "overflow", "empty set", "completeness"]
+related = ["exhaustive-enumeration", "candidate-bank-lineage-and-cap-accounting", "bound-benchmarks-and-certificates", "factorial-completion-resource-guards", "drainability-and-throughput", "throughput-fail"]
+summary = "The size of a Cartesian product is zero if any factor is zero, even when earlier factors already exceed a resource cap. Inspect every factor for emptiness before doing capped multiplication. If a nonempty exact family exceeds its cap, mark the whole family incomplete and emit no selectively truncated prefix unless approximation was explicitly part of the contract."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Suppose an exact stage must enumerate choices from finite sets $S_1,\ldots,S_m$. Its physical family is
+
+$$\mathcal{X}=S_1\times\cdots\times S_m.$$
+
+A **zero-aware product cap** distinguishes three results before enumeration: `COMPLETE_EMPTY`, `COMPLETE_NONEMPTY`, and `CAP_EXCEEDED`. It first validates and inspects the complete factor vector. Only a fully nonzero vector enters overflow-safe capped multiplication.
+
+For a union of several product families, compute each family's cardinality this way and then add the nonzero cardinalities with checked arithmetic. A nonproductive family contributes zero, not an early refusal.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Order-independent cardinality"
+body = '''
+Let $n_j=|S_j|$ and let the permitted physical-product cap be $K$. Then
+
+$$N=|\mathcal{X}|=\prod_{j=1}^{m}n_j.$$
+
+The zero law has priority:
+
+$$\left(\exists j:n_j=0\right)\Longrightarrow N=0,$$
+
+regardless of the size of any prefix product. When every factor is positive, multiplication can be checked without overflow by refusing before $p\leftarrow pn_j$ whenever
+
+$$p>\left\lfloor\frac{K}{n_j}\right\rfloor.$$
+
+For disjoint groups $g$, the total census is $N_{\rm total}=\sum_g N_g$; use the same subtraction or division checks before addition and multiplication.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Single product:** one tuple family with one global cap.
+- **Union of groups:** zero-aware cardinality per group followed by checked summation.
+- **Streaming enumeration:** allowed only after the complete cardinality has passed the cap.
+- **Factorial factors:** compute missing-permutation counts without constructing their completion lists; see [Factorial completion resource guards](/exact/factorial-completion-resource-guards).
+- **Approximate prefix:** a different contract that may retain the first $K$ tuples, and must never be labelled exact or complete.
+- **Semantic cap:** applied after quotienting aliases; it is separate from this physical-product feasibility cap.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- Every factor count is exact, nonnegative, and available before tuple emission.
+- The family definition is a Cartesian product; dependencies between factors must be handled by an exact constrained counter instead.
+- `CAP_EXCEEDED` is an infrastructure or support limit, not evidence that no candidate exists.
+- Enumeration counters and forward-check counters must equal the accepted product cardinality before the stage can report complete.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Apply a physical-family cap safely"
+body = '''
+Build all accepted factor sets, record their exact sizes, and check whether any is empty. For nonempty groups, calculate the product using division-before-multiplication so machine overflow cannot wrap it below the cap. Check the sum across groups the same way. Start enumeration only after the full declared family fits. If it does not fit, preserve the cap failure and withhold exact-family output rather than allowing early groups or tuple order to choose a biased subset.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function CAPPED_PRODUCT(factors, cap):
+    require cap >= 0
+    require every factor is an integer and factor >= 0
+    if ANY(factor == 0 for factor in factors):
+        return COMPLETE_EMPTY, 0
+    product = 1
+    for factor in factors:
+        if product > FLOOR(cap / factor):
+            return CAP_EXCEEDED, unknown
+        product = product * factor
+    return COMPLETE_NONEMPTY, product
+
+function CAPPED_UNION(groups, cap):
+    total = 0
+    for factors in groups:
+        status, size = CAPPED_PRODUCT(factors, cap - total)
+        if status == CAP_EXCEEDED: return CAP_EXCEEDED, no_rows
+        if size > cap - total: return CAP_EXCEEDED, no_rows
+        total = total + size
+    return COMPLETE, ENUMERATE_EXACTLY(total)
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The preflight costs $O(m)$ per product group and constant extra memory. Exact enumeration still costs $\Theta(N)$ when admitted. The test prevents wasted or misleading work; it does not reduce a genuinely large nonempty product.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Early-prefix refusal.** A partial product exceeds $K$ before a later zero factor is inspected, falsely classifying an empty family as too large.
+- **Integer overflow.** Multiplication wraps around and makes an enormous family appear small.
+- **Partial exact output.** Rows emitted before a later cap failure are presented as a complete bank.
+- **Order dependence.** Reordering the same factors changes the terminal status, which is impossible for the mathematical product.
+- **Conflated caps.** A physical enumeration cap is confused with a top-$K$ semantic output cap.
+- **Unknown treated as zero.** A missing or uncomputed factor is labelled empty rather than incomplete.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Compare the routine with arbitrary-precision direct products for random small vectors and every permutation of each vector. Include zero in the first, middle, and last positions; include products exactly at and one above the cap; and include factors near the machine-word limit. For a union, combine a nonproductive group whose early positive factors exceed the cap with a productive group that fits, then require the productive group to enumerate completely. Separately force a genuinely nonempty over-cap group and require zero emitted rows plus an explicit incomplete terminal.
+'''
+
+[[blocks]]
+kind = "example"
+title = "A later zero cancels a large prefix"
+body = '''
+With cap $22$, the factor vector $(11,10,0)$ has prefix product $110$ but true product
+
+$$11\cdot10\cdot0=0.$$
+
+It must therefore contribute no rows and no cap failure. A second group of size $22$ can still be enumerated completely. By contrast, a nonempty product of $39$ under cap $38$ is genuinely over cap and must be withheld as incomplete.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The zero law and overflow-safe multiplication are elementary. Their importance here is contractual: resource caps must preserve the exact set's order-independent meaning, especially when several search branches are merged.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_GROUP609_EXPAND.md"
+kind = "audit"
+note = "Documents the exact Cartesian-product family, independent enumeration comparisons, the early-prefix zero-factor defect, and its corrected regression."
+ref = "LOG609"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk9_group609_expand.cpp"
+kind = "solver"
+note = "Compiled reference implementation of full-factor zero detection, checked physical-product counting, exact enumeration, and no-output cap refusal."
+
+[[provenance]]
+path = "withmath/logs/609_group_kat_20260905T081047Z_1788595847392625000.log"
+kind = "log"
+note = "Canonical target-absent receipt for independent row equality and the 11-by-10-then-zero regression under a productive total of 22."
+ref = "LOG609"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK89_DUAL636_REPLAY.md"
+kind = "audit"
+note = "Read-only exact branch replay confirms that a 39-row nonempty product under cap 38 withholds the union even when another branch has surviving rows."
+ref = "LOG636"
+
+[[provenance]]
+path = "withmath/logs/636_dual_replay_kat_20260905T200725Z_1788638845895637000.log"
+kind = "log"
+note = "Frozen target-absent receipt for exact accepted sets, physical expansion accounting, and the over-cap withholding case."
+ref = "LOG636"

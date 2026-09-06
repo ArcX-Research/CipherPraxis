@@ -5,79 +5,104 @@ subtitle = "Check whether a known text is the key or two ciphertexts reuse one l
 status = "POWER-LIMITED"
 status_note = "For a known key text, the exact window solver found the planted passage with 5 answers in 255 nodes, while a wrong passage failed in 26 nodes. It also recovered a link between two earlier solved texts. For an unknown shared key, differences between 144- to 153-letter ciphertexts carried too little signal. The IC test stayed inside its family-wide null, and a language beam failed 3/3 hidden controls (logs/60, 63, 03, 166)."
 family = "Relations between ciphertexts"
-tags = ["running key", "known text", "difference text", "family-wise null", "constraint satisfaction"]
-related = ["running-key", "book-cipher", "one-time-pad", "key-cancellation", "autokey-difference-periodicity", "family-wise-null", "index-of-coincidence", "constraint-satisfaction-forward-checking", "beam-search", "power-measurement", "g-key-cancellation", "g-selection-freedom"]
-summary = "A running key adds a long text to the plaintext. One test asks whether a passage we have was used as that key. An exact solver tries each window with a free alphabet, and wrong windows quickly fail. Another test asks whether two ciphertexts share an unknown running key. Subtraction then leaves the difference between their plaintexts, but at about 150 letters this signal was too weak for the tested decoder. Both searches need family-wide nulls because they try many offsets, directions, signs, and alphabet orders."
-updated = "2026-09-04"
+tags = ["running key", "known text", "difference text", "periodic residual", "all-different", "CRT", "family-wise null", "constraint satisfaction"]
+related = ["running-key", "book-cipher", "one-time-pad", "key-cancellation", "autokey-difference-periodicity", "exact-period-alignment", "family-wise-null", "within-coset-null", "index-of-coincidence", "all-different-constraints", "modular-inverse-and-crt", "all-different-enumeration", "constraint-satisfaction-forward-checking", "beam-search", "power-measurement", "g-key-cancellation", "g-selection-freedom"]
+summary = "A running key adds a long text to the plaintext. A known long stream can also be combined with a free short-period residual, so the search must cover source offsets, directions, signs, periods, and alphabet orders. With an unknown alphabet, each window becomes an exact modular constraint problem. With a known alphabet, a deterministic monogram shortlist and quadgram polish provide a faster heuristic. Two ciphertexts may cancel a shared unknown stream, but the remainder can still be periodic, so raw IC is only a period-1 screen."
+updated = "2026-09-06"
 
 [[blocks]]
 kind = "definition"
 body = '''
 Running-key encryption: $c_i = p_i + t_{i+o}$ for a key text $t$ at offset $o$ (with a keyed-alphabet variant $c = A[\operatorname{idx}_A(p) + \operatorname{idx}_A(t) + k_{i \bmod m}]$). Two relations are testable:
 
-- **Known text as key.** For a candidate window $t_{o}, \dots, t_{o+n-1}$ the unknowns are the alphabet (and a short periodic key). Each position gives one linear equation over $\mathbb{Z}_{26}$ in the alphabet positions of two letters, $\operatorname{idx}(c_i) - \operatorname{idx}(t_{o+i}) - k_{i \bmod m} \equiv 0$, with the positions all different and one fixed. Sixty to ninety equations on 25 unknowns make a wrong window infeasible within a few nodes and a right window consistent.
+- **Known text as key.** For a candidate window $t_{o}, \dots, t_{o+n-1}$ the unknowns are the alphabet coordinate $z$ and, when present, a short periodic key. Each position gives one linear equation over $\mathbb{Z}_{26}$, $z(c_i)-z(t_{o+i})-k_{i\bmod m}\equiv0$. Fix one valid translation gauge, solve the equations modulo 2 and modulo 13, and keep only CRT lifts in which the coordinates of distinct observed letters are all different. Unseen letters take the unused coordinates later.
 - **Two ciphertexts, one key.** $c_i - c'_{i+o} = p_i - p'_{i+o}$: the key cancels and the difference of two plaintexts remains. Its letter distribution is the autocorrelation of the language distribution, with mass $\sum_x E(x)^2 \approx 0.066$ at zero and near-uniform mass elsewhere, so its index of coincidence is only slightly above $1/26$.
+- **One plaintext keys another.** If $c'_j=p'_j+k_j$ and $c_i=q_i+p'_{\phi(i)}$, then $c_i-c'_{\phi(i)}=q_i-k_{\phi(i)}$. The plaintext $p'$ cancels and the remaining key structure becomes visible. This is why already recovered plaintexts should be tested as candidate running keys in both directions through a related series.
+- **Known long stream plus free residual.** Let $X$ be a fixed text known before the search. For alphabet order $A$, source offset $o$, direction $d\in\{-1,+1\}$, plaintext sign $\epsilon\in\{-1,+1\}$, source sign $\beta\in\{-1,+1\}$, and residual period $q$,
+
+$$a_A(C_i)\equiv \epsilon a_A(P_i)+\beta a_A(X_{(o+di)\bmod L})+k_{i\bmod q}\pmod{26},$$
+
+where $L$ is the length of the known stream.
+
+This strictly contains the direct known-running-key case $k=0$. It differs from two unknown short periodic keys because $X$ is a fixed long stream whose cyclic window is selected by the search.
 '''
 
 [[blocks]]
 kind = "equations"
-title = "Statistics and their nulls"
+title = "Exact alphabet constraints and structural statistics"
 body = '''
+For one known-stream cell, remove the long component first:
+
+$$y_i=a_A(C_i)-\beta a_A(X_{(o+di)\bmod L})\pmod{26},\qquad
+a_A(P_i)=\epsilon\big(y_i-k_{i\bmod q}\big)\pmod{26}.$$
+
+Once $(A,X,o,d,\epsilon,\beta,q)$ is fixed, only the $q$ residual shifts remain. Each coset supplies a monogram-MAP starting shift; complete plaintexts are then ranked and polished with an order-sensitive language score. The cell scan is finite, but retaining only fixed shortlists makes the resulting search heuristic rather than exhaustive.
+
+For an exact known-text window, split every equation into two systems $A_2u_2=0$ over $\mathrm{GF}(2)$ and $A_{13}u_{13}=0$ over $\mathrm{GF}(13)$. Two alphabet coordinates collide modulo 26 exactly when both of their components collide. Therefore an injective lift has at most two observed letters at each modulo-13 residue, and any pair sharing that residue must have opposite parity. The explicit lift is
+
+$$z(x)=13z_2(x)+14z_{13}(x)\pmod{26}.$$
+
+Enumerate the modulo-13 null space, turn its required parity differences into linear conditions on the modulo-2 null-space coefficients, lift every survivor, and verify the original equations and all-different rule. A homogeneous system is always linearly consistent because it contains the zero vector; rank and consistency alone do not reject a window.
+
 Difference-text index of coincidence over all offsets $o$, both orientations of the second text and both signs: the corpus's best values were $0.0455$ to $0.0468$ against a random-pairing level of $0.0383 \pm 0.0017$; with 324 trials the expected maximum is about $+3$ standard deviations above the mean, so the observed maxima are chance (logs/03). The family-wise null shuffles the second text and repeats the full maximisation. A per-trial null had made the same maximum look like $+5.7\sigma$ across 1,296 trials in all index-space pairs (logs/11).
+
+That measurement is a period-1 test. When cancellation leaves $q_i+h_{i\bmod m}$, its whole histogram mixes $m$ rotations of the plaintext histogram and may look flat. Periodic IC keeps pairs inside $i\bmod m$; exact coset alignment tests whether those histograms are rotations of one distribution. The maximum across all source pairs, alignments, signs, orders, relations, and periods must be compared with the same maximum after a matched source-pair shuffle.
 '''
 
 [[blocks]]
 kind = "assumptions"
 body = '''
 - The key text is one of the candidates (for the exact test) or is shared at a fixed offset and orientation (for the difference test).
+- A known-stream screen freezes the source bank and declares whether windows wrap cyclically. Direction acts on the source before the cyclic offset is applied.
+- The source-bank digest binds both source names and cleaned bytes. Distinct physical sources remain distinct origins even when their windows spell the same text.
 - The addition is in a common index order. A keyed alphabet on one text only breaks the cancellation (see [Key cancellation](/cryptanalysis/key-cancellation)).
 - For the difference test the two plaintexts are language; for a structured second plaintext the difference statistics change.
+- The translation gauge is fixed only when it is a proved symmetry of the equations. Unit and other alphabet aliases are retained or canonicalised after enumeration, not removed by an invalid linear row.
+- Blind calibration reruns every score-bearing selection stage on each shuffled ciphertext. A smaller null output file is safe only when it is proved to preserve the selected maximum.
 '''
 
 [[blocks]]
 kind = "attack"
 title = "How to attack it"
 body = '''
-1. Known-text test: for every candidate text and window, solve the free-alphabet CSP with a node cap; report consistent windows, capped windows (undecided) and dead windows; re-run capped windows with a larger cap.
-2. Difference test: compute $c \pm c'$ at every offset and orientation in each common order; score by IC and by a language model; compare the maximum with the family-wise null.
-3. If a relation is found, hand the difference text to a two-plaintext solver (an exact running-key Viterbi with backtracking over a language model, or a beam), and require a control at the same length to recover both hidden texts before reading a target.
-4. In a series of related texts, test earlier recovered plaintexts as keys of later texts as part of the standard cascade. This is where the relation was found in the solved part of the corpus's series.
+1. Known-text test: for every candidate text and window, build the modular equations, project to the letters that actually occur, split them over $\mathrm{GF}(2)$ and $\mathrm{GF}(13)$, and enumerate every all-different CRT lift. Report feasible windows, exact dead windows, and capped windows (undecided); never call rank consistency a hit.
+2. Known-stream residual test: scan every declared source, cyclic offset, direction, order, sign pair, and residual period. Keep fixed per-chunk parameter-cell and global monogram shortlists, rank their literal decrypts by quadgrams, and run deterministic coordinate polish only on the frozen finishing shortlist.
+3. Difference test: compute $c\pm c'$ at every offset and orientation in each compatible order. Scan raw IC, periodic IC, and coset alignment over the declared periods; only then use a language endpoint. Compare the selected maximum with a matched family-wide null.
+4. If a relation is found, hand the difference text to a two-plaintext solver (an exact running-key Viterbi with backtracking over a language model, or a beam), and require a control at the same length to recover both hidden texts before reading a target.
+5. In a series of related texts, test each recovered plaintext as a key for later and earlier texts, with the same offset, direction, alphabet, forward-check, and multiplicity rules as any other candidate source.
 '''
 
 [[blocks]]
 kind = "pseudocode"
 body = '''
 ```text
-// Ciphertext c[0..n-1]; candidate key texts; a second ciphertext c'; period m
-// of a short extra key; node cap; N shuffles.
 function KNOWN_TEXT_WINDOWS(c, texts, m, cap):
     for text t in texts, offset o with a full window t[o..o+n-1]:
-        // unknowns: the alphabet positions and k
-        equations: idx(c[i]) - idx(t[o+i]) - k[i mod m] = 0 (mod 26) for i in
-                0..n-1
-        subject to: the 26 positions all different, one position fixed
-        // consistent (solutions found), dead (infeasible), or capped
-        result[t, o] = CSP_SOLVE(equations, cap)
-    // capped is undecided, not consistent
-    re-run the capped windows with a larger cap
-    // a planted window must come back consistent and a wrong one dead
+        rows = {z(c[i]) - z(t[o+i]) - k[i mod m] = 0 mod 26}
+        rows = PROJECT_TO_OBSERVED_LETTERS(rows) + VALID_GAUGE_ROW
+        N2  = NULL_SPACE(rows mod 2)
+        N13 = NULL_SPACE(rows mod 13)
+        result[t,o] = ENUMERATE_ALL_DIFFERENT_CRT(N2, N13,
+                observed_letters, cap)
+        VERIFY_EACH_LIFT_AGAINST_ROWS(result[t,o])
     return (consistent windows, capped windows, dead windows)
 
-function DIFFERENCE_TEST(c, c', orders, N):
-    for order in orders, orientation of c' in {forward, reversed}, sign in
-            {-, +}, offset o:
-        // the key cancels: v = p - p'
-        v = [ (c[i] sign c'[i + o]) mod 26 for the overlapping i ]
-        stat[order, orientation, sign, o] = (IC(v), LANGUAGE_SCORE(v))
-    observed = max over all trials of stat
-    // family-wise null over all trials
-    for r in 1..N: null[r] = the same maximum with c' replaced by SHUFFLE(c')
-    return (observed, z of observed against null)
+function KNOWN_STREAM_RESIDUAL(c, sources, orders, periods, limits):
+    seeds = empty list
+    for A, X, direction d, cyclic offset o, signs eps and beta, period q:
+        y[i] = index_A(c[i]) - beta*index_A(X[o+d*i]) mod 26
+        k = MONOGRAM_MAP_BY_COSET(y, eps, q)
+        p = DECRYPT_RESIDUAL(y, k, eps)
+        KEEP_PER_CELL(seeds, (QUADGRAM(p), cell, k), limits.cell)
+    seeds = DETERMINISTIC_TOP(seeds, limits.global)
+    endpoints = COORDINATE_POLISH_TOP(seeds, limits.polish)
+    require every endpoint passes independent full forward replay
+    return DEDUPLICATE_PLAINTEXTS_WITH_ALL_PHYSICAL_ORIGINS(endpoints)
 
-// A found relation hands v to a two-plaintext solver (exact running-key
-// Viterbi with backtracking, or a beam) only after a control at the same
-// length recovers both hidden texts. In a series, earlier recovered
-// plaintexts are tested as keys of later texts.
+function MATCHED_RANK(c, FULL_SELECTOR, null_bank):
+    observed = FULL_SELECTOR(c).best_score
+    null = [FULL_SELECTOR(x).best_score for x in null_bank]
+    return (1 + COUNT(score >= observed in null)) / (1 + LENGTH(null))
 ```
 '''
 
@@ -91,9 +116,15 @@ Difference scan: $O(n)$ per trial, $\approx 10^3$ trials per order pair. Exact w
 kind = "failure_modes"
 body = '''
 - **Low signal in the difference.** The two-plaintext difference has an IC barely above uniform; at 144 to 153 letters the corpus's best difference IC never left the family-wise null band.
+- **Period-1 blindness.** If the residual carries a short periodic key, raw IC pools differently rotated coset histograms and may be near uniform. A raw-IC miss closes only the raw-IC screen.
+- **Linear consistency is automatic.** A homogeneous alphabet-coordinate system always has the zero solution. Only all-different CRT enumeration can make an exact infeasibility claim; a feasible wrong window is still possible.
 - **Solver power.** A language-model beam on planted two-plaintext differences recovered 41%, 50% and 26% of the hidden pairs, with the truth leaving the beam every time (3/3 FAIL, logs/166). An unknown-shared-key negative on the real texts would therefore be meaningless and was not claimed.
 - **Undecided windows.** With a small node cap, 166 windows of one zone stayed capped; at 300,000 nodes 16 remained undecided for that zone and none for the others (logs/63). Capped is not consistent.
 - **Multiplicity.** Offsets, orientations, signs and two orders give hundreds of trials per pair. Only family-wise nulls are valid.
+- **Shortlist saturation.** Every declared cell is visited, but a true offset can fall below the per-cell, global, or polish cap. Deterministic output and local stationarity do not turn the result into an exhaustive family search.
+- **Control-pass inflation.** Exact recovery of a planted in-family text shows that the selector has some power. It does not make an observed leader significant and does not close candidates lost behind saturated shortlists.
+- **Fixed-winner null.** The observed source, offset, sign, period, or polished key is carried into the null runs instead of being selected again. The resulting null is too easy to beat.
+- **Null/statistic collision.** Shuffling positions inside the already-derived cosets leaves periodic IC and histogram alignment unchanged. Calibrate those gates by breaking the source pairing while preserving the individual source coset histograms; reserve within-derived-coset shuffles for order-sensitive language endpoints.
 - **Necessary-condition violation.** A running key added letter-wise destroys periodic coset structure. A text with a strong period-7 alignment cannot have been produced that way (predicted $z \approx +0.1$ against measured $+4.2$).
 '''
 
@@ -104,6 +135,8 @@ body = '''
 - Difference scan (logs/03, 11): best IC $0.0455$ to $0.0468$ against $0.0383 \pm 0.0017$ over 324 trials; mixed-order pairs at $z +0.8$ against the family-wise null.
 - Two-plaintext beam (logs/166): hidden-pair match 41.3%, 49.5%, 26.2%; control gate FAIL.
 - Cascade on the solved series (logs/145): the running-key link between two consecutive texts was recovered from the earlier text's plaintext with 100% match to the published solution.
+
+A separate known-long-stream residual control should match the text length and exercise different source directions, alphabet orders, signs, and residual periods. Run that gate before observations, then pass each position-shuffled ciphertext through the same source scan, shortlist, reranking, and polish. If the observation stays inside the selected null distribution, report a bounded heuristic nonhit even when every planted control is recovered.
 '''
 
 [[blocks]]
@@ -158,3 +191,29 @@ note = "Recipe-free cascade (D3 running-key links over plaintexts recovered earl
 path = "withmath/PK89_SHARED_STREAM_COUPLING375_DESIGN.md"
 kind = "design"
 note = "Section 5: letter-wise running-key chains predict no periodic alignment; section 8: the identity-aligned shared key reduces to the two-plaintext difference (log 166 power failure)."
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/CROSS_DERIVED_STRUCTURAL_COVERAGE_AUDIT.md"
+kind = "audit"
+note = "Separates the early raw-IC difference test from the later complete derived-stream scan over periodic monogram and coset-alignment statistics."
+
+[[provenance]]
+path = "withmath/docs/pk8-pk9/PK89_COMMONPLAIN_INVARIANT_CONTROL_AUDIT.md"
+kind = "audit"
+note = "Documents exact modulo-2/modulo-13 null-space enumeration, CRT lifting, literal all-different checks, independent equation replay, and explicit incomplete boundaries."
+
+[[provenance]]
+path = "withmath/docs/project-notes/KNOWNRESIDUAL657.md"
+kind = "design"
+note = "Defines the general known-long-stream plus free-periodic-residual equation, the full order/sign/orientation/offset family, deterministic shortlist stages, complete-selector nulls, and the heuristic claim boundary."
+
+[[provenance]]
+path = "withmath/scripts/experiments/cross/wm_knownresidual657.py"
+kind = "solver"
+note = "Reference implementation of the finite cell scan, monogram-MAP seeding, quadgram reranking, deterministic coordinate polish, scalar replay, and add-one null rank."
+
+[[provenance]]
+path = "withmath/logs/657_knownresidual_20260906T011407Z_1788657247581387000_45767.log"
+kind = "log"
+note = "Frozen finite-selector receipt with target-absent planted controls, full score-bearing null reselection, shortlist census, add-one ranks, and bounded heuristic terminals."
+ref = "LOG657"

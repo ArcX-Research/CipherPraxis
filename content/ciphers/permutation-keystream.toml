@@ -1,0 +1,154 @@
+id = "permutation-keystream"
+section = "ciphers"
+title = "Periodic permutation keystream"
+subtitle = "Repeat every alphabet shift exactly once per key period"
+status = "VERIFIED"
+status_note = "A full selector recovered the exact plaintext, algebra cell, and 26-value permutation at rank one in all eight held-out 153-letter controls, with independent forward checks. This validates the declared additive and reflective forms, not unrelated aperiodic keys."
+family = "Structured stream ciphers"
+tags = ["periodic key", "permutation", "all-different", "high entropy", "structured key"]
+related = ["vigenere", "beaufort", "compound-periodic-key", "all-different-constraints", "identity-plus-one-swap-neighborhood", "maximum-weight-bipartite-assignment"]
+summary = "A periodic permutation keystream is a full set of alphabet shifts arranged in an unknown order and then repeated. It has much more entropy than a short word key, but it also has a strong all-different rule: no shift may repeat inside one period. Search moves should preserve that rule."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For an alphabet of size $m$, choose a key vector
+
+$$K=(k_0,\ldots,k_{m-1})$$
+
+that is a permutation of $0,\ldots,m-1$. Repeat it with period $m$. In an additive form, position $i$ uses shift $k_{i\bmod m}$. The defining constraint is `AllDifferent(K)` together with the complete value range.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Additive and reflective forms"
+body = '''
+With plaintext coordinates $a(p)$ and ciphertext coordinates $b(c)$ modulo $m$, two simple relations are
+
+$$b(c_i)\equiv a(p_i)+k_{i\bmod m}\pmod m$$
+
+and
+
+$$b(c_i)\equiv k_{i\bmod m}-a(p_i)\pmod m.$$
+
+The permutation rule implies
+
+$$\{k_0,\ldots,k_{m-1}\}=\{0,\ldots,m-1\},$$
+
+so the key has $m!$ possible orders and every full key block has the same shift multiset.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- Additive, subtractive, and reflective letter relations.
+- Different fixed plaintext and ciphertext alphabet orders.
+- A permutation shorter than the alphabet, drawn without replacement from a declared subset.
+- One permutation per segment rather than one globally repeated key.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The key period and its origin are fixed.
+- Every permitted shift appears exactly once in a period.
+- Alphabet orders and the modular relation are included in the selected family.
+- Spaces and punctuation do not silently advance the key unless stated.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to attack it"
+body = '''
+Fit an initial shift for each residue class using monogram or assignment scores, then project those choices onto one permutation. Improve the key with swaps, which preserve the all-different rule automatically, and score the complete plaintext with n-grams or a word model. Search every declared alphabet and relation cell under one fixed budget. For a retained result, independently encrypt the recovered plaintext and compare every symbol.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function ENCRYPT(plain, key_permutation, relation, alphabets):
+    require SORT(key_permutation) == [0, ..., alphabet_size - 1]
+    out = empty
+    for i, letter in enumerate(plain):
+        shift = key_permutation[i mod alphabet_size]
+        append APPLY_RELATION(letter, shift, relation, alphabets) to out
+    return out
+
+function SEARCH(ciphertext, declared_cells):
+    for cell in declared_cells:
+        key = INITIAL_ALL_DIFFERENT_ASSIGNMENT(ciphertext, cell)
+        repeat the fixed search budget:
+            propose swapping two key positions
+            accept or reject using the full language score
+        retain the cell winner
+    return only candidates that pass an independent forward check
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The exact key space is $m!$. One full decryption is $O(n)$, and one swap update can be rescored incrementally at positions belonging to the two affected residue classes. A complete single-swap neighbourhood has $1+\binom{m}{2}$ states when the unchanged key is included.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Treating shifts independently.** Choosing the best shift in every residue can repeat values and leave the actual family.
+- **Replacement moves.** Changing one key value without a compensating swap breaks the permutation invariant.
+- **Unknown-origin alias.** Rotating the key and moving the text origin together can describe the same function.
+- **Local language optimum.** A full permutation can be several swaps from a better basin even when every single swap is worse.
+- **Roundtrip-only evidence.** Every permutation defines an inverse; exact held-out plaintext recovery is the meaningful solver gate.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Hide the permutation, alphabet pair, relation, and text while preserving the real length and residue counts. Require exact plaintext, the exact selected family cell, the exact key order, and an independently written forward reconstruction. A recorded selector searched eight alphabet/relation strata and recovered all eight 153-letter controls exactly at rank one. A target miss under that selector is evidence only for those declared strata and length, not every high-entropy structured key.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+Work modulo 5 on `ABCDE` with key permutation $(2,0,4,1,3)$. Under additive encryption:
+
+```trace
+plain   A  B  C  D  E  A  B  C  D  E
+value   0  1  2  3  4  0  1  2  3  4
+key     2  0  4  1  3  2  0  4  1  3
+cipher  C  B  B  E  C  C  B  B  E  C
+```
+
+Each block uses all five shifts once. Subtracting the same repeated key gives `ABCDEABCDE`.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The key combines high combinatorial entropy with a cheap exact constraint. That is precisely when constraint-preserving moves and all-different assignment are more useful than searching arbitrary independent shifts.
+'''
+
+[[provenance]]
+path = "withmath/scripts/wm_pk8_permkey421.py"
+kind = "solver"
+note = "Full-selector permutation-key search and independent forward interface."
+
+[[provenance]]
+path = "withmath/scripts/run_pk8_permkey421.sh"
+kind = "script"
+note = "Frozen runner for the recorded control and measurement pass."
+
+[[provenance]]
+path = "withmath/logs/421_pk8_permkey_20260902T135557Z.log"
+kind = "log"
+note = "Eight exact controls across the declared alphabet and relation cells."
+ref = "LOG421"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Records the corrected integer-width defect, exact control result, and scoped boundary."
+ref = "LOG421"

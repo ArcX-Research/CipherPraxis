@@ -1,0 +1,152 @@
+id = "mutual-information-column-order"
+section = "cryptanalysis"
+title = "Mutual-information column ordering"
+subtitle = "Rank column orders even when every column uses a different unknown symbol labeling"
+status = "VERIFIED"
+status_note = "On four held-out width-9 controls, the hidden order ranked 7th, 1st, 187th, and 82nd among all 362,880 orders. A fixed top-256 handoff retained it in every case, and the later language stage recovered the exact order in all four."
+family = "Transposition inference"
+tags = ["mutual information", "column order", "relabeling invariant", "contingency table", "screening"]
+related = ["columnar-transposition", "order-free-width-statistic", "transposition-width-recovery", "family-wise-null", "selection-overfit-diagnostic", "maximum-weight-bipartite-assignment"]
+summary = "Unknown substitutions can hide which letters match, but they do not change the amount of dependence between two columns. Mutual information measures that dependence from a contingency table. Scoring adjacent column pairs can therefore rank possible readout orders before the substitutions are known."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Split a stream into $w$ observed column chunks. For two chunks aligned by row, build a contingency table of symbol pairs and compute their mutual information. Any one-to-one relabeling applied separately to either chunk only permutes the table's rows or columns, so the mutual information is unchanged.
+
+If true neighboring plaintext columns carry more dependence than unrelated columns, this gives an alphabet-free edge score for ordering the chunks.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Relabeling-invariant order score"
+body = '''
+For aligned random variables $X$ and $Y$,
+
+$$I(X;Y)=\sum_{a,b}p(a,b)\log\frac{p(a,b)}{p(a)p(b)}.$$
+
+If $f$ and $g$ are bijections, then $I(f(X);g(Y))=I(X;Y)$ because only the row and column names change. For a proposed order $s=(s_0,\ldots,s_{w-1})$, one useful score is
+
+$$S(s)=\sum_{j=0}^{w-2} I(C_{s_j}[r];C_{s_{j+1}}[r])
++I(C_{s_{w-1}}[r];C_{s_0}[r+1]).$$
+
+The last term scores the boundary between one row and the next.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- Omit the row-boundary term when rows are independent units.
+- Add smoothing or a small-sample correction to contingency counts.
+- Replace mutual information with another statistic invariant under separate symbol permutations, then validate it under the same complete selector.
+- Use exact subset dynamic programming instead of enumerating every order when $w!$ becomes too large.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- Symbols within each chunk have undergone a fixed one-to-one relabeling.
+- Candidate chunks are aligned on comparable rows.
+- Adjacent source columns carry enough statistical dependence at the available sample length.
+- The full set of tested orders is included when calibrating ranks or nulls.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to attack it"
+body = '''
+Split the text under a candidate width and exact long-column convention. Precompute a mutual-information score for every ordered pair of chunks, including the shifted boundary score. Enumerate orders for small widths, or solve the resulting weighted Hamiltonian path problem with subset dynamic programming. Keep a controls-fixed number of top orders for the more expensive substitution and language stage. Repeat the complete selection on shuffled controls when a significance claim is needed.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function MI(x, y):
+    table = counts of aligned pairs (x[r], y[r])
+    return sum over occupied cells (a, b):
+        p(a,b) * log(p(a,b) / (p(a) * p(b)))
+
+function PRECOMPUTE(columns):
+    for a != b:
+        same_row[a,b] = MI(columns[a][r], columns[b][r])
+        next_row[a,b] = MI(columns[a][r], columns[b][r+1])
+    return same_row, next_row
+
+function ORDER_SCORE(order, same_row, next_row):
+    score = 0
+    for j in 0 .. length(order)-2:
+        score += same_row[order[j], order[j+1]]
+    score += next_row[order[last], order[first]]
+    return score
+
+rank every allowed order and pass a fixed top K onward
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Pair tables cost $O(w^2R)$ for $R$ rows. Direct enumeration costs $O(w!\,w)$ after precomputation. A Held-Karp-style subset dynamic programme reduces the order stage to $O(w^2 2^w)$ states, with extra bookkeeping if the first column affects a boundary term.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Too little data.** Plug-in mutual information is noisy and biased upward for sparse tables.
+- **No adjacency signal.** Separate relabeling preserves dependence, but it cannot create dependence that the source lacks.
+- **Wrong chunk lengths.** A ragged grid aligned under the wrong convention corrupts pair counts.
+- **Selector overclaim.** Retaining the true order does not prove that a later decoder can recover all other parameters.
+- **Unmatched null.** Testing many widths, orientations, and orders but shuffling only the final winner understates selection freedom.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Plant independent per-column substitutions over a hidden transposition order, then hide both. Rank every allowed order without using the substitutions. Record the hidden rank and use a fixed handoff size chosen before reading new samples. In four recorded width-9 controls the true ranks were 7, 1, 187, and 82 of $9!=362{,}880$, so a top-256 handoff retained all four. The next stage recovered all four orders, while one complete coupled decoder still failed; the evidence therefore validates the screen, not the whole decoder.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+Let `X = ABAB` and `Y = XYXY`. Their aligned pairs are `AX, BY, AX, BY`, so $I(X;Y)=1$ bit. Relabel `A,B` as `Q,R` and `X,Y` as `M,N`; the pairs become `QM, RN, QM, RN`, but the mutual information stays 1 bit. A different chunk `Z = MMNN` makes all four pairs with `X` occur once, giving zero mutual information. The statistic prefers the dependent neighbor without knowing either labeling.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+This statistic is complementary to order-free width tests. A width test asks which geometry is plausible; the pair score asks which sequence of already formed chunks is plausible.
+'''
+
+[[provenance]]
+path = "withmath/docs/cipher-methods/SHARED9_FACTOR_DEAL_AUDIT.md"
+kind = "audit"
+note = "Derivation, exhaustive width-9 order screen, hidden-order ranks, fixed handoff, and downstream control split."
+ref = "Log 202"
+
+[[provenance]]
+path = "withmath/scripts/wm_shared9_factor_deal.py"
+kind = "solver"
+note = "Driver for the mutual-information order stage and later factorized search."
+
+[[provenance]]
+path = "withmath/logs/202a_same_b.log"
+kind = "log"
+note = "First full-profile order-screen control."
+
+[[provenance]]
+path = "withmath/logs/202b_isolate_pk8.log"
+kind = "log"
+note = "Second full-profile order-screen control."
+
+[[provenance]]
+path = "withmath/logs/202c_isolate_pk9.log"
+kind = "log"
+note = "Third full-profile order-screen control."
+
+[[provenance]]
+path = "withmath/logs/202d_isolate_pk10.log"
+kind = "log"
+note = "Fourth full-profile order-screen control."

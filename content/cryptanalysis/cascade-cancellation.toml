@@ -1,0 +1,153 @@
+id = "cascade-cancellation"
+section = "cryptanalysis"
+title = "Cascade cancellation"
+subtitle = "Combine three aligned streams so two hidden running texts disappear"
+status = "VERIFIED"
+status_note = "Two full-profile held-out controls selected the exact alignment and sign cell, recovered all 144 endpoint letters and the exact period-7 or period-26 key, and passed derived-stream plus three-layer forward checks."
+family = "Cross-stream algebra"
+tags = ["running key", "linear cancellation", "cascade", "periodic endpoint", "cross-stream"]
+related = ["difference-operators", "key-cancellation", "running-key-relation-test", "periodic-substitution-dp", "exact-period-alignment", "family-wise-null", "selection-overfit-diagnostic"]
+summary = "Three texts connected by two running-key steps can look like a hard joint problem. When both steps are linear, one signed combination cancels the two hidden intermediate streams exactly. The remaining stream is an ordinary periodic additive cipher, so tested periodic tools can finish it."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Consider three aligned observed streams produced by a two-hop linear chain. The first observation combines an endpoint plaintext with an intermediate stream. The second combines that intermediate stream with another hidden stream. The third is the last hidden stream under a periodic key. Because each hop is additive with a sign, Gaussian-style elimination over $\mathbb Z_{26}$ removes both intermediates.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Exact two-hop cancellation"
+body = '''
+Suppose
+
+$$z_t=w_t+k_{t\bmod p},\qquad
+y_t=r_t+\alpha w_t,\qquad
+x_t=sq_t+\beta r_t,$$
+
+where $\alpha,\beta,s\in\{+1,-1\}$. Then
+
+$$\begin{aligned}
+d_t&=x_t-\beta y_t+\alpha\beta z_t\\
+   &=sq_t+\alpha\beta k_{t\bmod p}\pmod{26}.
+\end{aligned}$$
+
+The unknown streams $r$ and $w$ cancel. For the endpoint relation, recover $q_t=d_t-k_t$ in the difference form or $q_t=k_t-d_t$ in the reflection form after absorbing the coefficient sign into the periodic key.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- The four coefficient pairs $(\alpha,\beta)$ cover both signs at each running-key hop.
+- Either endpoint sign $s$ can be tested after structural screening.
+- Reversals, offsets, and coordinate alphabets can be enumerated before cancellation.
+- Longer linear chains can be eliminated with a left-null vector, but their coefficient family and controls must be declared separately.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- All three streams refer to the same aligned positions over the same modulus.
+- Each running-key hop is additive with one fixed sign.
+- One surviving key is periodic with a tested period.
+- Coordinate conversions, reversals, and cuts are fixed for each selected cell.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to attack it"
+body = '''
+Enumerate the allowed anchor stream, overlaps, orientations, coordinate systems, and sign pairs. Derive $d$ for every cell without language fitting. Rank period candidates with an exact structural statistic, retain a controls-fixed number, and send the survivors to an exact periodic decoder for both endpoint relations. Reconstruct the derived stream and every original layer. Calibrate significance by shuffling whole source streams and repeating the complete selector.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function DERIVE(x, y, z, alpha, beta):
+    require equal aligned lengths
+    for t in 0 .. length(x)-1:
+        d[t] = x[t] - beta * y[t] + alpha * beta * z[t] mod 26
+    return d
+
+function SEARCH(streams, alignments, periods):
+    structural = empty
+    for alignment in alignments:
+        x, y, z = APPLY_ALIGNMENT(streams, alignment)
+        for alpha, beta in {+1,-1} squared:
+            d = DERIVE(x, y, z, alpha, beta)
+            for period in periods:
+                add (STRUCTURAL_PERIOD_SCORE(d, period), cell) to structural
+    for cell in fixed_top_k(structural):
+        for endpoint_relation in {DIFFERENCE, REFLECTION}:
+            plain, key = EXACT_PERIODIC_DECODE(cell.d, cell.period, relation)
+            keep only if DERIVED_AND_LAYER_FORWARD_CHECKS_PASS
+    return candidates
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+For $A$ alignment and sign cells over length $n$, derivation costs $O(An)$. The periodic finish is paid only for a fixed shortlist and depends on its decoder. A recorded three-stream selector evaluated 1,386,240 derived streams before its bounded structural and exact-language handoffs.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Wrong alignment.** One offset error prevents cancellation at every later position.
+- **Nonlinear hop.** Substitution, multiplication by a non-unit, or stateful feedback can leave a residue not described by the endpoint model.
+- **Partial overlap ignored.** Requiring a full common length misses shorter valid chains; allowing every overlap greatly increases selection freedom.
+- **Early language scoring.** The useful signal is periodic structure after cancellation, not necessarily readable text before the exact finish.
+- **Unmatched nulls.** Shuffling only the winning derived stream ignores the large alignment and sign search.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Hide the anchor, cuts, reversals, coordinate choices, both hop signs, endpoint sign, period, and key. Require the selector to recover the exact family cell, every endpoint letter, the exact periodic key, the derived stream, and all forward layers. Two recorded controls used 144-letter overlaps: one period-7 difference endpoint and one period-26 reflection endpoint. Both passed all gates, and each complete selector was also run on whole-source shuffled controls.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+Work modulo 26 with $q=(7,4)$, $k=(3,5)$, $w=(8,2)$, $r=(6,9)$, $\alpha=+1$, $\beta=-1$, and $s=+1$. Then
+
+```trace
+z = w + k = (11, 7)
+y = r + w = (14, 11)
+x = q - r = (1, 21)
+d = x + y - z = (4, 25) = q - k
+```
+
+Both unknown intermediate streams vanish, leaving a period-2 additive endpoint.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Cancellation adds a real constraint because it joins all three streams before language decoding. A pairwise comparison cannot test the same two-hop hypothesis.
+'''
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/CROSSCASCADE_AUDIT.md"
+kind = "audit"
+note = "Algebra, declared selector, matched-null design, exact controls, and scope boundary."
+ref = "Log 214"
+
+[[provenance]]
+path = "withmath/scripts/wm_crosscascade.py"
+kind = "solver"
+note = "Controls-first orchestration, periodic finish, and independent reconstruction checks."
+
+[[provenance]]
+path = "withmath/scripts/run_crosscascade.sh"
+kind = "script"
+note = "Frozen launcher for the recorded selector."
+
+[[provenance]]
+path = "withmath/logs/214_crosscascade.log"
+kind = "log"
+note = "Two exact selected-family controls and whole-source shuffled comparisons."

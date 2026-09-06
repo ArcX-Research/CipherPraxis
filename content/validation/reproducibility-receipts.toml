@@ -6,18 +6,18 @@ status = "VERIFIED"
 status_note = "Launchers print transcript paths, ledger entries store SHA-256 hashes for sources and transcripts, and audits recompute hashes before writing. A fresh rerun of one sealed control job reproduced every meaningful record; only timing fields changed."
 family = "Reproducibility"
 tags = ["receipts", "hashes", "transcripts", "provenance"]
-related = ["seal-and-audit-protocol", "ledger-reservations", "seed-determinism", "g-receipt"]
-summary = "A receipt stores the minimum needed to reproduce a number: hashes of the source, runner, parser, corpus, and model tables; the seeds and exact command; and the transcript hash. This site reports no measured figure without one. An audit of 200 logs found four empty files and twelve failed or partial runs that could otherwise have been cited. Receipts make those mistakes easier to catch."
-updated = "2026-09-04"
+related = ["seal-and-audit-protocol", "ledger-reservations", "seed-determinism", "isolated-acquisition-solver-handoff", "transitive-process-census", "fresh-holdout-after-selector-change", "known-answer-tests", "kat-harness", "candidate-bank-lineage-and-cap-accounting", "provenance-preserving-partial-map-join", "factorial-completion-resource-guards", "drainability-and-throughput", "g-receipt"]
+summary = "A receipt stores the minimum needed to reproduce a number: hashes of the solver, runner, parser, independent replay checker, corpus, and model files; package versions; the seeds and exact command; and the transcript hash. Discover those runtime inputs from the environment itself, then hash them again after the run. A copied manifest value cannot prove which bytes a process actually used, that they stayed unchanged, or that a forward replay was independent."
+updated = "2026-09-06"
 
 [[blocks]]
 kind = "definition"
 body = '''
 A **receipt** for a claim $x$ is the tuple
 
-$$\big(h(\text{source}),\ h(\text{runner}),\ h(\text{parser}),\ h(\text{corpus}),\ h(\text{model tables}),\ \text{seeds},\ \text{argv},\ h(\text{transcript}),\ \text{line or record id}\big)$$
+$$\big(h(\text{source}),\ h(\text{runner}),\ h(\text{parser}),\ h(\text{replay checker}),\ h(\text{corpus}),\ h(\text{model files}),\ \text{packages},\ \text{seeds},\ \text{argv},\ h(\text{transcript}),\ \text{record id}\big)$$
 
-with $h$ = SHA-256, such that re-running the pinned bytes with the pinned inputs regenerates the transcript's semantic records and $x$ can be read from them. Receipts are recorded in three places: the transcript itself (a `PINS` or `LINEAGE` record), the ledger entry that announces the result, and the audit that verifies it.
+with $h$ = SHA-256, such that re-running the pinned bytes with the pinned inputs regenerates the transcript's semantic records and $x$ can be read from them. The runtime component is discovered rather than trusted: query installed package versions, resolve every model or tokenizer file actually selected by the loader, and hash those files directly. The independent checker implements the forward equation from the written specification with a scalar loop and verifies every position of every physical origin. It does not call the solver's decrypt, encrypt, coordinate, or table-building helpers. The transcript records its input pins; a detached receipt, the result ledger, and the audit bind the completed transcript hash. A file cannot contain its own final digest without a circular definition.
 '''
 
 [[blocks]]
@@ -33,6 +33,23 @@ prefix_sha256    38c98177… -> f1739a6b…   (necessarily, since the summary ch
 ```
 
 with all 24 fixture records byte-identical. A gate that expects transcript-hash equality across runs is therefore wrong by construction; compare the semantic records. Designs that want byte reproducibility keep elapsed values out of the canonical transcript entirely.
+
+Let $D_0$ be the freshly discovered digest vector immediately before execution and $D_1$ the same discovery repeated after execution. If $M$ is the frozen manifest, runtime closure requires
+
+$$D_0=M\qquad\text{and}\qquad D_1=D_0.$$
+
+The first equality binds the run to the declared resources. The second detects mutation, replacement, or a package change while the process was active. Comparing $M$ with a second copy of $M$ proves nothing; both checks must read the current files and query the current environment.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Repository-only run:** hash source, runner, parser, input data, and generated tables.
+- **Model-bearing run:** also resolve and hash every weight, tokenizer, vocabulary, configuration, and index file opened by the model loader.
+- **Package-sensitive run:** query the installed distribution metadata or executable version; do not rely only on a lock file that may not describe the active environment.
+- **Derived-resource run:** rebuild the derived table from its raw source when practical, then bind both the raw and derived digests.
+- **Long-running job:** take both pre-run and post-run snapshots. For a multi-process job, bind each child to the same snapshot and record the process graph.
+- **Multi-stage packet:** bind the canonical producer input, packet schema version, packet bytes, producer and consumer sources, and final artifact. The consumer revalidates every field it relies on instead of trusting a producer-written summary.
 '''
 
 [[blocks]]
@@ -41,12 +58,30 @@ body = '''
 - Hashes are recomputed from the files at the moment of writing, not copied from a hand-off. Audits in the program state this explicitly.
 - Corpus and model tables are pinned by content hash, and derived tables (integer-scaled quadgram scores) by both their hash and a checksum.
 - Host artefacts outside the repository (a system dictionary used as a word bank) are a reproducibility risk. The audit recommended pinning the derived bank blob itself.
+- Runtime discovery follows the same loader rules as execution. Hashing a convenient directory listing is not enough if the loader can select a different revision, cache, or optional file.
+- The post-run snapshot is taken before accepting or publishing the result. Any missing file, version-query failure, or digest drift makes the run incomplete.
+- "Independent" describes code paths, not function names. The scalar checker may share the declared input schema and alphabet constants, but not derived arrays, inverse helpers, fitted state, or cached plaintext from the search. Its source and dependencies receive their own hashes.
+- Every physical origin behind a deduplicated plaintext is replayed. Checking one representative proves nothing about the other keys, offsets, or sign cells in that bucket.
+- Every origin in an intermediate packet resolves to one canonical input row. Its support positions are inside the declared input span and reproduce the stated direct or derived map cells.
+- Producer and consumer bounds agree. A packet accepted by the producer cannot exceed an undocumented bank-size or completion limit at the next stage.
 '''
 
 [[blocks]]
 kind = "attack"
 body = '''
-Receipts defeat three slow failures. **Drift**: a source is "improved" after a run, and the ledger notes that the current hash must not be represented as the executed one. **Promotion**: an exploratory, capped or empty log is later cited as an exclusion. The audit classified 200 logs and found four empty ones that prove nothing and a dozen failed or partial ones that are not exclusions. **Untraceable claims**: a statement made from the ledger's prose rather than from code or a log. The program retracted one such novelty claim after a source audit.
+Before a run, resolve the executable sources, independent replay checker, and every transitive data resource, query active package versions, and recompute their hashes. Compare this fresh snapshot with the frozen manifest. Replay every emitted physical origin through the separate scalar forward before accepting its semantic bucket. After the last semantic record is produced, repeat the same discovery and require exact equality with the first snapshot. Only then bind the transcript and claim record.
+
+At a process boundary, treat a digest as a pointer, not as validation. Either store the canonical producer input beside the packet or make it reproducibly rebuildable from bound inputs. Recompute the digest, enforce exact keys and types, check every origin-to-row link and support position, and verify that each candidate cell is supported by that candidate's own origins. A global pool containing some matching cell is not enough. Record direct observations separately from cells forced by a model identity.
+
+For each child, durably write both the raw streams and the complete process record before asserting that the child passed or refused correctly. Record the exact command, environment, exit status, wall time, peak resource use, cap status, and stream hashes. If a later assertion aborts the controller, these facts must already be recoverable. An error message alone cannot reconstruct missing exit or resource evidence.
+
+Keep observed resource use separate from its admission limit. Never replace a measured duration with the smaller of that duration and the timeout: an overrun must remain visible in both the process receipt and cumulative budget accounting. State whether a memory figure describes one process, an operating-system child-usage record, or a simultaneously measured process tree. A post-exit resource check is not a hard memory limit.
+
+For a fixed panel, reserve enough time for a complete case and its required replay before starting it. When a resource ceiling is reached, record the current case and every unattempted case as incomplete; do not grade only the finished prefix. Keep search, verification and whole-controller budgets distinct, and check the whole limit again after a case and after final evaluation. A complete-looking score cannot override a capped process or a missing replay certificate.
+
+Refusal tests must identify the expected failure phase. An import or initialization guard runs before the main handler, so it cannot emit a marker owned by that handler. Check the phase-appropriate exit and diagnostic, and verify that no downstream search artifacts were created. Preserve an earlier failed receipt when completing such a test separately; do not promote its surviving stderr into a process record that was never saved.
+
+Receipts also stop three slower failures. **Drift:** current source is presented as the source that produced an older result. **Promotion:** an exploratory, capped, empty, or partial transcript is cited as an exclusion. **Untraceable claim:** a reported number cannot be derived from a named semantic record. Runtime closure adds a fourth check: the manifest must describe the resources the active process actually resolved.
 '''
 
 [[blocks]]
@@ -55,39 +90,41 @@ body = '''
 ```text
 // Inputs: the pinned bytes (source, runner, parser, corpus, model tables),
 // the seeds and exact command line, and the transcript record a number x is
-// read from. Output: a receipt recorded in the transcript, the ledger entry
-// and the audit.
-function MAKE_RECEIPT(files, seeds, argv, transcript, record_id):
-    // recomputed now, never copied from a hand-off
-    for f in files: h[f] = SHA256(READ(f))
+// read from. Output: a detached receipt that binds the finished transcript.
+function DISCOVER_RUNTIME(loader, declared_sources):
+    files = declared_sources + loader.RESOLVE_ALL_ACTIVE_RESOURCES()
+    packages = QUERY_ACTIVE_PACKAGE_VERSIONS(loader.dependencies)
+    require every resolved file exists and is a regular file
+    return SORTED(files with SHA256(READ(file))), SORTED(packages)
+
+function RUN_WITH_RECEIPT(manifest, seeds, argv, record_id):
+    // Fresh reads from the active environment, never copied manifest values.
+    before = DISCOVER_RUNTIME(manifest.loader, manifest.sources)
+    require before == manifest.runtime_snapshot
+    transcript, processes = RUN_AND_FSYNC_PROCESS_RECORDS(argv, seeds)
+    require transcript is complete and semantically valid
+    require INDEPENDENT_SCALAR_REPLAY_ALL(manifest.checker, transcript)
+    after = DISCOVER_RUNTIME(manifest.loader, manifest.sources)
+    require after == before
     h_t = SHA256(READ(transcript))
-    receipt = (h[source], h[runner], h[parser], h[corpus], h[model_tables],
-               seeds, argv, h_t, record_id)
-    write receipt into the transcript's PINS record, the ledger entry and the
-            audit
-    // the last line of every launcher
-    print "transcript:", PATH(transcript)
+    receipt = (before, seeds, argv, HASHES(processes), h_t, record_id)
+    WRITE_ATOMIC(receipt)
     return receipt
 
 function VERIFY_RECEIPT(receipt, transcript):
-    for f in receipt.files:
-        // the current bytes are not the executed bytes
-        if SHA256(READ(f)) != receipt.h[f]: return DRIFT
-    fresh = RERUN(receipt.files, receipt.seeds, receipt.argv)
-    // compare semantic records, not whole-file bytes: timing and memory
-    // fields may differ
+    current = DISCOVER_RUNTIME(receipt.loader, receipt.sources)
+    if current != receipt.runtime_snapshot: return DRIFT
+    fresh = RERUN(receipt.runtime_snapshot.files, receipt.seeds, receipt.argv)
     if SEMANTIC_RECORDS(fresh) != SEMANTIC_RECORDS(transcript):
         return NOT_REPRODUCED
-    // re-derive the number rather than accept it
-    x = READ_RECORD(fresh, receipt.record_id)
-    return REPRODUCED(x)
+    return REPRODUCED(READ_RECORD(fresh, receipt.record_id))
 ```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-Hashing is free relative to any solver. The cost is procedural: the analysis script of a comparison is kept beside its transcript (as a `.py.txt` so it cannot be executed by accident), and every launcher prints `transcript: <path>` as its last line.
+Runtime discovery and hashing are linear in the total size of the bound files. Model checkpoints can make this visible, but it remains small compared with a long search and must not be replaced by trusting cached digest strings. Semantic replay may dominate verification when the solver's certificate is large. The procedural cost remains: keep the analysis program with its transcript, name the semantic record behind every claim, and print the transcript path when a launcher exits.
 '''
 
 [[blocks]]
@@ -96,12 +133,31 @@ body = '''
 - **Path-bound hashes.** Smoke transcripts that embed the absolute log path in `argv` have path-dependent whole-file hashes. The program records a path-independent fixture digest alongside.
 - **Self-computed runner hash.** A runner that hashes itself at run time and exports the value validates a modified copy of itself; production modes pin the runner through the manifest and environment instead, and the auditors recorded that a public-mode transcript alone does not attest runner identity.
 - **Mis-filed transcripts.** A pilot's transcript was filed under a development directory when a superseded pilot was stopped. The ledger corrected the path and hash.
+- **Manifest echo.** The end check compares stored manifest values with the same stored values instead of opening the resources again.
+- **Checkpoint-directory hash.** A directory name or revision label is pinned, but the individual files selected by the loader are not enumerated and hashed.
+- **Lock-file assumption.** A dependency lock is treated as proof of the packages imported by the active interpreter.
+- **Pre-run only.** Resources are verified before execution but can change before the result is accepted.
+- **Optional-resource omission.** A tokenizer vocabulary, lexical database, configuration file, or fallback table affects scoring but is absent from the snapshot.
+- **Shared-helper replay.** A function called "independent forward" imports the inverse routine's coordinate table or calls its encryption helper, so one sign or indexing bug can make both paths agree.
+- **Representative-only replay.** One key behind a deduplicated plaintext passes, while other physical origins are never checked or even written to the receipt.
+- **Orphan packet hash.** An artifact names a packet digest, but the packet and canonical inputs needed to rebuild it are absent.
+- **Decorative provenance.** Fields called `input_hash`, `rows`, or `origin` are accepted without recomputation or a link to the supporting source row.
+- **Global-support substitution.** A candidate cell is accepted because some proposal supports it, although none of the candidate's recorded origins does.
+- **Unbounded support position.** A residue check passes for a negative or far-out coordinate because only its value modulo the period was validated.
+- **Schema limit mismatch.** A producer legally emits a bank that the consumer refuses, so the advertised pipeline contract is not closed.
+- **Assertion before durable process record.** The raw streams survive, but a refusal assertion interrupts the controller before it saves the child's exit status, resources, or cap classification.
+- **Wrong-phase marker.** A test demands a main-handler diagnostic from a child that correctly refused during import. The test is incomplete even though the safety guard worked; it is not a cipher-family negative.
+- **Clipped resource evidence.** The reported duration is truncated to its limit, hiding an overrun from the cumulative budget and later audit.
+- **Finished-prefix promotion.** Unattempted cases disappear after a panel timeout, so a favourable subset is graded as though it were the whole panel.
+- **Memory-scope substitution.** A per-process peak or post-exit check is described as a hard bound on the entire pipeline's simultaneous memory use.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-The receipt for an audit is the audit's own transcript and script, hashed in the ledger. Independent auditors re-derive counts rather than accepting them: one recomputed the COMMIT prefix hash over the first 178,821 bytes of a transcript and matched it; another rebuilt a 23,724-word bank from the raw source and matched its digest.
+Test the closure with copies rather than valuable inputs. Mutate each source, checker, and model resource in turn, change one reported package version, remove an optional file, point the loader at a second cache, and alter a file between the pre-run and post-run snapshots. Mutate the sign, index order, offset, and final symbol in the solver output so the independent scalar replay demonstrably fails. Every case must refuse. A clean case must rediscover the same full resource set twice, replay every physical origin, and reproduce its semantic output independently. Independent review should also rebuild derived banks from raw sources and rederive counts and claims rather than accepting summaries.
+
+For packet pipelines, also mutate the input digest, origin id, origin weight, support position, direct-versus-derived label, bank-size summary, and producer metadata one field at a time. Test the producer's largest valid bank and one row beyond it against the consumer. A clean packet must rebuild byte-for-byte from its canonical input, while every mutation either changes the bound digest or is refused.
 '''
 
 [[blocks]]
@@ -154,3 +210,49 @@ path = "withmath/PK98_SEGCHAIN_A1S0_CONTROL366_AUDIT.md"
 kind = "audit"
 note = "Residual 8: smoke transcripts embed the absolute log path in argv, so the whole-file hash is path-bound; the fixture digest is not."
 ref = "LOG366"
+
+[[provenance]]
+path = "withmath/docs/project-notes/KNOWNRESIDUAL657.md"
+kind = "design"
+note = "Requires immutable ranking and cap records, complete forward replay, and independent algebraic review for every reported endpoint."
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK89_UNTIEDCYCLE659_ADAPTER.md"
+kind = "design"
+note = "Defines a canonical proposal-to-packet-to-search boundary with source snapshots, packet digests, origin witnesses, and target-absent controls."
+ref = "LOG659"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_PANEL712.md"
+kind = "note"
+note = "Source-bound in-memory panel broker preserves untrimmed resource measurements and every incomplete occurrence, isolates both search and certificate scoring, and requires a complete separate replay before accepting a score. Public mock orchestration is explicitly separate from cryptanalytic power."
+ref = "LOG712"
+
+[[provenance]]
+path = "withmath/logs/712_preflight_audit_1788692875772984000.report.json"
+kind = "audit"
+note = "Frozen separate-code preflight SHA-256 0d47f5b67cda42d4dc3b3e049616f15e441fe4d976bd160dc699dcc05949e5e2: independently reconstructs 14 mock panels, 2,526 dispatches and 25 parser refusals, including unclipped overruns, incomplete tails, tied winners and missing audits. Zero native calls; no fresh-power claim."
+ref = "LOG712"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_INTEGRATED706.md"
+kind = "note"
+note = "Phase-specific early-refusal contract and durable process-envelope ordering. The original frozen controller abort remains INCOMPLETE; saved cryptanalytic outputs may be replayed without rerunning the search, and old stderr is not promoted into missing process evidence."
+ref = "LOG706"
+
+[[provenance]]
+path = "withmath/logs/702_public_20260906T095056Z_1788688256791182000.log"
+kind = "log"
+note = "Original infrastructure-abort receipt SHA-256 89e1e3e34e697c93bac38a5b4e424f77b4b6fb9957e60d2acf6913015630b829. The optimized child refused during import, but the frozen test required the later main-handler marker and failed before persisting its process envelope. No live input was involved."
+ref = "LOG702"
+
+[[provenance]]
+path = "withmath/logs/659_untiedcycle_outputs_20260906T013701Z_1788658621169040000.json"
+kind = "data"
+note = "Bound output artifact containing source digests, packet digests, complete symbolic outputs, factorised origins, and cut-parity records."
+
+[[provenance]]
+path = "withmath/logs/659_untiedcycle_kat_20260906T013701Z_1788658621169040000.log"
+kind = "log"
+note = "Source-rehashed software/algebra receipt; its packet metadata also motivates consumer-side provenance mutation tests."
+ref = "LOG659"

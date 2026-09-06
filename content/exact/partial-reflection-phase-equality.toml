@@ -1,0 +1,162 @@
+id = "partial-reflection-phase-equality"
+section = "exact"
+title = "Partial-reflection phase equality"
+subtitle = "Use one shared image and exact deletion costs to decide whether two partial phases must match"
+status = "VERIFIED"
+status_note = "Software-only checks covered 9,316 accepted-involution set equalities, 2,329 exact minimum-deletion comparisons, 1,024 degree-26 reflection-set checks, 6,400 distinct-phase lower bounds, and 10 malformed-input refusals. The result is conditional on a common regular cycle and the stated component-deletion metric."
+family = "Exact dihedral constraints"
+tags = ["reflection", "phase equality", "partial involution", "component deletion", "dihedral group"]
+related = ["dihedral-group", "semiregular-common-cycle-criterion", "partial-involution-edit-distance", "partial-involution-conjugacy-query", "two-involution-component-templates", "reflection-product-cycle-lift", "permutation-cycles"]
+summary = "Two reflections of one regular cycle cannot agree on even one input unless they are the same phase. With partial, noisy maps, this fact creates two useful bounds: an exact deletion cost for the equal-phase branch and a necessary deletion cost for every distinct-phase branch. If the second bound exceeds the repair budget while the first fits, equality is forced."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $w$ be a regular cycle and let $r$ be one reflection satisfying $rwr=w^{-1}$. Every reflection in the same dihedral action has the form
+
+$$r_a=w^a r.$$
+
+Suppose $P$ is an immutable reciprocal partial map and $Q$ is another reciprocal partial map whose components may be deleted. A component is one fixed loop or one unordered reciprocal pair. Classify each component of $Q$ as:
+
+- $S$: it agrees with $P$ at a known letter;
+- $D$: it disagrees with a known assignment of $P$;
+- $U$: its vertices lie outside the observed domain of $P$.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "The phase theorem and two repair bounds"
+body = '''
+If $r_a(x)=r_b(x)$ for one letter $x$, then $r_b^{-1}r_a$ fixes $x$. But $r_b^{-1}r_a$ is a power of the regular cycle. No nonidentity regular rotation fixes a letter, so
+
+$$r_a(x)=r_b(x)\quad\Longrightarrow\quad a=b.$$
+
+For the equal-phase branch, every $D$ component must be deleted. Merge $P$ with the remaining compatible components and let $L$ be the number of distinct fixed loops. A reflection of an even regular cycle has zero or two fixed points. Provided $P$ itself admits such a completion, the exact minimum is
+
+$$d_{\mathrm{eq}}=|D|+\max(0,L-2).$$
+
+For a distinct phase, every shared component in $S$ must be deleted, giving the necessary bound
+
+$$d_{\mathrm{neq}}\ge |S|.$$
+
+Therefore, for repair radius $R$, if $d_{\mathrm{eq}}\le R$ and $|S|>R$, every admissible common-cycle repair has equal phase.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Exact equality merge:** delete the forced conflicts and excess loops, then use the denser merged partial as an anchor for another map.
+- **Weighted components:** forced conflicts and shared components can carry nonnegative deletion costs; the cheapest removable excess loops give the equal-branch completion.
+- **Odd degree:** reflection fixed-point counts differ, so replace the zero-or-two loop rule with the fixed-point types of the declared action.
+- **Other semiregular actions:** the one-agreement theorem extends whenever every nonidentity element in the phase-difference subgroup is fixed-point-free.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and limits"
+body = '''
+- Both full maps are reflections of the same regular cyclic action.
+- Partial maps are reciprocal and injective; a pair counts once, not once per direction.
+- $P$ is immutable. Only components of $Q$ may be deleted.
+- The distinct-phase expression is a lower bound, not a complete sufficiency test. Other cycle geometry can still rule out a branch after all shared components are removed.
+- A small repair radius is an external model assumption and needs its own controls.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Collapse an uninformative equal-phase pair"
+body = '''
+Validate both partial maps as involutions. Classify every component of the repairable map against the immutable prefix. Compute the exact equal-phase deletion cost and the shared-component lower bound for distinct phases. If equality is forced at the declared radius, enumerate every minimum or radius-bounded legal deletion set, merge it into the prefix, and deduplicate identical merged maps while retaining witnesses. Use the denser result only with another informative reflection; the product of two equal reflections is the identity and does not reveal the cycle by itself.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function PHASE_TEST(prefix P, repairable Q, radius R):
+    REQUIRE P and Q are reciprocal partial injections
+    REQUIRE P has a legal zero-or-two-fixed completion
+    shared = empty component list
+    conflicts = empty component list
+    compatible = empty component list
+    for component e of Q, counted once:
+        if e disagrees with a known image in P:
+            APPEND(conflicts, e)
+        else:
+            APPEND(compatible, e)
+            if e agrees with P at a known letter:
+                APPEND(shared, e)
+    merged = UNION(P, compatible)
+    loops = COUNT_DISTINCT_FIXED_LOOPS(merged)
+    equal_min = SIZE(conflicts) + max(0, loops - 2)
+    distinct_lower_bound = SIZE(shared)
+    forced_equal = equal_min <= R and distinct_lower_bound > R
+    return equal_min, distinct_lower_bound, forced_equal
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Classification and the two bounds are linear in the number of observed components. Building every radius-bounded merged partial may still require a subset enumeration when optional agreeing components are deleted to pad to an exact radius. The equality test itself avoids searching all full reflection phases or all completions.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Treating the distinct bound as sufficient.** Removing all shared components may leave an impossible product cycle.
+- **Weakening the prefix.** The exact equal-branch formula assumes $P$ is fixed; allowing deletions from both maps is a different optimisation problem.
+- **Counting pair directions twice.** A reciprocal pair is one evidence component.
+- **Merging identity as cycle evidence.** Equal reflections multiply to the identity, so a third informative phase is still needed.
+- **Ignoring fixed loops.** More than two retained loops cannot extend to a reflection of an even regular cycle.
+- **Assuming a common cycle.** The conclusion does not apply to unrelated involutions.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The software checks covered all $43\times43$ degree-four partial-map pairs, 480 sampled pairs at degrees six and eight, and repair radii zero through three. It independently enumerated legal complete involutions and compared 2,329 exact minimum costs. Further checks covered 9,316 accepted-involution set equalities, 1,024 full degree-26 reflection sets, 6,400 distinct-phase lower bounds, and ten malformed refusals. A counterexample with alternating components of lengths six and twenty confirms that deleting all shared images is necessary but not sufficient for distinct phases.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Equality forced inside a radius"
+body = '''
+Suppose $Q$ has five components shared with $P$, two components that conflict with $P$, and no excess fixed loops after those conflicts are removed. Then $d_{\mathrm{eq}}=2$ while every distinct phase needs at least five deletions. Under radius $R=3$, the equal branch fits but the distinct branch cannot, so the phases must be equal within the declared model. The merged partial is useful as a stronger anchor, but it still needs a different reflection to expose the cycle.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The one-agreement theorem is a fixed-point argument in a regular group action. The project contribution is its use with an immutable partial involution, an exact equal-branch deletion formula, and a safe one-sided bound for the distinct branch.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_EQUAL610_COLLAPSE.md"
+kind = "note"
+note = "Proof, exact deletion formula, distinct-phase lower bound, counterexample, control scope, and software hashes."
+ref = "LOG610"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk9_equal610_kernel.py"
+kind = "library"
+note = "Implements phase classification, legal completions, exact equal repair, and bounded merged-map generation."
+ref = "LOG610"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk9_equal610_kat.py"
+kind = "script"
+note = "Independent complete-map comparisons, full reflection-set checks, lower-bound checks, and malformed-input refusals."
+ref = "LOG610"
+
+[[provenance]]
+path = "withmath/logs/610_equal_kat_20260905T080435Z_1788595475298792000.log"
+kind = "log"
+note = "Target-absent software receipt containing the full check census."
+ref = "LOG610"
+
+[[references]]
+title = "Permutation Groups"
+author = "John D. Dixon and Brian Mortimer"
+year = 1996

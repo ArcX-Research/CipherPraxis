@@ -1,0 +1,162 @@
+id = "residue-bank-crt-join"
+section = "exact"
+title = "Residue-bank CRT joins"
+subtitle = "Combine independently proposed periodic maps with exact modular constraints"
+status = "VERIFIED"
+status_note = "A native implementation matched an independent finite oracle on every declared path in three synthetic controls. A larger bank panel retained every planted cross-bank path; this verifies the join, not the method that proposes each bank."
+family = "Exact constraint joins"
+tags = ["periodic substitution", "partial maps", "CRT", "projective search", "all-different"]
+related = ["provenance-preserving-partial-map-join", "modular-inverse-and-crt", "finite-field-linear-algebra", "all-different-enumeration", "full-residue-anchor-enumeration", "shared-cycle-attack", "parameter-versus-plaintext-recovery", "endpoint-specific-control-contracts"]
+summary = "A periodic cipher can be attacked one residue at a time without requiring all residue maps to come from the same initial plaintext guess. Each map becomes a small set of shift-free linear equations. An exact search chooses one candidate from every bank, joins the equations over GF(2) and GF(13), and keeps only CRT lifts that form a full alphabet permutation."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $z(L)$ be the unknown coordinate of letter $L$ in an alphabet cycle. For one residue class $r$, a proposed cipher-to-plain map contains observed pairs $c\mapsto p$. In an additive rotation model,
+
+$$z(p)-z(c)=k_r\pmod {26}.$$
+
+In a reflection model,
+
+$$z(p)+z(c)=h_r\pmod {26}.$$
+
+The residue shift is unknown, but it is constant inside that bank. Subtract one observed pair from the others to eliminate it. The resulting homogeneous rows constrain $z$ without choosing a shift or completing every sparse map first.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Shift-free rows and CRT completion"
+body = '''
+Using an anchor pair $(c_0,p_0)$, a rotation row is
+
+$$z(p)-z(c)-z(p_0)+z(c_0)=0\pmod {26},$$
+
+while a reflection row is
+
+$$z(p)+z(c)-z(p_0)-z(c_0)=0\pmod {26}.$$
+
+Solve the accumulated rows separately over $\mathrm{GF}(2)$ and $\mathrm{GF}(13)$. Fix one translation gauge such as $z(A)=0$. A nonzero $\mathrm{GF}(13)$ solution is considered projectively because multiplying every coordinate by a nonzero scalar preserves homogeneous equations. Combine each residue vector with every compatible parity vector by CRT and require
+
+$$\{z(L):L\in A\}=\{0,1,\ldots,25\}.$$
+
+This all-different condition turns a linear solution into a valid alphabet coordinate system. The chosen maps then determine their shifts, and a literal forward replay decides whether the complete bank path is feasible.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Rotation banks:** map differences are constant within each residue.
+- **Reflection banks:** map sums are constant, and complete maps are involutions.
+- **Sparse observed maps:** equations use only exercised cells; unused cells are completed through the shared coordinate permutation.
+- **Cross-proposal paths:** residue $r$ may come from a different source proposal than residue $s$.
+- **Factorised provenance:** each selected row retains its original proposal, rank, and observed positions without expanding every equivalent origin tuple.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and endpoint"
+body = '''
+- All residue maps use one shared alphabet cycle and the same declared relation.
+- Every candidate map is a function on its observed inputs and is consistent with any required reciprocal cells.
+- The search rejects a partial branch only when no all-different CRT completion can extend it.
+- Resource limits are explicit. A node, direction, parity, solution, or time cap makes the result incomplete.
+- One feasible bank path can fix the plaintext on every observed position while several inequivalent coordinate systems still support it. Path recovery, plaintext recovery, and cycle recovery are separate endpoints.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Join independent residue evidence"
+body = '''
+Build one deduplicated candidate bank per key residue and retain every source origin. Order the banks by a fixed rule, then depth-first join one row from each bank. Maintain canonical row spaces over both prime fields and apply only conservative all-different capacity checks. At a complete path, enumerate projective residue directions and compatible parity lifts, rebuild coordinates with CRT, require a permutation, derive the residue shifts, and replay the entire segment in both directions. Emit the path and plaintext separately from the coordinate witness.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function JOIN_RESIDUE_BANKS(ciphertext, banks, relation, limits):
+    search(depth, rows_mod_2, rows_mod_13, chosen):
+        if LIMIT_REACHED(limits): return INCOMPLETE
+        if CONSERVATIVE_ALL_DIFFERENT_CAPACITY_FAILS(rows_mod_2,
+                                                      rows_mod_13): return
+        if depth < NUMBER_OF_BANKS(banks):
+            for candidate in banks[depth] in frozen order:
+                rows = SHIFT_FREE_ROWS(candidate, relation)
+                search(depth + 1, ADD(rows_mod_2, rows mod 2),
+                       ADD(rows_mod_13, rows mod 13), chosen + candidate)
+            return
+        for direction_13 in PROJECTIVE_NULLSPACE(rows_mod_13):
+            for parity in COMPATIBLE_PARITY_LIFTS(rows_mod_2, direction_13):
+                coordinates = CRT(parity, direction_13)
+                if not IS_PERMUTATION(coordinates): continue
+                shifts = DERIVE_RESIDUE_SHIFTS(chosen, coordinates, relation)
+                if FORWARD_REPLAY(ciphertext, chosen, coordinates, shifts):
+                    EMIT_FEASIBLE_PATH(chosen, plaintext, coordinates)
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+With bank sizes $b_0,\ldots,b_{m-1}$, the unpruned path space is $\prod_r b_r$. Incremental row reduction and all-different capacity checks can remove branches before the endpoint. Endpoint work depends on the two nullities rather than on $26!$: projective enumeration is proportional to $(13^{d_{13}}-1)/12$, followed by the compatible parity lifts. This is still exponential and therefore needs separate scan and output caps.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Whole-proposal coupling.** Requiring all residues to come from one proposal discards a correct path assembled from several near misses.
+- **First witness called the alphabet.** An existential endpoint may return an arbitrary compatible coordinate system, not the planted or unique one.
+- **Zero vector accepted.** Homogeneous systems always contain zero; it cannot label a permutation alphabet.
+- **Projective aliases overcounted.** Unit-scaled coordinate vectors can describe the same complete residue maps.
+- **Unsafe pruning.** A heuristic score or an incomplete completion test is used as a hard contradiction.
+- **Plaintext path confused with proposal power.** An exact join can be perfect when the true residue map is present, yet the upstream proposer may never place it in the bank.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The exact gate used three deterministic 95-character controls covering rotation with mixed shifts, rotation with even shifts, and reflection with mixed shifts. Each residue bank contained three candidates, and the planted answer was split across the three source proposals. A separate oracle enumerated all 6,561 physical paths; both implementations found the same sole feasible path in each control and replayed all plaintexts exactly. A later panel used 24 candidates per residue and retained every planted cross-proposal path. Parser, overflow, memoisation, deadline, node, endpoint, and solution-cap cases were tested separately.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Two rows remove one unknown shift"
+body = '''
+Suppose one rotation residue proposes $B\mapsto F$ and $D\mapsto H$. The two equations are $z(F)-z(B)=k$ and $z(H)-z(D)=k$. Subtracting them gives
+
+$$z(H)-z(D)-z(F)+z(B)=0\pmod {26}.$$
+
+The key shift has disappeared. A second residue contributes its own shift-free rows. The join asks whether all such rows can share one permutation $z$; only after that does it recover each residue shift.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Linear congruences, CRT, and projective null spaces are standard. The reusable construction here is the exact banked interface: independently acquired residue maps, shift elimination, incremental prime-field row spaces, conservative permutation feasibility, cross-proposal path recovery, and explicit separation of a plaintext witness from a complete coordinate orbit.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_RESIDUECRT660.md"
+kind = "design"
+note = "Derives the shift-free rotation and reflection rows, prime-field split, projective endpoint, and path-versus-cycle endpoint boundary."
+ref = "LOG660"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk9_residuecrt660_core.cpp"
+kind = "solver"
+note = "Native incremental bank join with conservative capacity tests, projective residue enumeration, CRT all-different completion, and literal replay."
+ref = "LOG660"
+
+[[provenance]]
+path = "withmath/logs/660_residuecrt_kat_20260906T021635Z_1788660995775476000.log"
+kind = "log"
+note = "Final target-absent receipt for three complete path-space comparisons, scalar forwards, memoisation, interruption, parser, and cap checks."
+ref = "LOG660"
+
+[[provenance]]
+path = "withmath/logs/661_residuecrt_power_20260906T021752Z_1788661072137813000.log"
+kind = "log"
+note = "Larger candidate-bank panel showing cross-proposal truth retention and complete native/reference agreement."
+ref = "LOG661"
+

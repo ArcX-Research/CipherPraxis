@@ -1,0 +1,135 @@
+id = "monome-dinome"
+section = "ciphers"
+title = "Monome–Dinome cipher"
+subtitle = "Mix single-digit and double-digit codes in one prefix-free checkerboard"
+status = "UNTESTED"
+status_note = "The standard checkerboard construction is documented by the American Cryptogram Association and was encountered during the external family audit. This repository has no dedicated control-qualified decoder."
+family = "Variable-length substitution ciphers"
+tags = ["checkerboard", "variable length", "digits", "prefix code"]
+related = ["polybius-square", "homophonic-substitution", "frequency-analysis", "constraint-satisfaction-forward-checking"]
+summary = "Monome–Dinome assigns one digit to letters in the top row of a checkerboard and two digits to letters in its lower rows. Two digits are reserved as row markers, so the code can be read without separators: a non-marker is a complete letter, while a marker says to read one more digit."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Choose a permutation of the ten decimal digits. Reserve two digits as row markers and use the other eight as column labels. Fill a $3 \times 8$ keyed box. A top-row letter is encoded by its column digit alone. A letter in either lower row is encoded by that row's marker followed by its column digit.
+
+With two merged letter pairs, the 24 cells can represent the alphabet. Because row-marker digits are not column labels, the concatenated code is prefix-free.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "One- and two-digit codewords"
+body = '''
+Let column labels be $d_0,\ldots,d_7$ and row markers be $u,v$, all distinct. For a letter in column $j$,
+
+$$E(x)=\begin{cases}
+d_j,&x\text{ is in the top row},\\
+u\,d_j,&x\text{ is in the second row},\\
+v\,d_j,&x\text{ is in the third row}.
+\end{cases}$$
+
+A decoder reads one digit. If it is $u$ or $v$, it consumes the following column digit; otherwise it decodes a top-row cell immediately.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- Derive the digit order and box alphabet from one or two keywords.
+- Choose different merged-letter pairs to fit 24 cells.
+- Print digit groups for readability or concatenate them into one stream.
+- General checkerboards can reserve more row markers and use more rows.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The two row markers are distinct from all eight column labels.
+- The box contains each normalized plaintext symbol exactly once.
+- The digit stream begins at a codeword boundary.
+- Merged letters and any printed group spaces follow a fixed convention.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to attack it"
+body = '''
+Try candidate pairs of row-marker digits. Parse the stream deterministically under each pair and reject a pair when a marker is not followed by a valid column digit. The resulting one- and two-digit tokens form a monoalphabetic substitution, so solve them by frequency, word pattern, or hill climbing. A crib can identify marker positions and strongly restrict the keyed box.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function ENCRYPT(plain, box, row_markers, column_digits):
+    out = empty digit stream
+    for letter in plain:
+        row, column = position(letter, box)
+        if row == 0:
+            append column_digits[column]
+        else:
+            append row_markers[row - 1], column_digits[column]
+    return out
+
+function DECRYPT(stream, box, row_markers, column_digits):
+    scan from left to right
+    if next digit is a row marker, consume it and one column digit
+    otherwise consume one column digit and select the top row
+    append the selected box letter
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Known-key parsing is linear and needs no backtracking. A marker-first attack has $\binom{10}{2}$ unordered row-marker choices, or twice that when row order matters, before solving the resulting 24-symbol substitution and digit ordering.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Allowing a marker as a column label.** The stream then loses its prefix-free parse.
+- **Solving raw digits as letters.** One ciphertext token may contain one or two digits.
+- **Wrong stream phase.** A missing digit can desynchronize every later token.
+- **Ignoring merged cells.** Exact control comparison must normalize the declared letter pairs.
+- **Frequency distortion.** Row markers occur in every lower-row token and are not ordinary substitution symbols.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Plant controls with all ten digit roles exercised, a mix of one- and two-digit tokens, both lower rows, and the merged letters. Hide the digit order and keyed box. Require exact tokenization, normalized plaintext, and exact ciphertext reconstruction. A malformed stream must be rejected rather than silently repaired.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+Reserve 8 and 9 as row markers and use columns 0 through 7:
+
+```text
+      0 1 2 3 4 5 6 7
+      A B C D E F G H
+8     I K L M N O P Q
+9     R S T U V W X Y
+```
+
+With I/J and Y/Z merged, `MEET` encodes as `83 4 4 92`, giving the stream `834492`. Reading 8 and 9 as two-digit prefixes parses the stream uniquely and returns `MEET`.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+This is a small straddling checkerboard. Its useful invariant is structural: the two marker digits never finish a one-digit token, so a proposed marker pair determines the whole parse before language scoring.
+'''
+
+[[provenance]]
+path = "withmath/docs/cipher-methods/COLOSSUS_AUDIT.md"
+kind = "audit"
+note = "Records the external implementation's merged-letter handling for this family; no target verdict is imported."
+
+[[references]]
+title = "MONOME-DINOME"
+author = "American Cryptogram Association"
+url = "https://www.cryptogram.org/downloads/aca.info/ciphers/MonomeDinome.pdf"

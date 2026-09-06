@@ -1,0 +1,160 @@
+id = "stationary-alternating-optimization"
+section = "search"
+title = "Stationary alternating optimisation"
+subtitle = "Finish every declared start at a checked coordinate-wise fixed point"
+status = "VERIFIED"
+status_note = "A compiled solver now re-runs its exact structural optimiser after each mapping fit, reports stationarity for the selected result and every used start, and emits the actual seed bank. A corrected disclosed control reached the exact plaintext and a stationary endpoint."
+family = "Deterministic heuristics"
+tags = ["alternating optimisation", "coordinate stationarity", "start bank", "fixed point", "completion"]
+related = ["coordinate-descent", "hill-climbing", "expectation-maximisation", "piecewise-running-shift-dp", "candidate-bank-lineage-and-cap-accounting", "exhaustive-enumeration", "bound-benchmarks-and-certificates", "drainability-and-throughput", "seed-determinism"]
+summary = "Alternating optimisation switches between two parameter blocks, such as a shift schedule and a substitution map. Recheck every block and finish every declared start before selecting the best endpoint. Even then, a heuristic optimiser is a proposal generator: its endpoints may enter an exact replay or statistical gate, but a miss does not prove that no better key exists."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let the objective be $F(\theta,M)$, where $\theta$ is a finite structural parameter and $M$ is a fitted substitution. An alternating solver repeatedly applies
+
+$$M\leftarrow T_M(\theta),\qquad
+\theta\leftarrow T_\theta(M).$$
+
+The structural step $T_\theta$ may be exact even when the mapping step $T_M$ is heuristic. A returned pair is **structurally stationary** when
+
+$$T_\theta(M)=\theta.$$
+
+For a declared start bank, **all-start completion** means every emitted start reached that check before the final winner was chosen. It does not mean every possible start or every global basin was searched.
+
+Compilation, parallel execution, or a large iteration budget does not change this claim boundary. A native implementation may produce proposals faster and more consistently, but it becomes a proof procedure only if it enumerates a declared finite space completely or returns a separately checkable exact certificate.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Monotonicity and the final recheck"
+body = '''
+If both block updates never lower the same exact score, then
+
+$$F(\theta_t,M_t)\le F(\theta_t,M_{t+1})
+\le F(\theta_{t+1},M_{t+1}).$$
+
+In a finite state space, strict improvements eventually stop. The implementation must still test the endpoint explicitly. If the last operation fitted $M$, the required check is $T_\theta(M)=\theta$; otherwise the result may already contain a profitable structural update that was never applied.
+
+When $T_M$ is stochastic or approximate, stationarity under $T_\theta$ certifies only the exact block. It is a completion condition, not a proof that $(\theta,M)$ is globally optimal.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Two exact blocks:** a fixed point is coordinate-wise optimal in both blocks, but can still miss the global optimum.
+- **Exact plus heuristic:** certify the exact block and describe the other block as a fitted result.
+- **More than two blocks:** recheck every block after the final update and require a full unchanged sweep.
+- **Deterministic multi-start:** enumerate a recorded start bank and finish every member.
+- **Capped polish:** hitting the round cap is an incomplete terminal, even when the current score is high.
+- **Proposal front end:** retain every completed endpoint and its lineage for a later exact join, reranker, or matched-null selector; do not turn absence from the endpoint bank into a family exclusion.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Every block update is scored by the same objective and tie rule.
+- The exact block optimiser is checked independently on small cases.
+- The actual start bank, including tie expansion and fallback seeds, is emitted rather than inferred from a requested count.
+- No start is silently dropped because it converges slowly or scores poorly.
+- A stationary result is still compared with valid controls and nulls; convergence alone is not evidence that the cipher model is correct.
+- The result contract distinguishes `PROPOSAL_COMPLETE` from `SEARCH_EXHAUSTIVE`. The first means the declared heuristic work finished; only the second can support a finite-space closure.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Close the optimisation loop"
+body = '''
+Construct and record the complete declared start bank. From each start, fit the mapping, optimise the structure, and repeat. After the final mapping fit, run the exact structural optimiser once more. If it proposes a change, continue; if the round cap is reached first, mark that start incomplete. Select a winner only after every used start has a stationary receipt, and report both selected-start and all-start status. Pass the endpoint bank, origin records, completion flags, and caps to downstream verification. A candidate that survives can be proved by independent replay; a missing candidate remains a heuristic miss unless a separate exact stage closes the space.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function ALTERNATE_FROM_START(start, objective, round_cap):
+    structure = start
+    mapping = INITIAL_MAPPING()
+    for round in 1..round_cap:
+        mapping = FIT_MAPPING(structure, mapping, objective)
+        next_structure = EXACT_BEST_STRUCTURE(mapping, objective)
+        if next_structure == structure:
+            return COMPLETE_STATIONARY(structure, mapping)
+        structure = next_structure
+    return INCOMPLETE_ROUND_CAP
+
+function MULTISTART_ALTERNATION(requested_starts):
+    starts = BUILD_AND_EMIT_ACTUAL_START_BANK(requested_starts)
+    results = empty list
+    for start in starts:
+        result = ALTERNATE_FROM_START(start, objective, round_cap)
+        if result is incomplete: return INCOMPLETE_ALL_STARTS
+        results.append(result)
+    require EVERY(result is stationary for result in results)
+    return BEST_BY_EXACT_SCORE_WITH_TIES(results)
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+For $h$ starts, at most $t$ alternating rounds, structural cost $C_\theta$, and mapping-fit cost $C_M$, the declared work is $O(ht(C_\theta+C_M))$. Rechecking stationarity adds at most one exact structural call per completed start. A round cap bounds runtime but changes the terminal from complete to incomplete when reached.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Stopping after the mapping step.** The new map changes which structure is best, but that structure is never recomputed.
+- **Checking only the winner.** A nonstationary losing start can still mean the advertised multi-start selector was not completed.
+- **Requested starts differ from used starts.** Tie expansion, deduplication, or random fallback changes the bank without appearing in the receipt.
+- **Seed-score contamination.** Placeholder scores outrank genuinely ranked seeds and quietly replace the intended starts.
+- **Global-optimum language.** Coordinate stationarity is promoted to exhaustive or global optimality.
+- **Cap treated as convergence.** A loop ends because its counter expired and is printed as stationary.
+- **Native-equals-exact fallacy.** Compiled code finishes its requested work quickly, so a bounded multi-start search is described as exhaustive.
+- **Proposal-bank closure.** A correct plaintext is absent from the retained endpoints and the whole cipher family is rejected, even though no completeness certificate covers the unvisited basins.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Use a toy objective with a known two-block fixed point and another with multiple basins. Check every intermediate score for monotonicity, force a final-step structural change, and require the endpoint recheck to catch it. Set the round cap too low and require an incomplete terminal. Emit the actual start list, alter fallback seed scores, and verify that ranked starts cannot be displaced silently.
+'''
+
+[[blocks]]
+kind = "example"
+title = "One last check changes the answer"
+body = '''
+Suppose a mapping fit is performed for schedule $A$, after which the exact schedule optimiser prefers $B$. Returning the new mapping with $A$ is not stationary, even if an earlier $A\rightarrow A$ check passed under the old map. Apply $B$, refit the map, and recheck the schedule. Only an unchanged final recheck closes that start.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Alternating optimisation and block coordinate methods are established. The operational distinction here is between a stationary endpoint for one start, completion of every declared start, and a global optimum. Those are three different claims and should have three different receipts.
+'''
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_quartervelocity640_core.cpp"
+kind = "solver"
+note = "Implements exact structural rechecks, bounded alternating polish, selected-start stationarity, all-start stationarity, and emitted used seeds."
+ref = "LOG640"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_quartervelocity640_controls.py"
+kind = "script"
+note = "Parses the actual seed bank and requires truth membership, exact recovery, selected stationarity, all-start stationarity, and an independent forward replay."
+ref = "LOG640"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "LOG640-A preserves a seed-bank defect without interpreting it; LOG640-B records the repaired bank and a stationary disclosed control."
+ref = "LOG640"
+
+[[references]]
+title = "Nonlinear Programming"
+author = "Dimitri P. Bertsekas"
+year = 1999

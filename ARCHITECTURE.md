@@ -139,7 +139,7 @@ Derived from dilate.co.ke (Framer site) on 2026-09-04:
 ## 6. Layout of this directory
 
 ```
-cipher-praxis/
+CipherPraxis/
   ARCHITECTURE.md      this note
   README.md            run/build instructions
   Cargo.toml, build.rs

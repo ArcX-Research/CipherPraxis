@@ -6,7 +6,7 @@ status = "VERIFIED"
 status_note = "The alternating fit recovered both planted controls at 100%: a same-alphabet period-70 case at z +51 and a two-alphabet 7-over-10 case at z +27. The general cascade also recovered a two-period cipher in an earlier solved text. Tests then ruled out this family for the two short texts at inner periods 2 to 13."
 family = "Composite constructions"
 tags = ["periodic", "composite", "lcm", "two alphabets", "polyalphabetic"]
-related = ["vigenere", "quagmire-iii", "sandwich-construction", "lcm-of-periods", "exact-period-alignment", "coincidence-lag-profile", "expectation-maximisation", "coordinate-descent", "g-period"]
+related = ["vigenere", "quagmire-iii", "additive-stream-wheels", "sandwich-construction", "lcm-of-periods", "exact-period-alignment", "coincidence-lag-profile", "expectation-maximisation", "coordinate-descent", "g-period"]
 summary = "Apply one repeating key after another. If both use the same alphabet, they combine into one key with period lcm(m, q). If they use different mixed alphabets, the result is a new layered cipher. Even a short text may show both periods as separate match peaks. The solver alternates exact single-letter fits for the 7 + q shifts, starts from many points, then checks the result with quadgrams and shuffled null data."
 updated = "2026-09-04"
 

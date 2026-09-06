@@ -1,0 +1,160 @@
+id = "translated-set-packing"
+section = "exact"
+title = "Translated-set packing"
+subtitle = "Test a periodic all-different window by moving residue sets, not individual letters"
+status = "VERIFIED"
+status_note = "The exact decision procedure matched independent full-key brute force on 6,793 small instances. Planted and shuffled controls exercised both feasible and infeasible outcomes; one later 280-cell application completed with an exact zero census in its stated family."
+family = "Exact permutation constraints"
+tags = ["set packing", "periodic key", "all-different", "translation gauge", "structural zero"]
+related = ["all-different-constraints", "all-different-enumeration", "residue-class-graphs", "exhaustive-enumeration", "modular-arithmetic-z26", "periodic-substitution-dp", "bound-benchmarks-and-certificates"]
+summary = "When a full-alphabet plaintext window is encrypted with repeating additive shifts, positions in one key residue move together. Group the ciphertext values by residue, translate each group by one candidate shift, and require the translated groups to be disjoint. A short depth-first set-packing search then decides the exact all-different condition without assigning letters one at a time."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let a window of length $q$ use all $q$ alphabet coordinates exactly once after decryption. Its ciphertext coordinates are $y_i\in\mathbb{Z}_q$, encrypted with a period-$p$ additive key. In the Vigenère relation,
+
+$$x_i\equiv y_i-k_{i\bmod p}\pmod q.$$
+
+For residue $b$, collect the ciphertext values
+
+$$S_b=\{y_i:i\equiv b\pmod p\}.$$
+
+The question is whether translations $S_b-k_b$ can be packed without overlap. Since the window has $q$ positions, pairwise disjoint translated sets automatically cover all of $\mathbb{Z}_q$.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Gauge and exact feasibility"
+body = '''
+A repeated value inside one residue can never be repaired by one common shift. Thus
+
+$$|S_b|=\#\{i:i\equiv b\pmod p\}$$
+
+is a necessary first check. After that, feasibility is exactly
+
+$$\exists k_0,\ldots,k_{p-1}:\quad (S_b-k_b)\cap(S_c-k_c)=\varnothing\quad\text{for all }b\ne c.$$
+
+Set $k_0=0$ without losing a solution. Given any solution, replacing every $k_b$ by $k_b-k_0$ translates every plaintext coordinate by the same amount $k_0$, preserving all differences and the all-different property.
+
+For Beaufort,
+
+$$x_i\equiv k_{i\bmod p}-y_i=-(y_i-k_{i\bmod p}),$$
+
+so global negation gives exactly the same feasibility decision.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Partial alphabet window:** disjointness is still necessary and sufficient for distinct outputs, but no full-cover claim follows.
+- **Other finite groups:** replace cyclic translations with the relevant group action and keep the same disjoint-orbit search.
+- **Known shift relations:** merge equal residues or restrict their candidate translations before search.
+- **Witness census:** retain every gauge-normalised shift vector when later layers need all physical candidates rather than a yes/no answer.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and limits"
+body = '''
+- Every position in residue $b$ uses the same additive shift $k_b$.
+- Cipher and plaintext coordinates use the same declared cyclic order.
+- The plaintext claim is only all-different. Passing does not show that the order spells language or follows another proposed structure.
+- A zero result closes only the stated period, coordinate order, window layout, and additive relation.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Search one translation per residue"
+body = '''
+Build the residue sets and reject immediately if a residue contains a duplicate. Fix the first shift to zero. Visit the other residues in a frozen order, preferably largest or most constrained first. For each possible shift, translate the whole set and keep it only if it does not intersect the values already used. A leaf is a complete witness. If depth-first search visits every allowed shift at every reachable node and finds no leaf, infeasibility is exact.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function TRANSLATED_SET_FEASIBLE(values, period, modulus):
+    for residue in 0..period-1:
+        items[residue] = values at positions with this residue
+        if COUNT(items[residue]) != COUNT(DISTINCT(items[residue])):
+            return false, no witness
+        sets[residue] = DISTINCT(items[residue])
+    order = [0] followed by a fixed order of the other residues
+    fixed = sets[0]
+    return PLACE(1, fixed, shifts = [0])
+
+function PLACE(depth, used, shifts):
+    if depth == period: return true, shifts
+    residue = order[depth]
+    for shift in 0..modulus-1:
+        moved = {value - shift mod modulus for value in sets[residue]}
+        if moved intersects used: continue
+        answer = PLACE(depth + 1, used union moved, shifts plus shift)
+        if answer is feasible: return answer
+    return false, no witness
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The worst case tries $q^{p-1}$ gauge-normalised shift vectors, but each node uses a set-intersection check and failures often occur near the root. With $q\le64$, bit masks make translation and intersection cheap. Exact enumeration may retain all leaves; a decision-only solver may stop at the first witness but must search the full tree before reporting zero.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Skipping within-residue duplicates.** A set conversion can hide a collision unless the original count is checked first.
+- **Fixing the wrong gauge.** Fixing $k_0=0$ is valid only because a common key translation acts as a global plaintext translation for this objective.
+- **Searching Beaufort separately.** For all-different feasibility it is the same set problem under negation.
+- **Calling an early timeout zero.** A cap or interruption is `INCOMPLETE`, never an infeasibility certificate.
+- **Generalising the closure.** Another period, alphabet order, transposition, or non-additive layer remains open.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+An independent brute-force reference tested 6,793 vectors across six small modulus/period settings and agreed with the set-packing solver on every feasibility decision; every returned shift witness was checked directly. A planted full-alphabet window was recovered in its intended cell. Four same-histogram shuffles produced both zero and nonzero survivor counts, showing that the test is neither forced nor forbidden by letter counts alone. A later complete application visited 280 declared cells and found no witness, giving a scoped structural-zero certificate for that exact family.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Two translated residue sets"
+body = '''
+Work in $\mathbb{Z}_6$ with residue sets $S_0=\{0,2,4\}$ and $S_1=\{0,2,4\}$. Fix $k_0=0$, so the used values are $\{0,2,4\}$. Trying $k_1=1$ gives
+
+$$S_1-1=\{5,1,3\},$$
+
+which is disjoint and completes all six coordinates. Thus shifts $(0,1)$ are an exact witness. If one residue had begun with values $(0,0,4)$, its repeated zero would survive every common translation and the window would be rejected immediately.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+This is a small exact-cover problem specialised to translated subsets of a cyclic group. The specialisation exposes a valid gauge, a free duplicate gate, and a compact bit-mask implementation.
+'''
+
+[[provenance]]
+path = "withmath/docs/pk9/PK9_RAWPERM_ZERO279_AUDIT.md"
+kind = "audit"
+note = "States the set-packing reduction, gauge proof, sign equivalence, exhaustive small-instance comparison, controls, and narrow closure rule."
+ref = "LOG279"
+
+[[provenance]]
+path = "withmath/scripts/wm_pk9_rawperm_zero279.py"
+kind = "solver"
+note = "Exact translated-set depth-first decision procedure and independent witness checks."
+ref = "LOG279"
+
+[[provenance]]
+path = "withmath/logs/279_pk9_rawperm_zero.log"
+kind = "log"
+note = "Complete 280-cell structural-zero census for one declared application."
+ref = "LOG279"
+
+[[references]]
+title = "Constraint Processing"
+author = "Rina Dechter"
+year = 2003

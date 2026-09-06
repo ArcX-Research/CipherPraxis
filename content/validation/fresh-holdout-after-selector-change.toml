@@ -1,0 +1,148 @@
+id = "fresh-holdout-after-selector-change"
+section = "validation"
+title = "Fresh holdout after a selector change"
+subtitle = "Once evaluation feedback changes the rule, validate the revision on unopened cases"
+status = "VERIFIED"
+status_note = "A recorded selector was adjusted after development controls and therefore required a new frozen holdout; the fresh gate then failed its preregistered threshold. This is a direct example of why the old cases cannot validate the revision."
+family = "Adaptive validation"
+tags = ["fresh holdout", "selector change", "selection bias", "adaptive analysis"]
+related = ["held-out-gates", "selection-overfit-check", "selection-overfit-diagnostic", "control-first-policy", "seal-and-audit-protocol", "lexical-reranking-and-oov-bias", "reproducibility-receipts"]
+summary = "Changing a score weight, tie rule, cap, model, vocabulary, search budget, or endpoint after seeing control results consumes those controls for development. Freeze the revised selector, then evaluate it once on a separate unopened bank. Preserve the old results as development evidence, not validation."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $D$ be the set of cases whose outcomes influenced a selector $A$. If any choice in $A$ was made after inspecting performance on $D$, then $D$ is development data for that final selector. A **fresh holdout** $H$ is drawn or committed independently, remains unopened while $A$ is frozen, and is evaluated once under a pass rule fixed before its outcomes are observed.
+
+A selector change includes not only source-code edits but also changes to weights, thresholds, candidate caps, random-start counts, tie handling, lexicons, model versions, preprocessing, stopping rules, or the endpoint being scored.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Selection makes the old estimate optimistic"
+body = '''
+If $A_1,\ldots,A_K$ are compared on the same development sample and
+
+$$\hat k=\operatorname*{argmax}_{k}\widehat R_D(A_k),$$
+
+then $\widehat R_D(A_{\hat k})$ estimates the performance of a data-selected maximum, not an untouched fixed method. The valid confirmatory estimate is $\widehat R_H(A_{\hat k})$ on a bank $H$ not used to choose $\hat k$. Repeatedly opening $H$ and adapting to it simply moves $H$ into development as well.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Code change:** search, scorer, parser, or forward-check logic changes.
+- **Configuration change:** a weight, threshold, cap, seed policy, or budget changes without source edits.
+- **Resource change:** corpus, tokeniser, lexicon, model checkpoint, or package version changes.
+- **Claim change:** a failed exact endpoint is replaced by a looser metric after results are seen.
+- **Selector choice:** the best of several unchanged methods is chosen using the same evaluation bank.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions"
+body = '''
+- Holdout membership, construction seeds, hashes, endpoints, and threshold are committed before execution.
+- Development and holdout sources are disjoint under a machine-checked interval or identity registry.
+- The production runner uses the byte-identical selector and resources that the fresh gate tests.
+- A failed holdout is not redrawn, filtered, or renamed a pilot to obtain a favourable replacement.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Reset validation after adaptation"
+body = '''
+Record which observed result motivated the change and mark every exposed case as consumed development. Freeze the revised source and configuration by hash. Reserve a disjoint bank and predeclare its construction, endpoint comparator, threshold, seeds, timeout, and stopping rule. Run it once without arguments. Publish every case and the aggregate verdict, including a failure, before any further revision begins a new cycle.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function FREEZE_REVISION(selector, resources, exposed_cases, holdout_plan):
+    mark exposed_cases as DEVELOPMENT_CONSUMED
+    require DISJOINT(holdout_plan.sources, exposed_cases.sources)
+    manifest = HASH(selector, resources, holdout_plan,
+                    endpoint, threshold, seeds, stopping_rule)
+    commit manifest before opening any holdout case
+    return manifest
+
+function ONE_SHOT_FRESH_GATE(manifest, unopened_holdout):
+    require NO_ARGUMENTS() and HASHES_MATCH(manifest)
+    require unopened_holdout identity matches the committed plan
+    outcomes = []
+    for case in unopened_holdout:
+        outcomes.append(EVALUATE_FROZEN_ENDPOINT(case))
+    verdict = PREDECLARED_PASS_RULE(outcomes)
+    publish every case, aggregate count, hashes and verdict
+    mark unopened_holdout as CONSUMED regardless of verdict
+    return verdict
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The gate costs one production-budget run per holdout case. Hashing and disjointness checks are negligible by comparison. The scarce resource is statistical independence: every adaptive inspection consumes a bank even when no file was edited.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Configuration laundering.** A command-line change is claimed not to count because source bytes stayed fixed.
+- **Threshold retreat.** The endpoint or pass mark changes after the first outcome.
+- **Favourable redraw.** A failed seed is replaced and only the replacement is reported.
+- **Holdout peeking.** Partial results influence whether the run continues or which method becomes primary.
+- **Near-duplicate leakage.** Different offsets contain overlapping or duplicated text.
+- **Selector switch.** Another development winner is substituted after the fresh gate without a new gate.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Audit the interval registry, exact source hashes, resource versions, seeds, no-argument runner, derived threshold, and complete transcript. In the recorded example, tuning controls informed new production defaults, so an auditor required a fresh frozen panel. That panel recovered exact ordered text in 3 of 20 cases and the separately declared chunk-set endpoint in 17 of 20, below the preregistered 18-of-20 requirement for each. The failed receipt was retained and no use was authorised.
+'''
+
+[[blocks]]
+kind = "example"
+title = "A weight change consumes the old bank"
+body = '''
+A character-only selector is tested on bank D. After seeing its errors, a word-score weight is added and chosen to repair D. Even if the new selector now gets every case in D right, D measures tuning success. Freeze the weight and evaluate on unopened bank H. If H fails, the result is a failed validation, not an invitation to retune on H and keep calling it held out.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+This entry applies standard model-selection and adaptive-data-analysis principles to cipher-selector pipelines. The project's contribution is the concrete hash-bound reset protocol and retained failed example, not a claim that holdout discipline is new.
+'''
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "LOG430 records the audit requirement for a fresh panel after defaults changed and the subsequent failed one-shot verdict."
+ref = "LOG430"
+
+[[provenance]]
+path = "withmath/logs/430_chunkmono_20260902T180439Z_82057.log"
+kind = "log"
+note = "Frozen fresh-seed receipt with 3/20 exact ordered recoveries and 17/20 selected chunk-set recoveries against predeclared 18/20 requirements."
+ref = "LOG430"
+
+[[provenance]]
+path = "withmath/docs/pk9/PK9_CHUNKMONO430_NOTE.md"
+kind = "note"
+note = "Frozen selector definition, source pins, endpoint split, independent-forward rule, and absence of an authorised unknown-text path."
+ref = "LOG430"
+
+[[references]]
+title = "On Over-fitting in Model Selection and Subsequent Selection Bias in Performance Evaluation"
+author = "Gavin C. Cawley and Nicola L. C. Talbot"
+year = 2010
+url = "https://www.jmlr.org/papers/v11/cawley10a.html"
+
+[[references]]
+title = "Generalization in Adaptive Data Analysis and Holdout Reuse"
+author = "Cynthia Dwork, Vitaly Feldman, Moritz Hardt, Toniann Pitassi, Omer Reingold and Aaron Roth"
+year = 2015
+url = "https://papers.nips.cc/paper_files/paper/2015/hash/bad5f33780c42f2588878a9d07405083-Abstract.html"

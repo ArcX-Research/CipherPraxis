@@ -1,0 +1,134 @@
+id = "strict-best-improvement-swap-ascent"
+section = "search"
+title = "Strict best-improvement swap ascent"
+subtitle = "Scan every label swap, take only the best strict gain, and stop at a checked local optimum"
+status = "VERIFIED"
+status_note = "Known-answer and adversarial checks confirm the search rule: it chooses the best complete-neighbourhood move rather than the first improvement, stops on a flat landscape, and refuses when its step cap prevents a final stationarity check. This verifies the implementation contract, not global recovery power."
+family = "Deterministic local search"
+tags = ["best improvement", "coordinate ascent", "label swaps", "local optimum", "fail closed"]
+related = ["identity-plus-one-swap-neighborhood", "relabeling-permutation-distance", "hill-climbing", "bounded-permutation-shells", "lexical-band-contextual-reranking", "endpoint-specific-control-contracts"]
+summary = "This deterministic search repeatedly scores the current substitution and every map made by swapping one pair of output labels. It moves only to the globally best strict improvement in that neighbourhood. A result is emitted only after a complete scan finds no improving swap, giving a local-optimum certificate for the declared score and move set."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $M_t$ be a permutation on $q$ output labels, let $L(M)$ be a frozen score, and let
+
+$$\mathcal N_1(M)=\{M\}\cup\{\tau_{ab}\circ M:0\le a<b<q\},$$
+
+where $\tau_{ab}$ exchanges output labels $a$ and $b$. One best-improvement step finds
+
+$$M^*=\operatorname*{argmax}_{N\in\mathcal N_1(M_t)}L(N)$$
+
+under a declared deterministic tie order. If $L(M^*)>L(M_t)$, set $M_{t+1}=M^*$. Otherwise stop. The stopping certificate is local and exact:
+
+$$L(M_t)\ge L(N)\quad\text{for every }N\in\mathcal N_1(M_t).$$
+
+It says nothing about maps two or more swaps away.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **First improvement:** take the first improving swap in a fixed order. It is cheaper on average but can enter a different basin.
+- **Best improvement:** score the complete neighbourhood before moving. This is the rule defined here.
+- **Restricted labels:** swap only labels exercised by the text. This changes the key-recovery contract and can hide literal-key differences.
+- **Larger moves:** add insertions, cycles, or multi-swap shells. These create a different neighbourhood and need their own cost and control measurements.
+- **Alternating ascent:** refit structural parameters between label scans. Stationarity then applies to the combined declared move set, not to labels alone.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Every iteration evaluates the identity and every unordered output-label swap from the same current map.
+- The score, text normalisation, model files, numeric runtime, and tie order remain fixed for the whole run.
+- Equal-score moves are not strict improvements. The deterministic tie order affects reporting but cannot create a gain.
+- A step cap limits work; it is not evidence of stationarity. If the final permitted scan still improves, the search must refuse or perform another complete scan.
+- The initial map still matters. Different starts may reach different local optima.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Polish a complete substitution"
+body = '''
+Start from each independently justified map. Decode and score the identity plus every single output-label swap. Select the complete-neighbourhood maximum with the frozen tie rule and accept it only on a strict score increase. Rebuild the neighbourhood from the accepted map rather than mutating candidates in sequence. Continue until a full scan is stationary. Preserve the start, every accepted move, all scores, the terminal map, and the final stationarity scan so another implementation can replay the path.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function STRICT_BEST_SWAP_ASCENT(start, score, max_scans):
+    current = COPY(start)
+    current_score = score(current)
+    path = []
+    for scan in 1..max_scans:
+        rows = []
+        for move, candidate in IDENTITY_PLUS_ALL_OUTPUT_SWAPS(current):
+            rows.append((score(candidate), TIE_KEY(move), move, candidate))
+        SORT(rows, by=(score descending, tie_key ascending))
+        best = rows[0]
+        if best.score <= current_score:
+            return STATIONARY(current, current_score, path, rows)
+        path.append((best.move, current_score, best.score))
+        current = best.candidate
+        current_score = best.score
+    return REFUSED("step cap reached before stationarity was checked")
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Each complete scan contains $1+q(q-1)/2$ maps. Decoding and rescoring a length-$n$ text from scratch therefore costs $O(q^2n)$ per accepted step. Cached affected-position and affected-window scores can reduce the constant, but the terminal certificate still requires accounting for every admitted move.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **First called best.** The scan stops at the first gain even though a later swap improves more.
+- **Walking neighbourhood.** Each trial swap is applied to the previous trial instead of the fixed current map.
+- **Tie drift.** Equal floating-point scores depend on thread completion or hash-map order.
+- **Cap-as-certificate.** A map is returned after the last permitted improving step without one stationary scan.
+- **Global overclaim.** A one-swap local optimum is described as the best permutation overall.
+- **Unreplayed output.** The score path is reproducible, but the emitted map and plaintext are not independently checked through the cipher.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Test a flat landscape, a unique improving swap, competing improvements where the best move appears late in enumeration order, an exact score tie, a multi-step path, and a path that improves on every permitted scan. Require zero moves on the flat case, the global neighbourhood maximum on every moving case, deterministic repeated receipts, and refusal when no final stationarity scan fits under the cap. Separately test starts outside the truth's basin; these should demonstrate the method's local nature rather than be reclassified as implementation failures.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Best improvement is not first improvement"
+body = '''
+Suppose the current map has score $s$. In the fixed swap order, the first improving move gives $s+\delta$, while a later move gives $s+3\delta$ for $\delta>0$. First-improvement accepts the earlier move. Strict best-improvement finishes the scan and accepts the later one. If the next complete scan has no value above $s+3\delta$, only then does it emit the map as stationary.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Steepest ascent is a standard local-search rule. The useful engineering refinement is its fail-closed stationarity contract: a work cap may stop the run, but it may not silently turn an unchecked endpoint into a certified local optimum.
+'''
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_lexband650.py"
+kind = "solver"
+note = "Frozen implementation of complete-neighbourhood best-swap ascent, deterministic ties, strict acceptance, and cap refusal."
+ref = "LOG650"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_LEXBAND650_INDEPENDENT_AUDIT.md"
+kind = "audit"
+note = "Independent tests cover flat scores, competing improvements, exact ties, stationarity, and cap exhaustion."
+ref = "LOG650"
+
+[[provenance]]
+path = "withmath/logs/650_pk10_lexband_kat_20260905T232734Z.log"
+kind = "log"
+note = "Immutable known-answer receipt for the frozen scorer."
+ref = "LOG650"

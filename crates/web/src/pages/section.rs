@@ -284,7 +284,7 @@ fn ReferencesPage() -> impl IntoView {
             </div>
             <div class="section-head">
                 <p class="eyebrow mono">"Source files"</p>
-                <h2 class="display-sm">{format!("{prov_count} source files support entries in this knowledge base.")}</h2>
+                <h2 class="display-sm">{format!("{prov_count} source files support entries in this knowledge base")}</h2>
                 <p class="lede-sm">"Each path starts at "<code>{CORPUS_ROOT}</code>". These internal links show where every reported number came from."</p>
             </div>
             <div class="table-scroll">

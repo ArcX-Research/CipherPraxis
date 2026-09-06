@@ -1,0 +1,160 @@
+id = "relax-then-project-decoding"
+section = "cryptanalysis"
+title = "Relax-then-project decoding"
+subtitle = "Learn easy literal maps first, then require them to fit one exact shared algebra"
+status = "POWER-LIMITED"
+status_note = "The method exactly recovered two of five direct held-out controls and three of four controls with a shared outer deal. It was reliable for dense homogeneous groups, but short isolated groups and some mixed relations did not produce enough correct edges for exact projection."
+family = "Factorized cryptanalysis"
+tags = ["relaxation", "exact projection", "shared action", "dihedral", "all-different"]
+related = ["shared-cycle-attack", "maximum-weight-bipartite-assignment", "all-different-enumeration", "partial-permutation-completion-bounds", "parameter-versus-plaintext-recovery", "conjugacy-and-gauge", "modular-inverse-and-crt"]
+summary = "A tightly coupled cipher can be hard to search in its true parameters. Relax the coupling and learn separate literal substitution maps using language evidence. Then translate reliable map edges back into modular equations and keep only candidates that fit one shared cycle, key, and relation exactly. This can repair small map errors, but it cannot invent evidence missing from short groups."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Suppose several substitution maps must all be powers or reflections of one unknown alphabet cycle. Searching the cycle, powers, relation labels, and plaintext together creates a strongly coupled landscape. The relaxation temporarily replaces each structured map with an independent literal permutation $F_{h,g}$, where $h$ is a source group and $g$ is a residue or role.
+
+After the language stage, frequent high-confidence edges $C\mapsto P$ become hard equations. An exact finite-domain solver asks whether all retained edges come from one legal shared action.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Projection into one cyclic or dihedral action"
+body = '''
+Let $x_L\in\{0,\ldots,25\}$ be letter $L$'s position in an unknown alphabet, all distinct, and let $k_g$ be a shared shift. Two common relation types give
+
+$$\begin{aligned}
+\text{difference: }&x_C-x_P-k_g\equiv0\pmod{26},\\
+\text{reflection: }&x_C+x_P-k_g\equiv0\pmod{26}.
+\end{aligned}$$
+
+If $\sigma$ is the cycle induced by $x$ and $\tau$ is a reflection, the corresponding literal decryptions are
+
+$$F_{D,g}=\sigma^{-k_g},\qquad F_{R,g}=\sigma^{k_g}\tau.$$
+
+Projection enforces these equations together with `AllDifferent(x)`.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- Group sources by an unlabelled relation partition before assigning difference or reflection labels.
+- Build edge constraints from one endpoint or from agreement across several independent endpoints.
+- Try a strongest-first ladder of minimum edge counts; stop at the first satisfiable predeclared level.
+- Solve modulo 2 and modulo 13 first, then combine solutions modulo 26 with the Chinese remainder theorem.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The relaxed literal maps contain enough correct repeated edges to determine the structured action.
+- Every projected map really belongs to the declared shared cyclic or dihedral family.
+- Relation groups, residue roles, and any outer geometry are represented consistently.
+- Gauge fixing preserves every distinct function; mixed difference/reflection systems may require restoring relative origins explicitly.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to attack it"
+body = '''
+First optimise independent literal maps for language score, without a cycle parameter. Collect map edges with their observation counts or cross-endpoint agreement. Starting at the strongest declared threshold, form the modular system, split it modulo 2 and 13, impose distinct positions, and enumerate exact completions. Restore any gauge-related functions that a canonical representative hides. Decrypt and forward-check every exact model under the original coupled cipher, not the relaxation.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function RELAX_THEN_PROJECT(ciphertexts, model):
+    endpoints = SEARCH_INDEPENDENT_LITERAL_MAPS(ciphertexts)
+    for endpoint in endpoints ordered by language score:
+        edges = COUNT_OR_VOTE_FOR_MAP_EDGES(endpoint)
+        for threshold in PREDECLARED_STRONGEST_FIRST_LEVELS:
+            E = edges meeting threshold
+            equations = empty
+            for (group, role, C, P) in E:
+                append MODULAR_EDGE_EQUATION(group, role, C, P)
+            models = SOLVE_MOD_2_AND_13(equations, all_different=true)
+            models = RESTORE_GAUGE_DISTINCT_FUNCTIONS(models)
+            if models is not empty:
+                for exact_model in models:
+                    plain = DECRYPT_ORIGINAL_MODEL(ciphertexts, exact_model)
+                    keep only if FORWARD_CHECK(plain, exact_model)
+                stop weakening this endpoint
+    return exact candidates ranked by the original objective
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The relaxed language search is usually the dominant cost and depends on the number of independent maps. Projection is a finite constraint problem on 26 distinct coordinates plus the shared shifts. Splitting modulo 2 and 13 can make feasibility much cheaper, but the number of completions still grows quickly when the edge system is under-ranked.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Sparse isolated group.** A short source may not identify an arbitrary literal map well enough to supply projection edges.
+- **Wrong relaxed optimum.** Many high-score edge errors can make every exact threshold unsatisfiable.
+- **Over-weak threshold.** Dropping too many equations restores the original identifiability problem and admits many accidental actions.
+- **Invalid gauge pin.** Fixing one alphabet origin can discard distinct mixed-relation functions because reflections change under translation.
+- **Projection called recovery.** Satisfying the algebra does not by itself establish readable plaintext; the original model must still be rescored and forward-checked.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Use controls covering homogeneous and mixed relation partitions, fresh shared cycles, shared shifts, and the real source lengths. Hide every group label. Require exact plaintext, the observable shared function class, and independent forward reconstruction. In a recorded direct geometry, both homogeneous controls passed and three mixed controls failed. Adding a shared width-9 deal produced three passes from four controls; all four deal orders were recovered, but one mixed dense group remained too inaccurate to project. This is evidence for the decomposition and a measured power limit, not a family closure.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+On a five-letter cycle $\sigma=(A\ B\ C\ D\ E)$, the relaxed map
+
+```trace
+A->D  B->E  C->A  D->B  E->C
+```
+
+is exactly $\sigma^{-2}$. Projection recognizes one shift $k=2$ from all five edges. Now swap the last two images to get
+
+```trace
+A->D  B->E  C->A  D->C  E->B
+```
+
+This is still a permutation, but its edges do not fit one power of $\sigma$; exact projection rejects it.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The relaxation is a search aid, not a broader cipher model. Its endpoint may be linguistically useful while algebraically impossible. Projection is the step that restores the intended family.
+'''
+
+[[provenance]]
+path = "withmath/docs/cipher-methods/SHARED9_FACTOR_AUDIT.md"
+kind = "audit"
+note = "Direct factorization, exact projection equations, observable partitions, gauge caveat, and five-control result."
+ref = "Log 198"
+
+[[provenance]]
+path = "withmath/scripts/wm_shared9_factor.py"
+kind = "solver"
+note = "Relaxed literal-map driver and exact shared-action projection."
+
+[[provenance]]
+path = "withmath/logs/198_shared9_factor.log"
+kind = "log"
+note = "Two exact homogeneous passes and three mixed control failures at the declared budget."
+
+[[provenance]]
+path = "withmath/docs/cipher-methods/SHARED9_FACTOR_DEAL_AUDIT.md"
+kind = "audit"
+note = "Extension through a shared deal, ensemble edge projection, rank checks, and four-control result."
+ref = "Log 202"
+
+[[provenance]]
+path = "withmath/scripts/wm_shared9_factor_deal.py"
+kind = "solver"
+note = "Shared-deal search, edge consensus, modular projection, and forward verification."

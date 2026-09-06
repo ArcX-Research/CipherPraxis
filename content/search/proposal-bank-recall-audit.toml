@@ -1,0 +1,211 @@
+id = "proposal-bank-recall-audit"
+section = "search"
+title = "Proposal-bank recall audit"
+subtitle = "Find out whether acquisition failed before blaming the exact join"
+status = "VERIFIED"
+status_note = "Frozen control panels showed the key distinction directly: approximate banks contained many correct individual cells but no complete planted maps. In a separate square-cipher panel, every planted truth would have won the score if inserted, yet none was proposed."
+family = "Candidate acquisition diagnostics"
+tags = ["proposal banks", "recall", "partial maps", "failure localisation", "controls"]
+related = ["provenance-preserving-partial-map-join", "residue-bank-crt-join", "coherent-endpoint-distance-polynomial", "candidate-bank-lineage-and-cap-accounting", "endpoint-specific-control-contracts", "power-measurement", "unique-proposal-voting", "simulated-annealing"]
+summary = "A multi-stage key search can fail because its proposal generator never produced the needed map, even when the exact downstream solver is correct. Audit recall at several levels: individual map edges, one coherent map row per residue, one complete path across all residue banks, and the final algebraic join. High edge coverage does not imply coherent-row recall, because useful-looking cells from different rows may not be combined."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Suppose a period-$p$ search produces one bank $E_r$ of injective partial maps for each residue $r$. On a planted control, let $T_r$ be the true partial map on the declared observed domain $D_r$. Write
+
+$$\operatorname{graph}(M)=\{(x,M(x)):x\in\operatorname{dom}(M)\}.$$
+
+Four different recall questions matter:
+
+1. **Edge recall:** does some row contain each true cell?
+2. **Row recall:** does one physical row equal the whole true partial map?
+3. **Path recall:** can one true row be selected from every residue bank at once?
+4. **Join recall:** does the exact algebraic join retain that physical path?
+
+These are nested endpoints. Passing an early endpoint does not imply passing a later one.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Recall at four levels"
+body = '''
+The union of all proposed cells in residue $r$ is
+
+$$U_r=\bigcup_{M\in E_r}\operatorname{graph}(M).$$
+
+Its edge recall is
+
+$$e_r=\frac{|\operatorname{graph}(T_r)\cap U_r|}{|D_r|}.$$
+
+The best coherent-row overlap and exact row indicator are
+
+$$b_r=\max_{M\in E_r}
+\frac{|\operatorname{graph}(T_r)\cap\operatorname{graph}(M)|}{|D_r|},$$
+
+$$a_r=\mathbf{1}[T_r\in E_r].$$
+
+If the downstream solver must choose one complete row from every bank, planted path recall before algebra is
+
+$$A=\prod_{r=0}^{p-1}a_r.$$
+
+Let $J(E_0,\ldots,E_{p-1})$ be the exact set of algebraically feasible bank paths. The final planted-path indicator is
+
+$$R=\mathbf{1}[(T_0,\ldots,T_{p-1})\in J(E_0,\ldots,E_{p-1})].$$
+
+$e_r=1$ for every residue can coexist with $A=R=0$: different proposal rows may supply different true edges, while no single row supplies $T_r$.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Complete-map banks:** compare full permutations instead of maps restricted to observed symbols.
+- **Weighted endpoints:** report recall by physical row first; keep restart counts and duplicate origins as separate weights.
+- **Top-$K$ audit:** compute every endpoint for each frozen $K$ to show whether recall was lost at generation, deduplication, ranking, or truncation.
+- **Subpartial acquisition:** when edge recall is high but row recall is poor, carry compatible submaps or edge uncertainty into a later coherent completion stage.
+- **Nonperiodic search:** replace residue banks with segments, blocks, or graph components; the same edge-row-path-join ladder applies.
+- **Counterfactual truth insertion:** score the planted truth without letting it enter selection. If it would rank first but acquisition never proposes it, the objective separates truth while the move set or generator cannot reach it.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and scope"
+body = '''
+- Exact truth maps are available only for controls. These diagnostics are not live attack features.
+- All maps use one declared direction, domain, alphabet convention, and gauge before comparison.
+- Semantic duplicates are removed without losing their physical origins.
+- A true path is compared as a physical tuple, not merely as one coordinate representative from an algebraic orbit.
+- Every cap and discarded row is recorded. A capped bank gives a lower bound on recall, not a complete negative.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Locate the broken stage"
+body = '''
+Freeze the proposal generator, ranking, bank width, and exact join. On blind planted controls, generate banks without exposing truth to the worker. In the evaluator, compare the complete encountered census and each retained prefix with the planted maps. Record edge recall, best coherent-row overlap, exact row ranks, full path recall, and exact-join retention.
+
+If the true row occurs in the encountered census but not the retained bank, improve ranking or widen the bank. If it never occurs in the census, widening the same retained prefix cannot help; change the generator or representation. If every true row is present but the true path disappears, audit deduplication, provenance, caps, and join correctness. Only the last case points at the exact solver.
+
+For a stochastic key search, also score the hidden truth after the run in the evaluator. A truth that beats every emitted endpoint proves only that the objective could distinguish it if reached. It does not repair zero proposal recall or license a semantic reranker over the same bank.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function RECALL_AUDIT(banks, encountered, truth_maps, exact_join):
+    for each residue r:
+        require maps use the frozen direction and observed domain
+        union_edges = union of graph(M) for M in banks[r]
+        edge_recall[r] = overlap(graph(truth_maps[r]), union_edges)
+        row_overlap[r] = max overlap with one M in banks[r]
+        row_present[r] = truth_maps[r] is a physical member of banks[r]
+        encountered_rank[r] = exact rank in encountered[r], or ABSENT
+        retained_rank[r] = exact rank in banks[r], or ABSENT
+
+    path_present = ALL(row_present)
+    joined_paths = exact_join(banks)
+    joined_truth = physical tuple truth_maps is in joined_paths
+
+    if any truth map is ABSENT from encountered:
+        diagnosis = GENERATOR_RECALL_FAILURE
+    else if not path_present:
+        diagnosis = RANK_OR_BANK_WIDTH_FAILURE
+    else if not joined_truth:
+        diagnosis = HANDOFF_OR_JOIN_FAILURE
+    else:
+        diagnosis = DOWNSTREAM_SELECTION_STAGE
+    return every metric, cap flag, origin, and diagnosis
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+With hashable canonical maps, exact row membership costs $O(\sum_r |E_r|)$. Edge recall costs $O(\sum_r\sum_{M\in E_r}|\operatorname{dom}(M)|)$. The exact join is usually the expensive stage and is already part of the pipeline. The audit adds little work because it evaluates stored controls after acquisition rather than changing the search.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Frankenstein recall:** correct cells from unrelated rows are counted as one recoverable map.
+- **Best-overlap optimism:** a row with many correct cells is described as exact map recall.
+- **Empty join blamed on algebra:** the true row was absent before the exact solver ran.
+- **Feasible means planted:** a wrong but algebraically valid path is treated as recovery.
+- **Gauge mismatch:** equivalent coordinate descriptions are compared literally instead of through their physical maps.
+- **Truth leakage:** planted maps influence proposal generation, ranking, stopping, or bank width.
+- **Width-only retry:** the full encountered census lacks truth, yet the unchanged generator is simply run longer or retained more deeply.
+- **Reranking an empty truth set:** a stronger language model is applied after acquisition even though the planted truth is absent from every retained endpoint.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+One frozen three-case panel generated seven residue banks for each case using workers that saw ciphertext and a fixed language table but not truth. Across all twenty-one residues, neither of two acquisition methods retained one exact planted partial map. The complete encountered censuses held 471 to 512 unique maps per residue, so this was not merely a top-list truncation. Both downstream exact joins completed without caps and found no planted path.
+
+The new method nevertheless improved the truth-aided best cross-row character coverage from 34 to 63, 34 to 70, and 23 to 54 of 95 positions. That is the diagnostic counterexample: substantially better local coverage did not create one coherent true row or one full path. An independent evaluator replayed 1,728 full proposals and 10,628 residue marginals and reproduced every rank and join result.
+
+A separate three-cell square-cipher selector ran eighteen fixtures and retained 1,296 endpoints. None of six planted squares or plaintexts appeared in its proposal banks. Each planted plaintext ranked first when inserted counterfactually under the frozen character score, and every one-cell neighbour scored lower, so the score had local separation while acquisition had zero exact recall. Ten of twelve negative arms nevertheless crossed the nominal language threshold. This is a generator and calibration failure; no downstream reranker can recover a truth that is absent from the bank.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Every edge is present, but no row is right"
+body = '''
+Let the true three-cell map be
+
+$$T=\{A\mapsto D,\ B\mapsto E,\ C\mapsto F\}.$$
+
+Suppose the bank contains
+
+$$M_1=\{A\mapsto D,\ B\mapsto X,\ C\mapsto Y\},$$
+
+$$M_2=\{A\mapsto Z,\ B\mapsto E,\ C\mapsto W\},$$
+
+$$M_3=\{A\mapsto Q,\ B\mapsto R,\ C\mapsto F\}.$$
+
+The union has all three true edges, so $e=1$. Each best coherent row has only one correct cell, and $T$ is absent, so $a=0$. A downstream search whose state is "choose one row" cannot recover $T$ from this bank without explicitly adding a new subpartial-completion operation.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Recall at different retrieval stages is a standard evaluation idea. The useful cryptanalytic form is to compare map edges, coherent physical rows, cross-bank paths, and exact algebraic retention separately. It turns an uninformative final miss into a precise statement about which representation or stage lost the answer.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_MARGINAL663.md"
+kind = "design"
+note = "Defines the endpoint-exact marginal acquisition comparison, complete encountered censuses, bank ranks, and downstream path gate."
+ref = "LOG663"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk9_marginal663_controls.py"
+kind = "script"
+note = "Builds blind controls and evaluates exact row recall, proposal origins, cross-row coverage, and physical path retention."
+ref = "LOG663"
+
+[[provenance]]
+path = "withmath/logs/663_marginal_controls_20260906T023845Z_1788662325750372000.log"
+kind = "log"
+note = "Frozen three-case receipt recording absent exact residue maps, complete encountered-map counts, uncapped join outcomes, and improved local coverage without coherent-path recovery."
+ref = "LOG663"
+
+[[provenance]]
+path = "withmath/logs/663_marginal_outputs_20260906T023845Z_1788662325750372000.json"
+kind = "data"
+note = "Artifact independently replayed for all full proposals, residue marginals, rankings, origins, and join terminals."
+ref = "LOG663"
+
+[[provenance]]
+path = "withmath/docs/cipher-methods/ZONE25_715_FULL_SELECTOR.md"
+kind = "audit"
+note = "Three-cell square-cipher proposal audit: zero planted endpoint recall despite every inserted truth ranking first, plus negative-arm overfit under the same selector."
+ref = "LOG715"
+
+[[provenance]]
+path = "withmath/logs/715_threecell_controls_20260906T105202Z_45966.audit.json"
+kind = "data"
+note = "Independent replay of eighteen fixtures and 1,296 retained endpoints, including exact transforms, gauges, scores, truth ranks, and forwards."
+ref = "LOG715"

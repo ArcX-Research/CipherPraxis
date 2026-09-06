@@ -1,0 +1,171 @@
+id = "piecewise-constant-velocity-disk-cipher"
+section = "ciphers"
+title = "Piecewise-constant-velocity disk cipher"
+subtitle = "Change the disk speed at fixed boundaries while carrying its phase forward"
+status = "POWER-LIMITED"
+status_note = "The algebra, exact schedule step, equality-class scan, and forward transform pass recorded controls. The tested end-to-end solver retained every planted structural class but missed two exact output labelings, so recovery remains power-limited at the substitution stage."
+family = "Stream and machine ciphers"
+tags = ["cipher disk", "piecewise velocity", "continuous phase", "arbitrary substitution", "change points"]
+related = ["alberti-progressive", "alternating-velocity-disk-cipher", "piecewise-running-shift-dp", "arbitrary-substitution-equality-classes", "latent-label-identifiability", "stationary-alternating-optimization", "strict-best-improvement-swap-ascent", "lexical-band-contextual-reranking", "reverse-alphabet-affine-alias"]
+summary = "This cipher turns one alphabet disk at a constant speed inside each segment. At a boundary, the speed may change, but the disk does not jump back to its starting position. Removing the carried disk phase leaves one latent symbol stream under a single substitution alphabet."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Work modulo an alphabet size $m$. Fix boundaries
+
+$$0=b_0<b_1<\cdots<b_s=n,$$
+
+and let segment $q$ have length $L_q=b_{q+1}-b_q$ and velocity $d_q\in\mathbb{Z}_m$. The phase is continuous:
+
+$$\phi_0=0,\qquad \phi_{q+1}=\phi_q+L_qd_q\pmod m.$$
+
+Let $B$ be the outer alphabet order and let $M$ be one stationary permutation from latent coordinates to plaintext letters. At position $i=b_q+j$,
+
+$$C_i=B\!\left(M^{-1}(P_i)+\phi_q+jd_q\pmod m\right),$$
+
+and decryption subtracts the same carried phase before applying $M$. Setting $\phi_0=0$ fixes a coordinate gauge when an arbitrary $M$ can absorb a global rotation.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "The boundary does not reset"
+body = '''
+Within segment $q$, the phase at local offset $j$ is
+
+$$a_{b_q+j}=\phi_q+jd_q\pmod m.$$
+
+The next segment starts at
+
+$$a_{b_{q+1}}=\phi_q+L_qd_q=\phi_{q+1}\pmod m.$$
+
+Replacing this value with zero, or fitting it independently, defines a reset model. It is not an equivalent way to optimise the continuous model. For equal segment lengths $L$,
+
+$$a_{Lq+j}=L\sum_{r<q}d_r+jd_q\pmod m.$$
+
+That closed form makes the carried history explicit: every earlier velocity affects every later segment's starting phase.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Constant velocity:** all $d_q$ are equal, giving ordinary progressive disk motion.
+- **Periodic velocity:** a short list of velocities repeats position by position rather than changing only at segment boundaries.
+- **Reset at boundaries:** every segment chooses a fresh phase; this is a larger and different family.
+- **Independent segment maps:** each segment has its own substitution $M_q$; this removes the shared-label constraint.
+- **Unknown boundaries:** the change points become part of the key and require a wider search or a change-point model.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Boundaries, the outer alphabet bank, and the direction of motion are declared before scoring.
+- One substitution map $M$ applies to the full text.
+- The phase update uses the complete length of the previous segment.
+- A fixed-map schedule optimiser may be exact even when the joint search over schedules and substitutions is heuristic.
+- Parameter rows with the same latent equality pattern are observational aliases until output labels are fixed.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Peel motion before fitting labels"
+body = '''
+Enumerate or optimise the admitted velocity schedules. For each schedule, carry the phase across every boundary and subtract it from the ciphertext coordinates. Group the resulting latent streams by their complete equality pattern before fitting the arbitrary substitution. For a fixed substitution, use [Piecewise running-shift dynamic programming](/exact/piecewise-running-shift-dp) so internal and boundary-crossing language terms are counted exactly. Preserve all schedule aliases and independently encrypt every reported plaintext.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function ENCRYPT(plain, boundaries, velocities, outer, map):
+    require one velocity for each segment
+    phase = 0
+    for segment q in order:
+        length = boundaries[q + 1] - boundaries[q]
+        for local j in 0..length-1:
+            i = boundaries[q] + j
+            latent = INVERSE_MAP(map, plain[i])
+            coordinate = (latent + phase + j * velocities[q]) mod ALPHABET_SIZE
+            cipher[i] = outer[coordinate]
+        phase = (phase + length * velocities[q]) mod ALPHABET_SIZE
+    return cipher
+
+function PEEL(cipher, boundaries, velocities, outer):
+    phase = 0
+    for segment q in order:
+        for each local position j in segment q:
+            latent[i] = (POSITION(outer, cipher[i]) - phase
+                         - j * velocities[q]) mod ALPHABET_SIZE
+        phase = (phase + SEGMENT_LENGTH(q) * velocities[q]) mod ALPHABET_SIZE
+    return latent
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+For $s$ segments and $m$ allowed velocities per segment, direct schedule enumeration has $m^s$ cells and costs $O(nm^s)$ just to peel them. Equality-pattern grouping can reduce repeated substitution work. With a fixed substitution, the continuity constraint supports an exact dynamic program whose cost is polynomial in $s$ and $m$ rather than exponential in $s$.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Hidden reset:** local segment code starts every phase at zero and tests the wrong family.
+- **Boundary score loss:** language n-grams that cross a change point are omitted.
+- **Raw-cell ranking:** equivalent schedules occupy several ranking slots and appear to be independent support.
+- **Substitution bottleneck:** the correct latent class is retained, but a rare output symbol receives the wrong label.
+- **Boundary tuning:** several segmentations are tried on the evaluation text without correcting the selection freedom.
+- **Shared transform bug:** encryption and decryption reuse the same faulty phase helper and agree for the wrong reason.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Use planted texts with different velocity patterns, alphabet directions, and symbol coverage. Include nearby-family sentinels for boundary reset, shifted boundaries, periodic velocity, and independent segment maps. Require an exact equality-class scan over every declared schedule, a complete alias census, whole-text score agreement, and a separately written forward recurrence. Report structural-class recovery apart from literal plaintext recovery so a label-scoring failure does not become a false rejection of the motion model.
+'''
+
+[[blocks]]
+kind = "example"
+title = "A carried phase over two segments"
+body = '''
+Use alphabet `ABCDE`, the identity map, two segments of length three, and velocities one then two. For plaintext `ABCADE`, the phase is $(0,1,2)$ in the first segment. The second segment starts at three, not zero, and its phases are $(3,0,2)$:
+
+```trace
+plain   A B C | A D E
+phase   0 1 2 | 3 0 2
+cipher  A C E | D D B
+```
+
+The boundary phase is $3\cdot1\equiv3\pmod5$. Encrypting the second segment from phase zero would produce a different ciphertext and would test the reset variant.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Variable disk motion is classical. The important modelling distinction here is simple: velocity is piecewise constant, while phase is one continuous state. The exact schedule optimiser and the arbitrary-substitution labeler are separate recovery stages and should receive separate power verdicts.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_QUARTERVELOCITY640_CONTROLS.md"
+kind = "design"
+note = "Defines the continuous boundary-phase algebra, exact schedule step, alias relation, control family, and scoped power result."
+ref = "LOG640"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_quartervelocity640_core.cpp"
+kind = "solver"
+note = "Implements the carried-phase transform, exact fixed-map schedule optimisation, equality-class scan, and known-answer tests."
+ref = "LOG640"
+
+[[provenance]]
+path = "withmath/logs/640_pk10_quartervelocity_controls_20260905T215346Z.log"
+kind = "log"
+note = "Frozen target-absent control receipt separating schedule-class retention from exact output-label recovery."
+ref = "LOG640"
+
+[[references]]
+title = "De Cifris"
+author = "Leon Battista Alberti"
+year = 1467

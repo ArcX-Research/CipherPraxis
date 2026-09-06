@@ -1,0 +1,136 @@
+id = "homophonic-substitution"
+section = "ciphers"
+title = "Homophonic substitution"
+subtitle = "Give common plaintext letters several possible ciphertext symbols"
+status = "VERIFIED"
+status_note = "A target-absent coupled-map panel reached its readability gate on all 40 controls, with mean letter matches above 99% in both tested alphabets. Matched random inputs also showed that an unconstrained many-to-one decoder can manufacture language-like output, so null checks are part of the method."
+family = "Substitution ciphers"
+tags = ["homophones", "many-to-one decryption", "frequency flattening", "degeneracy"]
+related = ["frequency-analysis", "keyword-mixed-alphabet", "simulated-annealing", "valid-model-nulls", "parameter-versus-plaintext-recovery"]
+summary = "A homophonic cipher assigns several ciphertext symbols to one plaintext letter. Encryption chooses among those alternatives, while decryption maps every alternative back to the same letter. Giving more symbols to common letters can flatten ciphertext frequencies, but an unconstrained decoder can also collapse noise into common letters and create false language."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $\mathcal P$ be the plaintext alphabet and $\mathcal C$ a usually larger ciphertext symbol set. Partition $\mathcal C$ into nonempty homophone sets $H_p$, one for each plaintext letter $p$. To encrypt $p$, choose one symbol from $H_p$. Decryption uses the deterministic many-to-one map
+
+$$h(c)=p \quad\text{when }c\in H_p.$$
+
+The random or scheduled choice made during encryption is part of the convention.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Why frequencies can flatten"
+body = '''
+If symbols are selected uniformly within a homophone set, then
+
+$$\Pr(C=c)=\frac{\Pr(P=p)}{|H_p|}, \qquad c\in H_p.$$
+
+Choosing $|H_p|$ roughly in proportion to the language frequency of $p$ makes the ciphertext symbols closer to uniform. The inverse map is not a permutation: several distinct $c$ values have the same image under $h$.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- Choose homophones randomly, cycle through them, or use a secondary key stream.
+- Fix the number of symbols per plaintext letter or infer those counts from expected frequencies.
+- Use numbers, letter pairs, or a larger printable alphabet as ciphertext symbols.
+- Combine the many-to-one layer with a transposition or another stream relation.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- Every ciphertext symbol belongs to exactly one plaintext letter.
+- The symbol-choice rule does not leak an unmodelled state.
+- A blind attack either knows the homophone counts or treats them as constrained parameters.
+- Language score alone is not accepted without controls and matched null inputs.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to attack it"
+body = '''
+Start with ciphertext symbol frequencies and allocate several symbols to common letters. Improve the map by moving one symbol at a time between plaintext bins and rescoring the full decoded text. Use word patterns, repeated contexts, and n-grams because single-symbol frequencies were deliberately flattened. Constrain bin sizes or apply a prior so the map cannot send most symbols to only a few common letters. Compare the best result with the identical optimiser run on matched shuffled or random inputs.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function ENCRYPT(plain, homophone_sets, chooser):
+    out = empty
+    for position, letter in enumerate(plain):
+        symbol = chooser(position, homophone_sets[letter])
+        append symbol to out
+    return out
+
+function DECRYPT(ciphertext, map_h):
+    return [map_h[symbol] for symbol in ciphertext]
+
+function SEARCH(ciphertext, constraints):
+    map_h = INITIAL_FREQUENCY_ALLOCATION(ciphertext, constraints)
+    repeat:
+        propose moving or swapping ciphertext symbols between output letters
+        accept using language score plus declared map penalties
+    compare the complete selected score with matched null runs
+    return map_h only if control and null gates pass
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+With $M$ ciphertext symbols and $L$ plaintext letters, an unconstrained decoder has $L^M$ raw maps before requiring every plaintext letter to have a preimage. Practical attacks use stochastic search, constraint programming, or alternating assignment and language optimisation.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Collapse degeneracy.** A free map can send many symbols to E, T, H, and other common letters, making random input look partly linguistic.
+- **Permutation-only solver.** Enforcing one-to-one substitution excludes the defining feature of the cipher.
+- **Frequency-only attack.** The setter can allocate homophones specifically to flatten those frequencies.
+- **Unrecorded choice state.** Exact encryption replay is impossible if a random choice sequence was used but not retained.
+- **Readable is not exact.** A decoder may recover the message while assigning rare or unused symbols incorrectly.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Generate controls with the same length, symbol inventory, bin-size profile, and selection rule as the intended task. Hide the map and require readable or exact plaintext according to a predeclared endpoint. Run the complete selector on shuffled and uniform-random symbols as well. In one recorded coupled-map panel, both 20-control alphabet strata reached readability power 1.000, with mean letter matches 0.9925 and 0.9905; exact text occurred in 9 and 5 controls. The same free decoder mapped unrelated inputs to about ten distinct output letters, producing a misleading language score. That comparison validates the degeneracy warning, not a universal homophonic solver.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+For a tiny alphabet, let
+
+$$H_A=\{Q,Z\},\qquad H_E=\{M,N,R\},\qquad H_T=\{X\}.$$
+
+Plaintext `TEA` may encrypt as `XMZ`: `X` can only mean T, `M` means E, and `Z` means A. Another valid encryption is `XRQ`. Both decrypt to the same text even though their ciphertext letters differ.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The key object is the inverse partition $h$, not a permutation alphabet. Report recovery only for observed symbols; unused symbols can remain unidentifiable unless the control exercises them.
+'''
+
+[[provenance]]
+path = "withmath/scripts/wm_pk8_hfreemap417b.py"
+kind = "solver"
+note = "Target-absent many-to-one map controls, language search, and matched random-input comparison."
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Records the 40-control readability and exact-text results plus the measured collapse degeneracy."
+ref = "LOG417b"
+
+[[references]]
+title = "Military Cryptanalysis, Part I: Monoalphabetic Substitution Systems"
+author = "William F. Friedman"
+year = 1938

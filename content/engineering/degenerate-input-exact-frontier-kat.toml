@@ -1,0 +1,154 @@
+id = "degenerate-input-exact-frontier-kat"
+section = "engineering"
+title = "Degenerate-input exact-frontier KAT"
+subtitle = "Exercise the real pipeline on an input whose full observable output is easy to enumerate"
+status = "VERIFIED"
+status_note = "One isolated process ran the unchanged model-bearing prefix pipeline on a constant-symbol input. An independent oracle recovered the complete 26-map frontier at each of two cuts, checked all 52 forward relations, and rejected eight interface mutations; this is wiring evidence, not full-frontier power."
+family = "Tooling"
+tags = ["known-answer test", "degenerate input", "exact frontier", "process wiring"]
+related = ["kat-harness", "known-answer-tests", "isolated-acquisition-solver-handoff", "observable-function-fingerprinting", "latent-label-identifiability", "parameter-versus-plaintext-recovery"]
+summary = "Choose a deliberately simple input for which every observable answer can be derived independently, but run it through the real executable, models, configuration, parser, and file handoff. Exact set equality then tests that the pipeline is wired correctly. Because the input collapses the hard search frontier, the result says nothing about recovery power on ordinary data."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+A **degenerate-input exact-frontier KAT** uses a low-complexity input that turns a large heuristic search into a small, mathematically enumerable set. Unlike a mocked unit test, the actual model-bearing process still runs with its production configuration. Unlike a power control, success means only that every expected observable row appears, no extra row appears, and all process and replay contracts hold.
+
+The fixture is useful when a normal input has too many latent states for a complete independent oracle. Degeneracy should simplify the *answer set*, not bypass the code path being tested.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Constant symbol under a reciprocal map"
+body = '''
+Let the alphabet have $q$ symbols, let the input be $a^n$, and let the observable substitution be an involution $M=M^{-1}$. For each possible partner $p$, the minimum observed partial map is
+
+$$M_p(a)=p,\qquad M_p(p)=a.$$
+
+When $p=a$ this is a fixed point; otherwise it is a transposition. Unobserved letters remain unspecified. The complete observable frontier is
+
+$$\mathcal{F}_a=\{M_p:p\in\mathcal{A}\},\qquad |\mathcal{F}_a|=q.$$
+
+Every row decrypts to $p^n$ and has the literal reciprocal check
+
+$$M_p(M_p(a))=a.$$
+
+If the same independent frontier is emitted at $r$ declared cuts or views, the expected census is $rq$, not a heuristic estimate.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Constant-symbol involution:** the construction above yields one exact partner map per alphabet symbol.
+- **Repeated short orbit:** choose an input contained in a small known permutation orbit and enumerate the orbit-compatible partial maps.
+- **Zero table:** use a deliberately flat score table to test deterministic tie retention and ordering.
+- **Tiny graph fixture:** collapse a graph search to a known finite component set while keeping the real parser and subprocess boundary.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The degenerate input reaches the same parser, process launcher, model loader, search body, output writer, and independent replay used in the larger mode.
+- The oracle is derived separately and compares sets or multisets, not only a count supplied by the worker.
+- Any production budget kept in the configuration is reported truthfully even when the tiny frontier cannot exercise it.
+- The result is labelled interface or algebra evidence. It cannot be promoted to language, ranking, or full-frontier power.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Build an exact-frontier pipeline test"
+body = '''
+Derive the entire observable output set on paper, then encode that derivation in a small independent oracle. Freeze the real process, transitive sources, checkpoints, runtime, and production configuration. Run it once on the degenerate input, commit all raw and parsed artefacts, and require exact output-set equality plus literal forward checks. Mutate the wrapper, budget, census, and output to show that each binding can fail.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function EXACT_FRONTIER_KAT(alphabet, symbol, cuts, frozen_manifest):
+    input = REPEAT(symbol, declared_length)
+    expected = empty set
+    for cut in cuts:
+        for partner in alphabet:
+            map = PARTIAL_INVOLUTION(symbol, partner)
+            expected.add((cut, CANONICAL(map)))
+    packet = COMMIT_CANONICAL_INPUT(input, frozen_manifest)
+    raw = RUN_REAL_ISOLATED_PIPELINE(packet)
+    observed = STRICT_PARSE_COMPLETE_OUTPUT(raw)
+    require PROJECT(observed) == expected
+    for row in observed:
+        require INDEPENDENT_INVERSE(row) == row.plaintext
+        require INDEPENDENT_FORWARD(row) == input at row.cut
+    require SOURCE_RUNTIME_PROCESS_CENSUS_MATCHES(frozen_manifest)
+    return INTERFACE_PASS
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Oracle construction costs $O(rq)$ for $r$ cuts and alphabet size $q$. Independent checking costs the emitted-row count times the tested prefix length. The real pipeline may still pay model-startup cost, but the intentionally small observable frontier keeps the test bounded.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Mocked path.** The fixture is sent through a helper that bypasses the actual executable or models.
+- **Count-only oracle.** The worker emits the right number of wrong maps and still passes.
+- **Degeneracy mistaken for power.** A constant-symbol frontier says nothing about pruning or ranking on ordinary inputs.
+- **Hidden configuration reduction.** Beam width or model set is quietly lowered for the KAT, so production wiring is not exercised.
+- **Latent completion overclaim.** Equality is proved only for observable partial maps, but reported as exact recovery of unobserved coordinates.
+- **Self-derived reference.** Expected rows are generated by the same function that writes the observed rows.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Require both exact set equality and independent scalar forwards. Refuse a changed input, wrong case identifier, output path outside the owned directory, source drift, altered production budget, false large census, duplicate invocation, trailing records, and malformed map. The manifest should show that actual checkpoints and runtime were loaded while corpus, hidden answers, and live inputs were absent.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Five-symbol reciprocal frontier"
+body = '''
+For alphabet $\{A,B,C,D,E\}$ and input `AAAA`, the complete observed partial maps are
+
+```trace
+p=A  A->A
+p=B  A->B  B->A
+p=C  A->C  C->A
+p=D  A->D  D->A
+p=E  A->E  E->A
+```
+
+Their plaintexts are `AAAA`, `BBBB`, `CCCC`, `DDDD`, and `EEEE`. Each row forwards back to `AAAA`. The test proves that all five observable reciprocal choices survive the real pipeline; it does not determine how the pipeline behaves when several input symbols interact.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Degenerate and metamorphic test inputs are established testing techniques. This entry records a concrete exact-frontier pattern that made a model-bearing cryptanalytic interface independently enumerable without presenting the result as recovery power.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK89_PREFIX637_PROCESS.md"
+kind = "audit"
+note = "LOG637 derives the constant-symbol reciprocal-map frontier, records the isolated real-model execution, and states the tiny-frontier power limitation."
+ref = "LOG637"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk9_prefix637_kat.py"
+kind = "script"
+note = "Independent construction of all 26 partial reciprocal maps per cut, exact set comparison, scalar forward checks, and mutation refusals."
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk9_prefix637_process.py"
+kind = "script"
+note = "Isolated child that admits only the declared constant-symbol input while loading the actual pinned method and model dependencies."
+
+[[provenance]]
+path = "withmath/logs/637_prefix_preflight_20260905T201419Z_1788639259990604000.log"
+kind = "log"
+note = "Frozen receipt for one process, two 26-map frontiers, 52 scalar forwards, complete source and process bindings, and eight refusal tests."
+ref = "LOG637"

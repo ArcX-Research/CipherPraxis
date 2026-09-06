@@ -1,0 +1,161 @@
+id = "immutable-artifact-postmortem"
+section = "validation"
+title = "Immutable artifact postmortems"
+subtitle = "Recover what a completed one-shot worker proved without rerunning or rewriting it"
+status = "VERIFIED"
+status_note = "A read-only audit recovered a committed worker record after an outer validator rejected an order-only difference. Mutation tests distinguished harmless reordering from missing, duplicate, changed, and uncommitted data, while inherited stage limits kept the final status incomplete."
+family = "One-shot validation"
+tags = ["postmortem", "immutable artifacts", "canonical sets", "one-shot runs", "cap propagation", "independent replay"]
+related = ["isolated-acquisition-solver-handoff", "reproducibility-receipts", "seal-and-audit-protocol", "correction-and-retraction", "candidate-bank-lineage-and-cap-accounting", "evidence-scope-ladder", "endpoint-specific-control-contracts"]
+summary = "A one-shot worker can finish and commit valid raw output even when its outer validator later fails. If the failure is in representation rather than the recorded computation, a new read-only postmortem may audit the sealed bytes under the intended schema. It must define which fields are ordered, reject every substantive mutation, independently replay the recorded equations, and inherit every upstream resource limit. The postmortem explains the existing run; it is not a retry."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+An **immutable artifact postmortem** is a new validator for an already committed run. It may read the frozen packet, attempt marker, process record, worker output, raw-file manifest, and independent replay code. It does not change those bytes, reopen the original input source, import or execute the search, or synthesize missing work.
+
+This is appropriate when the worker reached its committed terminal but a later wrapper rejected a representational mismatch. The postmortem first proves that the disputed representations describe the same schema object. It then rechecks every unaffected commitment and derives the narrowest status supported by the existing artifacts.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Canonical sets and inherited completeness"
+body = '''
+Suppose a schema defines a list of path-indexed Boolean records as unordered. For list $L$, define
+
+$$C(L)=\operatorname{sort}_{\rm path}\{(p,v):(p,v)\in L\}.$$
+
+Canonical equality is valid only when each path occurs exactly once:
+
+$$|L|=|\{p:(p,v)\in L\}|,
+\qquad C(L_{\rm recorded})=C(L_{\rm recomputed}).$$
+
+Sorting alone is unsafe because it can hide duplicate paths. Set comparison is also unsafe when the schema says order carries meaning; the equivalence rule must come from the frozen contract, not from whichever comparison makes a failed run pass.
+
+Let $G$ collect identity, commit, manifest, parse, and independent-replay gates, and let $c_j$ be every upstream or downstream cap flag. Then
+
+$$\operatorname{complete}=\left(\bigwedge_{g\in G}g\right)
+\land\left(\bigwedge_j\neg c_j\right).$$
+
+A complete transfer between stages does not erase a cap that truncated support before the transfer.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Order-only repair:** the schema says records are keyed by path, so permutations are equivalent after uniqueness checks.
+- **Order-sensitive record:** event streams, ranking order, and adaptive callback traces must retain their original order.
+- **Independent semantic replay:** recompute cipher equations, rankings, ties, and counts from raw committed files without calling the worker's implementation.
+- **Status-only salvage:** validate the computation and its cap state even when no selected string is promoted for review.
+- **Correction rather than salvage:** if the worker bytes are wrong or incomplete, preserve them and record a correction; do not manufacture a repaired result from them.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Boundary conditions"
+body = '''
+- The worker wrote and flushed its raw files and terminal before the outer failure.
+- A sealed manifest lists every raw file and binds its size and digest.
+- The postmortem source, runner, ancestor artifacts, and independent checker receive fresh hashes and a new receipt.
+- Parsing rejects duplicate object keys, unknown fields, non-finite values, missing files, and duplicate semantic paths.
+- The equivalence relation is narrow and predeclared. Only fields proved order-insensitive are canonicalized.
+- Every cap is recomputed from raw records or checked against bound counters; producer summaries are not trusted alone.
+- Selected output remains unreviewed when the run is incomplete. Replay proves internal consistency, not linguistic meaning or uniqueness.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Conduct the postmortem"
+body = '''
+Freeze a new, read-only audit before inspecting selected output. Pin the old packet, marker, process record, envelope, raw directory manifest, worker streams, and the separate checker. Strictly parse each file and require a committed worker terminal. Recompute the disputed records through an independent path, apply only the schema's canonical equivalence, and run mutations that prove the check can fail.
+
+Next, match every raw byte to the manifest, independently replay every retained physical witness, rebuild ranking and tie records, and recompute each cap. Derive the terminal mechanically. Publish the old selected strings only if the protocol permits it, labelled with the inherited completeness status. Never rerun the worker under a postmortem label.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function POSTMORTEM(frozen, independent_checker, schema):
+    require HASHES_MATCH_FRESH_READS(frozen.manifest)
+    require WORKER_COMMITTED(frozen.process, frozen.envelope)
+    require STRICT_PARSE_ALL(frozen) and RAW_CENSUS_MATCHES(frozen)
+
+    recorded = PARSE_PATH_VALUE_RECORDS(frozen.envelope)
+    rebuilt = INDEPENDENTLY_REBUILD_PATH_VALUE_RECORDS(frozen)
+    require UNIQUE_PATHS(recorded) and UNIQUE_PATHS(rebuilt)
+    if schema.records_are_unordered:
+        require SORT_BY_PATH(recorded) == SORT_BY_PATH(rebuilt)
+    else:
+        require recorded == rebuilt
+
+    require INDEPENDENT_REPLAY_ALL(frozen.raw, independent_checker)
+    require REBUILD_RANKS_AND_TIES(frozen.raw) == frozen.rank_record
+    caps = RECOMPUTE_EVERY_STAGE_CAP(frozen.raw, frozen.envelope)
+    if ANY(caps): return INCOMPLETE with audited frozen output
+    return COMPLETE_EXISTING_RUN with audited frozen output
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Manifest checking is linear in the total raw bytes. Canonicalizing $n$ path records costs $O(n\log n)$ with sorting, or expected linear time with a checked map followed by deterministic output ordering. Independent replay and ranking reconstruction usually dominate, but they remain bounded by the already committed artifacts rather than the original search space.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Retry disguised as audit.** The postmortem imports the search or reopens the original input and creates a second chance at a one-shot computation.
+- **Set conversion hides duplicates.** Two records with one path collapse into one set member and pass.
+- **Convenient canonicalization.** An ordered ranking or event stream is sorted only because the original validator rejected it.
+- **Manifest trust.** Recorded digests are compared with each other instead of hashing the raw files again.
+- **Shared-helper replay.** The checker calls the worker's transform or ranking function and reproduces the same defect.
+- **Cap laundering.** A later stage transferred every row it received, so an earlier truncated bank is called complete.
+- **Output promotion.** An internally consistent but capped selected string is described as a recovered message.
+- **In-place repair.** Old bytes are edited, destroying the evidence needed to explain the original failure.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The recorded postmortem accepted one order-only permutation and rejected six substantive mutations: a missing path, duplicate path, changed value, changed path, altered selected output, and an uncommitted raw file. It matched 32 raw files totalling 17,934,216 bytes to the sealed manifest, required five unique false-valued paths, independently performed 414 scalar forward and inverse checks, and rebuilt rankings for 3,950 exact rows and 22 full-text rows.
+
+Raw identity, replay, rankings, and the final transfer all passed. Several upstream support, state, arm, and output limits had fired, so the mechanically derived terminal remained `INCOMPLETE`. This is the important separation: the postmortem recovered a trustworthy account of the run without upgrading what the run covered.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Canonical serialization gives deterministic bytes, but it can also reorder object members. A validator should compare each field according to its schema meaning: byte sequence, ordered list, keyed map, or duplicate-free set. When a one-shot wrapper gets that distinction wrong, immutable postmortem validation preserves both scientific value and chain of custody.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK89_PIPELINE682_POSTMORTEM.md"
+kind = "audit"
+note = "Defines the read-only boundary, path-keyed canonical-set comparison, mutation panel, independent replay, cap propagation, and evidence limits."
+ref = "LOG682"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk89_pipeline682_postmortem.py"
+kind = "audit"
+note = "Strict postmortem implementation that imports neither the search nor the original-input loader and derives status from sealed artifacts."
+ref = "LOG682"
+
+[[provenance]]
+path = "withmath/logs/682_pipeline677_postmortem.json"
+kind = "data"
+note = "Durable raw census, canonical-record comparison, independent scalar replay, ranking reconstruction, cap record, and incomplete terminal."
+ref = "LOG682"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Reservation and terminal record preserve the failed wrapper, forbid a retry, and distinguish recovered artifacts from expanded evidence."
+ref = "LOG682"
+
+[[references]]
+title = "JSON Canonicalization Scheme"
+author = "Anders Rundgren, Bryce Jordan, and Samuel Erdtman"
+year = 2020

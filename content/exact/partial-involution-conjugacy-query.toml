@@ -1,0 +1,148 @@
+id = "partial-involution-conjugacy-query"
+section = "exact"
+title = "Partial-involution conjugacy query"
+subtitle = "Test completion compatibility without materialising every full map"
+status = "VERIFIED"
+status_note = "The compressed criterion matched independent full-completion enumeration on 30,000 Boolean checks at degrees six, ten, and twenty-six. It also exposed hundreds of cases accepted by a weaker known-image check."
+family = "Exact permutation constraints"
+tags = ["partial involution", "conjugacy", "matching", "completion", "capacity test"]
+related = ["all-different-constraints", "constraint-satisfaction-forward-checking", "permutation-cycles", "partial-involution-edit-distance", "two-involution-component-templates", "reflection-product-cycle-lift"]
+summary = "A partial relabelling of a template involution fixes some pairs, leaves some partner slots open, and leaves a known number of unused loops and pairs. A small capacity test decides exactly whether an observed partial involution can still fit. It gives the same answer as enumerating every full completion but avoids building that large bank."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $t$ be a complete involution on $n$ template slots and let $\phi$ be a partial one-to-one assignment of letters to slots. Write $S$ for the placed letters. Pulling $t$ through $\phi$ determines a partial letter involution $\pi$: if both mate slots are filled, $\pi(c)$ is known; if only one is filled, that letter is an **open endpoint**.
+
+Let $q$ be an observed partial involution that must extend to a conjugate $\phi t\phi^{-1}$. The query asks whether some completion of the still-empty slots can retain every observed component of $q$.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Orbit capacities"
+body = '''
+If $t$ has $f$ fixed points, define
+
+$$F=f-\text{known fixed loops},$$
+
+$$D=\#\{c\in S:\pi(c)\text{ is still unknown}\},$$
+
+$$E=\frac{n-|S|-D-F}{2}.$$
+
+$F$ is the number of unused fixed slots and $E$ the number of unused two-cycle orbits. Inspect each component of $q$ once:
+
+- both endpoints in $S$: its image must equal the image already fixed by $\pi$;
+- exactly one endpoint in $S$: that placed endpoint must still be open;
+- neither endpoint in $S$: reserve one fixed slot for a loop or one unused two-cycle for a pair.
+
+A compatible completion exists exactly when every touching test passes and the reserved loop and pair counts are at most $F$ and $E$.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **One partial map:** the criterion gives one exact Boolean answer.
+- **A bank of partial maps:** take the logical OR across the original maps; no full-completion bank is needed.
+- **Weighted or bounded disagreement:** deleting incompatible observed components leads to [Partial-involution edit distance](/exact/partial-involution-edit-distance).
+- **Several involutions:** each single-map query remains exact, while cross-map component geometry adds separate constraints.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- $t$ is a complete involution and $q$ is an injective reciprocal partial map.
+- $\phi$ is one-to-one on the placed letters.
+- Components are counted once: a pair $(c,d)$ and $(d,c)$ is one two-cycle, not two directed cells.
+- The criterion decides extension relative to one template. It says nothing about language quality or whether another map shares the same hidden cycle.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Compressed compatibility test"
+body = '''
+Compute the determined images, open endpoints, and remaining orbit capacities from the partial slot assignment. Scan the observed loops and pairs once, rejecting a touching conflict immediately and counting wholly unplaced components. Compare those counts with the available capacities. For a bank, stop at the first compatible original partial map but retain its identity for later replay. This replaces a potentially huge bank of arbitrary full completions with a direct exact query.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function COMPATIBLE(template t, partial_label phi, partial_involution q):
+    S, partial_image pi = PULL_BACK_KNOWN_IMAGES(t, phi)
+    F = FIXED_POINTS(t) - KNOWN_FIXED_LOOPS(pi)
+    D = count c in S where pi[c] is unknown
+    E = (SIZE(t) - size(S) - D - F) / 2
+    need_loops = 0
+    need_pairs = 0
+    for component e of q, counted once:
+        placed = number of endpoints of e in S
+        if placed == 2 and pi[e.left] != e.right: return false
+        if placed == 1:
+            c = the placed endpoint
+            if pi[c] is known: return false
+        if placed == 0 and e is a loop: need_loops += 1
+        if placed == 0 and e is a pair: need_pairs += 1
+    return need_loops <= F and need_pairs <= E
+
+function BANK_COMPATIBLE(t, phi, bank):
+    return any COMPATIBLE(t, phi, q) for q in bank
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The query is linear in the number of placed letters plus the observed components of $q$, with constant extra memory. Full completion can be factorial in the number of unplaced letters; the criterion never constructs those completions.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Checking only determined positive images:** two placed letters may already occupy nonmate slots even though neither image is known.
+- **Ignoring fixed-point type:** unused loops and pairs have different capacities and cannot substitute for each other.
+- **Counting directed cells:** a reciprocal pair counted twice produces a false distance or capacity failure.
+- **Confusing local and joint compatibility:** two maps can each fit a template separately while their combined common-cycle geometry fails.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The reference checked twenty banks at each of degrees six, ten, and twenty-six, with one hundred random partial labellings per bank and both individual-map and union queries. All 30,000 Boolean results matched independent full-completion enumeration. The weaker known-image check falsely accepted 105, 160, and 110 union queries at the three degrees; the compressed test rejected them correctly.
+'''
+
+[[blocks]]
+kind = "example"
+title = "An open-endpoint conflict"
+body = '''
+Take the six-slot template $(0\ 1)(2\ 3)(4\ 5)$. Place letter `A` in slot zero and letter `B` in slot two. Neither mate slot is filled, so both induced images are still unknown. An observed map that pairs `A` with `B` is nevertheless impossible: their occupied template slots are not mates. The exactly-one-endpoint rule detects this as soon as the second endpoint is seen; a test that looks only for conflicting known images does not.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Matching orbit types under conjugacy is standard finite permutation theory. The capacity formula and its use as a compressed query over a union of partial maps were derived and exhaustively checked in this project.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_CONJUGACY570_EXACT.md"
+kind = "note"
+note = "Necessary-and-sufficient capacity criterion, proof, failure of the earlier positive-image check, and evidence boundary."
+ref = "LOG570"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_dihedral570_partial_conjugacy.py"
+kind = "solver"
+note = "Reference implementation and independent full-completion comparator."
+
+[[provenance]]
+path = "withmath/logs/570_conjugacy_kat_20260905T011103Z.log"
+kind = "log"
+note = "Thirty thousand exact Boolean comparisons over three degrees and the weaker-query discrepancy census."
+ref = "LOG570"
+
+[[references]]
+title = "Permutation Groups"
+author = "John D. Dixon and Brian Mortimer"
+year = 1996

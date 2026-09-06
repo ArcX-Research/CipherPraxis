@@ -1,0 +1,142 @@
+id = "fractionated-morse"
+section = "ciphers"
+title = "Fractionated Morse"
+subtitle = "Turn Morse symbols into base-three groups, then label the groups with letters"
+status = "VERIFIED"
+status_note = "An independent encoder matched a separate generator. On one held-out sample, the decoder recovered all 427 plaintext letters and rebuilt all 504 ciphertext letters. Four table cells were not observable; all 24 permutations of their labels produced the same ciphertext."
+family = "Fractionation ciphers"
+tags = ["morse", "fractionation", "ternary", "keyed alphabet", "identifiability"]
+related = ["compressocrat", "trifid", "keyword-mixed-alphabet", "simulated-annealing", "parameter-versus-plaintext-recovery", "known-answer-tests", "g-fractionation"]
+summary = "Fractionated Morse changes letters into dots, dashes, and separators. It reads that three-symbol stream in groups of three and replaces each group with a letter from a table. The method is simple, but some table cells may never occur. A solver must report the table only up to what the observed stream can identify."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Encode each plaintext letter in International Morse. Put one separator symbol `X` between adjacent letters, then add trailing `X` symbols until the stream length is a multiple of three. Read the stream in trigraphs.
+
+Assign the digits $0,1,2$ to `.`, `-`, and `X`. A trigraph selects one cell of a 26-letter table. The all-separator trigraph `XXX` is omitted, leaving 26 usable cells from the $3^3=27$ possible trigraphs.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Base-three table index"
+body = '''
+For a trigraph with digits $(a,b,c)$,
+
+$$r=9a+3b+c, \qquad C=\sigma[r],$$
+
+where $\sigma$ labels ranks $0$ through $25$ with distinct ciphertext letters. Rank $26$ is `XXX` and is not assigned. Decryption uses $\sigma^{-1}(C)$, expands the rank back to three ternary digits, joins all trigraphs, removes terminal padding, and splits on separators before decoding Morse tokens.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- A straight table labels ranks with `A` through `Z`.
+- A keyed table deduplicates a keyword and appends unused letters.
+- Historical descriptions may print a trigraph table instead of the numeric rank. The transform is the same if the row order is stated.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The Morse alphabet, separator rule, padding rule, trigraph order, and table convention are fixed.
+- Plaintext characters must have agreed Morse encodings.
+- A recovered table cell is identifiable only if its rank occurs in the observed symbol stream.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to attack it"
+body = '''
+Invert a candidate table, turn every ciphertext letter into a trigraph, and score both the resulting Morse validity and the decoded language. Search table permutations with swaps or another permutation optimiser. Reject candidates with malformed Morse runs instead of silently replacing them with filler. Finally, re-encode the decoded text and require an exact ciphertext match.
+
+Before comparing a recovered table with hidden truth, find the ranks that the sample actually emits. Compare observed cells literally and report unobserved cells as one equivalence class.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function ENCRYPT(text, table):
+    stream = empty
+    for i, letter in enumerate(text):
+        if i > 0: append X
+        append MORSE(letter)
+    append trailing X until length(stream) mod 3 = 0
+    out = empty
+    for (a, b, c) in groups_of_three(stream):
+        r = 9 * digit(a) + 3 * digit(b) + digit(c)
+        require r != 26
+        append table[r] to out
+    return out
+
+function DECRYPT(ciphertext, inverse_table):
+    stream = concatenate trits(inverse_table[ch]) for ch in ciphertext
+    remove only valid terminal padding
+    tokens = split stream on X
+    require every token is valid Morse
+    return decode_morse(tokens)
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Encryption and decryption are linear in the symbol-stream length. Searching an arbitrary 26-letter table is factorial in the worst case, so practical decoders use language-guided permutation search. Observable-class checking is linear in the ciphertext plus $u!$ for $u$ unobserved labels when an explicit equivalence proof is wanted.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Unobservable cells.** Some trigraphs cannot occur with the separator grammar, and others may be absent from a finite sample. Their labels cannot be recovered from that sample.
+- **Padding ambiguity.** Removing interior separators or too many terminal separators changes the plaintext.
+- **Invalid-token masking.** Replacing malformed Morse tokens with a common filler can create a good-looking score that cannot reproduce the ciphertext.
+- **Table convention drift.** Reversing the trit order or including `XXX` shifts every cell.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Use an independently generated sample long enough to exercise many ranks. Require exact plaintext, exact ciphertext reconstruction, and exact table labels on every emitted rank. For absent ranks, enumerate label permutations and confirm that each produces the same complete ciphertext. One recorded 427-letter control emitted 504 ciphertext letters, used 22 ranks, left four ranks unobserved, and verified all $4!=24$ equivalent labelings.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+With the straight table, plaintext `TEST` becomes the Morse stream
+
+```trace
+-X.X...X-
+```
+
+The trigraphs are `-X.`, `X..`, and `.X-`. Their ranks are $15$, $18$, and $7$, so the ciphertext is `PSH`. Reversing the steps gives the same three trigraphs, then Morse tokens `-`, `.`, `...`, `-`.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Exact plaintext recovery does not imply exact recovery of unused table cells. The correct result is the observable table class, not whichever full table a search seed happened to return.
+'''
+
+[[provenance]]
+path = "withmath/docs/cipher-methods/COLOSSUS_DYNAMIC_AUDIT.md"
+kind = "audit"
+note = "Defines the transform and records the original strict-table control result."
+ref = "Log 186"
+
+[[provenance]]
+path = "withmath/scripts/wm_colossus_dynamic.py"
+kind = "solver"
+note = "Independent forward transform and controls-first search wrapper."
+
+[[provenance]]
+path = "withmath/scripts/wm_colossus_fracmorse_equiv.py"
+kind = "solver"
+note = "Predeclared observable-rank equivalence replay."
+
+[[provenance]]
+path = "withmath/logs/186b_colossus_fracmorse_equiv.log"
+kind = "log"
+note = "Exact plaintext, forward reconstruction, emitted-rank census, and 24-member equivalence check."

@@ -8,7 +8,7 @@ family = "Polygraphic substitution"
 tags = ["polygraphic", "digraphic", "polybius square", "5x5"]
 related = ["two-square-four-square", "bifid", "hill-cipher", "polybius-square", "simulated-annealing", "known-answer-tests", "g-polygraphic", "g-transposition-grid"]
 summary = "Playfair encrypts letter pairs on a 5 x 5 square built from a keyword, with I and J sharing a cell. Pairs in one row or column shift along it. Other pairs take the opposite corners of their rectangle. Reversing a pair reverses its ciphertext pair, and no letter maps to itself. Tests used Playfair to check square-search methods and as an inner layer beneath repeating keys."
-updated = "2026-09-04"
+updated = "2026-09-06"
 
 [[blocks]]
 kind = "definition"
@@ -24,13 +24,18 @@ with indices modulo 5. Decryption shifts left or up in the first two cases and s
 kind = "equations"
 title = "Invariants"
 body = '''
-No letter encrypts to itself. The digraph $(b, a)$ encrypts to the reverse of the encryption of $(a, b)$; and the same-row and same-column rules make about a quarter of digraphs "linear". The key is identified only up to the symmetries of the square's cyclic row and column structure that leave all three rules unchanged (rotations of rows and of columns), so a solver must compare squares modulo that gauge. A seriated Playfair writes the text in rows of a period $w$ and applies the rules to vertical pairs, which removes the digraph alignment and couples the square with $w$.
+No letter encrypts to itself. The digraph $(b, a)$ encrypts to the reverse of the encryption of $(a, b)$; among the 600 ordered pairs of different letters, 200 share a row or column, so exactly one third use a shift rule instead of the rectangle rule.
+
+The square is not a unique key. For $u,v \in \mathbb Z_5$, define $S_{u,v}(r,c)=S(r-u,c-v)$. Moving every row by $u$ and every column by $v$ changes the written grid but leaves every Playfair digraph unchanged. These 25 row-and-column translations form the exact torus gauge used when comparing recovered squares. Transposing the square is not such a gauge: it reverses the two rectangle outputs. Reversing both axes instead changes the right/down rule into the left/up rule, so a search that includes both directions must compare the square and direction together.
+
+A seriated Playfair writes the text in rows of a period $w$ and applies the rules to vertical pairs, which removes the digraph alignment and couples the square with $w$.
 '''
 
 [[blocks]]
 kind = "variants"
 body = '''
 - **Seriated Playfair**: pairs formed down the columns of a $w$-row layout.
+- **Raw fixed-pair Playfair**: applies the square rule to fixed pairs without inserting fillers. It is length-preserving, but it is not the classical text-preparation rule.
 - **Two-square and four-square**: two or four squares; see [Two-square and four-square](/ciphers/two-square-four-square).
 - **Playfair under a periodic layer**: the outer shifts allow all 26 letters to appear in the ciphertext, which a direct 25-letter cipher cannot.
 - **Custom 26-symbol squares**: not covered by the standard implementation.
@@ -41,7 +46,8 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - The text uses at most 25 symbols. A ciphertext containing all 26 letters cannot be a direct standard Playfair. This is a decisive structural check, and the program's three unsolved texts all fail it.
-- Digraph boundaries are aligned with the text start; padding conventions are part of the model.
+- Digraph boundaries are part of the model. Moving the start by one position changes every pair, so a search over both starts must include that choice in its null comparison.
+- Classical preparation merges I/J, inserts a filler between equal plaintext letters and pads an odd tail. Raw fixed-pair Playfair does none of those things. Controls and forwards must use the same one of these two conventions.
 - A fitted square always round-trips.
 '''
 
@@ -92,13 +98,15 @@ function DECRYPT(c, S):
 [[blocks]]
 kind = "complexity"
 body = '''
-Key space $25!/\text{gauge} \approx 10^{25}$; annealing at 504 letters converged inside the declared budget for direct Playfair. Seriated Playfair adds the period and the vertical pairing, and the same budget reached only 8.1% at 504 letters.
+Key space $25!/25 \approx 6.20 \times 10^{23}$ after the 25-way translation gauge; annealing at 504 letters converged inside the declared budget for direct Playfair. Seriated Playfair adds the period and the vertical pairing, and the same budget reached only 8.1% at 504 letters.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
 - **Length.** At 144-153 letters generic quadgram annealing cannot identify an arbitrary square: 3.9% and 3.5% plaintext on the seriated controls, with false states that still round-trip.
+- **Pair-origin selection.** Testing both possible starts and reporting the better plaintext doubles the decision surface. Repeat the complete two-start search in every matched null.
+- **Prepared/raw mismatch.** A raw-pair control can pass while a classical prepared-text implementation is wrong, or vice versa. The two conventions need separate labels and tests.
 - **Seriation.** Even at 504 letters the seriated variant is locked (8.1%).
 - **One-letter overfits.** A neighbouring family's control stopped at 503/504 with a fluent but wrong letter. The audit refused to relax the exact gate for it.
 - **Alphabet mismatch.** An engine that treats the merged letter as a rejected sentinel cannot accept a 26-letter ciphertext at all. This is an implementation boundary, not evidence.
@@ -155,6 +163,11 @@ ref = "logs/181_pk10_squares.log"
 path = "ck_lib.py"
 kind = "library"
 note = "playfair_decrypt and anneal_square: shared square toolkit."
+
+[[provenance]]
+path = "withmath/docs/cipher-methods/ZONE25_707_INDEPENDENT_REVIEW.md"
+kind = "audit"
+note = "Derives the 25-way square-translation gauge, separates raw fixed pairs from classical preparation, and explains pair-origin selection."
 
 [[references]]
 title = "The Codebreakers"

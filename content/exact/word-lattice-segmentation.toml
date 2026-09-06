@@ -1,0 +1,141 @@
+id = "word-lattice-segmentation"
+section = "exact"
+title = "Word-lattice segmentation of unspaced text"
+subtitle = "Build every admitted token edge and use dynamic programming to choose the best path"
+status = "VERIFIED"
+status_note = "The max-score path is an exact dynamic program for a fixed acyclic lattice. It has been checked against scalar enumeration in the project and is supported by established word-lattice and Viterbi literature."
+family = "Exact language decoding"
+tags = ["word lattice", "segmentation", "Viterbi", "unspaced text"]
+related = ["semi-markov-word-model", "viterbi-decoding", "exact-dynamic-programming", "word-prefix-csp", "combined-character-word-models", "lexical-reranking-and-oov-bias"]
+summary = "Represent every admitted word or fallback fragment as an edge from its start to end position in an unspaced string. The best segmentation is the maximum-weight path through this directed acyclic graph. Viterbi dynamic programming finds that path exactly relative to the frozen lexicon and penalties."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For a string $y_0\ldots y_{n-1}$, make vertices $0,1,\ldots,n$. Add an edge $(i,j,w)$ when token $w=y_i\ldots y_{j-1}$ is admitted by the lexicon or fallback policy. Give it weight $\ell(i,j,w)$, commonly a log word probability plus declared length, boundary, or unknown-token penalties. A segmentation is a path from $0$ to $n$; its tokens concatenate exactly to the input.
+
+Because every edge moves to a larger position, the lattice is a directed acyclic graph. The best path can therefore be computed exactly by a left-to-right Viterbi recurrence.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Max-score path"
+body = '''
+Let $V(j)$ be the best score of any path ending at position $j$. Then
+
+$$V(0)=0,\qquad V(j)=\max_{(i,j,w)\in E}\{V(i)+\ell(i,j,w)\}.$$
+
+Store the maximising predecessor to reconstruct the words. Retain every predecessor tied under the declared numerical rule when all optimum segmentations matter. If edge scores depend on the previous word, extend the state to $(j,w_{\rm prev})$; the same recurrence remains exact on the enlarged graph.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Unigram lattice:** each edge score depends only on the token.
+- **Word n-gram lattice:** the state includes preceding tokens.
+- **Trie construction:** generate all lexicon edges beginning at a position without scanning the whole vocabulary.
+- **Edge fragments:** permit bounded prefixes or suffixes where the candidate is known to cut through a word.
+- **Unknown-token arcs:** guarantee coverage with an explicit penalty instead of making out-of-vocabulary text impossible.
+- **Marginal lattice:** replace max with log-sum-exp to sum probability over segmentations.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions"
+body = '''
+- The lexicon, token probabilities, normalisation, maximum token length, and fallback penalties are frozen.
+- Every edge consumes at least one character, so the graph is acyclic.
+- Exactness is relative to the admitted lattice. Missing words and pruned edges remain outside the theorem.
+- If input chunks may begin or end inside a word, the permitted edge-fragment policy is specified in advance.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Use as a decipherment component"
+body = '''
+Decode each retained complete candidate to an unspaced string, build its lattice from a hashed general lexicon, and run the exact recurrence. Store the best score, token path, and any ties. Use the lexical result as one declared component of ranking rather than a validity test. Include out-of-vocabulary controls and report whether a missing edge, not the structural search, caused a loss.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function BUILD_LATTICE(text, trie, fallback_policy):
+    edges = empty lists indexed by end position
+    for start in 0..LENGTH(text)-1:
+        for token, end in TRIE_MATCHES(text, start, trie):
+            edges[end].append((start, token, TOKEN_SCORE(token)))
+        add every fallback edge allowed at start by fallback_policy
+    return edges
+
+function VITERBI_SEGMENT(text, lattice):
+    best[0] = 0; predecessor[0] = NONE
+    for end in 1..LENGTH(text):
+        best[end] = NEGATIVE_INFINITY
+        for start, token, edge_score in lattice[end]:
+            candidate = best[start] + edge_score
+            if candidate improves best[end]:
+                best[end] = candidate
+                predecessor[end] = (start, token)
+            else if candidate ties: retain the additional predecessor
+    return best[last position], BACKTRACK_ALL_TIED_PATHS(predecessor)
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Topological Viterbi costs $O(|E|)$ time and $O(n)$ best-score storage for a unigram lattice, plus the space needed for edges and tied backpointers. With a trie and maximum admitted token length $L$, construction is typically $O(nL)$ character transitions. Word-history states increase both costs by the number of retained histories.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Lexicon incompleteness.** The correct path is absent because a name, spelling, or inflection is missing.
+- **Unbounded fragments.** Cheap fallback arcs let arbitrary strings masquerade as words.
+- **Greedy splitting.** Taking the best next word can miss the best complete path.
+- **Silent pruning.** A token cap or beam turns an exact lattice calculation into a heuristic one.
+- **Boundary leakage.** Fragments are allowed everywhere although only the ends of a chunk can cut words.
+- **Tie loss.** One optimum segmentation is displayed as unique because equal predecessors were overwritten.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Compare the dynamic program with exhaustive segmentation on short strings. Include a unique optimum, multiple tied optima, a missing word served by fallback, a string with no legal path when fallback is disabled, and chunks that legitimately cut words only at their edges. Hash the lexicon order and effective token set so package drift cannot change the graph silently.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Two paths through one string"
+body = '''
+For `THERAPIST`, a lattice might contain paths `THE | RAP | IST` and `THERAPIST`, along with other admitted splits. Each edge advances from one character boundary to another. The recurrence compares whole-path sums, so a locally frequent `THE` cannot force the first split if the single-token path has the better total. If `THERAPIST` is absent from the frozen lexicon, exact Viterbi cannot select that missing edge.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The algorithm is exact about segmentation, not about linguistic truth. The project's reusable contribution is the fail-closed boundary and provenance contract around a standard word-lattice dynamic program.
+'''
+
+[[provenance]]
+path = "withmath/scripts/wm_cycleword.py"
+kind = "solver"
+note = "Trie-backed lexical lattice with complete-word, leading-fragment, and trailing-fragment states plus pinned vocabulary checks."
+
+[[provenance]]
+path = "withmath/docs/cipher-methods/CYCLEWORD_SEMIMARKOV_AUDIT.md"
+kind = "audit"
+note = "Independent audit of the semi-Markov word objective, boundary fragments, and fixed generic lexicon."
+
+[[references]]
+title = "Word Lattice Reranking for Chinese Word Segmentation and Part-of-Speech Tagging"
+author = "Wenbin Jiang, Haitao Mi and Qun Liu"
+year = 2008
+url = "https://aclanthology.org/C08-1049/"
+
+[[references]]
+title = "Error Bounds for Convolutional Codes and an Asymptotically Optimum Decoding Algorithm"
+author = "Andrew J. Viterbi"
+year = 1967

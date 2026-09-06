@@ -1,0 +1,145 @@
+id = "lexical-reranking-and-oov-bias"
+section = "statistics"
+title = "Lexical reranking and out-of-vocabulary bias"
+subtitle = "A word model can demote the correct character optimum when its vocabulary is incomplete"
+status = "VERIFIED"
+status_note = "Fresh synthetic controls contain observed cases where the correct structural or character-score candidate is retained but a generic lexical objective selects a wrong relabelling or ordering because a valid rare token is absent."
+family = "Language-model diagnostics"
+tags = ["lexical reranking", "out of vocabulary", "misranking", "character optimum"]
+related = ["combined-character-word-models", "word-lattice-segmentation", "n-gram-language-scoring", "parameter-versus-plaintext-recovery", "selection-overfit-diagnostic", "fresh-holdout-after-selector-change"]
+summary = "A candidate that globally maximises a frozen character objective can lose after a word score is added. This is not an optimisation contradiction: the reranker defines a different objective. Missing names, rare forms, and boundary fragments can make a plausible wrong spelling score better than the true text."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $\mathcal{Y}$ be a complete structural candidate set and let
+
+$$y_c^*=\operatorname*{argmax}_{y\in\mathcal{Y}}S_c(y)$$
+
+be a global optimum of a character score. A lexical reranker chooses
+
+$$y_{cw}^*=\operatorname*{argmax}_{y\in\mathcal{Y}'}\{S_c(y)+\eta S_w(y)\},$$
+
+where $\mathcal{Y}'$ may also be a retained subset. There is no requirement that $y_c^*=y_{cw}^*$. **Out-of-vocabulary bias** occurs when the true candidate's word path is absent or heavily penalised while a wrong candidate happens to use frequent in-vocabulary tokens.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Vocabulary exclusion:** the correct whole word has no edge in the lattice.
+- **Frequency bias:** both spellings exist, but a common wrong one overwhelms character evidence.
+- **Boundary bias:** a wrong ordering creates convenient word cuts that the correct ordering lacks.
+- **Rare-label swap:** exchanging labels used only a few times changes a rare word into a high-frequency form.
+- **Candidate-cap bias:** the true character optimum is excluded before lexical reranking and cannot be restored.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions"
+body = '''
+- “Global optimum” always names its objective and candidate set; it is not shorthand for true plaintext.
+- Character and lexical component values are retained separately, not only as a blended total.
+- The lexicon version, effective vocabulary, unknown-token penalty, and boundary policy are pinned.
+- Exact plaintext claims come from controls or authorised truth, not from the text looking readable.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Diagnose a reranking loss"
+body = '''
+Confirm first that the truth entered the rerank set. Compare its character score, word score, segmentation, and mapping with the selected row. Inspect whether the first differing label creates an absent word, a high-frequency substitute, or a favourable boundary. Re-run only preregistered ablations such as character-only and word-only ranks. Add an out-of-vocabulary control class before changing the selector, then require a fresh holdout for the new rule.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function RERANK_AUDIT(candidates, truth, char_model, word_model, config):
+    require truth in candidates
+    rows = []
+    for candidate in candidates:
+        char_score = CHARACTER_SCORE(candidate.text, char_model)
+        word_score, path = WORD_LATTICE_SCORE(candidate.text, word_model)
+        total = char_score + config.word_weight * word_score
+        rows.append((candidate, char_score, word_score, total, path))
+    selected = ALL_MAXIMA(rows, by=total)
+    report truth's rank under char_score, word_score and total
+    report first differing positions and exercised mapping labels
+    report missing-word and fallback edges on the truth path
+    independently forward-check truth and every selected candidate
+    return selected, full component table and diagnostic labels
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The audit adds one character score, one lattice pass, and one forward replay per retained candidate. It is linear in the candidate count times text length for bounded token length. Storing component tables is usually cheap and prevents an otherwise opaque combined score from hiding the failure stage.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Objective equivocation.** “The global optimum was wrong” is reported without saying which score was globally optimised.
+- **Post-hoc vocabulary repair.** A missing truth word is added after inspection, then the same case is called held out.
+- **Readability adjudication.** A human chooses between candidates without a frozen rule or null calibration.
+- **Component suppression.** Only the combined score is logged, so a missing token cannot be diagnosed.
+- **Rare-symbol neglect.** Aggregate letter accuracy hides the one label that changes a decisive word.
+- **Candidate inconsistency.** A reranked string is not replayed through the cipher equations.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Balance common-vocabulary prose with unseen names, rare words, inflections, and texts whose correct segmentation crosses a supplied chunk boundary. Include cases where the structural cell is exact but a single rare label is wrong. In recorded controls, a proper name absent from a general lexicon caused a wrong lexical winner even after the true structural row was retained, and another complete character-optimal map made two label errors in a repeated rare word. These are selector failures, not structural failures. A later fresh panel kept the lexicon frozen, exposed the retained map to a complete one-swap neighbourhood, and recovered both unseen rare-letter traps uniquely while still rejecting all negative cases.
+'''
+
+[[blocks]]
+kind = "example"
+title = "The missing-word trap"
+body = '''
+Suppose the true candidate contains the valid name `ORCHID`, but the frozen lexicon lacks it. A nearby substitution yields `OR CHID`, where both fragments receive ordinary word or fallback scores. The lexical path can prefer the wrong candidate even if the character model prefers `ORCHID`. The correct response is to record the disagreement and test a revised unknown-word policy on new cases, not to insert `ORCHID` and reuse this case as validation.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The explicit separation of structural optimum, character optimum, and lexical selection was developed in this project from observed control failures. Vocabulary bias itself is a general language-modelling limitation.
+'''
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "LOG429 records a retained truth demoted by the frozen generic lexical objective because a valid proper name was absent from the vocabulary."
+ref = "LOG429"
+
+[[provenance]]
+path = "withmath/logs/429_monocolumnar_20260902T180509Z_84151.log"
+kind = "log"
+note = "Fresh target-absent pilot receipt with separate structural, character-score, lexical, exact-text, and independent-forward fields."
+ref = "LOG429"
+
+[[provenance]]
+path = "withmath/logs/632_pk10_secondorder_plainfeedback_controls_20260905T150700Z_1788620820729932000.log"
+kind = "log"
+note = "Frozen positive in which the exact cell was selected but the character-optimal map made two label errors in a repeated rare word."
+ref = "LOG632"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_PLAINFEEDBACK633_SECONDORDER_CONTROLS_V2.md"
+kind = "audit"
+note = "Fresh-panel design and independent audit of lexical neighbourhood scores, winners, and forward checks."
+ref = "LOG633"
+
+[[provenance]]
+path = "withmath/logs/633_pk10_secondorder_plainfeedback_v2_controls_20260905T185614Z_1788634574907215000.log"
+kind = "log"
+note = "Fresh target-absent receipt with two unseen rare-letter traps and thirty negative cases."
+ref = "LOG633"
+
+[[references]]
+title = "Solving Substitution Ciphers with Combined Language Models"
+author = "Bradley Hauer, Ryan Hayward and Grzegorz Kondrak"
+year = 2014
+url = "https://aclanthology.org/C14-1218/"

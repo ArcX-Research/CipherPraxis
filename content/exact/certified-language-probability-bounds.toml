@@ -1,0 +1,235 @@
+id = "certified-language-probability-bounds"
+section = "exact"
+title = "Certified language probability bounds"
+subtitle = "Keep very small language probabilities positive and prove which way every rounding error goes"
+status = "VERIFIED"
+status_note = "Two separately written implementations enclosed the same normalized order-three probabilities on 1,082 exhaustive short words and four 504-letter cases. All nonempty intervals were positive, contained the independent result, and had relative width below 2^-100. A later full composition checked 2,817,805 interval containments using 7,428 independent binomial exponential bounds. This verifies arithmetic transport and key-family accounting, not language-model quality, search completeness, or fresh evaluation power."
+family = "Outward-rounded probability arithmetic"
+tags = ["interval arithmetic", "dyadic rationals", "language models", "marginal likelihood", "underflow", "key multiplicity", "certificates"]
+related = ["conditional-language-evidence", "search-safe-partial-marginal-evidence", "bayesian-evidence-model-selection", "reproducibility-receipts", "candidate-bank-lineage-and-cap-accounting", "exact-integer-separation-gates"]
+summary = "A long text can have a real language probability far below the smallest floating-point number. Compute lower and upper dyadic bounds instead of one rounded score. Bound every exponential, normalization, product, and sum outward. When several full keys agree on all coordinates used by a text, count that key family once with its exact factorial multiplicity. The result is a replayable probability interval; it becomes evidence about a cipher only after it is joined to a complete, matching denominator."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let an integer language table contain a score $q_{h,x}$ for next symbol $x$ after history $h$. First interpret the binary64 value produced by $q_{h,x}/1000$ as an exact rational number $\ell_{h,x}$. This freezes the distribution actually supplied to the program.
+
+For each history, subtract its largest entry $m_h$ and define
+
+$$w_{h,x}=\exp(\ell_{h,x}-m_h),\qquad
+p(x\mid h)=\frac{w_{h,x}}{\sum_y w_{h,y}}.$$
+
+With a uniform three-symbol prefix on an alphabet of size $a$, the probability of $x_1\ldots x_n$ is
+
+$$P_E(x_1\ldots x_n)=a^{-3}\prod_{i=4}^{n}p(x_i\mid x_{i-3}x_{i-2}x_{i-1}).$$
+
+A certificate returns dyadic numbers $P_{\rm lo}$ and $P_{\rm hi}$ such that
+
+$$0<P_{\rm lo}\le P_E(x)\le P_{\rm hi}.$$
+
+The endpoints are stored as an odd hexadecimal mantissa and a power of two, so a tiny positive probability never becomes floating zero.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "An exact exponential enclosure"
+body = '''
+Write $u=m_h-\ell_{h,x}\in[0,200]$ and choose $r$ so that $t=u/2^r\in[0,1]$. For the degree-48 Taylor sum $S$ and first omitted term $v$,
+
+$$S\le e^t\le S+\frac{v}{1-t/50}.$$
+
+Every quantity on the right is rational. Reciprocating gives bounds for $e^{-t}$; squaring those bounds $r$ times gives bounds for $e^{-u}$. Round the lower endpoint down and the upper endpoint up after every operation.
+
+If $w_x\in[w_{x,\rm lo},w_{x,\rm hi}]$, then a safe conditional interval is
+
+$$\frac{w_{x,\rm lo}}{\sum_y w_{y,\rm hi}}
+\le p(x\mid h)\le
+\frac{w_{x,\rm hi}}{\sum_y w_{y,\rm lo}}.$$
+
+The same outward rule applies to the initial probability, repeated-condition products, completion multiplicities, and family-mass sums.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Taylor enclosure:** range-reduce, bound one positive Taylor remainder, then square outward.
+- **Binomial cross-check:** for a large integer $N$, use
+
+  $$\left(1-\frac{u}{N}\right)^N\le e^{-u}\le
+  \left(1+\frac{u}{N}\right)^{-N}.$$
+
+  This gives a useful independent implementation because it needs no Taylor series.
+- **Grouped histories:** combine repeated conditional probabilities with integer powers for speed, then prove the multiplication count used in the error bound.
+- **Sequential audit:** multiply each conditional separately. Agreement with grouped evaluation catches count and exponent mistakes.
+- **Exact small panels:** use rational probabilities and exhaustive words when the alphabet and length are small enough.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "What the certificate does and does not establish"
+body = '''
+- The table, floating-literal interpretation, alphabet, prefix prior, and history normalization are frozen before scoring.
+- Every lower endpoint is rounded down and every upper endpoint up. Ordinary nearest rounding is not a certificate.
+- The interval certifies the supplied normalized language distribution. It does not prove that the distribution models the intended language well.
+- A list of candidates gives only a partial numerator unless the candidate generator is proved complete.
+- A positive lower-evidence ratio needs a complete matching denominator, or a certified upper bound on that denominator. A denominator-subset lower bound supports only an upper bound on a named found subset.
+- Duplicate restarts and unused-key variations do not create new probability mass.
+- Different named parameter choices keep separate prior mass when the declared prior treats their names as distinct, even if they decode to the same text.
+- A resource cap returns incomplete. It must not silently truncate the candidate list or probability sum.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Certify a searched language numerator"
+body = '''
+Independently replay every supplied key and require it to produce the ciphertext under the named geometry and schedule. Determine which key coordinates the ciphertext actually uses. At a fixed named geometry, canonicalize a proposal by its values on those occupied coordinates.
+
+If a canonical proposal fixes $k$ coordinates of an unrestricted $a$-symbol permutation, it represents exactly
+
+$$(a-k)!$$
+
+full keys. Deduplicate proposals by `(named geometry, occupied assignment)`, retain all physical origins for audit, and add the language-probability interval once with that factorial multiplicity. This produces a lower bound $A_{\rm lo}$ for the full language numerator because every omitted family has nonnegative mass.
+
+Given a separately certified upper bound $D_{\rm hi}$ for the complete null sum under the identical cipher model and prior,
+
+$$\frac{A_{\rm lo}}{a!D_{\rm hi}}
+\le \frac{Q_E(C)}{Q_N(C)}.$$
+
+The search may choose its verified subset after seeing the ciphertext; omitting positive numerator terms only makes this lower bound smaller.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function CERTIFIED_NUMERATOR(ciphertext, proposals, table):
+    families = empty map
+    for proposal in proposals:
+        require INDEPENDENT_FORWARD(proposal) == ciphertext
+        occupied = COORDINATES_USED(ciphertext, proposal.geometry)
+        id = (proposal.named_geometry, proposal.key[occupied])
+        families[id].origins.add(proposal.origin)
+
+    total = interval(0, 0)
+    for family in families:
+        text = INDEPENDENT_DECRYPT(family.representative)
+        probability = OUTWARD_LANGUAGE_PROBABILITY(text, table)
+        completions = factorial(alphabet_size - occupied_count(family))
+        total = OUTWARD_ADD(total,
+                            OUTWARD_MULTIPLY(probability, completions))
+
+    return total, families
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The cost of building conditional intervals follows the number of distinct history rows used, not the full table size. Scoring then takes $O(n)$ multiplications per text, or fewer grouped powers when histories repeat. Exact mantissas grow with the requested precision and operation count, so implementations normally round outward to a fixed number of significant bits after each step.
+
+Candidate union cost follows the number of supplied witnesses and occupied coordinates. It does not follow the number of unused-key completions because their contribution is the exact integer $(a-k)!$. This collapse is both faster and necessary to avoid counting equivalent completions as independent discoveries.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Log score called probability:** a raw n-gram total is never normalized by history.
+- **Underflow called zero:** a positive long-text probability is stored only as binary64.
+- **Rounded input left ambiguous:** the proof uses mathematical $q/1000$ while the program used a nearby binary64 literal.
+- **One-sided error forgotten:** nearest-rounded arithmetic is presented as a lower or upper bound.
+- **Selected winner only:** the likelihood of the best search result is treated as if it had been chosen in advance.
+- **Duplicate mass:** repeated restarts or changes to unused key coordinates are added again.
+- **Named aliases erased:** parameter names that carry separate declared prior weight are merged only because their decoded texts match.
+- **Partial denominator:** a favorable subset is placed below the fraction bar.
+- **Receipt mismatch:** a numerator and denominator from different ciphertexts, geometries, tables, or priors are combined.
+- **Cap truncation:** the first fixed number of proposals is accepted without returning incomplete.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The validated implementation exhausted 1,082 short words over alphabets of size two and three. It also checked 16 complete tiny ciphertext marginals, all relevant full keys and named geometries, an unused-key multiplicity trap, named-geometry aliases, duplicate and reversed witness lists, empty input, malformed receipts, and cap refusal.
+
+Four 504-letter generated cases exercised hash-like, sticky, constant, and alternating symbol streams. Every nonempty result stayed positive and had relative interval width below $2^{-100}$. A separate program reconstructed the floating literals by rational nearest-even rounding, used a 640-bit binomial exponential enclosure, evaluated words sequentially, and reproduced all required containments. The public tests covered 4,917 interval containments and more than 80,000 independently replayed forward letters.
+
+The implementation's operation-count proof gives a uniform supported nonempty numerator ratio below
+
+$$\frac{P_{\rm hi}}{P_{\rm lo}}<1+2^{-107}.$$
+
+These tests establish arithmetic containment and family accounting. Their generated texts do not measure whether the language model can identify prose in a live cipher search.
+
+A later source-bound composition carried the same interval rules through 52 already-disclosed cases. Its independent checker rebuilt 505 used language-table rows, 2,438,800 conditionals, 620,084 history counts, 9,654 word probabilities, and 10,221 disjoint families including its small controls. It checked 2,817,805 interval containments from 7,428 independently computed binomial exponential enclosures. This larger replay shows that the certified intervals survive a long multi-stage calculation. Because the cases were already consumed, it is an implementation-capability result rather than a fresh model or selection test.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The safest division of labor is deliberate. One implementation produces compact dyadic intervals efficiently. A second implementation starts from the same frozen public inputs but reconstructs literals, exponentials, products, forwards, and family counts by a materially different route. Matching ordinary floating scores would test too little; the audit must prove containment.
+
+Source binding is a separate layer. A mathematically valid probability routine cannot establish that an upstream file is complete or belongs to the same ciphertext. Hash the full request-result chain, verify forward witnesses, and check model and prior identifiers before composition.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_LANGUAGE688.md"
+kind = "design"
+note = "Defines the dyadic exponential enclosure, normalized language product, observed-key-family union, evidence boundary, controls, and terminal results."
+ref = "LOG688"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_language688.py"
+kind = "library"
+note = "Pure outward-rounded arithmetic, normalized order-three probability, canonical family union, and compact dyadic serialization."
+ref = "LOG688"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_language688_kat.py"
+kind = "script"
+note = "Frozen public controller for exhaustive words, tiny complete marginals, long cases, alias traps, refusal tests, and resource limits."
+ref = "LOG688"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_language688_audit.py"
+kind = "audit"
+note = "Separate-code binomial enclosure, rational binary64 reconstruction, sequential probability products, and independent forward census."
+ref = "LOG688"
+
+[[provenance]]
+path = "withmath/logs/688_public_20260906T064350Z_1788677030126485000.json"
+kind = "data"
+note = "Public machine-readable interval, normalization, multiplicity, cap, and long-text results."
+ref = "LOG688"
+
+[[provenance]]
+path = "withmath/logs/688_binomial_audit_1788677043393119000.log"
+kind = "audit"
+note = "Durable separate-code containment and forward-replay receipt."
+ref = "LOG688"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_RETAINED694.md"
+kind = "design"
+note = "Documents the later source-bound interval composition, exact found-mass branches, full replay counts, and consumed-panel scope."
+ref = "LOG694"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_retained694_controls_audit.py"
+kind = "audit"
+note = "Separate-code binomial interval, sequential language-probability, source-forward, family, and denominator replay for the complete composition."
+ref = "LOG694"
+
+[[provenance]]
+path = "withmath/logs/694_full_audit_1788683956475115000.log"
+kind = "audit"
+note = "Durable receipt for 2,817,805 interval containments using 7,428 independent binomial bounds."
+ref = "LOG694"
+
+[[references]]
+title = "Interval Analysis"
+author = "Ramon E. Moore"
+year = 1966
+
+[[references]]
+title = "Validated Numerics: A Short Introduction to Rigorous Computations"
+author = "Warwick Tucker"
+year = 2011

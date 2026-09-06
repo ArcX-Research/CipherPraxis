@@ -1,0 +1,166 @@
+id = "incremental-two-dial-feasibility"
+section = "exact"
+title = "Incremental two-dial feasibility"
+subtitle = "Reject impossible partial Quagmire IV readings without guessing the missing letters"
+status = "VERIFIED"
+status_note = "A separate brute-force oracle agreed on 2,040 complete small-alphabet cases. Two degree-26 plants survived every prefix and ended with independently replayed witnesses. A later integrated control showed that the exact filter became selective only after a character beam had already lost the true path."
+family = "Partial-map exact filtering"
+tags = ["Quagmire IV", "partial plaintext", "CRT", "all-different", "conservative pruning"]
+related = ["quagmire-iv", "two-dial-translation-factorization", "modular-inverse-and-crt", "finite-field-linear-algebra", "all-different-constraints", "constraint-satisfaction-forward-checking", "reproducibility-receipts"]
+summary = "A plaintext proposal can be tested against a periodic two-alphabet cipher before either alphabet is known. Each proposed letter adds one modular equation. Solve the equations modulo the prime factors, require both observed dial coordinates to remain injective, and return one of three answers: feasible with a replayable witness, infeasible after complete proof, or undecided when a resource cap is reached. Only infeasible is safe to prune."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $a(P)$ be the coordinate of plaintext symbol $P$ on one cyclic dial and $b(C)$ the coordinate of ciphertext symbol $C$ on another. Both coordinate maps must be permutations of $\mathbb{Z}_q$. For period class $r$, a proposed pair $(P,C)$ adds one equation involving the free shift $k_r$.
+
+The filter works on a partial record list. It does not need to fill either alphabet first. A **feasible** answer includes complete dials and shifts that replay every record. An **infeasible** answer means every possible completion has been ruled out. **Undecided** means only that the declared enumeration cap was reached.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Two equivalent feasibility forms"
+body = '''
+The supported relations are
+
+$$b(C)-a(P)-k_r\equiv0\pmod q\qquad\text{(Vigenere form)},$$
+
+$$b(C)+a(P)-k_r\equiv0\pmod q\qquad\text{(Beaufort form)}.$$
+
+When the plaintext dial is free, these have the same feasibility set: replacing $a$ with $-a$ converts one form into the other and preserves injectivity. They may produce different displayed witnesses, but testing both does not create two independent pieces of evidence.
+
+Two dial rotations are gauge freedoms. One observed $a$ coordinate and one observed $b$ coordinate may be fixed to zero without losing a physical solution; the shifts absorb those rotations.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **One-shot check:** decide one complete proposed phrase or token list.
+- **Prefix filter:** append records as a language search grows. Once a prefix is proved infeasible, every extension is infeasible too.
+- **Forkable state:** copy a prefix before trying several next letters. Branches must not share mutable records or a latched failure.
+- **Complete-map factorization:** when every residue map is complete, quotient-group factorization is much faster and stronger. Partial records need this linear-and-injective method instead.
+- **Other square-free alphabets:** replace 2 and 13 with all prime factors of $q$. A repeated prime factor needs different algebra and must not be accepted by this implementation.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "What the answer means"
+body = '''
+- Both dials are arbitrary permutations; the period shifts are free.
+- `FEASIBLE` proves only that the current prefix can be extended algebraically. It does not prove that the proposed language is correct.
+- `INFEASIBLE` is exact only after every relevant assignment has been covered by a proved shortcut or complete enumeration.
+- `UNDECIDED` is not evidence for or against the cipher family and must never be changed into rejection.
+- A proposal generator can still miss the true plaintext. Exhausting a word bank excludes only that bank, not every plaintext.
+- The Vigenere/Beaufort equivalence applies to free two-dial feasibility. Extra restrictions on either dial can break it.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Exact decision procedure"
+body = '''
+Start with two cheap checks. At one period class, the partial plaintext-to-ciphertext map must be a bijection on its observed cells. If two period classes are already complete, their quotient must have equal-length cycles because it is conjugate to a dial translation.
+
+Next build the homogeneous modular system for the observed $a$ coordinates, observed $b$ coordinates, and used shifts. For square-free $q$, row-reduce it over each prime factor. At $q=26$ this means $\mathrm{GF}(2)$ and $\mathrm{GF}(13)$. If the nullities are $f_2$ and $f_{13}$, the gauge-fixed linear space contains
+
+$$2^{f_2}13^{f_{13}}$$
+
+assignments. Reject field assignments that already use one residue too often to lift to a permutation. Join survivors with CRT, then apply exact all-different separately to the observed plaintext and ciphertext coordinates.
+
+One injective CRT assignment can always be completed by putting unseen symbols in unused positions. Build that completion and replay every equation. If the complete space is exhausted without a witness, return infeasible. If the cap arrives first, return undecided.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function DECIDE_TWO_DIAL_PREFIX(records, q, period, cap):
+    require q is square-free and every record is in range
+    if one residue map is not locally bijective: return INFEASIBLE
+    if a complete-map quotient has mixed cycle lengths: return INFEASIBLE
+
+    M = BUILD_HOMOGENEOUS_SYSTEM(records, fix_two_rotation_gauges=true)
+    bases = [NULLSPACE(M mod p) for each prime p dividing q]
+    total = PRODUCT(p ^ dimension(basis[p]))
+
+    for factor assignment in at most cap assignments:
+        if a factor residue exceeds its permutation capacity: continue
+        values = CRT_JOIN(factor assignment)
+        if observed a-values are not all different: continue
+        if observed b-values are not all different: continue
+        witness = COMPLETE_UNUSED_COORDINATES(values)
+        if FORWARD_REPLAY(witness, records): return FEASIBLE(witness)
+
+    if total <= cap: return INFEASIBLE
+    return UNDECIDED
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Row reduction is polynomial in the number of observed variables, but null-space enumeration is exponential in its dimensions. At $q=26$, the raw count is $2^{f_2}13^{f_{13}}$. Early prefixes often have large nullity, so a safe implementation may return undecided quickly. Later prefixes can become cheap once repeated symbols reduce the nullity. The useful question is not only whether the filter is correct, but whether it becomes selective before the surrounding search loses the true path.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Cap converted to no.** Stopping after a fixed number of assignments is reported as infeasible.
+- **Only one dial checked.** Plaintext coordinates are injective but ciphertext coordinates are allowed to collide, or vice versa.
+- **Shared-dial shortcut.** A Quagmire III equation is used for a two-dial model and valid Quagmire IV states are removed.
+- **Relation double-counting.** Vigenere and Beaufort are treated as separate free-QIV families even though $a\mapsto-a$ makes their feasibility identical.
+- **Unsafe factor pruning.** A modulo-2 or modulo-13 collision is rejected even though several full modulo-26 coordinates may share that factor residue. The correct capacity is $q/p$ uses per factor value.
+- **Partial map called complete.** A quotient-cycle theorem is applied after filling unknown cells arbitrarily.
+- **Late selectivity ignored.** Controls pass at the final prefix, but the language beam discards truth long before algebra starts pruning.
+- **Fork contamination.** One branch's records or latched failure leak into another branch.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The validated reference was compared with a separately written oracle that directly enumerates both physical dials and derives the shifts. It matched every subset at degree two and period two, every subset at degree three and period one, and every prefix of every ordered pair of complete degree-three maps at period two, under both equation forms: 2,040 decisions in total.
+
+Two random degree-26, period-seven plants survived all 183 prefixes each. Their final systems had nullities $(1,1)$, exactly 26 gauge-fixed linear assignments, and independently replayed forward witnesses. Further checks covered local nonbijection, a nonsemiregular complete-map quotient, a contradiction visible only after all-different enumeration, deliberate cap exhaustion, duplicate records, fork isolation, failure latching, malformed inputs, and artifact mutations. The cap control returned undecided as required.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Correctness and discovery power are different measurements. In two later held-out prose controls, the character beam lost truth at positions 4 and 5. At those exact cuts the filter had rejected zero branches. By position 96 it rejected 8,182 of 8,192 Vigenere branches and had already rejected 4,085 of 4,096 Beaufort branches by position 70. The algebra was powerful, but its information arrived too late. A useful combined solver must preserve early hypotheses or branch on variables that close algebraic components sooner.
+'''
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/QIV_PARTIAL683_DESIGN.md"
+kind = "design"
+note = "Defines the two-dial equations, gauges, factor-capacity rule, three-way terminal, incremental contract, and evidence limits."
+ref = "LOG683"
+
+[[provenance]]
+path = "withmath/scripts/experiments/cross/wm_qiv_partial683.py"
+kind = "solver"
+note = "Target-absent exact reference implementation with forkable prefix state and replayable witnesses."
+ref = "LOG683"
+
+[[provenance]]
+path = "withmath/scripts/experiments/cross/wm_qiv_partial683_audit.py"
+kind = "audit"
+note = "Independent direct-dial oracle, exhaustive small-degree census, adversarial controls, and mutation checks."
+ref = "LOG683"
+
+[[provenance]]
+path = "withmath/logs/683_qiv_partial_controls_20260906T060326Z_12151_2955.log"
+kind = "log"
+note = "Terminal receipt for 2,040 exact decisions, degree-26 prefix plants, and refusal controls."
+ref = "LOG683"
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/QIV_POWER685_DESIGN.md"
+kind = "note"
+note = "Measures when the exact filter becomes selective inside a held-out language beam and records the early-truth-loss timing mismatch."
+ref = "LOG685"
+
+[[provenance]]
+path = "withmath/logs/685_qiv_power_controls_20260906T063351Z_12151_22194.json"
+kind = "data"
+note = "Machine-readable branch statuses, truth ranks, final witnesses, adversaries, and the POWER_FAIL terminal."
+ref = "LOG685"

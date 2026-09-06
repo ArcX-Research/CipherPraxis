@@ -1,0 +1,175 @@
+id = "bidirectional-cross-text-propagation"
+section = "cryptanalysis"
+title = "Bidirectional cross-text propagation"
+subtitle = "Use a proposed letter in one ciphertext to force an unfinished cell in another"
+status = "VERIFIED"
+status_note = "A target-absent control joined a running-text chain to an arbitrary two-dial periodic cipher. Both planted solutions survived a fixed width-512 beam and became the sole paths by row 11. Exhaustive small-alphabet checks covered 66,856 chain inversions and 5,776 supported incremental cipher decisions with no mismatch."
+family = "Coupled-cipher constraint propagation"
+tags = ["cross-text coupling", "running key", "Quagmire IV", "bidirectional propagation", "word beam", "all-different"]
+related = ["key-cancellation", "incremental-two-dial-feasibility", "constraint-activation-timing", "word-prefix-csp", "all-different-constraints", "constraint-satisfaction-forward-checking", "running-key-relation-test", "segment-chain-analysis"]
+summary = "When one plaintext supplies key material for another cipher, do not wait to finish the first plaintext. A candidate letter on either side of the chain equation can force the corresponding letter on the other side. Apply that forced value immediately to word domains, equality rules, all-different constraints, and the second cipher's exact algebra. This can make an exact filter useful several rows earlier while keeping approximate language scores out of the hard-pruning rules."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Suppose plaintext stream $P^9$ is also a running-key input to a second ciphertext. Let $z_8$ be a declared coordinate order for the second cipher. A simple signed chain cell is
+
+$$z_8(P^8_i)=s_Cz_8(C^8_i)+s_Pz_8(P^9_i)+\kappa\pmod{26},$$
+
+where $s_C,s_P\in\{-1,+1\}$ and $\kappa$ is fixed for the cell being tested.
+
+Because both signs are their own inverses, every one-letter assignment propagates in either direction:
+
+$$z_8(P^9_i)=s_P\left[z_8(P^8_i)-s_Cz_8(C^8_i)-\kappa\right]\pmod{26},$$
+
+$$z_8(C^8_i)=s_C\left[z_8(P^8_i)-s_Pz_8(P^9_i)-\kappa\right]\pmod{26}.$$
+
+The lookup is deterministic once the chain cell is fixed. It introduces no new search variable.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Attach the forced letter to a two-dial cipher"
+body = '''
+Let $a$ and $b$ be separate unknown symbol-to-coordinate permutations for another periodic cipher, with one shift $h_r$ per residue. Its two common relations are
+
+$$b(C^9_j)-a(P^9_j)-h_{j\bmod p}=0\pmod{26},$$
+
+$$b(C^9_j)+a(P^9_j)-h_{j\bmod p}=0\pmod{26}.$$
+
+If the same ciphertext symbol appears twice in one residue, both positions share one quotient cell $X_{r,c}=P^9_j$. A proposed $P^8_i$ therefore assigns $X_{r,C^9_i}$ through the chain equation. That assignment can delete incompatible words and add one modular record to the two-dial feasibility system.
+
+Two positions sharing the same quotient cell also give a cheap chain-only invariant:
+
+$$z_8(P^8_i)-z_8(P^8_\ell)
+=s_C\bigl(z_8(C^8_i)-z_8(C^8_\ell)\bigr)\pmod{26}.$$
+
+This rejects an inconsistent language prefix before the more expensive modular check.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Literal running text:** physical letters of the first plaintext key the second cipher.
+- **Coordinate running text:** unknown dial coordinates rather than physical letters become key values. This is a different model with more gauge freedom.
+- **Word-to-block propagation:** choosing one word forces a whole block in the linked plaintext and supplies a continuous language score across word boundaries.
+- **Character-to-cell propagation:** grow the linked plaintext one character at a time and update the unfinished quotient cell immediately.
+- **Several chain cells:** test a frozen finite menu of alphabets, signs, offsets, and constants. Repeat the full selector in every null.
+- **More than two texts:** propagate through a factor graph, but keep each physical alphabet and equality type separate.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Keep exact and approximate evidence separate"
+body = '''
+- The chain cell, alignment, alphabet direction, and modular signs are fixed within one branch.
+- Physical-letter equality and coordinate equality are different types unless a declared map connects them.
+- Word or language scores order and truncate proposals; they are not proofs of impossibility.
+- Equality contradictions, failed injectivity, failed Hall matchings, and exact modular infeasibility may prune.
+- A capped exact check returns undecided and remains eligible.
+- Testing one chain cell on controls does not validate a larger menu automatically.
+- A finite word bank can miss the true text even when every algebraic component is correct.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Propagate after every proposal"
+body = '''
+Represent each repeated `(period residue, ciphertext symbol)` as one plaintext cell. Store the current word domains and the incident cells for every row. When a word or linked-text letter is proposed, assign its cells and push the consequences in both directions through the chain.
+
+Delete words that disagree with an assigned cell. Enforce that distinct ciphertext cells in one residue receive distinct plaintext letters. Run a covering-matching check on the remaining domains. Convert every forced cell to a two-dial modular record and invoke the exact feasibility filter at frozen checkpoints. Keep feasible and undecided states, reject only infeasible states, then apply the fixed language-beam width.
+
+The useful branch order is the one that closes highly connected cells early, not necessarily the next position in reading order.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function EXTEND_COUPLED_STATE(state, proposed_word):
+    child = copy(state)
+    for position, p9_letter in proposed_word:
+        cell = quotient_cell(residue(position), C9[position])
+        require ASSIGN(child, cell, p9_letter)
+
+        p8_letter = CHAIN_FORWARD(C8[position], p9_letter, child.chain_cell)
+        require linked_language_prefix accepts p8_letter
+
+    repeat until stable:
+        remove row words inconsistent with assigned cells
+        assign singleton row/cell values
+        require residue-wise injectivity
+        require covering matching exists for each residue
+        propagate forced p8 letters back to p9 cells
+
+    status = EXACT_TWO_DIAL_FEASIBILITY(child.records)
+    if status == INFEASIBLE: reject child
+    // FEASIBLE and UNDECIDED both remain live
+    child.language_score = SCORE_CONTINUOUS_P8_PREFIX(child)
+    return child
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The chain lookup is constant time per letter. Domain filtering follows the number of incident candidate words. One covering-matching check is polynomial in the residue's cell-domain graph. The two-dial filter is polynomial for modular row reduction but can require exponential null-space enumeration; that is why it has an undecided terminal under a cap.
+
+The practical gain comes from timing. The linked language score keeps plausible paths alive before two-dial algebra becomes selective, while forced cells make that algebra selective earlier. Neither improvement enlarges the exact cipher family.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Wait for complete rows:** the most useful cross-text assignments are withheld until the proposal beam has already lost truth.
+- **One-way implementation:** word choices force linked text, but linked text cannot shrink unfinished word cells.
+- **Shared-dial shortcut:** a one-dial equation is used for a two-dial family and valid states are deleted.
+- **Undecided removed:** a resource cap is converted into an exact contradiction.
+- **Boundary score lost:** each linked block is scored separately, discarding n-grams across word boundaries.
+- **Wrong equality type:** equal physical letters are treated as equal unknown coordinates without applying the relevant dial.
+- **Adversary omitted:** success may come from language alone, with the exact cipher filter adding no discrimination.
+- **Bank miss called family miss:** the true words were never available to the search.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The verified control used thirteen seven-letter rows, a 4,096-word generic-only bank, a width-512 beam, two independent unknown cipher dials, and a period-seven key. Two positive fixtures used different relation signs, linked-text alphabets, chain signs, and constants. Their worst truth ranks before the exact filter became useful were 165 and 124, both inside the frozen width.
+
+At row 8 the planted paths were undecided and correctly retained. At row 9 the exact QIV filter became selective. At row 11 the enabled arms contained exactly one feasible path each, both planted truths. The unfiltered arms still held 4 and 220 locally consistent final paths. Exact witnesses, both cipher forwards, the bidirectional chain forward, and language-score replay all passed.
+
+One adversary preserved the chain and every local period-residue bijection but used seven substitutions that did not admit a common pair of dials. Its planted path became exactly infeasible at row 9 and its enabled beam emptied at row 10. A second adversary preserved a genuine two-dial ciphertext but broke the cross-text link; its language beam emptied at row 7.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The method is a factor-graph view of chained classical ciphers. A proposed linguistic unit is valuable not only for its score but for the exact variables it fixes elsewhere. Conversely, exact algebra can improve language acquisition before a complete decryption exists.
+
+This is most useful when repeated ciphertext symbols create shared cells. If almost every position introduces a new cell, the chain still transfers language information but the exact all-different and modular systems may activate too late.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK89_QIVCHAIN690.md"
+kind = "design"
+note = "Defines the bidirectional chain equations, row/cell propagation, exact QIV checkpoints, control construction, measurements, and limitations."
+ref = "LOG690"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk89_qivchain690.py"
+kind = "solver"
+note = "Target-absent implementation of the paired filter-off/filter-on word beam and exact two-dial coupling."
+ref = "LOG690"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk89_qivchain690_audit.py"
+kind = "audit"
+note = "Separate-code exhaustive chain inversion, small-alphabet direct QIV oracle, control reconstruction, and forward replay."
+ref = "LOG690"
+
+[[provenance]]
+path = "withmath/logs/690_pk89_qivchain_controls_20260906T072108Z_12151_7679.json"
+kind = "data"
+note = "Frozen exact-equivalence, beam telemetry, adversary, witness, and POWER_PASS artifact."
+ref = "LOG690"

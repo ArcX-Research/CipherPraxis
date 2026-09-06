@@ -8,7 +8,7 @@ the browser.
 ## Run it locally
 
 ```bash
-cd cipher-praxis
+cd CipherPraxis
 make dev                    # builds, serves, watches and live-reloads
 ```
 
@@ -35,7 +35,7 @@ present but not required.
 ## Layout
 
 ```
-cipher-praxis/
+CipherPraxis/
   ARCHITECTURE.md      architecture, content schema, brand tokens, status vocabulary
   content/             one TOML file per entry, content/<section>/<id>.toml (see content/AUTHORING.md)
   crates/core          content model + validator/lint, search index, Markdown+MathML, cipher/statistics engine (native tests)
@@ -76,6 +76,13 @@ The build output is static (`dist/`), so any static host works. The app uses cli
 so the host must serve `index.html` for unknown paths (a "SPA rewrite"); `dist/404.html` is a copy
 of the shell for hosts that use that convention instead.
 
+### Share previews
+
+`static/og.png` (2400×1260) is the Open Graph and Twitter card image declared in `static/index.html`;
+its source is `scripts/og-card.html`. To change it, edit the card and re-render it in a headless browser
+at a 1200×630 viewport with device scale 2. LinkedIn and X cache previews, so after deploying a new
+image refresh it with the LinkedIn Post Inspector (linkedin.com/post-inspector) before posting.
+
 ### AWS Amplify Hosting
 
 The repository root carries `amplify.yml` (build spec) and `customHttp.yml` (cache headers), which
@@ -83,7 +90,7 @@ the console picks up automatically. In the console wizard:
 
 | Setting | Value |
 | --- | --- |
-| App name | `cipher-praxis` |
+| App name | `CipherPraxis` |
 | Frontend build command | leave the auto-detected value, or `./scripts/build.sh release`; `amplify.yml` overrides it |
 | Build output directory | `dist` |
 | Build image | default (Amazon Linux 2023); Rust is installed by the `preBuild` phase |

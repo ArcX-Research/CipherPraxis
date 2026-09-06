@@ -1,0 +1,152 @@
+id = "factorial-completion-resource-guards"
+section = "exact"
+title = "Factorial completion resource guards"
+subtitle = "Count or stream missing-map completions before memory grows"
+status = "PROMISING"
+status_note = "The counting and streaming rules are exact. Each solver still needs boundary tests because a pair counter cannot protect an eagerly materialised factorial list."
+family = "Exact enumeration"
+tags = ["partial permutations", "factorial search", "resource caps", "lazy enumeration", "completeness"]
+related = ["partial-permutation-completion-bounds", "zero-aware-cartesian-product-cap", "all-different-constraints", "exhaustive-enumeration", "bound-benchmarks-and-certificates", "candidate-bank-lineage-and-cap-accounting"]
+summary = "A partial permutation with several unused inputs and outputs may have factorially many bijective completions. A safe exact solver counts that work with overflow-safe arithmetic or streams completions one at a time. It never builds an entire factorial list before consulting its cap. If the cap stops the stream, the result is incomplete rather than a proof that no completion exists."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let a partial permutation on an alphabet of size $n$ leave $u$ domain symbols and $u$ image symbols unused. If there are no further restrictions, every bijection between those two sets is a completion, so the family has size
+
+$$u!.$$
+
+For two anchor maps with $u$ and $v$ missing images, a naive pair search can visit as many as $u!v!$ completion pairs. A **resource guard** decides whether that work is admitted before storing it, or consumes the completions lazily while charging each attempted pair to a declared budget.
+
+The guard changes only execution policy. It does not change which completions are mathematically valid, and reaching it never proves that the valid set is empty.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Capped factorial arithmetic"
+body = '''
+To compare $u!$ with a cap $K$ without overflowing a machine integer, multiply one factor at a time and stop before the update whenever
+
+$$p>\left\lfloor\frac{K}{j}\right\rfloor.$$
+
+The same division-before-multiplication rule checks a product of completion counts. Equality is admitted: work is over budget only when its count is greater than $K$.
+
+An upper bound larger than $K$ does not show that the filtered answer set is large. It only shows that a policy which promises to inspect the whole unfiltered family cannot do so under that work cap. A solver may instead use constraint propagation, matching, or a specialised component construction, but it must prove that the replacement covers the same declared family.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Lazy permutation completion:** generate one unused-image permutation at a time and discard it after checking.
+- **Nested anchor pairs:** keep both sides lazy; do not turn the inner generator into a list merely so it can be revisited.
+- **Partial involutions:** use loop and reciprocal-pair components instead of arbitrary permutations, then count the smaller component family.
+- **Constraint-first completion:** apply all-different propagation or matching before enumeration and count only the reduced domains when that count is exact.
+- **Approximate prefix:** returning the first $K$ completions is a heuristic mode with an explicit truncated flag, not exact enumeration.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Missing domains and images are known exactly, and the partial map is injective.
+- Work, accepted-output, semantic-output, and memory caps are separate counters.
+- A completion generator is lazy all the way to the innermost consumer.
+- Any stopped branch carries an incomplete reason through every later join and terminal.
+- Producer and consumer agree on maximum bank size and completion policy before a packet is accepted.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Admit completion work safely"
+body = '''
+Validate the partial map, derive the unused domains and images, and compute an overflow-safe work count. If the declared exact mode requires the full raw family and that family exceeds its work budget, stop before allocation and report the branch as incomplete. Otherwise stream each completion, apply cheap structural checks first, and charge the attempt before expensive group or language work. Keep accepted rows only under their own declared cap. Specialised completion routines may replace the raw factorial loop only after an equality test against exhaustive small cases.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function FACTORIAL_AT_MOST(u, cap):
+    value = 1
+    for j in 2..u:
+        if value > FLOOR(cap / j): return OVER_CAP
+        value = value * j
+    return value
+
+function STREAM_COMPLETION_PAIRS(left, right, limits):
+    require both partial maps are injective
+    require PRODUCER_BANK_LIMITS_MATCH_CONSUMER()
+    if RAW_WORK_POLICY_REQUIRES_PREFLIGHT():
+        a = FACTORIAL_AT_MOST(UNKNOWN_COUNT(left), limits.pairs)
+        b = FACTORIAL_AT_MOST(UNKNOWN_COUNT(right), limits.pairs)
+        if a is OVER_CAP or b is OVER_CAP or a > FLOOR(limits.pairs / b):
+            return INCOMPLETE("completion-pair work cap"), no exact claim
+    checked = 0
+    for a in LAZY_BIJECTIVE_COMPLETIONS(left):
+        for b in LAZY_BIJECTIVE_COMPLETIONS(right):
+            if checked == limits.pairs:
+                return INCOMPLETE("completion-pair work cap"), partial rows marked truncated
+            checked = checked + 1
+            if CHEAP_COMPATIBILITY(a, b): EMIT_UNDER_OUTPUT_CAP(a, b)
+    return COMPLETE, checked
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Raw arbitrary completion takes $\Theta(u!)$ time. Materialising every completion also takes $\Theta(u!\,n)$ memory, while a lazy generator needs only the current permutation and search stack. Constraint propagation can reduce practical work but does not change the worst case unless it proves a smaller exact family.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Cap after allocation.** The program converts every completion to a tuple or list, then begins counting pairs. Memory can fail before the cap is read.
+- **One lazy side.** The outer completions stream, but the inner side is fully materialised for reuse.
+- **Unsafe maximum-unknown setting.** The schema accepts a large missing-symbol count even though its factorial cannot fit the promised memory or wall budget.
+- **Producer-consumer mismatch.** A valid producer emits more physical maps than the consumer's schema permits.
+- **Off-by-one refusal.** Exactly $K$ attempts are rejected even though the contract permits them.
+- **Capped absence called impossible.** No accepted completion appears before the stop, and the partial prefix is reported as an exact empty set.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Use small maps whose completions can be enumerated by an independent reference. Cover no missing symbols, one missing symbol, work exactly at the cap, and work one step above it. Test unequal left and right completion counts, early structural rejection, and a producer bank exactly at and just above the consumer limit. Wrap the generator with a counter that fails if the implementation asks for more items than the budget allows; this catches eager materialisation before ordinary cap records can.
+'''
+
+[[blocks]]
+kind = "example"
+title = "The cap must come before the list"
+body = '''
+A partial map with four unused domains has $4!=24$ raw completions. Under a work cap of twenty, a safe full-family mode returns `INCOMPLETE` before building a list. A streaming heuristic may inspect twenty completions and retain candidates, but it must mark that output truncated. Raising the cap to twenty-four admits the full enumeration; refusing at twenty-four is an off-by-one error.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Factorial counting and lazy permutation generation are standard combinatorics. The cryptanalytic discipline is to bind them to explicit completion, output, and memory terminals so a resource stop cannot become a false exclusion.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK89_UNTIEDCYCLE659_ADAPTER.md"
+kind = "design"
+note = "Defines sparse-anchor completion as a separate resource boundary and withholds live authority until a sparse-shape control passes."
+ref = "LOG659"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk89_untiedcycle659_search.py"
+kind = "script"
+note = "Provides the completion-pair, group, tuple, assignment, output, witness, and fallback cap interfaces that motivate pre-allocation guarding."
+
+[[provenance]]
+path = "withmath/logs/659_untiedcycle_kat_20260906T013701Z_1788658621169040000.log"
+kind = "log"
+note = "Records independent cap terminals for the software/algebra fixture; it does not establish safety for large eagerly materialised completion sets."
+ref = "LOG659"
+
+[[references]]
+title = "The Art of Computer Programming, Volume 4A: Combinatorial Algorithms, Part 1"
+author = "Donald E. Knuth"
+year = 2011

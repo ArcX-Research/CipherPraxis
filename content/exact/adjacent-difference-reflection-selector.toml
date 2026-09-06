@@ -1,0 +1,150 @@
+id = "adjacent-difference-reflection-selector"
+section = "exact"
+title = "Adjacent-difference reflection selector"
+subtitle = "Turn a two-symbol key rule into exact modulo-2 and modulo-13 tests"
+status = "VERIFIED"
+status_note = "A complete six-symbol oracle check and four independent 26-symbol controls agreed with direct forwards. The method is an exact test for supplied complete plaintexts; it does not generate those plaintexts."
+family = "Exact dihedral constraints"
+tags = ["Porta", "reflections", "adjacent differences", "CRT", "hidden alphabet", "exact feasibility"]
+related = ["porta", "modular-arithmetic-z26", "finite-field-linear-algebra", "all-different-constraints", "dihedral-group", "selector-fibre-cardinality-invariant"]
+summary = "A source stream can choose a different reflection at every position without storing an independent row key. Subtract the hidden coordinates of two neighbouring source letters. For an even alphabet of size 26, the resulting feasibility problem splits cleanly: a complement graph modulo 2 and a linear system modulo 13. Joining those two parts gives an exact hidden-alphabet test for any supplied plaintext."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $z$ map physical letters bijectively to $\mathbb Z_{26}$. A source segment $S_0,\ldots,S_n$ defines one row value per output position:
+
+$$h_i=z(S_{i+1})-z(S_i)\pmod {13}.$$
+
+Choose an orientation $\epsilon\in\{-1,+1\}$ and an odd constant $\rho$. Encrypt plaintext $P_i$ as the reflection
+
+$$z(C_i)=-z(P_i)+2\epsilon h_i+\rho\pmod {26}.$$
+
+Each position still uses a fixed-point-free reflection. The row stream may look irregular, but every row comes from one source string and one hidden cyclic order.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "The exact CRT split"
+body = '''
+Move every term to one side:
+
+$$z(P_i)+z(C_i)-2\epsilon[z(S_{i+1})-z(S_i)]-\rho=0\pmod {26}.$$
+
+Modulo 2, the source term vanishes and every odd $\rho$ is one:
+
+$$z_2(P_i)+z_2(C_i)=1.$$
+
+So every observed plaintext/ciphertext pair says that two letters need opposite colours. A self-pair or an odd cycle proves that the supplied plaintext is impossible.
+
+Modulo 13, the same observations are linear equations in the 26 letter coordinates and $\rho$. Translation is a gauge, so one coordinate may be fixed to zero. Compute the full nullspace. A vector can lift to a permutation of $\mathbb Z_{26}$ only when every modulo-13 residue contains exactly two letters and those two letters can be given opposite modulo-2 colours. The Chinese remainder theorem then assigns every letter one unique coordinate from 0 through 25.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Scope"
+body = '''
+- One hidden cyclic coordinate order is shared by plaintext, ciphertext, and source letters.
+- Every row is the difference of two adjacent source coordinates, with one fixed sign.
+- The intercept is odd, so every operation is a fixed-point-free reflection.
+- The plaintext and source alignment are supplied to the test. The method does not discover readable text on its own.
+- The declared alignment and sign family must be searched in full. Choosing them after reading results changes the selection problem.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Test a supplied plaintext exactly"
+body = '''
+Build the opposite-colour graph from every pair $(P_i,C_i)$. Reject immediately if it is not bipartite. Otherwise, for each declared source alignment and each sign, build the modulo-13 equation matrix and enumerate its complete anchored nullspace. Keep only vectors with two letters in each residue. Add one opposite-colour edge between each residue pair and check the graph again. Combine the surviving residue and colour of every letter by CRT, then replay the full reflection equation.
+
+An enumeration limit is a resource guard, not a mathematical rejection. If the nullspace has more assignments than the limit, return `UNDECIDED`.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function ADJACENT_REFLECTION_FEASIBLE(P, C, S, epsilon):
+    G = graph with edge P[i] -- C[i], labelled XOR 1
+    if G has an XOR conflict: return INFEASIBLE
+
+    M = equations over F_13:
+        z[P[i]] + z[C[i]]
+        - 2*epsilon*z[S[i+1]] + 2*epsilon*z[S[i]] - rho = 0
+    add gauge equation z[first_letter] = 0
+
+    for v in COMPLETE_NULLSPACE(M):
+        if each residue in v[z] does not occur exactly twice: continue
+        H = copy of G
+        for each pair of letters with the same residue:
+            add XOR-1 edge between the pair in H
+        if H has an XOR conflict: continue
+        z26 = CRT(v[z] modulo 13, colours from H modulo 2)
+        rho26 = CRT(v[rho], 1)
+        if the scalar forward reproduces C: return FEASIBLE(z26, rho26)
+    return INFEASIBLE
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The modulo-2 gate is linear in the text length. Row reduction over $\mathbb F_{13}$ is polynomial in 27 variables. Complete enumeration costs $13^d$, where $d$ is the anchored nullspace dimension, so implementations need a fail-closed cap. In measured 63-letter controls, only one of 4,096 supplied prose passages survived the modulo-2 gate, and the surviving systems had dimension one or two.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Calling selection generation.** Rejecting almost every supplied passage does not explain how to produce the correct passage.
+- **Checking only modulo 13.** Two letters can share a residue yet collide modulo 26 unless their parity bits are opposite.
+- **Checking only bipartiteness.** The complement graph does not use the source stream and cannot identify an alignment.
+- **Treating a cap as false.** A large nullspace means the answer is unresolved, not impossible.
+- **Counting gauge copies as distinct plaintexts.** Affine coordinate changes can give several alphabet witnesses for the same physical solution.
+- **Using a one-symbol fibre test.** The selector depends on a pair of neighbouring symbols, so cardinality bounds for one-letter selectors do not apply.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The reduced check used an alphabet of size six. For three fixed observations, both signs, and all $6^4$ plaintexts, the algebraic solver's complete accepted set matched direct enumeration of every hidden order and every odd intercept.
+
+Four 26-symbol controls then hid one 63-letter prose passage among 4,096 unchanged passages, every forward and reverse 64-symbol window of a 144-symbol source, and both signs. Two sources were prose and two were cipher-like. Every linked control had exactly one feasible passage/alignment/sign cell, while four histogram-preserving unlinked controls had none. A separate implementation rebuilt all 10,616,832 declared cells and every scalar forward without importing the producer.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Why neighbouring letters add structure"
+body = '''
+Suppose three source coordinates are $4,11,9$. Their adjacent differences modulo 13 are $7$ and $11$. The two output positions therefore use reflection intercepts $\rho+14\epsilon$ and $\rho+22\epsilon$ modulo 26. Changing the absolute origin of every coordinate changes $\rho$ but leaves both differences unchanged. This is why translation can be fixed as a gauge while the relative source motion still selects the rows.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The useful lesson is broader than Porta: when a long key stream is made from local differences in a hidden coordinate system, a model that looks nonlinear in physical letters may become linear after introducing those coordinates. Factor the modulus before searching. One factor may remove the key term entirely and provide a very cheap exact gate.
+'''
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/PK89_PORTADELTA710.md"
+kind = "audit"
+note = "Defines the adjacent-coordinate reflection model, CRT proof, no-repeat scope, control family, and release boundary."
+ref = "LOG710"
+
+[[provenance]]
+path = "withmath/scripts/experiments/cross/wm_pk89_portadelta710_controls.py"
+kind = "solver"
+note = "Exact modulo-2/modulo-13 feasibility test, reduced direct oracle, complete supplied-passage controls, and scalar forwards."
+ref = "LOG710"
+
+[[provenance]]
+path = "withmath/scripts/experiments/cross/wm_pk89_portadelta710_audit.py"
+kind = "audit"
+note = "Separate implementation that rebuilds the complete reduced and 26-symbol control universes."
+ref = "LOG710"
+
+[[provenance]]
+path = "withmath/logs/710_portadelta_controls_20260906T102244Z_12151_5124.json"
+kind = "data"
+note = "Mode-0600 target-absent control artifact with four linked and four unlinked scans."
+ref = "LOG710"

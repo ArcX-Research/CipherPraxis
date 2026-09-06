@@ -1,0 +1,182 @@
+id = "candidate-bank-lineage-and-cap-accounting"
+section = "engineering"
+title = "Candidate-bank lineage and cap accounting"
+subtitle = "Limit distinct results while retaining every physical witness behind each result"
+status = "VERIFIED"
+status_note = "Target-absent interface checks matched capped output to naive all-witness enumeration, replayed every retained witness, and rejected malformed sidecars. This verifies the accounting rule, not plaintext-recovery power."
+family = "Solver data integrity"
+tags = ["candidate banks", "deduplication", "lineage", "caps", "witnesses"]
+related = ["unique-proposal-voting", "k-best-lists", "conjugacy-and-gauge", "group-actions-on-alphabets", "exhaustive-enumeration", "bound-benchmarks-and-certificates", "lexical-band-contextual-reranking", "reproducibility-receipts", "endpoint-specific-control-contracts"]
+summary = "A solver can reach the same plaintext or key class through many physical states. Group those aliases by their complete semantic result before applying an output limit, count the limit in distinct results, and retain every physical witness in a bound sidecar. This prevents aliases from crowding out other answers or becoming accidental extra votes."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $W$ be the physical rows produced by a search and let $\pi:W\to Y$ map each row to the semantic object the next stage consumes. Depending on the solver, $\pi(w)$ may be a full plaintext, a key modulo a gauge, or a completely replayed transform. A physical row identifies its endpoint and the complete route that produced it: parent row, start or shard, structural state, map, phase, cut, transition, and cap status wherever those fields affect replay.
+
+For each distinct result $y$, its **lineage bucket** is
+
+$$B_y=\{w\in W:\pi(w)=y\}.$$
+
+The candidate bank contains distinct $y$ values. A sidecar contains every member of each retained $B_y$, including complete maps, phases, cuts, transition identifiers, and source ranks needed for independent replay. Deduplication removes repeated semantic slots; it does not erase physical explanations.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Count the cap in the quotient bank"
+body = '''
+Let $K$ be the declared semantic-output cap and let $s(y)$ be the frozen bucket score. The retained bank is
+
+$$R_K=\operatorname{Top}_K\{(y,B_y):y\in\pi(W)\}.$$
+
+With $N_{\rm phys}=|W|$ and $N_{\rm sem}=|\pi(W)|$,
+
+$$N_{\rm keep}=\min(K,N_{\rm sem}),\qquad
+N_{\rm drop}=N_{\rm sem}-N_{\rm keep}.$$
+
+These counts mean what they say only if the upstream enumeration completed. Record search completion, every internal cap, $N_{\rm phys}$, $N_{\rm sem}$, $N_{\rm keep}$, and whether $N_{\rm keep}=K$ separately. Reaching a cap means the bank may be truncated; finishing a heuristic budget does not make the search exhaustive.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Plaintext quotient:** all keys or maps that produce the same full plaintext share one bucket.
+- **Gauge quotient:** descriptions related by a proved model symmetry share one canonical key class.
+- **Nested banks:** preserve parent identifiers so a final result can be traced through proposal, partial-map, completed-key, and plaintext stages.
+- **Heuristic endpoint bank:** preserve the start, terminal state, stationarity result, and upstream completion flags. Endpoint replay proves what that row means, not that the optimiser found every possible endpoint.
+- **Witness-dependent score:** if physical rows have different scores, define the bucket score explicitly, such as the maximum with a deterministic tie rule, while retaining all rows.
+- **Streaming top-$K$:** maintain a heap of semantic buckets, but merge a new alias into its existing bucket without consuming another heap slot.
+- **Score once, replay all:** an expensive language model may score one semantic plaintext once, but every physical origin attached to it still receives its own independent cipher replay.
+- **Duplicate record versus alias:** an identical physical row repeated by overlapping scan chunks may be collapsed by its full physical identity. Rows with different source names, offsets, orientations, signs, or keys are aliases even when their plaintext bytes match, so they remain separate witnesses.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The equality test for $\pi(w)$ uses the complete object consumed downstream. Equality on observed cells alone is unsafe when unseen completions can change a later letter.
+- Every witness in a retained bucket independently replays to the bucket's semantic object.
+- The score and total order are fixed before applying the cap.
+- The sidecar is hash-bound to the main bank and cannot be silently shortened or replaced.
+- A downstream stage inherits all upstream caps. It cannot recover a semantic class that an earlier cap discarded.
+- Every child origin resolves to exactly one existing parent record, and following parent links reaches a declared root without a cycle or missing edge.
+- The complete physical table is frozen before plaintext deduplication and is returned or written with the semantic bank. Keeping it only inside a local variable does not preserve provenance for the caller.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Build an alias-safe bank"
+body = '''
+Validate each physical row, resolve its parent chain, and fully replay the route from its declared root. Compute its semantic projection and insert it into a bucket keyed by canonical bytes. Rank buckets, not rows. Apply the declared limit to the ordered bucket list, then write the retained semantic records and their complete witness lists together. Carry the origin graph, count, and completion census into every later stage and treat aliases as provenance, never as independent evidence.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function BUILD_BANK(physical_rows, semantic_cap):
+    buckets = empty map from canonical semantic bytes to bucket
+    counts = INITIAL_CAP_CENSUS()
+    for row in physical_rows:
+        require VALID_PHYSICAL_ROW(row)
+        lineage = RESOLVE_TO_DECLARED_ROOT(row.parent_ids)
+        require lineage has no missing edge or cycle
+        semantic = INDEPENDENT_FULL_REPLAY(lineage, row)
+        key = CANONICAL_SERIALISE(semantic)
+        bucket = GET_OR_CREATE(buckets, key, semantic)
+        APPEND(bucket.witnesses, COMPLETE_WITNESS(row))
+        counts.physical_rows += 1
+    for bucket in buckets:
+        require every witness independently replays to bucket.semantic
+        bucket.score = FROZEN_BUCKET_SCORE(bucket)
+        SORT_AND_DEDUPLICATE_WITNESSES(bucket.witnesses)
+    ordered = SORT_BUCKETS_BY_FROZEN_TOTAL_ORDER(buckets)
+    retained = FIRST(ordered, semantic_cap)
+    counts.semantic_rows = LENGTH(ordered)
+    counts.retained_rows = LENGTH(retained)
+    counts.semantic_cap_reached = LENGTH(retained) == semantic_cap
+    sidecar = HASH_BOUND_WITNESS_SIDECAR(retained)
+    return retained, sidecar, counts and all upstream completion flags
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Hash bucketing is expected $O(N_{\rm phys})$ plus the cost of full replay. Sorting $N_{\rm sem}$ buckets costs $O(N_{\rm sem}\log N_{\rm sem})$. Retaining full lineage uses $O(N_{\rm phys,keep})$ sidecar space; that cost is deliberate because multiplicity and replay evidence would otherwise be lost.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Cap before quotienting.** Many aliases of one answer occupy the bank and hide lower-ranked distinct answers.
+- **Partial-signature merge.** Rows agree on observed cells but differ after completion, so a later bridge or forward transform changes.
+- **Witness deletion.** One representative survives, but key multiplicity, transition coverage, and independent replay can no longer be audited.
+- **Alias voting.** A result gains weight because it has more gauge descriptions or completion labels.
+- **Silent upstream truncation.** A downstream empty result is reported as exclusion even though an earlier node, state, or output cap fired.
+- **Unbound sidecar.** Main-bank rows and witness lists come from different runs or orders.
+- **Representative-only replay.** One map behind a plaintext is checked and the remaining origins are assumed equivalent without running their complete transforms.
+- **Broken parent chain.** A final row names an absent, ambiguous, or cyclic parent and can no longer be tied to a root proposal.
+- **Endpoint proof inflation.** Preserved origins show exactly how a heuristic reached its candidates, but are described as proof that unobserved basins contain no candidates.
+- **Lineage lost at the return boundary.** The solver builds both physical and distinct-plaintext lists, but its caller stores only the latter, so published candidates cannot be traced back to every source cell.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Use arbitrary-symbol fixtures containing deliberate gauge aliases, duplicate boundaries, and distinct completions that agree only on observed cells. Compare the ordered capped bank with a slow reference that enumerates every physical row and groups only after full replay. Permuting alias order must not change semantic output, and every retained witness must pass both forward and inverse checks. Include several endpoints whose complete neighbourhoods collapse to the same plaintext, then verify that semantic scoring happens once while replay still happens once per origin. Force each cap independently and require an explicit incomplete flag rather than a negative conclusion.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Three rows, two answers"
+body = '''
+Suppose physical rows $w_1$ and $w_2$ are different key descriptions but both replay to $y_A$, while $w_3$ replays to $y_B$. With a semantic cap of two, the correct bank is $[y_A,y_B]$ with sidecars $B_{y_A}=\{w_1,w_2\}$ and $B_{y_B}=\{w_3\}$. Capping physical rows first could return $[w_1,w_2]$, falsely hiding $y_B$ and making $y_A$ appear to have two votes.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+This end-to-end lineage invariant was developed in this project to join capped solver stages safely. Quotienting by symmetry, top-$K$ search, and provenance records are established ideas; the claim here is the tested interface rule that applies them together.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK89_BRIDGE588_ALIAS_SAFE.md"
+kind = "design"
+note = "Defines semantic bucketing before the output cap, complete-map equality, full witness sidecars, inherited-cap reporting, and independent replay."
+ref = "LOG589"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk89_bridge589_kat.py"
+kind = "script"
+note = "Target-absent comparison against naive enumeration of every alias across multiple semantic caps."
+
+[[provenance]]
+path = "withmath/logs/589_bridge_kat_20260905T045502Z_1788584102584532000.log"
+kind = "log"
+note = "Frozen receipt for ordered capped-output equality, full witness restoration, and gauge/duplicate checks."
+ref = "LOG589"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK89_SELECTOR615_AUDIT.md"
+kind = "audit"
+note = "Audits complete witness survival through plaintext bucketing, strict cap accounting, process completeness, and full-position replay."
+ref = "LOG615"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_LEXBAND650_INDEPENDENT_AUDIT.md"
+kind = "audit"
+note = "Independently verifies score-once plaintext deduplication, complete origin retention, replay of every physical map, and immediate refusal on replay failure."
+ref = "LOG650"
+
+[[provenance]]
+path = "withmath/logs/650_pk10_lexband_disclosed_replay_20260905T233259Z.log"
+kind = "log"
+note = "Immutable replay receipt for complete final neighbourhoods from several structural endpoints."
+ref = "LOG650"
+
+[[provenance]]
+path = "withmath/scripts/experiments/cross/wm_knownresidual657.py"
+kind = "solver"
+note = "Keeps a physical endpoint list separate from distinct plaintexts inside the solver, illustrating why both objects must survive the caller and reporting boundary."

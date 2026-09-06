@@ -6,9 +6,9 @@ status = "VERIFIED"
 status_note = "The square maps 25 letters one-to-one with coordinate pairs. It is implemented and unit-tested in the Bifid lab. The same component appears in Bifid, Trifid, and twin-square tests, whose results are listed on their own pages."
 family = "Fractionation"
 tags = ["fractionation", "coordinates", "checkerboard", "component"]
-related = ["bifid", "trifid", "playfair", "two-square-four-square", "keyword-mixed-alphabet", "bifid-lab", "g-fractionation"]
+related = ["bifid", "trifid", "digrafid", "playfair", "two-square-four-square", "nihilist", "monome-dinome", "coordinate-columnar-fractionation", "keyword-mixed-alphabet", "bifid-lab", "g-fractionation"]
 summary = "A Polybius square places 25 letters in a 5×5 grid, with I and J sharing one cell. Each letter becomes two digits from 1 to 5: its row and column. By itself, this is a simple substitution into digit pairs. It becomes more useful in Bifid, Trifid, ADFGX-style, and straddling-checkerboard ciphers, which rearrange those digits before turning them back into letters."
-updated = "2026-09-04"
+updated = "2026-09-05"
 
 [[blocks]]
 kind = "definition"

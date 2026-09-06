@@ -1,0 +1,128 @@
+id = "coordinate-orbit-completion"
+section = "exact"
+title = "Coordinate-orbit completion"
+subtitle = "Enumerate every alphabet coordinate system behind one feasible periodic-map path"
+status = "VERIFIED"
+status_note = "A target-absent implementation matched independent enumeration over rotation, reflection, parity, sparse, all-even, and reduced-degree controls. This validates completion after a feasible path is known; it does not validate how that path was acquired."
+family = "Exact algebraic completion"
+tags = ["cyclic alphabet", "coordinate orbit", "CRT", "unit quotient", "physical maps"]
+related = ["residue-bank-crt-join", "units-mod-26", "conjugacy-and-gauge", "modular-inverse-and-crt", "finite-field-linear-algebra", "all-different-enumeration", "shared-cycle-attack", "parameter-versus-plaintext-recovery"]
+summary = "A feasible set of sparse periodic maps may leave several alphabet-coordinate solutions. Enumerate the projective solutions modulo 13, combine them with every compatible parity lift by CRT, require a full permutation, and quotient coordinate rescalings that produce the same physical maps. Report coordinate orbits, physical maps, and plaintexts as separate counts."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $z(L)\in\mathbb Z_{26}$ be the coordinate of letter $L$ on an unknown cyclic alphabet. Shift-free equations from a feasible residue-map path form a homogeneous system
+
+$$Mz=0\pmod {26}.$$
+
+Solve it as two systems over $\mathrm{GF}(2)$ and $\mathrm{GF}(13)$. Fix one translation gauge, such as $z(A)=0$, then enumerate every compatible solution that satisfies
+
+$$\{z(L):L\in A\}=\{0,1,\ldots,25\}.$$
+
+Each surviving coordinate vector determines complete residue shifts, physical cipher-to-plain maps, and a plaintext.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Projective directions, parity lifts, and aliases"
+body = '''
+A nonzero residue solution $v$ modulo 13 represents a projective direction: $v$ and $av$ satisfy the same homogeneous rows for every $a\ne0$. For each direction, enumerate the parity vectors allowed by the $\mathrm{GF}(2)$ rows and join the two coordinates letter by letter:
+
+$$z(L)=\operatorname{CRT}\bigl(z_2(L),z_{13}(L)\bigr).$$
+
+If $u$ is a unit modulo 26, replacing every coordinate by $uz(L)$ and every shift by $uk_r$ preserves the physical equations. The unit group has
+
+$$\varphi(26)=12$$
+
+elements. Unit-scaled coordinate vectors must therefore be quotiented before counting distinct coordinate systems. The safest final identity is the complete physical map tuple, not the literal coordinate vector.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The supplied residue path is already known to be algebraically feasible.
+- Every residue uses the same cyclic alphabet and declared rotation or reflection relation.
+- Translation gauge and unit aliases are handled explicitly.
+- A coordinate solution is accepted only after CRT values are all distinct.
+- Scan, direction, parity, output, and deadline caps are part of the result. Any triggered cap makes the census incomplete.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Complete a feasible path without choosing one witness"
+body = '''
+Reduce the path equations over both prime fields. Enumerate all nonzero projective directions modulo 13 and all parity solutions compatible with each direction. Lift with CRT, apply the all-different test, recover shifts from the observed map pairs, and construct every complete physical residue-map tuple. Group unit-equivalent coordinates, then independently deduplicate physical maps and plaintexts. Forward-replay every emitted position.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function COMPLETE_COORDINATE_ORBITS(path, relation, limits):
+    rows2, rows13 = SHIFT_FREE_ROWS(path) reduced over GF(2), GF(13)
+    for direction13 in PROJECTIVE_NONZERO_SOLUTIONS(rows13):
+        for parity in COMPATIBLE_GF2_SOLUTIONS(rows2, direction13):
+            if LIMIT_REACHED(limits): return INCOMPLETE
+            z = CRT_VECTOR(parity, direction13)
+            if not ALL_DIFFERENT(z): continue
+            shifts = DERIVE_SHIFTS(path, z, relation)
+            maps = COMPLETE_PHYSICAL_MAPS(z, shifts, relation)
+            if not FORWARD_REPLAY(path, maps): reject
+            orbit = CANONICAL_UNIT_ORBIT(z)
+            RETAIN(orbit, maps, plaintext, path origins)
+    return separate counts for raw coordinates, unit orbits, maps, plaintexts
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+If the modulo-13 nullspace has dimension $d_{13}$, the number of nonzero projective directions is
+
+$$\frac{13^{d_{13}}-1}{12}.$$
+
+Each direction may admit up to $2^{d_2}$ parity lifts. The all-different and replay work is linear in the alphabet plus text length for each lift. Exact completion can still be exponential, so direction and parity caps must be independent and observable.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **First witness reported as unique.** An existential solver proves that a completion exists, not that it is the only one.
+- **Coordinate aliases counted as keys.** Unit-scaled coordinates can induce the same physical map tuple.
+- **All-even ambiguity hidden.** Weak parity constraints can produce several coordinate orbits even when every orbit decrypts identically.
+- **Projective zero accepted.** The zero direction cannot label a full alphabet permutation.
+- **Map count confused with plaintext count.** Several maps can agree on every symbol exercised by the ciphertext.
+- **Completion power confused with acquisition power.** Exact completion cannot recover a correct residue path that the upstream proposer never supplied.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The verified panel covered mixed-shift rotation, all-even rotation, mixed-shift reflection, two compatible parity lifts, a deliberately sparse system, and literal degree-six enumeration. One all-even fixture produced 156 raw coordinate vectors and 13 unit orbits but only one physical map and plaintext. A separate auditor reproduced every orbit, map, plaintext, multiplicity, cap, refusal, and forward replay from frozen target-absent artifacts.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Projective finite-field solutions, CRT, and group actions are standard tools. The reusable lesson is endpoint discipline: preserve the full coordinate orbit, quotient only proven aliases, and keep raw-coordinate, physical-map, and observed-plaintext uniqueness separate.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_CYCLEORBIT664.md"
+kind = "design"
+note = "Defines projective-direction enumeration, parity compatibility, CRT lifting, unit quotienting, and the separate completion endpoints."
+ref = "LOG664"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk9_cycleorbit664_core.cpp"
+kind = "solver"
+note = "Exact target-absent coordinate-orbit and complete physical-map exporter."
+ref = "LOG664"
+
+[[provenance]]
+path = "withmath/logs/664_cycleorbit_kat_20260906T024330Z_1788662610678349000.log"
+kind = "log"
+note = "Frozen receipt independently reproduced byte for byte, including orbit/map/plaintext counts and cap gates."
+ref = "LOG664"

@@ -1,0 +1,170 @@
+id = "bounded-permutation-shells"
+section = "search"
+title = "Bounded permutation shells"
+subtitle = "Expand a permutation search by a declared exact distance"
+status = "UNTESTED"
+status_note = "The higher-radius construction is documented from a design and has not been implemented or admitted to controls. Its component-distance bound has separate exact tests, but no recovery-power claim is made for the shell search."
+family = "Permutation neighbourhood search"
+tags = ["permutation shells", "component distance", "bounded search", "deduplication", "completeness"]
+related = ["identity-plus-one-swap-neighborhood", "partial-permutation-completion-bounds", "exhaustive-enumeration", "bound-benchmarks-and-certificates", "candidate-bank-lineage-and-cap-accounting", "unique-proposal-voting", "held-out-gates", "power-analysis"]
+summary = "A bounded permutation shell searches a precisely defined neighbourhood around one or more proposal maps. The distance, allowed permutation class, radius cells, deduplication rule, and completeness flags are part of the method. Component distance is especially useful for reciprocal maps because an entire loop or pair can be retained or released as one unit."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+A **ball** contains every allowed permutation within distance at most $R$ of a proposal bank. A **shell** is the new part added when that bound grows. These terms are meaningful only after the distance and allowed permutation family have been fixed.
+
+For reciprocal maps, every observed component is either a loop $x\mapsto x$ or a pair $x\leftrightarrow y$. Let $E(q)$ be the component set of a partial reciprocal proposal $q$. For a complete allowed involution $r$, define
+
+$$d_E(q,r)=\big|\{e\in E(q):r\text{ disagrees with }q\text{ on }e\}\big|.$$
+
+A pair counts once, not once per endpoint. For a proposal bank $Q$,
+
+$$\rho_Q(r)=\min_{q\in Q}d_E(q,r),\qquad
+B_Q(R)=\{r:\rho_Q(r)\le R\}.$$
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Generate the component ball exactly"
+body = '''
+For one proposal with $m=|E(q)|$, delete each component subset $D$ of size $\min(R,m)$, keep $q\setminus D$, and enumerate every allowed complete involution extending the kept map. After exact deduplication, this produces the whole radius-$R$ ball:
+
+$$B_{\{q\}}(R)=
+\bigcup_{\substack{D\subseteq E(q)\\|D|=\min(R,m)}}
+\{r:r\text{ is allowed and extends }q\setminus D\}.$$
+
+If $r$ disagrees on fewer than $R$ components, pad the deleted set with agreeing components. If $m<R$, deleting all observed components handles the small-map boundary. For a bank, take the union over proposals and deduplicate complete maps; proposal multiplicity is lineage, not extra evidence.
+
+Several evidence banks may use a predeclared rectangular cell instead of one total-radius ball. If a structural state $s$ determines maps $r_g(s)$ for classes $g$, a cell can require
+
+$$\rho_{Q_a}(r_a(s))\le R_a,\quad
+\rho_{Q_b}(r_b(s))\le R_b,\quad
+\rho_{Q_f}(r_f(s))\le R_f.$$
+
+The search family is the declared union of such cells. A cell with anchor limits $3$ and $2$ has maximum anchor total five, but it also contains smaller distances and does not include every partition of five. It is a rectangle, not the full radius-five ball.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Component-deletion shell:** distance counts disagreeing loops and reciprocal pairs.
+- **Transposition shell:** distance is the minimum number of swaps between two complete permutations; this is the metric behind an identity-plus-one-swap neighbourhood.
+- **Hamming shell:** distance counts input symbols whose images differ. It is not interchangeable with component distance.
+- **Rectangular multi-bank shell:** each evidence class receives its own radius, with another class used as an exact consistency gate.
+- **Incremental shell:** run a smaller family first, then search only the set difference introduced by the new cells.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The metric, proposal banks, allowed cycle or fixed-point types, and radius cells are frozen before evaluation.
+- Reciprocal pairs are canonical unordered components and are removed at both endpoints together.
+- Complete permutations, not deletion paths, define candidate identity.
+- A lower bound used for pruning is admissible for the same distance convention.
+- Every resource limit has a separate completeness flag. A valid emitted candidate may survive an incomplete run, but a miss cannot exclude the declared family.
+- Repeated proposal sources and symmetric descriptions do not create votes or consume extra semantic-output slots.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Search a declared shell"
+body = '''
+Choose the smallest radius schedule justified before seeing evaluated output. Build duplicate-free partial pools by releasing whole components, complete or join them only inside the allowed permutation family, and use exact completion-distance lower bounds to reject impossible branches. Recompute every distance on each completed state, merge symmetric witnesses by the complete semantic result, and score only candidates that pass an independent forward transform. Report the searched cells and every completeness flag alongside the results.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function COMPONENT_BALL(proposals, radius, allowed_type):
+    complete = empty map keyed by canonical permutation bytes
+    for proposal in STABLE_UNIQUE(proposals):
+        components = CANONICAL_RECIPROCAL_COMPONENTS(proposal)
+        release_count = MIN(radius, LENGTH(components))
+        for released in COMBINATIONS(components, release_count):
+            partial = REMOVE_WHOLE_COMPONENTS(proposal, released)
+            for candidate in COMPLETE_ALLOWED_INVOLUTIONS(partial, allowed_type):
+                require MIN_COMPONENT_DISTANCE(proposals, candidate) <= radius
+                MERGE_WITNESS(complete, candidate, proposal, released)
+    return complete
+
+function SEARCH_DECLARED_CELLS(banks, cells, score, semantic_cap):
+    results = empty semantic candidate bank
+    flags = INITIAL_COMPLETENESS_FLAGS()
+    for cell in cells:
+        pools = [COMPONENT_BALL(banks[g], cell.radius[g], cell.type[g])
+                 for g in cell.anchor_classes]
+        for state in EXACT_STRUCTURAL_JOIN(pools):
+            if EXACT_REMAINING_CLASS_TEST(state, banks, cell):
+                require every completed map satisfies its declared radius
+                plaintext = INDEPENDENT_DECODE_AND_FORWARD_CHECK(state)
+                MERGE_BY_SEMANTIC_RESULT(results, plaintext, state)
+    ordered = APPLY_FROZEN_SCORE_AND_TIE_RULE(results, score)
+    return FIRST_SEMANTIC_RESULTS(ordered, semantic_cap), flags
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+A proposal with $m$ observed components contributes $\binom{m}{\min(R,m)}$ released partials before deduplication. Each partial may have many completions, and a multi-bank cell may form a Cartesian product of pools. Exact distance bounds can prune that product, but bounded radius does not by itself make the search small. Preflight pool sizes and shard deterministically rather than truncating silently.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Unnamed metric.** “Radius two” is reported without saying whether it counts endpoints, components, swaps, or mismatched images.
+- **Path multiplicity.** The same permutation reached through several deletion subsets occupies several slots or gains several votes.
+- **Rectangle called a ball.** A few selected radius combinations are described as complete coverage of every combination with the same total.
+- **Exact-radius confusion.** An upper-bound cell is said to contain only candidates at exactly that distance.
+- **Partial-only check.** A permissive node bound replaces the exact distance test on completed candidates.
+- **Cap-based exclusion.** An unfinished pool, join, heap, or scoring pass is treated as evidence that no candidate exists.
+- **Adaptive expansion.** A radius or cell is added after inspecting a miss without a fresh evaluation panel.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Before using the search on unknown text, compare every generated ball with independent full enumeration on small alphabets. Include empty and small partial maps, loops, pairs, duplicate proposal paths, several allowed fixed-point types, and radii larger than the observed component count. For each rectangular cell, construct a synthetic state that is absent from every smaller declared family but present in the extension. Check exact accepted-set equality before caps, strict tie handling after caps, independent replay, malformed-input refusal, and separate pool, join, top-list, and scoring completeness flags. Fresh end-to-end controls are still required to measure recovery power.
+'''
+
+[[blocks]]
+kind = "example"
+title = "One released pair on six symbols"
+body = '''
+On the six-symbol set `ABCDEF`, let a partial reciprocal proposal contain the pairs `AB` and `CD`; `E` and `F` are unobserved. Restrict completions to involutions with no fixed points and use component radius one.
+
+Releasing `AB` while retaining `CD` permits `AB/CD/EF`, `AE/CD/BF`, and `AF/CD/BE`. Releasing `CD` while retaining `AB` permits `AB/CD/EF`, `AB/CE/DF`, and `AB/CF/DE`. The baseline appears through both paths and must be stored once with two witnesses. Every retained completion disagrees with at most one observed pair.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+This entry records a higher-radius construction at the design stage. The exact component-distance theorem is tested separately, but the proposed shell generator, finite-budget selector, and end-to-end recovery gate have not been completed. The page therefore defines a reproducible search family without claiming that its chosen radii recover unknown plaintexts.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_RADIUS5_SHELL603_DESIGN.md"
+kind = "design"
+note = "Defines duplicate-free component balls, rectangular dense-and-sparse radius cells, exact final distance checks, cap semantics, and the target-free test plan. No shell implementation or recovery result exists."
+ref = "LOG603"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_EDIT573_EXACT.md"
+kind = "audit"
+note = "Derives the exact minimum component-deletion distance over unfinished reciprocal-map completions."
+ref = "LOG573"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_dihedral573_edit_bound.py"
+kind = "script"
+note = "Independent finite-algebra checks for the component-distance formula used as the shell's admissible lower bound."
+
+[[provenance]]
+path = "withmath/logs/573_edit_kat_20260905T014857Z.log"
+kind = "log"
+note = "Frozen receipt for exact minimum-distance comparisons and reconstructed completions; it does not test the higher-radius shell."
+ref = "LOG573"

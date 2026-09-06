@@ -1,0 +1,208 @@
+id = "reflection-product-cycle-lift"
+section = "algebra"
+title = "Reflection-product cycle lift"
+subtitle = "Recover possible regular cycles from two complete reflections"
+status = "VERIFIED"
+status_note = "The exact lift retained all 240 nondegenerate random degree-twenty-six cases, deferred twenty degenerate cases, and agreed with exhaustive small-degree enumeration. An independent compiled implementation passed all 624 nondegenerate pair checks."
+family = "Permutation-group reconstruction"
+tags = ["reflections", "cycle roots", "dihedral", "involutions", "exact lifting"]
+related = ["permutation-cycles", "dihedral-group", "group-actions-on-alphabets", "semiregular-common-cycle-criterion", "two-involution-component-templates", "shared-cycle-attack", "conjugacy-and-gauge", "factorial-completion-resource-guards"]
+summary = "Two reflection maps can reveal the hidden cycle they reflect. Compose them: the product must be a rotation, hence a power of one regular cycle. Its cycle shape either determines that cycle group directly, leaves a small exact list of roots, proves incompatibility, or enters a separate identity or antipodal branch that carries less information."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let the alphabet have size $n=2p$, where $p$ is an odd prime. A coordinate map $z$ turns constants $h,k\in\mathbb{Z}_{2p}$ into reflections
+
+$$r(x)=z^{-1}(h-z(x)),\qquad s(x)=z^{-1}(k-z(x)).$$
+
+Their product is a rotation in the hidden coordinate system:
+
+$$T=s\circ r=z^{-1}\tau_{k-h}z.$$
+
+The cycle type of $T$ is therefore restricted to that of a power of a regular $2p$-cycle. The lift inverts this statement: from complete $r$ and $s$, enumerate every compatible regular cycle group without searching all alphabet orders.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Exact branch split and nondegenerate lift"
+body = '''
+The cycle type of $T=s r$ determines the branch:
+
+- one $2p$-cycle: $\langle w\rangle=\langle T\rangle$, so $T$ itself can represent the regular cycle group;
+- two $p$-cycles: enumerate exactly $p$ regular square roots;
+- $p$ transpositions or the identity: the observation is degenerate and does not determine a small cycle list;
+- any other cycle type: the two reflections cannot come from one regular $2p$-cycle.
+
+For
+
+$$T=(A_0\ A_1\ \dots\ A_{p-1})(B_0\ B_1\ \dots\ B_{p-1}),$$
+
+the $p$ roots are indexed by $a\in\mathbb{Z}_p$:
+
+$$w_a(A_i)=B_{i+a},\qquad w_a(B_i)=A_{i+1-a}.$$
+
+Each candidate must also satisfy
+
+$$w_a^2=T,\qquad r w_a r=w_a^{-1}.$$
+
+If $r$ preserves the two $T$-orbits and has two fixed points, the inversion condition selects one root; if it exchanges the orbits and has no fixed point, all $p$ roots can survive. Checking that $w_a$ is one $2p$-cycle and satisfies both equations turns the formula into an exact lift rather than a cycle-type guess.
+
+The two degenerate products have their own exact meaning. If $T=1$, then $s=r$ and the second map adds no cycle information. A single reflection with no fixed points is inverted by $2^{p-1}p!$ regular successor cycles; one with two fixed points is inverted by $2^{p-1}(p-1)!$. Each cyclic group has $p-1$ regular generators, so even after quotienting by generator choice this branch is large.
+
+If $T=h$ is a product of $p$ transpositions, then any compatible cycle obeys $h=w^p$. The involutions $r$ and $h$ commute. Their Klein-four action has one two-symbol orbit and $(p-1)/2$ four-symbol orbits. This orbit template supports a separate exact completion search; it is not represented by the $p$ square roots above.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **One full cycle in the product:** no root list is needed; use the product's cyclic group.
+- **Two prime cycles in the product:** use the explicit $p$-root formula.
+- **Twenty-six symbols:** a product made of two thirteen-cycles has exactly thirteen regular square-root candidates before the anchor-reflection test.
+- **Identity product:** the two reflections are equal. Keep the merged reflection, but do not claim that it identifies a cycle.
+- **Antipodal product:** $p$ transpositions reveal the opposite-pair map $h=w^p$. Complete the one two-orbit plus $(p-1)/2$ four-orbit template separately.
+- **Several reflections:** lift one informative pair, then require every other reflection to belong to the resulting dihedral set. The stronger joint test is [Semiregular common-cycle criterion](/algebra/semiregular-common-cycle-criterion).
+- **Several candidate banks:** try every residue pair as anchors. An early pair may be equal, antipodal, or too sparse even when a later pair identifies the cycle. Intersect every remaining bank with the recovered powers or reflection coset, and deduplicate complete outputs only after retaining their anchor and proposal origins.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Both input maps are complete involutions on the same $2p$ symbols.
+- They are claimed to be reflections of one regular cycle, not merely arbitrary involutions.
+- Identity and antipodal products use separate completion branches. They are weak observations, not contradictions.
+- A returned successor map is a letter-to-successor permutation. It is not automatically a printed alphabet order; rotation and generator-unit gauges remain.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to use the lift"
+body = '''
+Compose two recovered reflections and inspect the product's complete cycle decomposition. Reject impossible types, route degenerate types to their own templates, and apply the direct or two-orbit branch to obtain a small list of regular-cycle generators. Test the inversion identity against the anchor reflection, canonicalise generators that span the same cyclic group, and fit any remaining reflection phases as powers of that group. Independently rebuild every reflection and forward transform before scoring language.
+
+When inputs are banks of partial maps, completion and lifting are separate steps. Enumerate all declared anchor pairs, complete an anchor only within a guarded resource budget, and record sparse, identity, and antipodal pairs as unresolved fallbacks. A cycle recovered from one informative pair must still extend one candidate in every bank. A capped or fallback-only result is not an incompatibility proof.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function LIFT_TWO_REFLECTIONS(r, s, p):
+    require r and s are complete involutions on 2*p symbols
+    T = COMPOSE(s, r)
+    cycles = CYCLE_DECOMPOSITION(T)
+    if cycles have lengths [2*p]:
+        candidates = [T]
+    else if cycles have lengths [p, p]:
+        name cycles A[0..p-1] and B[0..p-1]
+        candidates = []
+        for a in Z_p:
+            define w by w(A[i]) = B[(i+a) mod p]
+                        and w(B[i]) = A[(i+1-a) mod p]
+            require COMPOSE(w, w) == T
+            candidates.append(w)
+    else if cycles are identity:
+        return IDENTITY_BRANCH(merged reflection r)
+    else if cycles are p transpositions:
+        require COMPOSE(r, T) == COMPOSE(T, r)
+        return ANTIPODAL_BRANCH(r, opposite_pair_map T)
+    else:
+        return IMPOSSIBLE
+    keep w only if w is one 2*p-cycle
+                   and COMPOSE(r, w, r) == INVERSE(w)
+    group candidates by the cyclic group they generate
+    return canonical groups with every generating witness
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Cycle decomposition and identity checks are $O(p)$ per map. The informative two-orbit case creates exactly $p$ candidate roots, so the lift is linear in the alphabet size rather than factorial in it. Once a cycle is fixed, three remaining class exponents can be fitted in $26^3$ evaluations in the recorded degree-twenty-six application.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Accepting any uniform cycle type:** the product must fit the exact power structure, and a proposed root must satisfy the anchor inversion identity.
+- **Rejecting a degenerate product:** identity and antipodal products carry less information but have valid, separate completion branches.
+- **Applying the square-root formula to the antipode:** $w^p=h$, not $w^2=h$; the two-prime-cycle lift is the wrong branch.
+- **Counting generators as groups:** the identity branch has $p-1$ regular generators for each cyclic group.
+- **Confusing generators with groups:** unit powers of one regular cycle are different successor maps for the same cyclic group.
+- **Using a complete-map theorem on partial maps:** incomplete reflections require a separate extension or component search.
+- **Fixed-anchor blind spot:** forcing the first two residue banks as anchors misses a valid state when that pair is tied, antipodal, or less observed than another pair.
+- **Unguarded completion:** a pair cap is checked only after one anchor's factorial completion list has already been built.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The reference implementation retained the planted group in all 240 nondegenerate random degree-twenty-six cases and explicitly deferred twenty degenerate cases. Exhaustive checks over all 120 anchored cycles at degree six and all 362,880 at degree ten agreed with the lift. A separate compiled implementation passed 624 nondegenerate pair checks. The same suite verified that emitted successor maps reconstruct the supplied reflections rather than merely matching their product cycle type.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Two three-cycles"
+body = '''
+Let $p=3$ and
+
+$$T=(0\ 1\ 2)(3\ 4\ 5).$$
+
+For $a=0$, the formula gives
+
+$$0\mapsto3\mapsto1\mapsto4\mapsto2\mapsto5\mapsto0,$$
+
+one six-cycle whose square is $T$. The choices $a=1$ and $a=2$ give the other two regular square roots. A supplied anchor reflection can retain one or more of them through $rwr=w^{-1}$.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Products of reflections and conjugacy of cycle types are standard group theory. The explicit two-orbit lift, its exact branch boundary, and the independently checked enumeration interface were developed in this project as a cryptanalytic reduction.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK8910_THEORIST550_GAP.md"
+kind = "note"
+note = "Derivation of the nondegenerate two-reflection lift, exact root formula, degenerate branches, gauges, and evidence summary."
+ref = "LOG552"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_dihedral552_exact.py"
+kind = "solver"
+note = "Reference implementation of the complete-map lift and reconstruction checks."
+
+[[provenance]]
+path = "withmath/logs/552_dihedral_20260904T220818Z.log"
+kind = "log"
+note = "Exact small-degree enumerations, random degree-twenty-six controls, degenerate deferrals, and independent compiled parity checks."
+ref = "LOG552"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK89_UNTIEDCYCLE659_ADAPTER.md"
+kind = "design"
+note = "Generalises cycle reconstruction to candidate banks, every residue-anchor pair, and explicit sparse or degenerate fallbacks."
+ref = "LOG659"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk89_untiedcycle659_search.py"
+kind = "solver"
+note = "Reference all-anchor implementation for rotation powers, reflection cosets, root aliases, and fallback accounting."
+
+[[provenance]]
+path = "withmath/logs/659_untiedcycle_kat_20260906T013701Z_1788658621169040000.log"
+kind = "log"
+note = "Pure-symbol gate covering informative, tied, antipodal, and globally underidentified control branches without live input."
+ref = "LOG659"
+
+[[references]]
+title = "Abstract Algebra"
+author = "David S. Dummit and Richard M. Foote"
+year = 2004
+
+[[references]]
+title = "Permutation Groups"
+author = "John D. Dixon and Brian Mortimer"
+year = 1996

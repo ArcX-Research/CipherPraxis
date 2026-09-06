@@ -6,9 +6,9 @@ status = "CLOSED"
 status_note = "The free periodic Porta solver passed all three target-length controls at 63, 95, and 126 letters. Every result in the three measured target zones failed the language check, ruling out free periodic Porta in the two fixed orders at those lengths. The Porta autokey test cannot pass its 144- and 504-letter controls."
 family = "Polyalphabetic substitution"
 tags = ["periodic", "reciprocal", "polyalphabetic", "half-alphabet"]
-related = ["beaufort", "vigenere", "autokey", "digraphic-slide", "periodic-substitution-dp", "exact-dynamic-programming", "g-reciprocal-cipher", "g-period"]
+related = ["beaufort", "vigenere", "autokey", "digraphic-slide", "sympathetic-alphabet-dial", "periodic-substitution-dp", "exact-dynamic-programming", "reflection-product-cycle-lift", "g-reciprocal-cipher", "g-period"]
 summary = "Porta splits the alphabet into two groups of 13. Each key-letter pair, such as AB or CD, chooses one rotation that swaps the two halves. There are 13 distinct tables. The same operation decrypts, and a letter never maps within its own half. An exact cyclic dynamic program solved one free Z13 key value per coset. Separate tests covered word keys and plaintext autokey."
-updated = "2026-09-04"
+updated = "2026-09-06"
 
 [[blocks]]
 kind = "definition"
@@ -25,6 +25,12 @@ kind = "equations"
 title = "Key classes and invariants"
 body = '''
 Key letters in the same pair (A/B, C/D, ...) select the same table, so the observable key is the vector $(t_0, \dots, t_{m-1}) \in \mathbb{Z}_{13}^m$ rather than a word. A sign-reversed tableau ($t \mapsto -t$) is absorbed into the free-key family, so it is not a separate trial. Because a letter never encrypts within its own half, a plaintext letter and its ciphertext differ in half at every position: $\lfloor x/13 \rfloor \ne \lfloor \operatorname{pos}_A(c_i)/13 \rfloor$. In a word-keyed Porta an ordinary word can produce only two or three distinct tables, which gives a period-7 text an unusually small number of substitution classes.
+
+Write a symbol as $(a,h) \in \mathbb{Z}_{13} \times \{0,1\}$, where $h$ selects the half. Table $t$ acts as
+
+$$R_t(a,0)=(a+t,1), \qquad R_t(a,1)=(a-t,0).$$
+
+Each $R_t$ is a fixed-point-free involution. Moreover, $R_sR_t$ is a rotation by $t-s$ on one half and the inverse rotation on the other. With the hidden-cycle labelling $(a,0) \mapsto 2a$ and $(a,1) \mapsto 1-2a \pmod{26}$, every $R_t$ is a reflection of one 26-cycle. This gives unknown-order Porta a dihedral common-cycle representation rather than 13 unrelated substitutions.
 '''
 
 [[blocks]]
@@ -133,6 +139,12 @@ body = '''
 The closure is scoped: free periodic Porta in the straight and one keyword-mixed order on three measured zones of 63, 95 and 126 letters, with a demonstrated control power of 3/3. It says nothing about Porta over an arbitrary order or a Porta layer inside a composite.
 '''
 
+[[blocks]]
+kind = "history"
+body = '''
+Giambattista della Porta's name links two different alphabet mechanisms. His *De Furtivis Literarum Notis* (1563) is a major cryptographic treatise associated with cipher wheels and reciprocal substitution. His earlier *Magia Naturalis* (1558) popularized the physically mistaken “sympathetic” magnetic needle surrounded by an alphabet dial. The historical dial is not the Porta cipher, but both show how a shared alphabet order and a moving index can turn a communication interface into a cipher mechanism.
+'''
+
 [[provenance]]
 path = "withmath/wm_periodic_porta_dp.py"
 kind = "solver"
@@ -161,3 +173,15 @@ ref = "logs/185_autokey_audit.log"
 title = "De Furtivis Literarum Notis"
 author = "Giovanni Battista della Porta"
 year = 1563
+url = "https://books.google.com/books?id=sc-Zaq8_jFIC"
+
+[[references]]
+title = "On Secret Writing"
+author = "University of Oklahoma Libraries"
+url = "https://galileo.ou.edu/exhibits/secret-writing.html"
+
+[[references]]
+title = "How to Send a Secret Message from Rome to Paris in the Early Modern Period"
+author = "Christoph Sander"
+year = 2022
+url = "https://brill.com/view/journals/esm/27/5/article-p426_3.pdf"

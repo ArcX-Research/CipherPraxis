@@ -6,9 +6,9 @@ status = "VERIFIED"
 status_note = "These works are standard sources for the listed cipher types. This bibliography makes no experimental claim."
 family = "Literature"
 tags = ["bibliography", "classical ciphers", "history"]
-related = ["vigenere", "beaufort", "porta", "quagmire-iii", "alberti-progressive", "chaocipher", "bifid", "trifid", "hill-cipher", "playfair", "gromark", "condi", "columnar-transposition", "literature-cryptanalysis-statistics"]
+related = ["vigenere", "beaufort", "porta", "quagmire-iii", "alberti-progressive", "chaocipher", "bifid", "trifid", "digrafid", "hill-cipher", "playfair", "gromark", "gronsfeld", "condi", "nihilist", "baconian", "ragbaby", "monome-dinome", "columnar-transposition", "literature-cryptanalysis-statistics"]
 summary = "These sources cover Alberti's disc, early polyalphabetic ciphers, nineteenth-century field ciphers and later fractionation, Hill's matrix cipher, American Cryptogram Association types, and Chaocipher. Kahn and Bauer give broad histories. Friedman's Military Cryptanalysis explains the classic attacks. Original works document the constructions themselves."
-updated = "2026-09-04"
+updated = "2026-09-05"
 
 [[blocks]]
 kind = "notes"

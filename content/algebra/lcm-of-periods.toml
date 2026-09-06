@@ -6,7 +6,7 @@ status = "VERIFIED"
 status_note = "The lcm, gcd, and coprime-residue rules are exact. Compound-key controls reached z +51 and +27, while target tests found nothing for inner periods 2 to 13. The same rules support the remaining-period screen after alignment and the residue-graph solvers."
 family = "Number theory"
 tags = ["period", "lcm", "gcd", "decimation", "compound key", "coprime"]
-related = ["residue-class-graphs", "linear-recurrences-lcg", "matrix-invertibility-mod-26", "modular-inverse-and-crt", "compound-periodic-key", "vigenere", "exact-period-alignment", "kasiski-examination", "coincidence-lag-profile", "g-residue-class", "g-coset"]
+related = ["residue-class-graphs", "linear-recurrences-lcg", "matrix-invertibility-mod-26", "modular-inverse-and-crt", "compound-periodic-key", "additive-stream-wheels", "vigenere", "exact-period-alignment", "kasiski-examination", "coincidence-lag-profile", "g-residue-class", "g-coset"]
 summary = "Add two repeating keys and the result repeats after the least common multiple of their periods. Read every n-th value from a periodic stream and its new period is the old period divided by a gcd. If two periods are coprime, one full cycle visits every pair of remainders exactly once. A period-7 key and a period-9 key therefore cover all pairs in 63 positions. These rules set search sizes and define graphs for exact solvers."
 updated = "2026-09-04"
 

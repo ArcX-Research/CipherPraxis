@@ -1,0 +1,213 @@
+id = "semiregular-common-cycle-criterion"
+section = "algebra"
+title = "Semiregular common-cycle criterion"
+subtitle = "Test complete reflections exactly and reject impossible partial mixed powers early"
+status = "VERIFIED"
+status_note = "The complete-map criterion agreed with full cycle enumeration on all 7,200 degree-six reflection triples, retained all 1,000 planted degree-twenty-six triples, and rejected two adversarial constructions that pass weaker pairwise checks."
+family = "Permutation-group reconstruction"
+tags = ["semiregular action", "group closure", "reflections", "common cycle", "fixed points"]
+related = ["reflection-product-cycle-lift", "permutation-cycles", "dihedral-group", "group-actions-on-alphabets", "conjugacy-and-gauge", "two-involution-component-templates", "modular-inverse-and-crt"]
+summary = "Pairwise reflection products can each look like legal rotations and still fail to come from one hidden cycle. The missing joint condition is semiregularity: no nonidentity product may fix a symbol. For complete reflections on twice an odd-prime number of symbols, commuting products plus this rule exactly characterise common-cycle compatibility. For partial maps, one known fixed image together with one known moved image in the same mixed power is an exact rejection witness."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+A permutation group $H$ acting on a set $X$ is **semiregular** when every point stabiliser is trivial. Equivalently,
+
+$$g\ne1\quad\Longrightarrow\quad g(x)\ne x\quad\text{for every }x\in X.$$
+
+Take one complete involution $r$ as an anchor and other complete involutions $s_i$. Put
+
+$$T_i=s_i r,\qquad H=\langle T_i\rangle.$$
+
+If all maps are reflections of one regular cycle $w$, then every $T_i$ is a power of $w$. The $T_i$ commute, and every nonidentity element of $H$ is fixed-point free. These are joint constraints: checking each pair product's cycle type alone is weaker.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Exact criterion in degree twice an odd prime"
+body = '''
+On $|X|=2p$ symbols for odd prime $p$, complete reflection maps admit one common regular cycle exactly when
+
+$$H=\langle s_i r\rangle\text{ is abelian and semiregular}.$$
+
+Semiregularity forces $|H|$ to divide $2p$, so its possible orders are $1,2,p,2p$.
+
+- If $|H|=2p$, the square-free abelian group is cyclic and acts regularly.
+- If $|H|=p$, its two regular orbits can be interleaved into a compatible $2p$-cycle.
+- If $|H|=2$, write its nonidentity element as $h$. It is fixed-point-free and becomes the antipode $w^p$. The Klein-four action $\langle r,h\rangle$ has one two-symbol orbit and $(p-1)/2$ four-symbol orbits, the standard reflection-and-antipode template.
+- If $|H|=1$, every supplied reflection equals the anchor. The anchor alone leaves the cycle underdetermined.
+
+Because $rT_i r=T_i^{-1}$ for every generator and $H$ is abelian, the anchor acts by inversion on all of $H$, as a reflection must.
+
+For partial rotation maps $U,V$ and an exponent $j$, conservatively form the known cells of
+
+$$D_j=V U^{-j}.$$
+
+A power of a regular cycle is either the identity, which fixes every symbol, or is fixed-point-free. Therefore
+
+$$D_j(x)=x\quad\text{and}\quad D_j(y)\ne y$$
+
+on any two known cells is an exact contradiction. Equivalently, if two partial rotation words agree at one jointly known input but disagree at another, they cannot be powers of the same regular cycle. If $U$ and $V$ really belong to one cyclic group, every $D_j$ is a group power, so one failing exponent rejects the map pair.
+
+For a twenty-six-cycle, the exponent arithmetic has the Chinese-remainder split
+
+$$\mathbb{Z}_{26}\cong\mathrm{GF}(2)\times\mathrm{GF}(13).$$
+
+If $U=w^a$ and $V=w^b$, then $D_j=w^{b-ja}$. Its exponent may be tracked as the pair
+
+$$\bigl(b-ja\bmod 2,\ b-ja\bmod 13\bigr).$$
+
+Scanning $j=0,\ldots,25$ visits every compatible parity and modulo-thirteen exponent pair once. The split helps organise the search, but the rejection certificate still comes from the literal partial permutation: one known fixed cell and one known moved cell in the same mixed word.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Complete maps:** abelian plus semiregular is an exact compatibility test in the stated degree.
+- **Partial maps:** a discovered fixed point or mixed-power disagreement is an exact rejection, but passing known cells is only necessary.
+- **Periodic rotation maps:** for $F_i=w^{k_i}$, every relative map $F_iF_0^{-1}$ is a rotation. Compare untied residue classes without assuming that any two use the same exponent.
+- **Periodic reflection maps:** for $B_i=w^{k_i}r$ with $rwr=w^{-1}$, each $B_i$ is an involution and $B_iB_0=w^{k_i-k_0}$. The same rotation-word cut applies.
+- **One informative pair:** use the [Reflection-product cycle lift](/algebra/reflection-product-cycle-lift) to enumerate the compatible cycles directly.
+- **Other degrees:** semiregularity remains necessary. Sufficiency and group-order cases must be proved again for the new degree.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- All complete maps are involutions on the same $2p$ symbols and have an individually legal reflection fixed-point type.
+- The claim is compatibility with one regular cycle, not proof that a cipher actually uses that model.
+- Closure is computed as literal permutations. Two different algebraic words that produce the same map are one group element.
+- On partial assignments, never promote a passing necessary cut to a sufficiency claim.
+- A partial composition defines an output only when every edge of its path is known. Unknown edges are not guessed, completed with identity, or borrowed from another candidate.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Closure test"
+body = '''
+Compose every candidate reflection with the anchor. Check that the resulting rotations commute, then close them under composition. Reject if a nonidentity closure element fixes any letter. An equivalent fast check is that two distinct closure elements may not agree at even one letter: their quotient would then have a fixed point. For complete maps the surviving closure gives the exact compatibility decision.
+
+For partial maps, choose relative words $U,V$ and scan every allowed exponent $j$. Walk $U^{-1}$ exactly $j$ times and then $V$, retaining only paths whose every edge is known. Reject the map pair if the resulting partial $D_j$ contains both a fixed and a moved cell. Re-run this monotone cut whenever new map cells arrive. Surviving every exponent is unresolved, not a compatibility proof.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function COMMON_CYCLE_COMPATIBLE(anchor r, reflections S, p):
+    require every map is a complete involution on 2*p symbols
+            with a legal reflection fixed-point type
+    generators = [COMPOSE(s, r) for s in S]
+    for u in generators, v in generators:
+        if COMPOSE(u, v) != COMPOSE(v, u): return false
+    H = CLOSURE_UNDER_COMPOSITION(generators, identity)
+    if size(H) > 2*p: return false
+    for g in H:
+        if g != identity and any g[x] == x: return false
+    return true
+
+function PARTIAL_COMMON_CYCLE_CUT(partial rotations U, V, n):
+    U_inverse = CONSERVATIVE_PARTIAL_INVERSE(U)
+    for j in 0..n-1:
+        D = V
+        repeat j times:
+            D = CONSERVATIVE_COMPOSE(D, U_inverse)
+        known_fixed = any x where D[x] is known and D[x] == x
+        known_moved = any y where D[y] is known and D[y] != y
+        if known_fixed and known_moved:
+            return CONFLICT(j, one fixed witness, one moved witness)
+    return UNRESOLVED
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+In the admitted degree, a compatible closure has at most $2p$ elements. Literal closure and all-pairs agreement checks therefore cost polynomial time in the alphabet size; at degree twenty-six the implementation stores at most twenty-six accepted permutations. This is tiny beside enumerating arbitrary alphabet orders.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Pairwise-only testing:** legal cycle types and pairwise commutation do not rule out a mixed group word that fixes part of the alphabet.
+- **Checking one base point:** an action can be free on one orbit and trivial on another. Every letter must be checked.
+- **Word multiplicity:** different products may represent one permutation and must be deduplicated before the group order is read.
+- **Partial sufficiency:** unknown images can later create a fixed point or break commutation.
+- **Checking only first powers:** $U$, $V$, and $VU^{-1}$ can look legal while $VU^{-j}$ exposes the mixed fixed-and-moved witness for another $j$.
+- **Dropping one CRT component:** modulo-thirteen exponents alone cannot distinguish an ordinary rotation from its antipodal partner; parity alone collapses the thirteen-step structure.
+- **Invented partial paths:** composition crosses an unknown edge and treats the absent image as fixed, manufacturing a contradiction.
+- **All-$j$ survival overclaim:** no mixed witness is visible, but unknown cells may still prevent every complete common-cycle extension.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The complete-map implementation matched actual full-cycle enumeration for all 7,200 triples of legal degree-six reflections; 474 triples were compatible. It retained all 1,000 planted degree-twenty-six triples. Two adversarial examples were rejected, including one whose pair products have legal cycle shapes and commute but whose mixed product fixes an entire orbit. For a partial-map test, restrict genuine powers to many known-domain subsets and require every restriction to survive; enumerate every minimal fixed-and-moved two-cell certificate and require rejection. These checks establish the algebraic criterion, not the power of any upstream map-recovery search.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Why pairwise cycle shapes are not enough"
+body = '''
+On $X=\{0,1\}\times\mathbb{Z}_{13}$ define
+
+$$U(e,x)=(e,x+1),$$
+
+$$V(0,x)=(0,x+2),\qquad V(1,x)=(1,x+3).$$
+
+$U$ and $V$ commute, and both move every point. But $VU^{-2}$ is the identity on the whole first orbit and moves the second orbit by one. The group is not semiregular, so these rotations cannot all be powers of one regular twenty-six-cycle.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Semiregular permutation actions are standard group theory. The exact common-cycle characterisation in degree twice an odd prime, the mixed-word cut, and its use as a cryptanalytic compatibility oracle were derived and checked in this project.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK8910_THEORIST550_GAP.md"
+kind = "note"
+note = "Semiregularity counterexample, complete-map characterization, partial-map cut, and evidence summary."
+ref = "LOG556"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_dihedral556_joint.py"
+kind = "solver"
+note = "Independent complete-map closure test and adversarial fixtures."
+
+[[provenance]]
+path = "withmath/logs/556_dihedral_joint_20260904T224207Z.log"
+kind = "log"
+note = "Degree-six exhaustive comparison, degree-twenty-six planted controls, and adversarial rejections."
+ref = "LOG556"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk89_untiedcycle655_theory.py"
+kind = "script"
+note = "Defines conservative partial powers and the fixed-and-moved mixed-word rejection witness."
+ref = "LOG655"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk89_untiedcycle659_search.py"
+kind = "solver"
+note = "Applies the mixed-word cut across every non-anchor residue bank before exact common-cycle extension."
+ref = "LOG659"
+
+[[provenance]]
+path = "withmath/logs/659_untiedcycle_kat_20260906T013701Z_1788658621169040000.log"
+kind = "log"
+note = "Target-absent software/algebra receipt comparing cut-off and cut-on output sets across all residue-anchor pairs."
+ref = "LOG659"
+
+[[references]]
+title = "Permutation Groups"
+author = "John D. Dixon and Brian Mortimer"
+year = 1996
+
+[[references]]
+title = "Permutation Groups"
+author = "Peter J. Cameron"
+year = 1999

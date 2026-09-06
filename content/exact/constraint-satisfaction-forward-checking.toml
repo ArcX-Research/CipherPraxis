@@ -6,9 +6,9 @@ status = "VERIFIED"
 status_note = "The method assigns word rows under fixed column substitutions, solving a planted control in 244 nodes. It also solves crib-plus-keyword equations over alphabet positions, recovering planted answers at 100% from 13- to 20-letter cribs with scores -4.12 to -4.27. A third form tiles finite word lists. Every tool prints its control before target results."
 family = "Constraint programming"
 tags = ["CSP", "forward checking", "backtracking", "MRV", "node budget", "all-different"]
-related = ["word-prefix-csp", "all-different-enumeration", "cp-sat-and-smt-solvers", "exhaustive-enumeration", "all-different-constraints", "crib-driven-alphabet-recovery", "crib-dragging", "quagmire-iii", "dictionary-attack", "planted-controls", "g-forward-checking"]
-summary = "A constraint satisfaction problem gives each variable one value from a fixed set while obeying every rule. Forward checking removes newly impossible choices from unassigned variables after each step. If any variable has no choices left, the solver backs up at once. Choosing the variable with the fewest options next keeps the search small. In cryptanalysis, variables may be row words, positions in an unknown alphabet, or tiles. Cipher equalities and one-to-one mappings supply the rules."
-updated = "2026-09-04"
+related = ["word-prefix-csp", "all-different-enumeration", "cp-sat-and-smt-solvers", "exhaustive-enumeration", "all-different-constraints", "maximum-weight-bipartite-assignment", "finite-field-linear-algebra", "modular-inverse-and-crt", "crib-driven-alphabet-recovery", "crib-dragging", "quagmire-iii", "dictionary-attack", "planted-controls", "g-forward-checking"]
+summary = "A constraint satisfaction problem gives each variable one value from a fixed set while obeying every rule. For a multipartite search, precompute which values from different parts can coexist, choose the part with the fewest remaining values, and update only its neighbours. Rollback modular state and Hall-style all-different checks add global pruning. Safe memoization keys the entire future state and records failure only after that subtree is fully searched."
+updated = "2026-09-06"
 
 [[blocks]]
 kind = "definition"
@@ -42,6 +42,35 @@ $$[\,c_r[b] = c_q[b]\,] \iff [\,w_r[b] = w_q[b]\,],$$
 which is injectivity of each column map expressed pairwise. The same test filters a row's domain against every assigned row in one vectorised comparison.
 
 Crib CSP. With one alphabet $A$ acting on both sides and key shifts $k_b$, a crib letter $p$ at position $i$ under ciphertext $c$ gives the linear equation $\operatorname{idx}_A(c) - \operatorname{idx}_A(p) - k_{i \bmod 7} \equiv 0 \pmod{26}$; with a key word $W$, $k_b = \operatorname{idx}_A(W_b)$ makes it an equation in three letter positions.
+
+In the multipartite form, variable $X_i$ chooses one row $v\in D_i$. Precompute an exact compatibility relation
+
+$$C_{ij}\subseteq D_i\times D_j$$
+
+for every interacting pair of parts. A full assignment is a clique through one vertex from each part that also satisfies the global modular and all-different state. Store each neighbourhood $C_{ij}(v)$ as a bit set. After choosing $v$, the remaining domain of part $j$ becomes $D_j\cap C_{ij}(v)$ before the next minimum-remaining-values choice.
+
+For pairwise affine equations over a prime field, with invertible edge coefficients, a potential disjoint-set structure stores
+
+$$z(x)=a_x z(r_x)+b_x.$$
+
+Adding an equation either joins two roots with a derived affine potential or checks a cycle inside one component. Maintain separate states modulo the prime factors when working modulo a composite number, then join only compatible leaves. Rollback records every changed parent, size, potential, and pinned root on a stack; restoring a checkpoint is exact.
+
+A safe unsatisfiable-state memo uses a canonical future-state key such as
+
+$$K=\big(A,(D_i),\operatorname{canon}(S_2),\operatorname{canon}(S_{13}),U\big),$$
+
+where $A$ is the assigned-part set, $D_i$ are remaining domains, $S_q$ is the modular state, and $U$ is the all-different domain state. Canonical root names and gauge-normalised potentials make equivalent states equal. If pruning depends on an incumbent, objective bound, or enumeration mode, that dependency also belongs in the key.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Pairwise-only CSP:** compatibility tables contain every rule, so a complete multipartite clique is a solution.
+- **Pairwise plus global state:** tables remove cheap conflicts; incremental modular equations and all-different feasibility decide coupled constraints that no pair table can express alone.
+- **Static order:** useful when parts have very different costs known in advance.
+- **Dynamic MRV:** after every propagation step, choose the unassigned part with the smallest current domain; break ties by a fixed rule.
+- **Rollback search:** update modular bases, used labels, and domain bit sets in place, then undo to a checkpoint instead of copying the full state at every node.
+- **Unsatisfiable-state memo:** cache only a canonical state whose entire subtree finished with no solution. A timeout, node cap, or partial enumeration is never cached as unsatisfiable.
 '''
 
 [[blocks]]
@@ -51,6 +80,9 @@ body = '''
 - The constraints are exact consequences of the cipher model. A solution is a proof of consistency, not of correctness, and is finished (completion of free letters) and read.
 - A node budget converts an open search into an honest "none within budget". Only an exhausted search supports a negative.
 - Spurious solutions scale with the bank: a 704-word bank has an expected spurious count near $10^{-28}$ for nine rows, while an unconstrained dictionary bank finds spurious assignments within a few nodes and is uninformative by design.
+- Every precomputed pair bit means the exact pair predicate passed. Pair compatibility is necessary but may not be sufficient when modular or all-different state spans three or more parts.
+- A memo key contains everything that can change future feasibility: assigned parts, remaining-domain bit sets, canonical modular state, all-different state, and any objective or enumeration mode. Search history is omitted only after proving it has no future effect.
+- The memo table belongs to one frozen problem instance. Clear it between instances or include a digest of the fixed domains, compatibility tables, and equations in the key.
 '''
 
 [[blocks]]
@@ -61,46 +93,41 @@ body = '''
 - **Crib plus key word.** Cribs of 7-20 letters at every offset for each candidate key word; consistent assignments are ranked by the quadgrams of their pinned letters and completed by a quadgram climb over the free letters; wrong placements die in tens to hundreds of nodes when the key word is right.
 - **Token tilings.** A window is parsed left to right into tokens of a frozen vocabulary while five partial maps (with tied residues) stay consistent. Each complete tiling is then checked against the modular position system with all-different positions.
 - **Direct letter-guess CSP.** In a chain without a free constant, every guessed plaintext letter is one homogeneous equation; GF(2) and GF(13) null spaces plus the CRT all-different factorisation decide feasibility in about 0.01 s per solve at crib length 26.
+- **Multipartite exact join.** Treat each row position as one part, precompute pair-compatible row bit sets, use dynamic MRV, and push each chosen row into rollback modular state. Reject on an empty domain, an inconsistent modular equation, or a failed all-different matching. Memoize only canonical states proved unsatisfiable after complete traversal.
 '''
 
 [[blocks]]
 kind = "pseudocode"
 body = '''
 ```text
-// Variables X_1..X_n with domains D_i and pairwise constraints C_XY; the
-// values are row words, alphabet positions (with a global all-different), or
-// tokens.
-function SOLVE(assignment, domains, budget):
-    if every variable is assigned: RECORD(assignment); return
-    // minimum remaining values
-    X = unassigned variable with the smallest |domains[X]|
+function PRECOMPUTE(parts, pair_rule):
+    for interacting parts i, j and value v in parts[i]:
+        compat[i,v,j] = bit set of u in parts[j] where pair_rule(v,u)
+    return compat
+
+function SEARCH(chosen, domains, state, budget):
+    if budget expired: return (found=false, complete=false)
+    key = CANONICAL_FUTURE_STATE(chosen, domains, state)
+    if key in proved_unsatisfiable: return (false, true)
+    if every part is chosen:
+        if VERIFY_AND_REPLAY(chosen, state): RECORD(chosen); return (true, true)
+        add key to proved_unsatisfiable; return (false, true)
+    X = unchosen part with smallest |domains[X]|  // fixed tie rule
+    found = false; complete = true
     for v in domains[X]:
-        nodes = nodes + 1
-        // honest cap, not a negative
-        if nodes > budget: status = NONE_WITHIN_BUDGET; return
-        assignment[X] = v
-        new_domains = copy of domains; dead = false
-        // forward checking
-        for each unassigned Y that shares a constraint with X:
-            new_domains[Y] = { u in domains[Y] : C_XY(v, u) holds }
-            if new_domains[Y] is empty: dead = true; break
-        if not dead: SOLVE(assignment, new_domains, budget)
-        unassign X
-    // every value tried without reaching the budget: this subtree has no
-    // solution
-
-// Row-word constraint under fixed column substitutions: for rows r, q and
-// every column b, c_r[b] = c_q[b] iff w_r[b] = w_q[b] (injectivity of each
-// column map, pairwise).
-function ROW_PAIR_OK(c_r, c_q, w_r, w_q):
-    for b in 0..len-1:
-        if (c_r[b] == c_q[b]) != (w_r[b] == w_q[b]): return false
-    return true
-
-// Crib CSP over alphabet positions: a crib letter p under ciphertext c at
-// position i gives idx_A(c) - idx_A(p) - k_{i mod 7} = 0 mod 26; propagate
-// unit equations first, branch on the most constrained letter, and re-check
-// all-different on positions after every assignment.
+        checkpoint = CHECKPOINT(domains, state)
+        child_found = false; child_complete = true
+        if ADD_MODULAR_EQUATIONS(v, state.modular):
+            for each unchosen neighbour Y:
+                domains[Y] = domains[Y] intersect compat[X,v,Y]
+            if every domain is nonempty and HALL_FEASIBLE(domains):
+                (child_found, child_complete) =
+                    SEARCH(chosen plus (X,v), domains, state, budget)
+        ROLLBACK(checkpoint, domains, state)
+        found = found or child_found
+        complete = complete and child_complete
+    if complete and not found: add key to proved_unsatisfiable
+    return (found, complete)
 ```
 '''
 
@@ -117,6 +144,10 @@ body = '''
 - **Caps hit by short tokens.** Banks of one- and two-letter tokens (element symbols, note names, compass abbreviations, glyph strings) exceeded 2,000,001 nodes because every ambiguous tokenisation is visited separately. The exact closure came from compiling the bank to a DFA and using SAT (see [CP-SAT and SMT solvers](/exact/cp-sat-and-smt-solvers)).
 - **Homogeneous systems.** A single word guess is always linearly consistent; rejection comes only from the all-different constraint once the null space is small, so single short cribs cannot be refuted exactly.
 - **Spurious solutions.** Large banks produce consistent assignments that are not the plaintext. The solution count within budget is the statistic, and any hit is a candidate until read and reproduced.
+- **Pairwise clique called globally feasible.** Every chosen pair agrees, but their combined modular equations collide or cannot extend to an all-different map.
+- **Unsafe transposition key.** Two nodes share selected row identifiers but have different residual domains, modular gauges, or used labels and are merged incorrectly.
+- **Memoized timeout.** A capped subtree is stored as unsatisfiable, turning an incomplete search into a false exact negative.
+- **Rollback leak.** A child equation, domain deletion, or used label survives into its sibling branch.
 '''
 
 [[blocks]]

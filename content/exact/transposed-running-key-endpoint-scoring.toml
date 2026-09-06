@@ -1,0 +1,243 @@
+id = "transposed-running-key-endpoint-scoring"
+section = "exact"
+title = "Transposed running-key endpoint scoring"
+subtitle = "Choose a block order exactly, then expose part of the same signal while a key is still being built"
+status = "VERIFIED"
+status_note = "An exact subset dynamic program matched direct permutation search on reduced cases and uniquely selected the planted complete endpoint, route, signs, constant, and plaintext in two 32-endpoint controls. A separate partial assignment score kept both planted endpoints through every declared cut in two 1,024-endpoint pools, while unlinked controls were cut immediately. These are conditional selection and retention results: the pools already contained the planted endpoint, so endpoint generation remains unproved."
+family = "Exact combinatorial optimisation"
+tags = ["running key", "block transposition", "Held-Karp dynamic programming", "assignment problem", "partial scoring", "forward replay"]
+related = ["running-key", "columnar-transposition", "exact-dynamic-programming", "maximum-weight-bipartite-assignment", "n-gram-language-scoring", "endpoint-specific-control-contracts", "planted-controls", "candidate-bank-lineage-and-cap-accounting", "reproducibility-receipts"]
+summary = "Suppose one candidate text becomes a running key only after its grid columns are reordered. For a complete candidate, an n-gram score splits into block scores, neighbouring-block scores, and a tail score. A Held-Karp-style subset dynamic program can therefore find the exact best column permutation for every signed affine cipher case without trying every route directly. While the candidate is incomplete, its known letters give a matrix of source-column-to-output-slot scores; an exact maximum-weight assignment turns that partial evidence into an early ranking proxy. The proxy can protect a good proposal from a beam cut, but only if linked and unlinked controls pass and the proposal generator can produce the endpoint in the first place."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let a candidate key text $K$ have length $rw$ and fill a grid $G[u,c]=K[wu+c]$, with $r$ rows and $w$ columns. A route $O\in S_w$ reads source columns in the order $O_0,\ldots,O_{w-1}$:
+
+$$R_O[rs+u]=G[u,O_s],\qquad 0\le s<w,\ 0\le u<r.$$
+
+If the consumer is $t$ letters longer than the grid, cycling the transposed stream adds
+
+$$R_O[rw+u]=G[u,O_0],\qquad 0\le u<t.$$
+
+The tail depends on the **first routed column**. It is not a free copy of the original row-major prefix.
+
+For a coordinate alphabet $A$, let $z_A$ map letters to residues modulo $q$. A signed affine running-key cell recovers
+
+$$z_A(P_i)=s_Cz_A(C_i)+s_Kz_A(R_O[i])+\kappa\pmod q,$$
+
+where $s_C,s_K\in\{-1,+1\}$ and $\kappa\in\mathbb Z_q$. Search every declared alphabet and signed cell. Because $s_C^{-1}=s_C$, the independent forward equation is
+
+$$z_A(C_i)=s_C\bigl(z_A(P_i)-s_Kz_A(R_O[i])-\kappa\bigr)\pmod q.$$
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Exact score for a complete endpoint"
+body = '''
+Use an order-$d$ language score $Q(P)=\sum_i q(P_i,\ldots,P_{i+d-1})$. For a fixed alphabet, signs, and constant, decrypt each possible source column into each output block slot. The score of a route can then be written as
+
+$$S(O)=N_0(O_0)+\sum_{s=1}^{w-1}\left[E_{s-1}(O_{s-1},O_s)+N_s(O_s)\right]+T(O_{w-1},O_0).$$
+
+$N_s(c)$ contains n-grams wholly inside block slot $s$. $E_s(c,d)$ contains n-grams crossing from slot $s$ with source column $c$ to slot $s+1$ with source column $d$. $T(j,f)$ contains the final block-to-tail boundary and n-grams inside the cycled tail; it depends on the last column $j$ and first column $f$.
+
+Fix $f=O_0$. A Held-Karp-style state $D_f[M,j]$ stores the best score for routes that start at $f$, use exactly the columns in subset $M$, and end at $j$. With $s=|M|$,
+
+$$D_f[M\cup\{k\},k]=\max_{j\in M}\left(D_f[M,j]+E_{s-1}(j,k)+N_s(k)\right).$$
+
+Start with $D_f[\{f\},f]=N_0(f)$ and finish with $\max_j[D_f[\mathrm{All},j]+T(j,f)]$. Store the number of maximising routes and the lexicographically smallest route as separate tie data. Taking the best result across all affine cells remains exact.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **No tail:** set $T(j,f)$ to the final boundary term only, or zero when no score crosses the end.
+- **Cycled tail:** append the first $t$ symbols of the routed stream. Its source indices all use $O_0$.
+- **Irregular blocks:** let node and edge tables carry the declared block lengths; the dynamic program still works if the route score depends only on the current stage, previous column, and first column.
+- **Several coordinate alphabets:** build the score tensors independently for each alphabet order and compare their exact totals.
+- **Signed affine cells:** enumerate the permitted signs and additive constants outside the route dynamic program.
+- **Partial endpoint proxy:** score only letters currently known, then solve a source-column-to-slot assignment exactly. This ranks proposals but is not automatically an admissible bound on their future full score.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Conditions for exactness"
+body = '''
+- Every n-gram appears exactly once: inside a block, across one adjacent block boundary, or in the final boundary and tail.
+- The score has no interaction between non-neighbouring routed blocks after the first column is fixed. Any such interaction must enter the state.
+- The source-to-slot convention is fixed. The partial assignment naturally returns the inverse of a route written as slot-to-source.
+- The tail source formula follows the actual cycling rule and is checked at every position under different first-column choices.
+- Scores use exact integer units. Route ties, affine-cell ties, and endpoint ties are counted rather than discarded.
+- A complete recovered plaintext is independently rescored and forwarded through the full route and signed affine equation.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Complete selection and early retention"
+body = '''
+For a complete candidate key, build node, edge, and tail tensors for every allowed affine cell. Run the exact subset dynamic program, recover its canonical route, decrypt the full message, rescore it directly, and replay the forward equation. Rank complete key candidates only after each receives this identical exhaustive selector.
+
+For an incomplete candidate, let depth $d$ describe the known prefix or completed rows. For every source column $c$ and possible output slot $s$, use only known letters to derive the corresponding plaintext positions. Give the first letter of each available run a monogram score and consecutive rows a conditional-bigram score. Include known tail letters only when $s=0$. Call the result $W_d[c,s]$.
+
+Optimise the unknown route exactly as a bijection:
+
+$$H_d=\max_{\pi\in S_w}\sum_{c=0}^{w-1}W_d[c,\pi(c)],$$
+
+where $\pi(c)$ is the output slot assigned to source column $c$. Use $H_d$ as a ranking proxy at that depth. At every cut, record the proposal count, planted rank, cutoff score, retained count, assignment route, and tie count. A later exact finish cannot repair a proposal removed by an earlier cut.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function EXACT_ENDPOINT(cipher, candidate_grid, affine_cells, ngram):
+    answers = []
+    for cell in affine_cells:
+        node, edge, tail = BUILD_ROUTE_SCORE_TENSORS(
+            cipher, candidate_grid, cell, ngram)
+        for first in 0 .. width-1:
+            dp[{first}, first] = (node[0, first], route=[first], ties=1)
+            for mask containing first in increasing popcount:
+                slot = POPCOUNT(mask)
+                for last in mask:
+                    for next not in mask:
+                        RELAX_WITH_TIES(
+                            dp[mask | {next}, next],
+                            dp[mask, last] + edge[slot-1, last, next]
+                                           + node[slot, next])
+            CLOSE_WITH_TAIL(dp[all, *], tail[*, first])
+        answers.append(BEST_ROUTE_WITH_ALL_TIES(cell))
+    winner = BEST_WITH_ALL_CELL_TIES(answers)
+    require DIRECT_NGRAM_SCORE(winner.plaintext) == winner.score
+    require INDEPENDENT_FORWARD(winner) == cipher
+    return winner
+
+function PARTIAL_ROUTE_PROXY(cipher, known_candidate, depth, affine_cell):
+    W = ZERO_MATRIX(width, width)
+    for source_column in 0 .. width-1:
+        for output_slot in 0 .. width-1:
+            letters = IMPLIED_KNOWN_PLAINTEXT_RUNS(
+                cipher, known_candidate, depth, source_column,
+                output_slot, affine_cell, include_tail=(output_slot == 0))
+            W[source_column, output_slot] = MARKOV_SCORE(letters)
+    return EXACT_MAX_WEIGHT_BIJECTION_WITH_TIES(W)
+
+function CUT_WITH_RECEIPT(proposals, depth, keep):
+    scored = SORT_BY_SCORE_THEN_FIXED_ID(
+        [(PARTIAL_ROUTE_PROXY(p, depth), p) for p in proposals])
+    record input count, planted rank, cutoff score, ties and retained IDs
+    return first keep proposals
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Directly checking every width-$w$ route costs $w!$ scores per affine cell. With a tail that depends on the first column, the complete endpoint dynamic program costs $O(hw^3 2^w)$ time over $h$ affine cells: $O(w^2 2^w)$ for each fixed first column. Processing first columns one at a time uses $O(hw2^w)$ score state when the cells are vectorised, or $O(w2^w)$ when cells are also streamed. The partial maximum-weight bijection costs $O(w^2 2^w)$ time and $O(2^w)$ state, or $O(w^3)$ with a Hungarian solver when only the optimum value and one route are needed.
+
+At width 9 over an alphabet of 26 symbols, four sign pairs and 26 constants represent $9!\times4\times26=37{,}739{,}520$ literal route-and-cell tuples per complete endpoint. The subset dynamic program evaluates the same optimum without materialising that factorial set. Scoring many endpoint candidates can still dominate, so report whole-pipeline time and memory.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Tail omitted or misindexed:** the last positions silently use row-major prefix letters instead of the first routed column.
+- **Internal score only:** n-grams crossing block boundaries are dropped, so the best route need not maximise the real language score.
+- **Route inverse confusion:** source-to-slot assignment is reported as slot-to-source order without inversion.
+- **One affine case assumed:** a good route under the wrong signs, constant, or coordinate alphabet hides the correct cell.
+- **Proxy called a bound:** a partial Markov score is used for exact pruning even though unknown future letters can change the full score.
+- **Final-only control:** the planted endpoint survives the last cut, but no receipt shows whether it was removed and reinserted, specially protected, or absent earlier.
+- **Linked-only controls:** generic language or pool construction may make the planted endpoint rank well even when the second stream contributes no real link.
+- **Pool insertion called generation:** placing the complete planted endpoint among alternatives proves conditional selection or retention, not that a blind generator can reach it.
+- **Forward replay overclaim:** re-encryption proves internal consistency of the selected parameters, not that the selected plaintext is correct.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+First compare the complete subset dynamic program with direct route enumeration on reduced random, tied, and tail-sensitive cases. Require identical optimum score, canonical route, and total tie count. Check the source-index formula at every body and tail position. Replay every sign, selected constant, and coordinate alphabet through a scalar implementation independent of the vectorised scorer.
+
+Complete-endpoint controls should mix one planted key endpoint with matched alternatives built by the same upstream process. Move the plant away from index zero and vary which routed column supplies the tail. Require unique recovery of the endpoint, route, affine cell, full plaintext, direct score, and forward transform. Two recorded 32-endpoint controls recovered all of these uniquely; their score margins over the best matched alternatives were 752,059,745 and 717,985,974 integer score units.
+
+Partial-proxy controls need the same matched proposal pool in two forms. The **linked** form is generated through the declared cross-stream relation. The **unlinked** form keeps the pool and marginal data but independently permutes the consumer stream, breaking only that relation. In two recorded 1,024-endpoint controls, the linked plant ranks through the first five cuts were 69, 74, 1, 2, 1 and 108, 1, 5, 3, 1, then rank 1 thereafter. Both survived a width-512 second cut. Their unlinked counterparts ranked 778 and 586 at the first cut and were removed. An exact complete selector then recovered both linked endpoints uniquely from 32 finalists.
+
+These tests prove that the complete selector can choose a supplied endpoint and that the partial proxy can retain one already in a matched pool. They do not measure the chance that a real proposal mechanism generates the endpoint. An end-to-end control must start before generation, never insert the answer, and report planted rank and survival at **every** pruning cut.
+'''
+
+[[blocks]]
+kind = "example"
+title = "A three-column route with a cycled tail"
+body = '''
+Let $r=4$, $w=3$, $t=2$, and route $O=(2,0,1)$. The row-major grid is
+
+```text
+a b c
+d e f
+g h i
+j k l
+```
+
+The routed body is `cfil` + `adgj` + `behk`. Cycling adds the first two letters of the routed stream, `cf`, so the complete key stream is `cfiladgjbehkcf`. A tail of `ab` would be wrong: it ignores that routed column 2 comes first. In the endpoint dynamic program, the tail term is attached to the transition from final column 1 back to first column 2.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The complete score is an exact sequencing problem because an n-gram model couples neighbouring routed blocks. The early score is an exact assignment only for the chosen proxy objective. Keeping that distinction explicit prevents a useful filter from being mistaken for a proof of completeness.
+
+The broader workflow is: generate proposals without answer assistance, score every partial proposal under the same declared proxy, audit every cut, finish retained complete endpoints with the exact route selector, and independently replay both the endpoint's upstream transform and the downstream running-key relation.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK89_T9QIV697.md"
+kind = "design"
+note = "Defines the complete block-route stream, cycled tail, signed affine relation, exact subset dynamic program, ties, controls, and claim boundary."
+ref = "LOG697"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk89_t9qiv697_controls.py"
+kind = "solver"
+note = "Builds exact node, boundary, and tail scores; optimises every declared route and affine cell; directly rescores and forwards the result."
+ref = "LOG697"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk89_t9qiv697_audit.py"
+kind = "audit"
+note = "Independent reconstruction of fixtures, score tables, route optima, tie counts, ranks, and scalar forwards."
+ref = "LOG697"
+
+[[provenance]]
+path = "withmath/logs/697_pk89_t9qiv_controls_20260906T082818Z_12151_10712.json"
+kind = "data"
+note = "Frozen two-control complete-endpoint selection artifact."
+ref = "LOG697"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK89_T9PROXY699.md"
+kind = "design"
+note = "Defines the partial known-letter score matrix, exact route assignment, per-cut receipts, linked null, and selection-versus-generation boundary."
+ref = "LOG699"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk89_t9proxy699_controls.py"
+kind = "solver"
+note = "Scores partial implied plaintext runs, solves the route bijection exactly, records every cut, and hands finalists to the complete selector."
+ref = "LOG699"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk89_t9proxy699_audit.py"
+kind = "audit"
+note = "Separate-code replay of proposal pools, partial matrices, assignments, cut ranks, unlinked controls, and exact finishing."
+ref = "LOG699"
+
+[[provenance]]
+path = "withmath/logs/699_pk89_t9proxy_controls_20260906T085659Z_12151_14946.json"
+kind = "data"
+note = "Frozen two-control partial-retention artifact with per-depth ranks and exact finishes."
+ref = "LOG699"
+
+[[references]]
+title = "A Dynamic Programming Approach to Sequencing Problems"
+author = "Michael Held and Richard M. Karp"
+year = 1962

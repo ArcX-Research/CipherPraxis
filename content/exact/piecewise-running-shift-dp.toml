@@ -1,0 +1,153 @@
+id = "piecewise-running-shift-dp"
+section = "exact"
+title = "Piecewise running-shift dynamic programming"
+subtitle = "Join segment scores without losing the n-grams that cross each boundary"
+status = "VERIFIED"
+status_note = "A compiled implementation agrees with complete enumeration on a restricted schedule bank, matches an independent whole-text score, and checks every forward and reverse state update. This verifies the schedule optimiser for a fixed substitution, not the alternating solver's global optimum."
+family = "Dynamic programming"
+tags = ["piecewise shift", "running state", "boundary terms", "n-gram score", "dynamic programming"]
+related = ["exact-dynamic-programming", "n-gram-language-scoring", "alberti-progressive", "coordinate-descent", "stationary-alternating-optimization", "known-answer-tests"]
+summary = "A running shift may keep one velocity inside each segment while carrying its state continuously across segment boundaries. For a fixed substitution, the best segment velocities can be found exactly by dynamic programming. The important detail is to score both the n-grams inside each segment and the n-grams that cross every boundary."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $0=b_0<b_1<\cdots<b_s=n$ be fixed segment boundaries, let $L_q=b_{q+1}-b_q$, and work modulo $m$. Segment $q$ has a constant velocity $d_q$. Its starting phase is carried from the previous segment:
+
+$$\phi_0=0,\qquad \phi_{q+1}=\phi_q+L_qd_q\pmod m.$$
+
+For ciphertext coordinate $x_i$ and an arbitrary substitution $M$, the deprogressed coordinate and plaintext are
+
+$$u_{b_q+j}=x_{b_q+j}-\phi_q-jd_q\pmod m,
+\qquad P_i=M(u_i).$$
+
+When $M$ is fixed, every candidate $(\phi_q,d_q)$ determines the complete text of one segment. A dynamic program can therefore choose the exact best velocity path under an $r$-gram score while enforcing continuous phase.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Internal and crossing terms"
+body = '''
+Let $\ell(P_i\ldots P_{i+r-1})$ be one $r$-gram log score. For a segment candidate $c=(q,\phi,d)$, define its internal score using only n-grams wholly inside that segment:
+
+$$I(c)=\sum_{i=b_q}^{b_{q+1}-r}\ell(P_i\ldots P_{i+r-1}).$$
+
+For adjacent candidates $c$ and $c'$ meeting at $b=b_{q+1}$, define
+
+$$B(c,c')=\sum_{i=b-r+1}^{b-1}\ell(P_i\ldots P_{i+r-1}),$$
+
+with out-of-range starts omitted. These are exactly the n-grams that cross the boundary. The recurrence is
+
+$$D_{q+1}(c')=I(c')+\max_{c:\,\phi'=\phi+L_qd}
+\big(D_q(c)+B(c,c')\big).$$
+
+Internal and boundary terms partition the whole-text objective, so traceback returns the exact best declared schedule for the fixed map $M$.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Enumerated initial phase:** retain every allowed $\phi_0$ when it is not absorbed by another key component.
+- **Higher-order language score:** an $r$-gram model needs the last $r-1$ letters of the left segment and the first $r-1$ of the right segment for each boundary score.
+- **Restricted velocity bank:** the same recurrence is exact over any declared subset of velocities.
+- **Segment reset model:** set each $\phi_q$ independently. This is a different cipher family, not an optimisation shortcut.
+- **Joint substitution search:** alternate this exact schedule step with a substitution solver, then apply the stationarity checks described under [Stationary alternating optimisation](/search/stationary-alternating-optimization).
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Segment boundaries and the continuous-state rule are fixed before scoring.
+- The substitution $M$ remains the same across all segments during one schedule optimisation.
+- Every candidate segment is long enough for the stated internal and boundary formulas, or the empty sums are handled explicitly.
+- Exactness applies to the finite schedule bank for a fixed $M$. It does not make a heuristic substitution fit globally exact.
+- Ties are retained or resolved by one declared deterministic order.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Use the exact schedule step"
+body = '''
+Precompute the decoded letters and internal score for every segment, starting phase, and allowed velocity. Initialise the first segment at every admitted phase. At each later segment, connect only states that satisfy the phase-carry equation and add the crossing n-grams once. Trace back the best full path, rebuild the whole plaintext, and require its independently computed score to equal the dynamic-programming score exactly.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function BEST_PIECEWISE_SCHEDULE(cipher, boundaries, map, velocities, score):
+    for segment q, phase, velocity:
+        text[q, phase, velocity] = DEPROGRESS_SEGMENT(cipher, q, phase, velocity, map)
+        inside[q, phase, velocity] = SCORE_INTERNAL_NGRAMS(text[q, phase, velocity])
+    states = every admitted first-segment candidate
+    for state in states:
+        dp[state] = inside[state]
+    for q in 1..NUMBER_OF_SEGMENTS-1:
+        next = empty table
+        for left in states:
+            phase = ADVANCE_PHASE(left.phase, left.velocity, LENGTH(q-1))
+            for velocity in velocities:
+                right = (q, phase, velocity)
+                value = dp[left] + inside[right] + SCORE_CROSSING_NGRAMS(left, right)
+                KEEP_BEST_WITH_TIES(next[right], value, left)
+        states = next
+    path = TRACE_BACK_BEST(states)
+    require DP_SCORE(path) == SCORE_WHOLE_TEXT(REBUILD(path))
+    return path
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+With $s$ segments, modulus size $m$, and all $m$ velocities, there are $m^2$ phase-and-velocity candidates per segment. Continuity fixes the next phase, leaving $m$ outgoing velocities per state, so the direct recurrence costs $O(sm^3)$ time and $O(m^2)$ working memory after candidate texts are prepared. The substitution search is a separate cost.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Scoring segments separately.** Dropping the crossing n-grams changes the objective and can change the winning schedule.
+- **Resetting the phase.** Starting each segment at zero silently tests a reset cipher instead of a continuous running state.
+- **Double-counting a boundary.** A crossing n-gram belongs in the boundary term once, never in both neighbouring internal scores.
+- **Calling alternation exact.** The schedule step may be exact while the fitted substitution and the combined search remain local.
+- **Ignoring tied paths.** A deterministic single winner can hide observational aliases unless the tie rule and survivor count are reported.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+On a small velocity bank, compare the dynamic program with complete enumeration of every schedule. Separately compute the whole-text n-gram score for every returned path and require exact integer equality. Mutate the phase carry, omit one crossing term, and double-count one crossing term; each mutation must fail. Finally, forward-encrypt and deprogress random texts under both alphabet directions.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Every trigram belongs somewhere"
+body = '''
+For `ABCD|EFGH` under a trigram score, the internal terms are `ABC`, `BCD`, `EFG`, and `FGH`. The boundary terms are `CDE` and `DEF`. Together they are exactly the trigrams of `ABCDEFGH`; scoring only the two pieces would omit the evidence that links them.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The dynamic-programming principle is standard. The reusable lesson is the objective decomposition: state continuity constrains which segment candidates may connect, while the boundary terms make the decomposed score exactly equal to the original whole-text score.
+'''
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_quartervelocity640_core.cpp"
+kind = "solver"
+note = "Compiled implementation of continuous piecewise shifts, exact schedule DP, boundary n-gram terms, scalar-score equality, brute-force comparison, and forward/deprogress checks."
+ref = "LOG640"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "LOG640 records the model, its exact fixed-map recurrence, the invalid first seed-bank smoke, and the corrected software/power smoke without a target run."
+ref = "LOG640"
+
+[[references]]
+title = "Dynamic Programming"
+author = "Richard Bellman"
+year = 1957
+

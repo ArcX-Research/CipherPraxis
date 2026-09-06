@@ -1,0 +1,180 @@
+id = "partial-permutation-completion-bounds"
+section = "exact"
+title = "Partial-permutation completion bounds"
+subtitle = "Use component capacities and matching to bound unfinished involution maps exactly"
+status = "VERIFIED"
+status_note = "Exact component-distance and one-template score formulas match independent exhaustive completions on small degrees and bounded missing-slot cases, with every recovered completion replayed. Their value as hot-loop pruning still requires workload-specific timing."
+family = "Exact bounds and certificates"
+tags = ["partial permutations", "involutions", "completion bounds", "matching", "branch and bound"]
+related = ["permutation-cycles", "all-different-constraints", "all-different-enumeration", "constraint-satisfaction-forward-checking", "maximum-weight-bipartite-assignment", "bound-benchmarks-and-certificates", "factorial-completion-resource-guards", "exact-dynamic-programming", "shared-cycle-attack"]
+summary = "A partial reciprocal substitution map cannot be completed arbitrarily: a template has a fixed number of loops and two-cycles. Count conflicts and remaining component capacity to get an exact minimum deletion distance. For weighted agreement, turn the remaining loop-and-pair choices into a maximum-weight general matching. The exact one-template value can then prune a larger coupled search without enumerating every completion."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+This method applies when a substitution map is an **involution**: every component is either a loop $a\mapsto a$ or a reciprocal pair $a\leftrightarrow b$. Let $t$ be a complete template involution on $n$ symbols and let $\phi$ partially assign template slots to alphabet symbols. The assignment determines part of a conjugate map $\pi=\phi t\phi^{-1}$.
+
+An observed partial involution $q$ supplies components that the completion should retain. Instead of enumerating every remaining slot labelling, ask two exact questions: how many observed components must be deleted before some completion exists, and what is the highest possible vote score over all completions of one template?
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Exact minimum component deletion"
+body = '''
+Let $S$ be the placed symbols. Let $O$ be the number of placed symbols whose partner slot is still open, $F$ the number of unused fixed slots, and $E$ the number of unused two-cycle slots counted as pairs:
+
+$$E=\frac{n-|S|-O-F}{2}.$$
+
+Count each observed reciprocal pair once. Let $\mathcal{C}$ be the set of mandatory conflicts and $C=|\mathcal{C}|$: a fully placed component disagrees with $\pi$, or a one-ended component points to an already determined wrong image. Among compatible observed components wholly outside $S$, let $L$ be the number of loops and $P$ the number of pairs. Then
+
+$$D^*=C+\max(0,L-F)+\max(0,P-E)$$
+
+is the exact minimum number of observed components that must be deleted before a full conjugate extension exists.
+
+For nonnegative component costs, delete every conflict and the cheapest excess components. If sorted loop costs are $\ell_{(j)}$ and pair costs are $p_{(j)}$,
+
+$$D_w^*=\sum_{e\in\mathcal{C}}w_e+
+\sum_{j=1}^{\max(0,L-F)}\ell_{(j)}+
+\sum_{j=1}^{\max(0,P-E)}p_{(j)}.$$
+'''
+
+[[blocks]]
+kind = "variants"
+title = "Exact vote completion by general matching"
+body = '''
+After removing already closed components, let $O_s$ be placed symbols with an open partner and $U$ the unplaced symbols. Add one dummy vertex for each unused fixed slot. For directed integer weights $v(a,b)$, build a general graph with:
+
+- edge $o-u$ of weight $v(o,u)+v(u,o)$ for $o\in O_s,u\in U$;
+- edge $u-u'$ of weight $v(u,u')+v(u',u)$ for distinct $u,u'\in U$;
+- edge from a fixed-slot dummy to $u$ of weight $v(u,u)$.
+
+A maximum-weight **perfect general matching**, plus the score of closed components, is the exact optimum for that template. In a multi-map join, other maps may still impose coupled constraints, so the one-template optimum is an admissible upper bound rather than an exact joint solution.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Both the template and completed map are involutions with known fixed-point type.
+- A reciprocal pair is one component even if the scoring table is directed.
+- Component deletion costs are nonnegative for the weighted distance formula.
+- The residual matching must have full cardinality. Maximizing weight alone is unsafe when zero or negative edges exist.
+- Infeasible parity, negative capacities, or a missing perfect matching means no completion exists.
+- A decoder's chosen error radius is a support assumption. The exact bound does not prove that the true map lies inside that radius.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Use the bounds in exact search"
+body = '''
+Canonicalize the partial reciprocal map into loops and unordered pairs. Place its known symbols into the template, reject immediate image conflicts, and compute the residual fixed-slot and pair capacities. Use $D^*$ to discard nodes outside an allowed edit radius. Where tighter score pruning is worth the cost, solve the residual general matching and add the closed-component constant. Prune only when this admissible upper bound cannot reach the current threshold, and retain a reconstructed full slot labelling as the certificate.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function COMPLETION_DISTANCE(template, placement, observed_components, costs):
+    require template and observed map are involutions
+    fixed_capacity, pair_capacity, open_count = RESIDUAL_CAPACITIES(template, placement)
+    conflicts, outside_loops, outside_pairs = CLASSIFY_ONCE(observed_components)
+    if residual parity or capacity is impossible: return INFINITY
+    loop_excess = MAX(0, LENGTH(outside_loops) - fixed_capacity)
+    pair_excess = MAX(0, LENGTH(outside_pairs) - pair_capacity)
+    distance = SUM(costs[e] for e in conflicts)
+    distance += SUM_SMALLEST(costs, outside_loops, loop_excess)
+    distance += SUM_SMALLEST(costs, outside_pairs, pair_excess)
+    return distance
+
+function COMPLETION_SCORE_BOUND(template, placement, directed_votes):
+    closed_score = SCORE_CLOSED_COMPONENTS(placement, directed_votes)
+    graph = BUILD_OPEN_SYMBOL_GENERAL_GRAPH(template, placement, directed_votes)
+    matching = MAXIMUM_WEIGHT_PERFECT_MATCHING(graph)
+    if matching does not cover every vertex: return NO_COMPLETION
+    witness = RECONSTRUCT_SLOT_LABELLING(matching, placement)
+    require witness is a complete conjugate involution
+    return closed_score + WEIGHT(matching), witness
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The unweighted deletion formula is linear in the observed components. Weighted deletion adds sorting of the outside loop and pair costs. General maximum-weight matching is polynomial; common blossom implementations take cubic time in the residual vertex count. Cache repeated template and anchor states before placing this bound in a high-volume search loop.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Double-counted pairs.** Both directions of $a\leftrightarrow b$ are charged as separate deletions.
+- **Independent-cell bound.** Each symbol chooses its best image without respecting reciprocity, fixed-point count, or shared endpoints.
+- **Wrong matching class.** A bipartite assignment solver is used even though unplaced symbols may pair with one another.
+- **Nonperfect optimum.** A high-weight partial matching is accepted although some template slots remain unfilled.
+- **Joint-exact overclaim.** A one-template optimum is called exact after other coupled maps have been relaxed.
+- **Cost without benefit.** A tighter matching bound slows the hot loop more than it reduces search.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+For small alphabets, enumerate every complete template labelling independently and compare the exact minimum deletion cost and maximum score. For larger alphabets, leave only a bounded number of slots unassigned and enumerate every missing-slot permutation. Include loops, reciprocal pairs, open endpoints, signed and zero vote tables, zero deletion costs, impossible capacities, and fixed-point-type changes. Reconstruct every optimizer and verify the full involution and all retained observed components.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Capacity forces one deletion"
+body = '''
+Suppose the remaining template has two unused fixed slots and one unused pair, while the compatible observed material outside the placed set contains three loops and no pairs. There are no direct conflicts, so $C=0$, $L=3$, $F=2$, and $P=0$. The exact distance is
+
+$$D^*=0+(3-2)+0=1.$$
+
+Deleting any one loop makes a completion possible; with weighted evidence, delete the cheapest of the three. A cell-by-cell test misses this obstruction because each loop is legal by itself.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The component-capacity distance and its use beside a conditional matching score were developed and exhaustively checked in this project. Maximum-weight general matching is classical; the project-specific contribution is the reduction and its certificate boundary for partial conjugate involutions.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_EDIT573_EXACT.md"
+kind = "design"
+note = "Derives the exact unweighted and weighted component-deletion formulas under partial conjugacy."
+ref = "LOG573"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_dihedral573_edit_bound.py"
+kind = "script"
+note = "Independent exhaustive completion checks over small degrees and bounded missing-slot permutations."
+
+[[provenance]]
+path = "withmath/logs/573_edit_kat_20260905T014857Z.log"
+kind = "log"
+note = "Frozen receipt for exact minimum-cost equality and reconstructed-extension checks."
+ref = "LOG573"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_MATCHING578_BOUND.md"
+kind = "design"
+note = "Reduces exact one-template directed vote completion to maximum-weight perfect general matching and states the admissible joint-bound scope."
+ref = "LOG578"
+
+[[provenance]]
+path = "withmath/logs/578_matching_kat_20260905T025730Z.log"
+kind = "log"
+note = "Frozen receipt for exact matching optima, completion reconstruction, and adversarial bounds."
+ref = "LOG578"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_MATCHING579_COST.md"
+kind = "audit"
+note = "Workload audit showing that a mathematically tighter bound still needs a measured runtime benefit before entering a hot loop."
+ref = "LOG579"
+
+[[references]]
+title = "Paths, Trees, and Flowers"
+author = "Jack Edmonds"
+year = 1965
+url = "https://doi.org/10.4153/CJM-1965-045-4"

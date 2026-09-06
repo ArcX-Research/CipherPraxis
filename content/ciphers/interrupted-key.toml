@@ -1,0 +1,145 @@
+id = "interrupted-key"
+section = "ciphers"
+title = "Interrupted key"
+subtitle = "Restart a periodic key whenever a chosen plaintext or ciphertext letter appears"
+status = "VERIFIED"
+status_note = "Held-out controls for Vigenere, Variant, and Beaufort forms each recovered the complete plaintext, period, reset side, interruptor, and key, then passed an independent forward check. The search covered periods 4 through 8 and both reset sides."
+family = "Polyalphabetic ciphers"
+tags = ["periodic key", "reset", "interruptor", "vigenere", "beaufort"]
+related = ["vigenere", "variant-beaufort", "beaufort", "autokey", "periodic-substitution-dp", "simulated-annealing", "known-answer-tests"]
+summary = "An interrupted-key cipher uses a short repeating key, but a chosen letter sends the key index back to its first position. The trigger can be read from the plaintext or ciphertext. This creates variable-length key runs: ordinary period tests may weaken even though the arithmetic inside each run is still simple."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $k_0,\ldots,k_{p-1}$ be a periodic key and let $j$ be its current index. Encrypt one character with $k_j$, advance $j$ modulo $p$, then set $j=0$ if the chosen interruptor appears in the declared stream. A ciphertext interruptor can be located before decryption. A plaintext interruptor can be located only while testing a candidate key.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Three additive bases"
+body = '''
+With letters numbered modulo 26, the common bases are
+
+$$\begin{aligned}
+\text{Vigenere: }&c_i=p_i+k_j,\\
+\text{Variant: }&c_i=p_i-k_j,\\
+\text{Beaufort: }&c_i=k_j-p_i.
+\end{aligned}$$
+
+After emitting position $i$,
+
+$$j\leftarrow (j+1)\bmod p, \qquad
+j\leftarrow0\text{ if }s_i=\iota,$$
+
+where $s_i$ is either $p_i$ or $c_i$ and $\iota$ is the interruptor.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Ciphertext reset:** trigger positions are known directly from the ciphertext.
+- **Plaintext reset:** trigger positions depend on the candidate decryption.
+- **Vigenere, Variant, or Beaufort base:** the reset schedule is unchanged, but the modular sign changes.
+- Some descriptions reset before the trigger character. That is a different convention and must be tested separately.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The reset occurs after the trigger character in the convention used here.
+- The same interruptor and key apply throughout the message.
+- Spaces and punctuation are either removed consistently or included under a separately stated rule.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to attack it"
+body = '''
+Enumerate plausible periods, the two reset sides, the 26 interruptors, and the three sign conventions. For a ciphertext reset, build the full key-index schedule once for each interruptor, then optimise the $p$ key shifts by language score. For a plaintext reset, decrypt while constructing the schedule because each recovered trigger changes later key positions. Keep only candidates that re-encrypt exactly under the same reset timing.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function ENCRYPT(plain, key, trigger, reset_side, relation):
+    j = 0
+    out = empty
+    for p in plain:
+        c = APPLY_RELATION(p, key[j], relation)
+        append c to out
+        j = (j + 1) mod length(key)
+        observed = c if reset_side == CIPHERTEXT else p
+        if observed == trigger:
+            j = 0
+    return out
+
+function SEARCH(ciphertext):
+    for period, reset_side, trigger, relation:
+        key = OPTIMISE_KEY(ciphertext, these settings)
+        plain = DECRYPT_WITH_RESETS(ciphertext, key, settings)
+        keep only if ENCRYPT(plain, key, settings) == ciphertext
+    return candidates ranked by language score
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+For a fixed configuration, encryption and decryption cost $O(n)$. A literal exhaustive key search costs $26^p$. Practical attacks enumerate the small structural choices, then use coordinate search, dynamic programming where the schedule is fixed, or stochastic optimisation for the key letters.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Off-by-one reset.** Resetting before rather than after the trigger changes every later alignment.
+- **Wrong reset side.** Plaintext and ciphertext triggers can yield very different schedules.
+- **Sparse triggers.** If the interruptor never occurs, the cipher reduces to an ordinary periodic form and the reset rule is unidentifiable.
+- **Sign aliases.** Vigenere and Variant can describe the same plaintext under complementary numeric keys; compare functions, not key spelling alone.
+- **Roundtrip-only evidence.** Any chosen key can decrypt and re-encrypt. Held-out plaintext recovery is needed to validate a solver.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Plant controls with several trigger positions, including runs of different lengths and a trigger near a key boundary. Hide the period, reset side, interruptor, key, and relation. Require their exact recovery plus full plaintext and independent forward reconstruction. Recorded controls hid a six-letter key and ciphertext interruptor; all three additive bases passed while the selector searched periods 4 through 8 and both reset sides.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+Use Vigenere with key `DOG`, plaintext interruptor `X`, and reset after the trigger. Plaintext `ATTAXDAWN` uses key positions
+
+```trace
+plain   A T T A X | D A W N
+key     D O G D O | D O G D
+cipher  D H Z D L | G O C Q
+```
+
+The `X` is encrypted with the current `O`. Only the next letter restarts at `D`, producing ciphertext `DHZDLGOCQ`.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The reset rule breaks a single global phase into segments, but it does not make the key random. Once the trigger positions and timing are fixed, each segment starts from the same key phase.
+'''
+
+[[provenance]]
+path = "withmath/docs/cipher-methods/COLOSSUS_DYNAMIC_AUDIT.md"
+kind = "audit"
+note = "Algebra, reset convention, search scope, and exact held-out gates for all three bases."
+ref = "Log 186"
+
+[[provenance]]
+path = "withmath/scripts/wm_colossus_dynamic.py"
+kind = "solver"
+note = "Independent forward implementation and controls-first search wrapper."
+
+[[provenance]]
+path = "withmath/logs/186_colossus_dynamic_intkey.log"
+kind = "log"
+note = "Exact configuration, plaintext, and forward reconstruction for the three interrupted-key controls."

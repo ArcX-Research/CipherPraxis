@@ -1,0 +1,165 @@
+id = "unique-proposal-voting"
+section = "search"
+title = "Unique proposal voting"
+subtitle = "Fuse ranked candidate sources without giving duplicate answers extra weight"
+status = "VERIFIED"
+status_note = "Target-absent software checks verify unique fusion, exact variable-denominator vote arithmetic, pruning-set equality, state handoff, and duplicate refusal. Recovery power for every possible voter count remains a separate control question."
+family = "Candidate fusion"
+tags = ["proposal fusion", "voting", "deduplication", "exact ratios", "ranked banks"]
+related = ["candidate-bank-lineage-and-cap-accounting", "k-best-lists", "beam-search", "bound-benchmarks-and-certificates", "selection-overfit-diagnostic", "endpoint-specific-control-contracts", "held-out-gates", "reproducibility-receipts"]
+summary = "Several selectors can propose useful candidates, but repeated aliases are not new evidence. Form one stable union of distinct semantic proposals, mark a predeclared subset as voters, and let every voter contribute one unit. Other proposals may expand search support without changing the vote. Store the exact numerator and denominator so jobs with different voter counts can be compared correctly."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $\pi(r)$ be the semantic text or key class carried by row $r$. Each selector supplies a frozen total order over validated rows. First remove duplicate $\pi(r)$ values within those orders. Choose a designated voting order $N$ and support orders $S_1,\dots,S_t$.
+
+For a declared voter limit $K$, define
+
+$$m=\min(K,|N|),\qquad V=\operatorname{first}_m(N),$$
+
+$$P=\operatorname{stable\_unique}\big(V\mathbin\Vert
+\operatorname{first}_K(S_1)\mathbin\Vert\cdots\mathbin\Vert
+\operatorname{first}_K(S_t)\big).$$
+
+$V$ supplies vote mass. $P$ supplies search support. Every semantic object occurs at most once in either role, and $V$ is the prefix of $P$.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Exact agreement with a variable voter count"
+body = '''
+For voter texts of length $n$, let
+
+$$v_i(a)=\sum_{p\in V}\mathbf{1}[p_i=a].$$
+
+A candidate $x$ receives the integer hit count and normalized agreement
+
+$$H_m(x)=\sum_{i=0}^{n-1}v_i(x_i),\qquad
+A_m(x)=\frac{H_m(x)}{nm}.$$
+
+Within one job, $m$ is fixed and positive, so ordering by $H_m$ is exactly the same as ordering by $A_m$. Store $H_m$ and $nm$ as integers. Across jobs with fractions $h_1/d_1$ and $h_2/d_2$, compare $h_1d_2$ with $h_2d_1$; do not round inside search or pruning.
+
+If positions also have classes $g(i)$ and observed symbols $c_i$, an exact regrouping is
+
+$$W[g,c,a]=\sum_{i:g(i)=g,\ c_i=c}v_i(a).$$
+
+Bounds and leaf scores must use this same integer table.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **One voting source, several support sources:** a calibrated selector votes; lexical, structural, or alternative-language rankings only widen the candidate set.
+- **Source-balanced voters:** assign one predeclared mass budget per selector, then deduplicate semantic overlaps before normalizing.
+- **Provenance-balanced voters:** cap total mass from one restart or search stratum when many correlated checkpoints are retained.
+- **Fixed-count compatibility:** when every job has the same $m$, raw integer hits remain directly comparable and reproduce a fixed-voter implementation.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Semantic equality is canonical and checked before fusion; map aliases of one plaintext are not separate voters.
+- Selector orders and tie rules are frozen before evaluation.
+- Separate selectors need not be statistically independent. A vote is an agreement score, not a calibrated probability unless controls establish that interpretation.
+- Support-only proposals never contribute to $v_i$ unless they are already members of $V$.
+- The state format carries the voter count and exact denominator through every stage.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Fuse proposals safely"
+body = '''
+Validate every source bank, project rows to semantic objects, and build stable unique rankings with deterministic ties. Select the voter prefix without inspecting hidden truth, then append unseen support proposals from the other orders. Construct integer position counts, feed the same counts to leaf scores and admissible bounds, and serialize both the numerator and denominator. Refuse duplicate padding rather than manufacturing a required bank size.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function FUSE_AND_VOTE(primary_rows, support_rankings, voter_limit):
+    primary = STABLE_UNIQUE_BY_SEMANTIC_OBJECT(primary_rows)
+    require every primary object is valid and distinct
+    voter_count = MIN(voter_limit, LENGTH(primary))
+    require voter_count is permitted by the frozen contract
+    voters = FIRST(primary, voter_count)
+    proposals = COPY(voters)
+    for ranking in support_rankings:
+        unique_ranking = STABLE_UNIQUE_BY_SEMANTIC_OBJECT(ranking)
+        for candidate in FIRST(unique_ranking, voter_limit):
+            APPEND_IF_SEMANTICALLY_UNSEEN(proposals, candidate)
+    require voters are exactly the first voter_count proposals
+    require all proposal semantic objects are distinct
+    weights = ZERO_POSITION_SYMBOL_COUNTS()
+    for voter in voters:
+        for position in voter.positions:
+            weights[position, voter[position]] += 1
+    return proposals, weights, voter_count
+
+function AGREEMENT(candidate, weights, voter_count):
+    hits = SUM(weights[i, candidate[i]] for every position i)
+    return exact fraction (hits, LENGTH(candidate) * voter_count)
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Stable fusion is linear in the rows inspected when semantic objects have canonical hashes. Building position counts costs $O(nm)$; scoring each candidate costs $O(n)$, or less when counts are regrouped by structural cells. Exact integer ratios avoid floating-point cost in the pruning path.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Duplicate padding.** Repeating one plaintext to meet a fixed bank size gives its basin extra weight.
+- **Alias-as-evidence.** Unseen map completions of an already present plaintext are treated as new voters.
+- **Support leakage.** A proposal source silently becomes a voting source, changing the objective.
+- **Raw-count comparison.** Jobs with different voter counts compare $H_m$ without their denominators.
+- **Correlation inflation.** Agreement among highly related search endpoints is described as independent confirmation.
+- **Post-truth replacement.** A weak voter is replaced after the expected answer is opened.
+- **Scale drift.** Leaf scores, node bounds, and heap thresholds use different normalizations.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+A target-absent interface test should cover every permitted voter count, compare the fused bank and every weight cell with an independent scalar builder, and compare fractions by cross multiplication. Add a duplicate-padding trap whose ranking changes under repeated rows, then require the parser to refuse it. For each count, compare the accepted set of the pruned search with uncapped full enumeration. Generator and finisher must reproduce the same ordered rows and exact denominator. These checks validate arithmetic; separate fresh controls must measure recovery power.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Aliases do not become voters"
+body = '''
+Suppose a primary order contains $A,A',B$, where $A$ and $A'$ are different physical rows with the same plaintext, while another selector proposes $C,A$. After semantic deduplication the primary order is $A,B$. With a voter limit of two, $V=[A,B]$ and the stable support union is $P=[A,B,C]$. The alias $A'$ contributes neither a proposal slot nor a second vote.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Ensemble voting and ranked-list fusion are established ideas. The denominator-bearing, duplicate-invariant contract described here was developed and tested in this project for a capped exact-search handoff; it should not be read as a claim that the general idea of voting is new.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_UNIQUE_PROPOSALS605_DESIGN.md"
+kind = "design"
+note = "Derives stable unique support fusion, the distinction between voters and support, exact normalized agreement, duplicate refusal, and cap semantics."
+ref = "LOG605"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_VARVOTE607_KAT.md"
+kind = "audit"
+note = "Records the implemented variable-voter contract, exact integer bounds, cross-denominator checks, accepted-set equality, cap flags, and the unresolved language-power boundary."
+ref = "LOG607"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk9_varvote607_kat.py"
+kind = "script"
+note = "Pure-symbol known-answer tests for proposal ordering, duplicate traps, vote arithmetic, pruning safety, state handoff, and malformed-input refusal."
+
+[[provenance]]
+path = "withmath/logs/607_varvote_kat_20260905T075224Z_1788594744575927000.log"
+kind = "log"
+note = "Frozen target-absent software and algebra receipt."
+ref = "LOG607"

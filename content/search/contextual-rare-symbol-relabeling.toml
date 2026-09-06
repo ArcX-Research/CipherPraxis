@@ -1,0 +1,173 @@
+id = "contextual-rare-symbol-relabeling"
+section = "search"
+title = "Contextual rare-symbol relabeling"
+subtitle = "Repair a nearly correct substitution with a frozen lexical and language-model cascade"
+status = "POWER-LIMITED"
+status_note = "The frozen cascade selected 14 of 16 fresh controls exactly. All true structural classes were retained, but one correct labeling ranked fourth and another was removed by the lexical shortlist, so the method is power-limited rather than verified."
+family = "Bounded substitution repair"
+tags = ["rare symbols", "substitution repair", "language model", "lexical shortlist", "provenance"]
+related = ["identity-plus-one-swap-neighborhood", "strict-best-improvement-swap-ascent", "relabeling-permutation-distance", "lexical-band-contextual-reranking", "combined-character-word-models", "lexical-reranking-and-oov-bias", "neural-language-model-decipherment", "word-lattice-segmentation", "candidate-bank-lineage-and-cap-accounting", "score-gap-ambiguity-bands", "fresh-holdout-after-selector-change"]
+summary = "A substitution solver can recover the right structural class yet misname one rare letter. This method evaluates the complete one-swap neighbourhood around each retained map, uses a cheap lexical model to form a tie-safe shortlist, and lets a frozen full-context language model choose among the survivors. Identical plaintexts are scored once, while every physical map that produced them remains attached for replay."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $u$ be a fixed latent symbol stream and $M$ a baseline substitution on an alphabet of size $q$. Its bounded relabeling bank is
+
+$$\mathcal N_1(M)=\{M\}\cup\{\tau_{ab}\circ M:0\le a<b<q\},$$
+
+where $\tau_{ab}$ exchanges two output labels. This bank contains
+
+$$1+\binom q2$$
+
+physical maps. Decode every map, group equal full plaintexts, and keep the complete set of origins behind each text. A lexical model supplies a cheap first-stage score and spacing. A frozen contextual model then reranks a tie-safe shortlist.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "The tested raw-score mixture"
+body = '''
+For a candidate plaintext $P$, let $L_{\rm lex}(P)$ be its lexical segmentation score and let
+
+$$L_{\rm ctx}(P)=\sum_i\log p_\theta(t_i\mid t_{<i})$$
+
+be the contextual log score of its fixed token sequence. Rank shortlisted candidates by
+
+$$S(P)=w_cL_{\rm ctx}(P)+w_lL_{\rm lex}(P),$$
+
+with weights, prompt, tokenizer, model files, segmentation rules, shortlist size, and tie order frozen together. A total contextual score is directly comparable when all candidates cover the same text length and preprocessing. Otherwise, the length normalisation must also be declared.
+
+This formula describes the recorded power-limited selector. A safer successor can avoid cross-model scale calibration by using lexical likelihood only to define a near-best band and using context only to order candidates inside that band.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Character-only context:** avoids a word vocabulary but may be weaker on long-range meaning.
+- **Word or subword context:** handles long dependencies but depends on tokenisation and prompt framing.
+- **Larger permutation shell:** admits more than one swap at a sharply higher search cost.
+- **Several structural endpoints:** union their neighbourhoods, then deduplicate by full plaintext while retaining endpoint identities.
+- **No lexical cascade:** context-score every candidate when the bank is small enough.
+- **Likelihood-band cascade:** admit candidates by a frozen lexical likelihood ratio, then rank the admitted set by context without adding raw model totals.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The correct map is the baseline or exactly one admitted output-label swap away.
+- Structural parameters and latent streams are fixed before relabeling.
+- The lexical shortlist includes every candidate tied at its cutoff.
+- Equal plaintexts receive one semantic score, not one vote per map alias.
+- Every physical origin remains available and independently replays to its grouped plaintext.
+- The language model and development material are separated from the final controls as declared.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Repair only the uncertain labels"
+body = '''
+Take stationary structural endpoints rather than arbitrary readable strings. Generate the identity and every single output-label swap from each endpoint's fixed baseline map. Decode and independently forward-check every physical map. Group candidates by complete plaintext, preserving endpoint and swap identifiers. Segment and lexical-score each distinct text, keep the declared best count with cutoff ties, then compute frozen contextual scores. Return the whole tied optimum with component scores, margins, maps, and origin lists.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function CONTEXTUAL_RELABEL(endpoints, lexical, context, limit, weights):
+    buckets = empty map from plaintext to semantic row
+    for endpoint in endpoints:
+        for move, mapping in IDENTITY_PLUS_ONE_SWAP(endpoint.map):
+            plain = APPLY(mapping, endpoint.latent_stream)
+            require INDEPENDENT_FORWARD(plain, endpoint, mapping)
+            bucket = GET_OR_CREATE(buckets, plain)
+            APPEND(bucket.origins, (endpoint.id, move, mapping))
+    for bucket in buckets:
+        bucket.lexical_score, bucket.spacing = LEXICAL_SEGMENT(bucket.plaintext)
+    shortlist = TOP_WITH_CUTOFF_TIES(buckets, limit, by=lexical_score)
+    for bucket in shortlist:
+        bucket.context_score = CONTEXT_LOG_SCORE(context, bucket.spacing)
+        bucket.total = (weights.context * bucket.context_score
+                        + weights.lexical * bucket.lexical_score)
+    winners = ALL_MAXIMA(shortlist, by=frozen total order)
+    return winners with component scores and every physical origin
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+One baseline map has $1+q(q-1)/2$ physical candidates. Direct decoding and lexical scoring cost $O(q^2n)$ for text length $n$. If $k$ distinct plaintexts survive the lexical cutoff, the expensive contextual stage scores only $k$ sequences. Provenance storage grows with the physical candidates even when semantic deduplication makes the scored bank smaller.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Wrong radius:** the correct map differs by two or more swaps and is absent from the bank.
+- **Cutoff loss:** the true plaintext is removed before the contextual model sees it.
+- **Tie truncation:** a candidate equal at the lexical boundary is dropped by row order.
+- **Weight tuning after reveal:** the mixture is adjusted on the same cases used to claim success.
+- **Model drift:** changed weights, tokenizer, prompt, package, or numeric backend silently changes the ranking.
+- **Alias voting:** one plaintext wins because several physical maps produced it.
+- **Provenance loss:** semantic deduplication deletes a phase, endpoint, or map needed for exact replay.
+- **Fluency overclaim:** a context winner is accepted without the cipher's forward equations.
+- **Mixed-scale dominance:** the longer contextual total overwhelms the rare lexical change even though the two raw scores have no calibrated common unit.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Build fresh texts whose rare letters create realistic one-swap confusions, and balance which rare symbol appears or is absent. Include identity winners, known single-swap winners, tied lexical cutoffs, duplicate plaintexts from different endpoints, and wrong plaintexts that must fail forward replay. Freeze the complete scoring manifest before the blind bank can be opened. Report separately whether truth entered the neighbourhood, survived the shortlist, won the hybrid score uniquely, and replayed from every physical origin.
+
+In the recorded fresh gate, all sixteen true structural classes were retained and every physical origin passed independent replay. Fourteen exact texts won. One truth survived the shortlist but ranked fourth under the hybrid score; another truth was removed by the lexical top-32 admission rule. These are two different power limits and require a new holdout for any successor. They do not show that contextual evidence is useless; they show that this exact mixture and admission rule did not meet its gate.
+'''
+
+[[blocks]]
+kind = "example"
+title = "One rare letter changes the sentence"
+body = '''
+Suppose a baseline map yields `THE MAP SHOWS FONES NEAR THE RIDGE`, while exchanging the output labels `F` and `Z` yields `THE MAP SHOWS ZONES NEAR THE RIDGE`. Both candidates satisfy the same structural schedule and differ by one map transposition. The lexical stage may retain both. A contextual model can use `MAP SHOWS ... NEAR THE RIDGE` to prefer the second, but the selection is valid only if the swap was admitted before scoring and its map recreates the ciphertext exactly.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Single-swap permutation search and combined language models are established ideas. The reusable pipeline here keeps four boundaries explicit: structural recovery, bounded relabeling, semantic language scoring, and physical replay. A pass at one boundary does not imply a pass at the next. See [Lexical-band contextual reranking](/statistics/lexical-band-contextual-reranking) for the separately tested successor that avoids raw score addition.
+'''
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_contextrelabel643.py"
+kind = "solver"
+note = "Implements the complete one-swap map bank, lexical shortlist with ties, pinned contextual score, hybrid ordering, semantic deduplication, and physical-origin ledger."
+ref = "LOG643"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_CONTEXTRELABEL646_CONTROLS.md"
+kind = "audit"
+note = "Freezes the relabeling rule and records the completed fresh gate: 14 of 16 exact selections, full structural retention and replay, one final-score error, and one shortlist exclusion."
+ref = "LOG646"
+
+[[provenance]]
+path = "withmath/logs/646_pk10_contextrelabel_controls_1788649066427692000_2058.log"
+kind = "log"
+note = "Immutable receipt for the fresh one-shot relabeling control gate."
+ref = "LOG646"
+
+[[provenance]]
+path = "withmath/logs/643_pk10_contextrelabel_controls_20260905T222047Z.log"
+kind = "log"
+note = "Disclosed development receipt for the frozen unit-weight relabeling rule."
+ref = "LOG643"
+
+[[references]]
+title = "Solving Substitution Ciphers with Combined Language Models"
+author = "Bradley Hauer, Ryan Hayward and Grzegorz Kondrak"
+year = 2014
+url = "https://aclanthology.org/C14-1218/"
+
+[[references]]
+title = "Decipherment of Substitution Ciphers with Neural Language Models"
+author = "Nishant Kambhatla, Anahita Mansouri Bigvand and Anoop Sarkar"
+year = 2018
+url = "https://doi.org/10.18653/v1/D18-1102"

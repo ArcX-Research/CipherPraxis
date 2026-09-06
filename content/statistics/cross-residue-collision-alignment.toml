@@ -1,0 +1,195 @@
+id = "cross-residue-collision-alignment"
+section = "statistics"
+title = "Cross-residue collision alignment"
+subtitle = "Align periodic substitution maps by matching symbol histograms across residues"
+status = "POWER-LIMITED"
+status_note = "The population objectives are exact under their stated sampling models, but short-text controls exposed two power limits: legal wrong cycles can outscore truth, and a selected literal shared-map screen detected only five of eight positives. Use these statistics as soft evidence, not truth-safe gates."
+family = "Permutation-invariant statistics"
+tags = ["periodic substitution", "collision score", "unknown cycle", "finite-sample bias", "selector validation"]
+related = ["label-free-collision-geometry", "index-of-coincidence", "shared-cycle-attack", "family-wise-null", "score-gap-ambiguity-bands", "parameter-versus-plaintext-recovery", "blind-controls", "maximum-weight-bipartite-assignment", "arbitrary-substitution-equality-classes"]
+summary = "Periodic-map hypotheses can be screened by comparing symbol histograms across residues or related texts before full language decoding. One variant applies candidate powers of a shared cycle; another asks whether two texts use the same arbitrary literal map in corresponding residue classes. Their population objectives are informative, but a large selected family can overfit short samples, so controls must measure the complete selector."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For text $t$, residue $r$, and recovered symbol $a$, let $n_{t,r,a}$ be the count after applying a candidate periodic map. The cross-residue collision objective is
+
+$$J=\sum_t\sum_{0\le r<s<p}\sum_a n_{t,r,a}n_{t,s,a}.$$
+
+It counts equal-symbol pairs taken from different residues of the same text. It can also be written as a pooled collision count minus all within-residue self-counts. A common relabelling of every recovered symbol leaves $J$ unchanged.
+
+For two texts thought to share one literal substitution map in class $s$, let $a_s(x)$ and $b_s(x)$ be their ciphertext counts of symbol $x$. A centered cross-text collision score is
+
+$$X=\frac{q\sum_{s,x}a_s(x)b_s(x)-\sum_s |a_s||b_s|}
+{q\sum_s |a_s||b_s|},$$
+
+for alphabet size $q$. Unlike $J$, this statistic intentionally depends on literal cross-text labels: applying the same global relabelling to both texts preserves it, while relabelling only one text usually breaks it.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Expectation is not a finite-sample guarantee"
+body = '''
+Assume every residue of text $t$ is sampled independently from one marginal $p_t$. A wrong periodic map permutes that marginal differently at each residue, producing $p_{t,r}$. For one residue pair,
+
+$$\langle p_{t,r},p_{t,s}\rangle
+=\lVert p_t\rVert^2-\frac{1}{2}\lVert p_{t,r}-p_{t,s}\rVert^2.$$
+
+Thus truth maximises $\mathbb E[J]$. But the observed count is noisy. Maximising it over many alphabet cycles and shift schedules selects an extreme fluctuation. The theorem compares fixed candidates in expectation; it does not say that the empirical maximum identifies truth.
+
+A second literal-map statistic profiles one shared plaintext-frequency permutation. With frozen integer log weights $w$ and histogram $h$, define
+
+$$F(h)=\max_{\pi\in S_q}\sum_x h(x)w_{\pi(x)}.$$
+
+The rearrangement inequality evaluates $F$ exactly by pairing sorted counts with sorted weights. For two class histograms, the sharing penalty
+
+$$G=F(a+b)-F(a)-F(b)\le 0$$
+
+is closest to zero when one alphabet assignment explains both texts nearly as well as two independent assignments. Larger $G$ therefore favours a shared literal map, but selection over phases and class aliases still needs a full-family null.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Shared-cycle alignment:** candidate cycle powers decode each residue before within-text histograms are compared. The score is invariant under a common relabelling of the recovered alphabet.
+- **Literal shared maps:** corresponding residue classes in two texts use the same arbitrary bijection. Compare their literal symbol counts directly; no rotation, reflection, or common cycle is assumed.
+- **Aliased residue classes:** a declared subset of residues may share one map. If that subset is selected, every candidate subset and relative phase belongs to the tested family.
+- **Profiled monogram compatibility:** use $G$ alongside collision excess $X$. They test different consequences of sharing and must be combined or corrected by a rule fixed before evaluation.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- In the cycle variant, one candidate cycle supplies all residue maps. In the literal variant, each declared class uses one bijection shared across the texts.
+- The plaintext marginal is stationary across residues within each text.
+- Positions are independent for the expectation calculation.
+- The true cycle family is included in the search.
+- Any use as a selector is calibrated at the real text lengths and full search multiplicity.
+- A relative phase, aliased residue subset, statistic, or source direction chosen by the procedure is reselected inside every null replicate.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Safe use"
+body = '''
+Use the score as one soft feature or as branch ordering inside an exact search. Preserve ties and candidates outside the top collision ranks. Before imposing a hard cutoff, run blind controls at the actual lengths with the same cycle space, restart count, and score maximisation. A single legal non-orbit candidate above truth refutes truth-safe hard selection.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function CROSS_RESIDUE_SCORE(decoded_texts, starts, period):
+    total = 0
+    for each text t:
+        count[r][a] = symbol counts at absolute residue r
+        for every residue pair r < s:
+            total += DOT(count[r], count[s])
+    return total
+
+function FALSIFY_SELECTOR(blind_candidates, truth):
+    truth_score = CROSS_RESIDUE_SCORE(DECODE(truth))
+    for candidate in blind_candidates:
+        if not SAME_GLOBAL_LABEL_ORBIT(candidate, truth)
+           and CROSS_RESIDUE_SCORE(DECODE(candidate)) > truth_score:
+            return REFUTED
+    return INCONCLUSIVE
+
+function LITERAL_SHARED_SCORE(count_a, count_b, weights):
+    X = CENTERED_CROSS_COLLISIONS(count_a, count_b)
+    G = 0
+    for class s:
+        G += SORTED_ASSIGNMENT(count_a[s] + count_b[s], weights)
+        G -= SORTED_ASSIGNMENT(count_a[s], weights)
+        G -= SORTED_ASSIGNMENT(count_b[s], weights)
+    return X, G
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Scoring one decoded candidate costs $O(n+pq^2)$ directly, or $O(n+p^2q)$ when pairwise dot products are explicit, for text length $n$, period $p$, and alphabet size $q$. The difficult part is the candidate family: arbitrary cyclic orders contribute roughly $(q-1)!/\varphi(q)$ unit-quotiented orders before periodic shifts. Heuristic search reduces runtime but does not remove multiple-search bias.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Winner's curse:** the best of many noisy candidates exceeds the planted finite-sample score.
+- **Changing marginals:** topics, formatting, or constructed residue patterns violate stationarity.
+- **Concentrated impostor:** a wrong cycle maps each residue toward a few common symbols and inflates collisions.
+- **Global label orbit counted as an error:** all common plaintext relabellings have the same score and must be quotiented before declaring a counterexample.
+- **Heuristic miss called evidence:** a search result below truth is inconclusive unless the full state space was exhausted.
+- **Expected optimum called recovered key:** a population theorem is not an observed-text certificate.
+- **Literal labels removed by the null:** a common relabelling of both texts preserves sharing; relabelling only one source is the contrast that breaks a literal shared map while preserving its internal residue structure.
+- **Subset selected once:** the observed phase or aliased residue set is held fixed on nulls instead of rerunning the whole selection.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+A frozen target-absent panel used two texts of lengths 63 and 95, period 7, one shared random 26-cycle, independent shifts, and both rotation and reflection. Every 576,000-proposal search completed uncapped. Even under stationary iid-skewed plaintext, legal non-orbit cycles scored 2,400 versus truth 2,384 for rotation and 2,373 versus 2,358 for reflection. Changing-marginal controls failed by more than 2,100. Separate code regenerated every fixture and replayed all 310 emitted states. These positive counterexamples close the statistic as a truth-safe hard gate at these lengths.
+
+A later literal-map panel used the same two lengths. Its broad arm searched seven arbitrary shared maps; its aliased arm searched every relative phase and every three-residue alias set. Each one-source relabelling null repeated the complete selector and both statistics. At the frozen decision threshold the screen detected five of eight linked positives, below its required six, while none of eight independently mapped negatives passed. The separate implementation replayed 4,752 null analyses and 1,203,552 selected cells. The result is `POWER-LIMITED`: the model remains open, but this marginal screen cannot gate a live language attack.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Collision matching and index-of-coincidence ideas are classical. The important methodological result is the boundary between an exact expectation identity and empirical selection after a large search. A mathematically correct population objective can still be unsafe for short-ciphertext key recovery.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK89_MARGINALCYCLE666.md"
+kind = "design"
+note = "Defines the periodic collision objective, shared-cycle relations, expectation claim, orbit quotient, and falsification endpoint."
+ref = "LOG666"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk89_marginalcycle666_probe.cpp"
+kind = "solver"
+note = "Target-absent shared-cycle search and reduced exact enumerator with physical-map deduplication."
+ref = "LOG666"
+
+[[provenance]]
+path = "withmath/logs/666_marginalcycle_controls_20260906T031129Z_1788664289980346000.json"
+kind = "log"
+note = "Frozen controls containing the genuine iid strict-better counterexamples and all cap/source records."
+ref = "LOG666"
+
+[[provenance]]
+path = "withmath/logs/666_marginalcycle_kat_20260906T031129Z_1788664289980346000.log"
+kind = "log"
+note = "Hash-bound receipt for the control artifact; the independent replay is recorded in the coordination ledger."
+ref = "LOG666"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "audit"
+note = "LOG666 terminal records the separate-code artifact replay and the verified iid non-orbit counterexamples."
+ref = "LOG666"
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/PK89_SHAREDMAP721.md"
+kind = "audit"
+note = "Defines the literal shared-map collision and profiled-assignment statistics, the complete phase-and-alias selector, source-relabeling nulls, and the target-absent power result."
+ref = "LOG721"
+
+[[provenance]]
+path = "withmath/scripts/experiments/cross/wm_pk89_sharedmap721.py"
+kind = "solver"
+note = "Exact rational collision comparisons, integer profiled assignments, full selected-family nulls, and scalar shared-map forwards."
+ref = "LOG721"
+
+[[provenance]]
+path = "withmath/scripts/experiments/cross/wm_pk89_sharedmap721_audit.py"
+kind = "audit"
+note = "Independent fixture, selector, null, tie, p-value, and forward reconstruction."
+ref = "LOG721"
+
+[[provenance]]
+path = "withmath/logs/721_controls_20260906T115100Z.json"
+kind = "data"
+note = "Frozen target-absent panel with five of eight positive detections and zero of eight negative detections."
+ref = "LOG721"

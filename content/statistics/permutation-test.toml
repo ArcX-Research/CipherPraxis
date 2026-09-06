@@ -5,10 +5,10 @@ subtitle = "Rank the observed result among results from shuffled or otherwise tr
 status = "VERIFIED"
 status_note = "Audited exact tests use a strict rank-1-of-100 rule: 99 matched nulls, with ties rejected and a smallest possible p-value of 0.01. Across 700 target-absent selections, it accepted 4/4 planted English positives and rejected 3/3 valid-model random negatives. One live test reported its candidate at rank 100 of 100 and p_perm 0.01 as the available resolution."
 family = "Null distributions and calibration"
-tags = ["permutation test", "randomisation", "exact test", "rank", "p-value"]
-related = ["shuffled-null-z-score", "within-coset-null", "family-wise-null", "power-analysis", "english-gate-calibration", "valid-model-nulls", "seal-and-audit-protocol", "g-empirical-p-value", "g-null-distribution", "null-lab"]
-summary = "A permutation test avoids assuming a particular probability distribution. Under the null, allowed transformations such as shuffles should make equivalent data. Compute the statistic on the original and N transformed copies, then rank the original among all N + 1 values. This gives the p-value. The method works for any statistic, even a full solver's final score, if the transformations truly preserve the null and every copy goes through the same selection process."
-updated = "2026-09-04"
+tags = ["permutation test", "randomisation", "exact test", "full selector", "add-one p-value", "rank"]
+related = ["shuffled-null-z-score", "within-coset-null", "family-wise-null", "power-analysis", "english-gate-calibration", "valid-model-nulls", "joint-statistic-release-gates", "evidence-scope-ladder", "candidate-bank-lineage-and-cap-accounting", "seal-and-audit-protocol", "g-empirical-p-value", "g-null-distribution", "null-lab"]
+summary = "A permutation test avoids assuming a particular probability distribution. Under the null, allowed transformations such as shuffles should make equivalent data. Compute the statistic on the original and N transformed copies, then rank the original among all N + 1 values. This gives the p-value. The statistic may be a capped heuristic's final score, but every copy must rerun the same complete shortlist, polish, deduplication, and selection process. The rank then calibrates that frozen procedure, not an exhaustive cipher family."
+updated = "2026-09-06"
 
 [[blocks]]
 kind = "definition"
@@ -21,6 +21,23 @@ is a valid $p$-value: under the null, $\Pr(\hat p \le \alpha) \le \alpha$. The *
 '''
 
 [[blocks]]
+kind = "equations"
+title = "Exact enumeration and sampled ranks"
+body = '''
+If every element of a finite transformation group $G$ is enumerated, the exact upper-tail probability is
+
+$$p_{\rm exact}=\frac{\#\{g\in G:T(gx)\ge T(x)\}}{|G|}.$$
+
+If only $B$ transformations are sampled, let $R=\#\{b:T(g_bx)\ge T(x)\}$. The finite-sample estimator is
+
+$$p_+=\frac{R+1}{B+1},$$
+
+not $R/B$. It can never be zero, and its smallest value is $1/(B+1)$. The inclusive comparison counts score ties against the observation.
+
+Sampling with replacement can draw the identity twice, repeat a transformation, or produce the same transformed text through different draws. Keep those draws. Removing them changes the experiment after seeing collisions. This is different from aliases *inside* a solver: several physical keys that yield one semantic candidate keep their lineage but do not become extra votes.
+'''
+
+[[blocks]]
 kind = "variants"
 body = '''
 - **Full symmetric group** (position shuffle): null of "any order structure". See [shuffled-null z-score](/statistics/shuffled-null-z-score).
@@ -28,6 +45,8 @@ body = '''
 - **Within-segment subgroup**: null for change-point and per-segment statistics.
 - **Pairing nulls**: for a two-text relation, re-pair one text with other sources or permute within key groups (identity plus 19 whole-source plus 19 within-key-group pairings per fixture in one audited bank).
 - **Per-family null banks**: when a hypothesis union is not exchangeable under one group, run one matched test per sub-family and report the worst-case $p$.
+- **Complete finite orbit**: enumerate all allowed transformations and use $p_{\rm exact}$.
+- **Monte Carlo orbit sample**: draw from the declared group with replacement and use $p_+$. Identity and duplicate draws remain in the denominator.
 '''
 
 [[blocks]]
@@ -36,6 +55,10 @@ body = '''
 - Exchangeability: the null distribution of the data is invariant under $G$. This must be argued for the *whole* hypothesis family in use. A union of re-indexings needs a common normaliser or separate tests.
 - Identical processing: every transformed copy goes through the same complete selection (enumeration, fit, polish, forward check). The observed cycle, sign, key or score is never reused.
 - The transformations are drawn before any score is seen and are not filtered by score or adjacency.
+- The statistic is a deterministic function of its input and frozen runtime. If the selector is stochastic, its seed rule is part of the test and must not depend on whether an input is observed or null.
+- Identical transformed inputs produce identical payloads and scores. A job index or role label must not change the answer.
+- A deterministic cap may be part of $T$ if the selector always returns a predeclared score or sentinel at that cap. Different caps, a missing replicate, or an unclassified timeout make the whole rank incomplete.
+- Plaintext deduplication may save scoring work, but physical keys and source offsets remain attached as provenance. Their multiplicity never becomes extra null evidence.
 '''
 
 [[blocks]]
@@ -56,31 +79,38 @@ body = '''
 // T = the frozen endpoint statistic (the score of the candidate selected by
 // the full search). G = the group of transformations under which the null
 // hypothesis is exchangeable.
-function PERMUTATION_TEST(x, T, G, N, seed):
+function SAMPLED_PERMUTATION_TEST(x, FULL_SELECTOR, G, B, seed):
     rng = RNG(seed)
-    for i in 1..N:
-        // drawn and stored before any score is seen
-        g[i] = DRAW(rng, G)
-    // the complete selection on the original
-    observed = T(x)
-    for i in 1..N:
-        // the same complete selection on each copy
-        null[i] = T(g[i](x))
+    for b in 1..B:
+        // Draw with replacement and store before any score is seen. Keep
+        // identity, repeated transformations, and repeated resulting texts.
+        g[b] = DRAW_UNIFORMLY(rng, G)
+    observed_result = FULL_SELECTOR(x)
+    require observed_result has a declared endpoint score and cap census
+    observed = observed_result.endpoint_score
+    for b in 1..B:
+        // Refit and reselect every hypothesis on each transformed input.
+        result = FULL_SELECTOR(g[b](x))
+        require result used the same caps and has a declared endpoint score
+        null[b] = result.endpoint_score
+        if g[b](x) equals an earlier input:
+            require null[b] equals the earlier complete result
     // a tie counts against the candidate
-    count = #{ i : null[i] >= observed }
-    p_hat = (1 + count) / (N + 1)
-    if observed > max over i of null[i]:            // strict rank 1 of N + 1
-        return CANDIDATE, p_hat                     // p_hat = 1 / (N + 1)
-    return NO_CANDIDATE, p_hat
+    R = #{ b : null[b] >= observed }
+    p_plus = (R + 1) / (B + 1)
+    return p_plus, R, all null scores
 
-// The attainable resolution is 1 / (N + 1); print it beside the verdict.
+function EXACT_GROUP_TEST(x, FULL_SELECTOR, G):
+    observed = FULL_SELECTOR(x).endpoint_score
+    scores = [FULL_SELECTOR(g(x)).endpoint_score for every g in G]
+    return #{ score in scores : score >= observed } / SIZE(G)
 ```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-$N + 1$ complete selections. The audited exact lane ran $7 \times 100 = 700$ selections with at most $5{,}268$ search nodes each, while a slow bank search could afford only nine. The resolution of $\hat p$ is $1/(N+1)$ regardless of how extreme the observed value is.
+$B + 1$ complete selections for a sampled test, or $|G|$ selections for full enumeration when the identity is included in $G$. The audited exact lane ran $7 \times 100 = 700$ selections with at most $5{,}268$ search nodes each, while a slow bank search could afford only nine. The resolution of $p_+$ is $1/(B+1)$ regardless of how extreme the observed value is.
 '''
 
 [[blocks]]
@@ -90,13 +120,21 @@ body = '''
 - **Score-reused nulls.** Scoring the observed key on transformed copies without re-selecting it tests a different, easier hypothesis.
 - **Gate shopping.** Re-tuning the statistic, the group or the threshold after seeing the live rank invalidates the test. The audited lanes freeze source hashes and refuse to run otherwise.
 - **Non-exchangeable unions.** Comparing separately conjugated, hypothesis-specific nulls as if they were one randomisation test overstates significance.
-- **Ties.** When the statistic is discrete (integer scores, search-tree sizes), ties with nulls are common. The rule must say that ties lose.
+- **Zero from a sampled tail.** Reporting $R/B$ gives zero when no sampled null exceeds the observation. The plus-one estimator correctly reports the finite resolution.
+- **Ties discarded.** When the statistic is discrete, ties with nulls are common. The upper tail is inclusive, so equality loses under a strict gate.
+- **Duplicate nulls redrawn.** Identity, repeated permutations, or repeated output strings are removed because they look uninformative. This changes the precommitted sample and can improve the observed rank.
+- **Alias votes.** Equivalent physical keys are counted as several candidate wins. Canonicalise the semantic candidate for scoring while retaining every physical origin for replay.
+- **Role-dependent randomness.** The same input receives different scores because its job number changes a search seed. The statistic is then not the same function across exchangeable inputs.
+- **Unequal cap handling.** The observation receives a deeper shortlist or more polish sweeps than the nulls, or a timed-out null is silently assigned a losing score without that sentinel having been predeclared.
+- **Heuristic rank called coverage.** A capped deterministic selector has a valid matched rank, but the rank says nothing about candidates that its shortlists discarded.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
 Target-absent exact lane: 4 English positives at rank 1/100 with observed scores above the best null by $0.9$–$1.3$ million scaled units; 3 valid-model random negatives at ranks 84, 55 and 6 (all rejected; rank 6 is the recorded boundary case). Derived-alphabet lane: controls power 47/48 with 6/6 negatives rejected; live candidate rank 100/100, terminal line stating $p_{\text{perm}} \ge 0.01$. Bank search: 9 within-coset nulls, 8 above the candidate, $\hat p \le 0.90$. Shared-cycle bank: identity plus 38 pairing nulls per fixture, 8/8 positives at rank one in both null families with margins $\ge 1.64$ rate units, 4/4 negatives rejected.
+
+An exact small-orbit check enumerated 1,728 ordered triples on a 12-string repeated-symbol orbit. Inclusive plus-one ranks rejected 454 triples at the one-third threshold and 1,034 at the two-thirds threshold, both conservative. A separate classifier check retained 99 duplicate transformed strings rather than redrawing them and counted all 99 ties in the upper tail.
 '''
 
 [[blocks]]
@@ -113,8 +151,20 @@ With nine nulls of which eight exceed $S$, $\hat p = 9/10 = 0.90$: the candidate
 [[blocks]]
 kind = "notes"
 body = '''
-The permutation test is the only inference in the toolkit that does not depend on a model of the score's distribution; that is why it is the endpoint of every audited lane, with the language gate and the evidence gains serving as guards and diagnostics upstream of it.
+The permutation test does not need a parametric model of the score distribution, but its conclusion is narrow. The rank is conditional on the declared transformation group, statistic, selector, and search family. It is not a posterior probability that a text is meaningful or that a cipher family is correct.
 '''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_NULLRELEASE652_PROTOCOL.md"
+kind = "design"
+note = "Defines sampled with-replacement group transformations, the inclusive plus-one upper tail, duplicate retention, identical full selection, deterministic input handling, and the difference between numerical rank and family evidence."
+ref = "LOG652"
+
+[[provenance]]
+path = "withmath/logs/652_nullrelease_preflight_20260906T000231Z_1788652951740611000.log"
+kind = "log"
+note = "Target-absent finite-orbit checks: 1,728 ordered triples with conservative rejection counts 454 and 1,034; duplicate-input rank and tie accounting; no live input."
+ref = "LOG652"
 
 [[provenance]]
 path = "withmath/PK9_THIRDS_ENDPOINT_NULL_CONTROL_AUDIT.md"
@@ -150,6 +200,11 @@ path = "withmath/PK10_LOCALIZED_ALBERTI_SPAN_CONTROL_POWER_AUDIT.md"
 kind = "audit"
 note = "Per-rule-family null banks with the conservative worst-case p when one shuffle is not exchangeable for heterogeneous rules; 19 control nulls are calibration only, a live candidate needs the 99-null successor."
 
+[[provenance]]
+path = "withmath/scripts/experiments/cross/wm_knownresidual657.py"
+kind = "solver"
+note = "Applies one deterministic capped selector independently to the observation and each position-shuffled input, then reports the inclusive add-one upper-tail rank."
+
 [[references]]
 title = "The Design of Experiments"
 author = "R. A. Fisher"
@@ -159,3 +214,8 @@ year = 1935
 title = "Permutation Tests: A Practical Guide to Resampling Methods for Testing Hypotheses"
 author = "Phillip Good"
 year = 2000
+
+[[references]]
+title = "Permutation P-values Should Never Be Zero: Calculating Exact P-values When Permutations Are Randomly Drawn"
+author = "Belinda Phipson and Gordon K. Smyth"
+year = 2010

@@ -1,0 +1,196 @@
+id = "two-dial-translation-factorization"
+section = "algebra"
+title = "Two-dial translation factorization"
+subtitle = "Recognize complete substitution maps that share two cyclic coordinates"
+status = "VERIFIED"
+status_note = "The exact factorizer matched independent direct enumeration on 25,935,016 ordered pairs through degree seven and 1,742,048 ordered triples through degree five. Every one of 184,819 tested exponent vectors through degree seven was retained."
+family = "Permutation-group reconstruction"
+tags = ["bitorsor", "two alphabets", "quotient maps", "cyclic action", "exact factorization"]
+related = ["quagmire-iv", "permutation-cycles", "group-actions-on-alphabets", "semiregular-common-cycle-criterion", "conjugacy-and-gauge", "shared-cycle-attack", "exhaustive-enumeration"]
+summary = "A periodic cipher may translate between two independently ordered alphabet dials. If every period-class substitution is known as a complete permutation, left quotients remove the plaintext dial and right quotients remove the ciphertext dial. The maps admit a two-dial translation factorization exactly when the left quotients generate a cyclic group whose nonidentity elements fix no symbols. The test is exact, constructive, and independent of language scoring."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $S$ be an alphabet of size $q$. Two coordinate maps
+
+$$A,B:\mathbb{Z}_q\longrightarrow S$$
+
+give the plaintext and ciphertext dial orders. Write $\tau_k(t)=t+k\pmod q$. A complete substitution map for period class $r$ has the form
+
+$$F_r=B\,\tau_{k_r}\,A^{-1}.$$
+
+This is a **two-dial translation factorization**: $A^{-1}$ reads a plaintext symbol on one dial, $\tau_{k_r}$ turns by the class shift, and $B$ reads the result on the other dial. [Quagmire IV](/ciphers/quagmire-iv) is the standard classical-cipher example.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Quotients and the exact criterion"
+body = '''
+Choose class zero as the phase anchor and set $k_0=0$. Then $F_0=BA^{-1}$. Define the left and right quotients
+
+$$L_r=F_rF_0^{-1}=B\tau_{k_r}B^{-1},$$
+
+$$R_r=F_0^{-1}F_r=A\tau_{k_r}A^{-1}.$$
+
+They must satisfy
+
+$$L_rF_0=F_0R_r=F_r,\qquad R_r=F_0^{-1}L_rF_0.$$
+
+Let $H=\langle L_r:r\rangle$. A two-dial factorization exists **if and only if** $H$ is cyclic and semiregular on $S$:
+
+$$h\ne1\quad\Longrightarrow\quad h(x)\ne x\text{ for every }x\in S.$$
+
+Necessity follows because $H$ is conjugate to a subgroup of the regular translation group on $\mathbb{Z}_q$. For sufficiency, let $h$ generate $H$, put $m=|H|$ and $d=q/m$, and choose one representative $x_j$ from each of its $d$ orbits. The cyclic order
+
+$$x_0,\ldots,x_{d-1},\ hx_0,\ldots,hx_{d-1},\ \ldots,\ h^{m-1}x_0,\ldots,h^{m-1}x_{d-1}$$
+
+defines a regular cycle $W$ with $W^d=h$. Every $L_r$ is therefore a power of $W$. Use a coordinate listing of $W$ as $B$, set
+
+$$A=F_0^{-1}B,$$
+
+recover each exponent $k_r$ from $L_r=W^{k_r}$, and replay every $F_r$. Semiregularity also makes every $H$-orbit have size $|H|$, so $|H|$ must divide $q$.
+'''
+
+[[blocks]]
+kind = "variants"
+title = "Roots, gauges, and aliases"
+body = '''
+- **Phase gauge:** rotating the two dial coordinates separately changes every shift by one common constant. Fixing $k_0=0$ removes that relative phase. Rotating both coordinates together still leaves every map unchanged; a canonical origin removes this remaining display gauge.
+- **Generator aliases:** one regular cyclic group has one generator for each unit modulo $q$. Replacing $W$ by $W^u$ for $\gcd(u,q)=1$ changes the exponent vector to $u^{-1}k_r\pmod q$ but describes the same cyclic group. Reversal is the alias $u=-1$.
+- **Group roots:** when $H$ is a proper subgroup, more than one regular cyclic group may contain it. Every compatible group and every generator alias must be retained.
+- **Right quotients:** for honest complete maps, the right family is conjugate to the left by $F_0$. It is an independent certificate and composition-order check, not extra existence evidence.
+
+For $q=26$, let $g=\gcd(26,k_1,k_2,\ldots)$. Then $|H|=26/g$, and the exact extension counts are:
+
+| $g$ | $|H|$ | regular cyclic groups | generator aliases over all groups |
+| ---: | ---: | ---: | ---: |
+| $1$ | $26$ | $1$ | $12$ |
+| $2$ | $13$ | $13$ | $156$ |
+| $13$ | $2$ | $12!\,2^{12}/12$ | $12!\,2^{12}$ |
+| $26$ | $1$ | $25!/12$ | $25!$ |
+
+The last two branches are too large to list casually. An exact implementation can return their counts and a replayable representative while clearly marking the remaining roots as factored, not absent.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and scope"
+body = '''
+- Every $F_r$ is a complete bijection on the same $q$ symbols. A partial substitution table does not have the inverse needed by the quotient equations.
+- The theorem decides algebraic compatibility with two cyclic dials. It does not recover the complete maps from ciphertext, score plaintext, or prove that this cipher model generated an observed text.
+- The mathematical criterion holds for any finite $q$. The validated reference implementation explicitly enumerates degrees two through seven and has specialised exact or factored branches at degree twenty-six; other degrees are unsupported by that implementation.
+- A rejected complete tuple is an exact contradiction. If a proposal bank has no survivor, only that bank has been excluded; the ungenerated complete maps remain open.
+- Proposal origins and algebraic ties are part of the result. Equal map content from distinct origins must not be silently merged.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Exact factorization procedure"
+body = '''
+Validate the class maps as complete permutations and choose an anchor $F_0$. Compute every left quotient and close the generated group under composition. Reject if the closure exceeds the alphabet size, is not cyclic, or contains a nonidentity map with a fixed symbol. Pairwise commutation and individually plausible cycle types are not sufficient: a mixed group word can still expose a fixed point.
+
+For a survivor, enumerate every regular cyclic supergroup containing $H$, or retain an exact factored count in a declared degenerate branch. For every regular generator, recover the shift exponents, reconstruct $A$ and $B$, and forward-replay the supplied maps. Recompute the right quotients independently and verify both link equations before emitting a witness.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function FACTOR_TWO_DIAL_MAPS(F[0..s-1]):
+    require s >= 2 and every F[r] is a complete permutation of q symbols
+    F0_inverse = INVERSE(F[0])
+    for r in 0..s-1:
+        L[r] = COMPOSE(F[r], F0_inverse)
+        R[r] = COMPOSE(F0_inverse, F[r])
+        require COMPOSE(L[r], F[0]) == F[r]
+        require COMPOSE(F[0], R[r]) == F[r]
+        require R[r] == COMPOSE(F0_inverse, L[r], F[0])
+    H = GROUP_CLOSURE(L)
+    if size(H) > q: return INCOMPATIBLE
+    if no member of H has permutation order size(H): return INCOMPATIBLE
+    if any nonidentity h in H fixes any symbol: return INCOMPATIBLE
+    groups = REGULAR_CYCLIC_SUPERGROUPS(H, q)
+    for each group G, or each declared factored branch:
+        retain every regular generator W of G
+        recover k[r] such that L[r] == POWER(W, k[r])
+        B = COORDINATE_LISTING(W, canonical origin)
+        A = COMPOSE(F0_inverse, B)
+        require B * SHIFT(k[r]) * INVERSE(A) == F[r] for every r
+        emit G, W, k, A, B, gauges, origins, and replay certificate
+    return every compatible witness and every exact factored count
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+With $s$ class maps, forming both quotient families costs $O(sq)$. A compatible semiregular closure contains at most $q$ permutations; literal composition and fixed-point checks are polynomial in $q$. The difficult part is listing every regular cyclic supergroup when $H$ is small. The degree-twenty-six implementation materialises the order-twenty-six and order-thirteen branches, but represents the order-two and identity branches by exact counts plus replayable representatives.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Partial maps treated as complete:** filling unknown cells with identity values can invent both compatibility and contradictions.
+- **Pairwise-only checks:** commuting quotients with plausible cycle shapes can generate a noncyclic or nonsemiregular group.
+- **Wrong composition order:** left and right quotients remove different dials. The link equations catch a swapped convention.
+- **Double-counting the right family:** $R_r=F_0^{-1}L_rF_0$, so it checks integrity but cannot add existence power.
+- **One convenient root:** selecting a single extension in an order-two or identity branch hides a vast exact tie set.
+- **Literal-key comparison:** origins, phase, unit generators, and reversal create equivalent alphabet and shift descriptions.
+- **Bank miss called a family rejection:** the factorizer filters complete proposals; it does not generate maps from ciphertext.
+- **Unsupported degree called incompatible:** implementation boundaries must be reported separately from algebraic rejection.
+- **Origin collapse:** deduplicating equal map tuples before recording their proposal lineage loses distinct evidence paths.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+An independent direct $A,B,k$ enumerator agreed with the quotient factorizer on all 25,935,016 ordered map pairs for degrees two through seven: 3,763,822 were compatible. It also agreed on all 1,742,048 ordered triples for degrees two through five: 18,566 were compatible. No degree-six or degree-seven triple census is claimed.
+
+A separate panel retained all 184,819 exponent vectors $(0,k_1,\ldots,k_6)$ through degree seven. Thirty constructed checks covered honest maps, repeated maps, the four degree-twenty-six gcd branches, root aliases, noncommuting and nonsemiregular quotients, distinct roots with no common regular group, corrupted left or right certificates, malformed and partial maps, resource caps, and duplicate origins.
+
+Finally, a thirty-row synthetic proposal bank retained all twelve planted rows, rejected all seventeen algebraic adversaries, and reported one degree-eight row as unsupported. Every explicit witness and every representative of a factored branch passed an independent forward replay. These controls validate the complete-map algebra and implementation; they do not measure map acquisition from ciphertext.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The construction can be viewed as a cyclic bitorsor: the left quotient action exposes the ciphertext coordinate, while the conjugate right action exposes the plaintext coordinate. The exact cyclic-and-semiregular criterion turns this viewpoint into a decision procedure rather than a metaphor.
+'''
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/QIV_BITORSOR681_DESIGN.md"
+kind = "design"
+note = "Derives the quotient theorem, constructive regular-cycle embedding, gauges, exact degree-twenty-six root counts, and complete-map scope."
+ref = "LOG681"
+
+[[provenance]]
+path = "withmath/scripts/experiments/cross/wm_qiv_bitorsor681.py"
+kind = "solver"
+note = "Frozen exact factorizer with complete-map validation, quotient closure, root enumeration, factored degeneracies, and forward certificates."
+ref = "LOG681"
+
+[[provenance]]
+path = "withmath/scripts/experiments/cross/wm_qiv_bitorsor681_audit.py"
+kind = "audit"
+note = "Independent direct dial-and-shift oracle, exhaustive finite censuses, adversarial checks, refusal tests, and synthetic-bank audit."
+ref = "LOG681"
+
+[[provenance]]
+path = "withmath/logs/681_bitorsor_controls_20260906T054053Z_12151_15740.log"
+kind = "log"
+note = "Terminal receipt for the exhaustive and constructed control panels."
+ref = "LOG681"
+
+[[provenance]]
+path = "withmath/logs/681_bitorsor_synthetic_20260906T054053Z_12151_15740.json"
+kind = "data"
+note = "Machine-readable census summaries, exact extension counts, refusals, source hashes, and synthetic-bank results."
+ref = "LOG681"
+
+[[references]]
+title = "Permutation Groups"
+author = "Peter J. Cameron"
+year = 1999
+

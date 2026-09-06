@@ -6,9 +6,9 @@ status = "VERIFIED"
 status_note = "Alignment, algebra, grammar, and cascade solvers take the best family score on each shuffled text. On controls, a period-7 key reaches z +15.3 while a weak compound-period case correctly reaches only +0.9. A cross-text match that looked like +5.7 standard deviations in one trial fell to +0.8 after accounting for all 1,296 trials."
 family = "Null distributions and calibration"
 tags = ["multiple comparisons", "selection", "null distribution", "max statistic", "familywise"]
-related = ["shuffled-null-z-score", "selection-overfit-diagnostic", "permutation-test", "within-coset-null", "bayesian-evidence-model-selection", "coincidence-lag-profile", "kasiski-examination", "g-null-distribution", "g-empirical-p-value"]
+related = ["shuffled-null-z-score", "selection-overfit-diagnostic", "permutation-test", "within-coset-null", "bayesian-evidence-model-selection", "joint-statistic-release-gates", "evidence-scope-ladder", "coincidence-lag-profile", "kasiski-examination", "g-null-distribution", "g-empirical-p-value"]
 summary = "A cipher search tries many periods, offsets, widths, relations, alphabets, and keys, then reports the best. Chance alone makes that winner better than one fixed trial. A family-wise null repeats the whole search on each shuffled text and saves each run's best score. Comparing best with best prevents a large search from looking significant only because it had many chances. Results from scans are therefore judged against family-wise nulls."
-updated = "2026-09-04"
+updated = "2026-09-06"
 
 [[blocks]]
 kind = "definition"
@@ -29,6 +29,12 @@ Decision rules in the toolkit are written against the family-wise maximum rather
 - periodic-substitution gate: fire if $\max_{p, A, \text{rel}} g(p, A, \text{rel}) \ \ge\ \max_{\pi} T^*(\pi c) + 0.02$ nats per letter;
 - conditional endpoint of a bank search: $\hat p = \frac{1 + \#\{j : T^*(\pi_j c) \ge T^*(c)\}}{N + 1}$ with the whole bank re-selected on every null;
 - when a family is heterogeneous and no single shuffle is exchangeable for all its members, use one null bank per sub-family and report the worst (largest) $p$; do not pool incompatible hypotheses.
+
+The tempting shortcut is to select $h^*=\arg\max_h T_h(c)$ once and score only that fixed hypothesis on each null. For a maximisation problem,
+
+$$U_b=T_{h^*}(\pi_b c)\le \max_{h\in H}T_h(\pi_b c)=V_b.$$
+
+Therefore the shortcut's exceedance count cannot be larger than the correct full-reselection count. Its empirical $p$ is biased downward and may be anti-conservative. Refit nuisance parameters, rerun every finishing stage, and reselect $h$ independently inside each null replicate.
 '''
 
 [[blocks]]
@@ -37,6 +43,8 @@ body = '''
 - The family used in the null is the family actually searched, including any post-hoc choices: a second window added after seeing the first is an uncharged trial unless the null maximises over both windows.
 - Hypotheses may be correlated. The family-wise null handles that automatically because it maximises over the same correlated statistics on each shuffle. A Bonferroni correction would be conservative and is not needed.
 - The shuffle preserves everything the family does not claim. Otherwise a subgroup shuffle (within coset, within segment) is required.
+- The complete selector is one frozen function of an input. Search seeds, stopping rules, candidate caps, tie expansion, polishing, reranking, and forward checks use the same policy for the observation and every null.
+- Output serialisation may retain fewer rows for a null only after every score-bearing stage has finished and a proof shows that the reported maximum is unchanged. Record that difference explicitly; it is not permission to shorten the null search.
 '''
 
 [[blocks]]
@@ -44,7 +52,7 @@ kind = "attack"
 title = "How to attack it"
 body = '''
 1. Define the family before the scan (periods, widths, offsets, relations, alphabet orders, cribs, keys) and write the maximiser as one function.
-2. Evaluate that function on the target and on $N$ shuffles; report the target's rank.
+2. Evaluate that complete function from scratch on the target and on $N$ shuffles; report the target's rank. Never carry the target's winning key, schedule, map, shortlist, or chosen scoring branch into the nulls.
 3. Look at *where* the maximum falls: a best that sits at the largest period or offset scanned, in every text, is the signature of selection over a family whose size grows with the parameter; treat it as null.
 4. Reserve the family-wise reading for gates; per-trial readings are diagnostics only.
 '''
@@ -62,7 +70,8 @@ function BEST_OVER_FAMILY(c, H):
 function FAMILY_WISE_NULL(c, H, N):
     T_star, h_star = BEST_OVER_FAMILY(c, H)
     for j in 1..N:
-        // re-selects h on each shuffle
+        // Start from the same declared search policy, not h_star. This refits
+        // nuisance parameters and re-selects h on each shuffle.
         null[j], _ = BEST_OVER_FAMILY(SHUFFLE_POSITIONS(c), H)
     z_fw = (T_star - MEAN(null)) / SD(null)
     p_hat = (1 + #{ j : null[j] >= T_star }) / (N + 1)
@@ -90,6 +99,9 @@ body = '''
 - **Per-trial illusion.** A cross-text relation scan reached a coincidence rate of $0.0495$ against a per-trial null of $0.0387 \pm 0.0019$, i.e. $+5.7\sigma$; over the 648 relation-offset trials per pairing the transcript already notes that a maximum near $+3\sigma$ is chance, and the family-wise null over all 1,296 trials put the same value at $+0.8\sigma$.
 - **False pattern at the largest period.** A keyword-bank scan reported $z = +2.74$, $+2.83$, and $+3.04$ for three targets. Every best result occurred at periods 12–14, the top edge of the scan. By contrast, the planted control ranked its true keyword 1 of $607{,}776$ at $z = +7.6$ and found the true period.
 - **Family too small in the null.** Re-using the observed cycle, sign or key inside the nulls (instead of re-selecting them) shrinks the null and manufactures significance.
+- **Endpoint-only shortcut.** The observation chooses a detector or candidate through a broad search, but each null is scored only under that observed winner. Because the null is denied its own maximisation, the resulting tail is systematically too light.
+- **Stage-two shortcut.** Nulls rerun a cheap first statistic but skip the polish, language reranker, or ambiguity rule that actually controls release. The calibrated object is not the released object.
+- **Unproved top-one shortcut.** Null runs write one row while the observation writes a larger bank, but the implementation never proves that truncation happens strictly after the common maximum has been selected.
 - **Invariant sub-families.** Members whose statistic is invariant under the shuffle contribute a constant. They neither help nor hurt but inflate the family size in a Bonferroni count, another reason to simulate rather than correct.
 '''
 
@@ -97,6 +109,8 @@ body = '''
 kind = "controls"
 body = '''
 Affine-lag filters (2 alphabet orders, all lags and multipliers): the best per-trial $z$ was $+4.2$, the family-wise maximum log-likelihood ratio $5.0$ against a shuffled maximum $5.1 \pm 0.6$, $z = -0.1$. Order-free substitution scan: a planted period-7 key found at $z = +15.28$ family-wise. A planted composite key of period $\operatorname{lcm}(5, 9) = 45$, outside the scanned range, at $+0.91$ (expected weak). Bank search with nine complete-pipeline nulls: observed $-4.869$ against null $-4.836 \pm 0.024$, maximum $-4.795$, $\hat p \le 0.90$.
+
+An exact target-absent construction selected one of six detectors on each observation. Keeping the observed detector fixed on the nulls falsely rejected 150 of 216 cases at a nominal one-third threshold. Repeating the six-way selection inside every null rejected 0 of 216. This is a direct finite counterexample to endpoint-only null scoring.
 '''
 
 [[blocks]]
@@ -114,8 +128,20 @@ The gate requires the target to clear the family-wise maximum by a margin; here 
 [[blocks]]
 kind = "notes"
 body = '''
-The family-wise null is the cryptanalytic form of the multiple-comparisons problem. Its discipline is procedural: write the maximiser once, call it on the target and on the shuffles, never on the target alone.
+The family-wise null is the cryptanalytic form of the multiple-comparisons problem. Its discipline is procedural: write the complete selector once, call it from a clean start on the observation and every null, and make any shortcut prove equality with that function before using it.
 '''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_NULLRELEASE652_PROTOCOL.md"
+kind = "design"
+note = "Gives the pointwise shortcut inequality and separates full deterministic reselection from scoring nulls under the observed endpoint."
+ref = "LOG652"
+
+[[provenance]]
+path = "withmath/logs/652_nullrelease_preflight_20260906T000231Z_1788652951740611000.log"
+kind = "log"
+note = "Exact six-detector counterexample: 150/216 false rejections under endpoint-only scoring and 0/216 under full reselection."
+ref = "LOG652"
 
 [[provenance]]
 path = "withmath/wm_grammar.py"
@@ -166,6 +192,12 @@ note = "D2 gate: best gain must beat the shuffled family-wise maximum by GAIN_MA
 path = "withmath/PK10_LOCALIZED_ALBERTI_SPAN_CONTROL_POWER_AUDIT.md"
 kind = "audit"
 note = "A second selected window is an uncharged trial unless every null maximises over both; heterogeneous rule families need per-family null banks and the worst-case p."
+
+[[provenance]]
+path = "withmath/logs/657_knownresidual_20260906T011407Z_1788657247581387000_45767.log"
+kind = "log"
+note = "Finite known-stream selector receipt with the complete scoring search repeated for each position shuffle and add-one ranks reported against selected maxima."
+ref = "LOG657"
 
 [[references]]
 title = "Resampling-Based Multiple Testing"

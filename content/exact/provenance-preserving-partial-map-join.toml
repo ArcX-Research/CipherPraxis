@@ -1,0 +1,198 @@
+id = "provenance-preserving-partial-map-join"
+section = "exact"
+title = "Provenance-preserving partial-map joins"
+subtitle = "Merge compatible constraints without losing the paths that produced them"
+status = "VERIFIED"
+status_note = "Symbol-only checks matched an independent finite reference for the complete join and downstream expansion. They also verified that every original source identifier survived map deduplication; this establishes interface correctness, not language-recovery power."
+family = "Exact constraint joins"
+tags = ["partial permutations", "constraint join", "provenance", "deduplication", "witnesses"]
+related = ["all-different-constraints", "partial-involution-conjugacy-query", "partial-permutation-completion-bounds", "candidate-bank-lineage-and-cap-accounting", "two-involution-component-templates", "conjugacy-and-gauge", "bound-benchmarks-and-certificates", "factorial-completion-resource-guards"]
+summary = "Two partial substitution maps can be joined exactly when their union is still a function and still injective. Identical merged maps may come from different cuts, proposal rows, or anchor choices. Deduplicate the map value, but keep the complete set of origins because later constraints can depend on those origins even when the merged assignments are identical."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $f:D_f\to A$ and $g:D_g\to A$ be partial permutations. Their natural join exists when
+
+$$x\in D_f\cap D_g\Longrightarrow f(x)=g(x)$$
+
+and the combined assignments remain injective:
+
+$$f(x)=g(y)\Longrightarrow x=y.$$
+
+When both conditions hold, $h=f\cup g$ is itself a partial permutation. For reciprocal maps, each non-loop assignment $x\mapsto y$ must travel with $y\mapsto x$; representing reciprocal pairs as single components makes that closure explicit.
+
+Each input also carries an origin record, such as a source rank, cut, phase, anchor, or callback identifier. The semantic join result is therefore not merely $h$, but
+
+$$\bigl(h,\;O_h\bigr),\qquad O_h=O_f\times O_g.$$
+
+Several origin pairs may produce the same $h$. They share one map bucket, while every pair remains in its witness set.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Deduplicate values, union witnesses"
+body = '''
+For compatible input pairs $J$, define the projection
+
+$$\pi(f,g)=f\cup g.$$
+
+The deduplicated map bank is $\pi(J)$, but the physical witness bucket of a map $h$ is
+
+$$W_h=\{(f,g,o_f,o_g)\in J:\pi(f,g)=h\}.$$
+
+A cap on distinct joined maps is applied to $\pi(J)$ only after all reachable $W_h$ buckets have been formed. A later operation $E$ that uses an original partial map, cut, or phase must run on each relevant witness:
+
+$$E(h)\quad\text{is safe only if}\quad
+E(h,w_1)=E(h,w_2)\ \text{for every }w_1,w_2\in W_h.$$
+
+If that invariance has not been proved, evaluate the full union $\bigcup_{w\in W_h}E(h,w)$ and deduplicate only its complete outputs.
+
+For a complete state assembled from $m$ independently chosen map buckets with origin sets $O_1,\ldots,O_m$, keep the witness in factorised form. Its number of logical origin tuples is
+
+$$N_O=\prod_{r=1}^{m}|O_r|.$$
+
+There is no need to materialise those tuples when every choice leads to the same already-verified map state. Store the $m$ origin lists, the product, and the proof of origin invariance. This count measures provenance paths, not independent votes or distinct cryptographic outputs.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Plain partial permutations:** use agreement on shared domains plus cross-map injectivity.
+- **Partial involutions:** merge loops and unordered reciprocal pairs, rejecting a component that assigns either endpoint differently.
+- **Bounded-error join:** enumerate declared component deletions first, then apply the exact compatibility test to each repaired map.
+- **Several banks:** join incrementally, carrying a tuple of original identifiers through every stage.
+- **Factorised witnesses:** store one origin list per residue or component and an exact product count instead of expanding a large Cartesian product.
+- **Symmetry quotient:** canonicalise equivalent complete maps only after retaining the physical descriptions that prove the equivalence class.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Every input map is validated before the join; malformed or non-injective rows do not enter the bank.
+- Origin identifiers are stable identifiers from the original inputs, not new row numbers assigned after filtering.
+- Every origin identifier resolves to one hash-bound input row. Merely matching a safe identifier pattern does not establish provenance.
+- A deduplication key contains the complete semantic map needed downstream, not only its observed prefix.
+- Any node, pair, output, or wall cap is reported separately. A capped empty join is incomplete, not an exact contradiction.
+- Downstream code either proves origin invariance or expands every retained origin.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Join sparse evidence safely"
+body = '''
+Validate and canonicalise each source row without changing its original identifier. Visit input pairs in the frozen order, reject shared-domain conflicts and image collisions, and construct the union map. Insert that map into a semantic bucket and append the full pair of origins. After the complete declared pair space has been visited, rank or cap the distinct map buckets. At the next stage, use the origin sidecar to restore every cut, phase, and source-specific partial constraint before expanding or scoring candidates.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function JOIN_PARTIAL_BANKS(left_bank, right_bank, map_cap):
+    buckets = empty map from canonical map to witness list
+    for left in left_bank in frozen order:
+        require VALID_PARTIAL_PERMUTATION(left.map)
+        for right in right_bank in frozen order:
+            require VALID_PARTIAL_PERMUTATION(right.map)
+            if DISAGREES_ON_SHARED_DOMAIN(left.map, right.map): continue
+            if UNION_HAS_IMAGE_COLLISION(left.map, right.map): continue
+            joined = UNION(left.map, right.map)
+            key = CANONICAL_SERIALISE(joined)
+            witness = (left.original_id, right.original_id)
+            APPEND_UNIQUE(buckets[key].witnesses, witness)
+    ordered = SORT_MAP_BUCKETS_BY_FROZEN_RULE(buckets)
+    retained = FIRST(ordered, map_cap)
+    for bucket in retained:
+        for witness in bucket.witnesses:
+            require REPLAY_JOIN(witness) == bucket.map
+    return retained with complete cap and witness census
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The direct join examines $|F||G|$ pairs. With array-backed maps, compatibility costs $O(m)$ for alphabet size $m$; bit masks or stored domain/image masks make early conflicts cheaper. Hashing the canonical union gives expected constant-time bucket lookup. Witness storage is proportional to the retained physical multiplicity, which is intentional rather than accidental duplication.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **First-origin deduplication.** The merged map is correct, but later expansion silently uses only the first cut or phase that produced it.
+- **Renumbered callbacks.** Filtering rewrites identifiers, so a downstream request points at a different original row.
+- **Agreement without injectivity.** Shared inputs agree, but two different inputs map to one output.
+- **Partial-signature merge.** Maps agree on a short observed region yet differ where the next stage reads them.
+- **Cap before bucketing.** Repeated aliases fill the physical-row cap and hide other distinct joined maps.
+- **Capped miss called exact.** An empty retained bank is reported as impossible although the declared pair space was not completed.
+- **Origin multiplication called evidence.** A state with many equivalent proposal paths is treated as more likely even though aliases are not independent observations.
+- **Unbound origin labels.** A candidate names plausible-looking origins, but the consumer never checks that those rows produced the candidate's cells.
+- **Expanded witness explosion.** A product of small origin lists is materialised even though the downstream operation is proved invariant over every combination.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Use small alphabets where every compatible pair and every downstream expansion can be enumerated independently. Include duplicate maps with different origins, conflicting shared inputs, cross-map image collisions, loops, reciprocal pairs, malformed rows, and an origin-dependent expansion. Permute input order and require the same semantic output set with the same origin set. Force each cap separately and require an incomplete flag rather than an empty-set certificate.
+
+For a multi-bank fixture, compare each stored product $\prod_r|O_r|$ with a slow expansion of every origin tuple. Mutate an origin id, rank, weight, support position, and direct-versus-derived label independently; the consuming boundary must reject each mutation before search begins.
+'''
+
+[[blocks]]
+kind = "example"
+title = "One map, two origins"
+body = '''
+Suppose one source emits $f_1=\{0\mapsto2\}$ from cut `A` and the identical map $f_2$ from cut `B`. A second source emits $g=\{1\mapsto4\}$. Both joins produce
+
+$$h=\{0\mapsto2,\ 1\mapsto4\}.$$
+
+The semantic bank contains one $h$, while its witness bucket contains `(A,g)` and `(B,g)`. If a later boundary calculation depends on the cut, both paths must be evaluated. Counting them as two candidate votes is wrong; deleting either origin is also wrong.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Natural joins and quotient sets are standard. The reusable discipline here is their combination at a solver boundary: exact partial-map compatibility, semantic deduplication, stable original identifiers, full witness retention, and cap accounting are checked together.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_NONEMPTY641_HANDOFF.md"
+kind = "design"
+note = "Defines the original-proposal partial-map handoff, stable callback identities, deduplication boundary, exact reference, and downstream physical expansion."
+ref = "LOG641"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk9_nonempty641_kat.py"
+kind = "script"
+note = "Builds a finite symbolic reference for compatible map joins and compares every physical downstream result while retaining original origins."
+ref = "LOG641"
+
+[[provenance]]
+path = "withmath/logs/641_nonempty_kat_20260905T215208Z_1788645128597456000.log"
+kind = "log"
+note = "Frozen receipt for complete joined-group equality, stable callback survival, full physical-witness expansion, and malformed/cap refusals."
+ref = "LOG641"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_EQUAL612_JOIN.md"
+kind = "design"
+note = "Earlier exact join design that separates one discovery witness from the complete physical representation needed downstream."
+ref = "LOG612"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK89_UNTIEDCYCLE659_ADAPTER.md"
+kind = "design"
+note = "Defines independently deduplicated partial-map banks, factorised origins, cell-support witnesses, and all-anchor expansion."
+ref = "LOG659"
+
+[[provenance]]
+path = "withmath/logs/659_untiedcycle_outputs_20260906T013701Z_1788658621169040000.json"
+kind = "data"
+note = "Machine-readable software/algebra fixture retaining complete output maps and factorised origin lists for cut-off and cut-on parity checks."
+
+[[provenance]]
+path = "withmath/logs/659_untiedcycle_kat_20260906T013701Z_1788658621169040000.log"
+kind = "log"
+note = "Receipt for factorised-origin products, physical output replay, and semantic equality between pruned and unpruned arms."
+ref = "LOG659"

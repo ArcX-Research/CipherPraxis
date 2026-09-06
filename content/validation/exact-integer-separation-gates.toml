@@ -1,0 +1,148 @@
+id = "exact-integer-separation-gates"
+section = "validation"
+title = "Exact integer separation gates"
+subtitle = "Make decisions on raw score sums, not rounded rates"
+status = "VERIFIED"
+status_note = "A controls-first implementation derives its required raw-score margin from the declared rate margin and gates only on the exact integer difference. Floating-point rates are retained as diagnostics."
+family = "Decision rules"
+tags = ["integer score", "separation gate", "rounding", "fixed point", "controls"]
+related = ["english-gate-calibration", "held-out-gates", "control-first-policy", "reproducibility-receipts", "n-gram-language-scoring", "selection-overfit-check"]
+summary = "Language scores are often sums of quantised integer n-gram weights, while reports show a rounded rate per scored position. Keep the raw sum for pass or fail decisions. Derive the integer threshold exactly, compare without floating point, and print the rounded rate only to help people read the result."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let a scorer add integer weights $w(g)$ for every scored n-gram:
+
+$$S(x)=\sum_i w(g_i)\in\mathbb Z.$$
+
+If weights use scale $\kappa$ and the text has $L$ scored positions, the displayed rate is $R(x)=S(x)/(\kappa L)$. A **separation gate** compares the weakest positive control with the strongest negative or null:
+
+$$\Delta S=\min_{x\in\mathcal P}S(x)-\max_{y\in\mathcal N}S(y).$$
+
+The decision is made on $\Delta S$ and an exact integer threshold. Decimal rates rounded for display never enter the branch condition.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Convert a rate margin without floating point"
+body = '''
+Suppose all cases have the same $L$ and the required rate margin is the rational number $\delta=a/b$. The exact gate is
+
+$$\Delta S\ge \left\lceil\frac{a\kappa L}{b}\right\rceil,$$
+
+or, without division,
+
+$$b\Delta S\ge a\kappa L.$$
+
+For two cases with different scored lengths $L_1,L_0$, compare their rates by cross multiplication:
+
+$$\frac{S_1}{\kappa L_1}-\frac{S_0}{\kappa L_0}\ge\frac ab
+\quad\Longleftrightarrow\quad
+b(S_1L_0-S_0L_1)\ge a\kappa L_1L_0.$$
+
+These forms remain exact for negative log scores. Quantisation of the weight table is a separate modelling choice and must be frozen with the gate.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Fixed-length panel:** compare one raw integer difference with a precomputed threshold.
+- **Mixed lengths:** use exact cross multiplication instead of comparing raw sums.
+- **Rational average of several metrics:** clear every declared denominator before applying the threshold.
+- **Lexicographic gates:** test exact recovery and forward validity first, then integer score separation.
+- **Floating source model:** store a canonical fixed-point conversion before evaluation or use a reproducible correctly rounded representation.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions"
+body = '''
+- The integer table, scale, number of scored positions, sign convention, and threshold are frozen before the evaluated cases run.
+- Scores being compared use the same model and preprocessing.
+- Raw sums fit in the chosen integer type; checked wider arithmetic is used for cross products.
+- Ties at the threshold have an explicit inclusive or strict rule.
+- A score margin is only one endpoint. Exact plaintext and independent forward checks remain separate when the protocol requires them.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Build a stable gate"
+body = '''
+Choose the desired rate margin as an exact rational, derive the corresponding integer inequality from the frozen score scale and scored length, and store both in the protocol. Preserve every raw case score. Compute the positive minimum, negative maximum, and their difference with checked integers. Apply the gate there, then calculate decimal rates only for the human-readable transcript.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function FIXED_LENGTH_SEPARATION(positive_scores, negative_scores, scale, length, a, b):
+    require all inputs and weights were frozen before evaluation
+    low_positive = MIN(positive_scores)
+    high_negative = MAX(negative_scores)
+    delta = CHECKED_SUBTRACT(low_positive, high_negative)
+    left = CHECKED_MULTIPLY(b, delta)
+    right = CHECKED_MULTIPLY(a, CHECKED_MULTIPLY(scale, length))
+    pass = left >= right
+    displayed_rate_gap = DECIMAL(delta) / DECIMAL(scale * length)
+    return pass, delta, displayed_rate_gap
+
+function MIXED_LENGTH_COMPARE(score1, length1, score0, length0, scale, a, b):
+    numerator = score1*length0 - score0*length1
+    return b*numerator >= a*scale*length1*length0
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+After scoring, a fixed-length panel needs one pass through the positive and negative scores and constant memory. Exact cross multiplication is also constant work per comparison, but intermediate products may require a wider integer type or arbitrary-precision arithmetic.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Rounded-rate gate.** Two different raw margins print the same decimal value and are treated as tied.
+- **Binary floating threshold.** A mathematically exact boundary falls on different sides after platform-dependent conversion or evaluation order.
+- **Floor instead of ceiling.** A positive requested margin is weakened by one score unit.
+- **Raw sums across different lengths.** The longer text wins merely because it has more terms.
+- **Integer overflow.** A cross product wraps and reverses the decision.
+- **Diagnostic drift.** The displayed rate uses a different denominator from the integer gate.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Construct cases one raw unit below the threshold, exactly at it, and one unit above it. Include negative scores, mixed lengths, and pairs whose displayed rates round to the same text. Compare the production predicate with arbitrary-precision rational arithmetic. Mutate the denominator, inequality direction, rounding mode, and threshold conversion so each test fails.
+'''
+
+[[blocks]]
+kind = "example"
+title = "A printed tie can still have an exact winner"
+body = '''
+Assume integer weights use scale $1000$ and both texts contribute $501$ terms. A required rate gap of $1/4$ becomes
+
+$$\Delta S\ge\frac{501\cdot1000}{4}=125250.$$
+
+Raw gaps $125249$ and $125250$ may look identical in a short decimal display, but the first fails and the second passes. The stored integer sums make the boundary unambiguous.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Integer comparison is not inherently more accurate than the frozen quantised model. Its value is reproducibility: once the model is represented by integers, the validation decision exactly matches that representation and is independent of report formatting.
+'''
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_quartervelocity640_controls.py"
+kind = "script"
+note = "Defines a fixed rate margin, derives its fixed-length integer score threshold, gates on the raw score separation, and prints the floating rate difference only as a diagnostic."
+ref = "LOG640"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_quartervelocity640_core.cpp"
+kind = "solver"
+note = "Keeps n-gram objectives as signed integer sums and emits both the exact score and a readable rate."
+ref = "LOG640"
+

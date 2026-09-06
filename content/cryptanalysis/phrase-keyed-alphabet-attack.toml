@@ -6,9 +6,9 @@ status = "CLOSED"
 status_note = "The search built 202,504 distinct alphabets from every 4- to 60-letter substring of known series texts in six styles, then tested each under a period-7 substitution. The planted control read at 100%; the two targets stayed at noise scores of -6.54 and -6.35. Larger zone searches also ruled out 2.06M dictionary and columnar alphabets, 100k nearby alphabets, and 1.56M numeric-grid alphabets in their stated scopes (logs/07, 24, 38, 41)."
 family = "Known-plaintext methods"
 tags = ["keyed alphabet", "phrase", "dictionary", "family sweep", "screen"]
-related = ["keyword-mixed-alphabet", "quagmire-i", "quagmire-ii", "quagmire-iii", "quagmire-iv", "dictionary-attack", "corpus-bank-screen", "coset-shift-recovery", "crib-driven-alphabet-recovery", "family-wise-null", "g-family-sweep"]
-summary = "All 26! mixed alphabets are far too many to search from 150 letters. Phrase-keyed alphabets form a much smaller list. Build an alphabet from every substring of each known source text in every chosen style. For each one, fit the coset shifts, decrypt, and score. A planted control must recover at 100% before target results count. A negative result rules out only the exact phrase sources and keying styles that were listed."
-updated = "2026-09-04"
+related = ["keyword-mixed-alphabet", "quagmire-i", "quagmire-ii", "quagmire-iii", "quagmire-iv", "dictionary-attack", "corpus-bank-screen", "coset-shift-recovery", "crib-driven-alphabet-recovery", "family-wise-null", "finite-language-key-signature-join", "g-family-sweep"]
+summary = "All 26! mixed alphabets are far too many to search from short text. Phrase-keyed alphabets form a much smaller list. Build alphabets from substrings of declared sources, or deterministically from a separately recovered related text, in every frozen serialization and completion style. Fit the remaining key, decrypt, and score. A negative rules out only that finite source-and-style table."
+updated = "2026-09-06"
 
 [[blocks]]
 kind = "definition"
@@ -31,9 +31,19 @@ For each alphabet $A$ and variant, coset $b$'s shift is fitted by chi-square aga
 '''
 
 [[blocks]]
+kind = "variants"
+body = '''
+- **Declared phrase bank:** take every allowed substring from frozen source texts and apply each listed keying style.
+- **Related-text-derived alphabet:** after another text has been recovered and independently replayed, serialize it in a frozen set of routes, keep first occurrences, and append missing letters in each declared completion order. Preserve every route and completion as a physical origin even when several produce the same alphabet.
+- **Exact downstream key:** when the derived alphabet bank is small, search the remaining periodic row key exactly rather than fitting it heuristically.
+- **Self-consistency filter:** a derived alphabet may also be required to explain the source text under a second declared relation. This filters the primary solve; it is not an independent source of alphabets.
+'''
+
+[[blocks]]
 kind = "assumptions"
 body = '''
 - The alphabet was derived from a phrase in one of the enumerated sources by one of the enumerated styles. The sweep closes nothing outside that.
+- A related-text variant accepts only complete, cap-free, independently replayed upstream plaintexts. An upstream shortlist or best-so-far row does not define a trustworthy alphabet bank.
 - The period, relation and zone are right: screening a whole text whose first third is keyed differently corrupts every score, which is why the corpus re-ran its screens per zone once the zones were known.
 - The plaintext is language of the reference distribution.
 '''
@@ -46,6 +56,8 @@ body = '''
 2. Plant a control: a known text under a keyed substitution whose alphabet is in the table. It must read at 100% and rank first.
 3. Screen every alphabet and variant; polish the top dozen; print the top rates against the noise level (about $-6.3$ per letter at 153 letters).
 4. Report the family as excluded for the enumerated sources and styles only.
+
+For a related-text construction, freeze the serialization routes and completion orders before opening the upstream result. Derive every literal alphabet with its origin, collapse duplicate computation only after preserving those origins, and include upstream endpoint selection in the family-wise accounting.
 '''
 
 [[blocks]]
@@ -109,6 +121,8 @@ body = '''
 - **Scope.** The sweep excludes only enumerated structures. The corpus concluded that either the alphabet's structure is of a kind not enumerated or the alphabet is random and was transmitted by other means. Family sweeps beyond that point were judged "buying lottery tickets".
 - **Zoning.** Whole-text screens on a text with a differently keyed prefix score every alphabet at noise. The zone screens had to be repeated.
 - **Top-of-null inflation.** The best of $10^6$ alphabets on a 63-letter zone sits near $-5.2$ to $-5.5$, the shuffled-segment maximum. Only a rate near the language level with a readable decrypt counts.
+- **Upstream error propagation.** One wrong recovered letter can change the first-occurrence order of many later letters. A downstream exact maximum is conditional on the supplied upstream endpoint, not proof that endpoint was correct.
+- **Alias collapse before selection.** Equal derived alphabets may share computation, but their routes, completion rules, and upstream origins must survive for exact tie and family-size accounting.
 '''
 
 [[blocks]]
@@ -118,6 +132,8 @@ body = '''
 - 2.06M structured alphabets on the 96-letter zone (logs/24): planted alphabet rank 1 at $-3.942$ against the shuffled-segment top $-6.194$; targets: best $-5.77$ against a shuffled maximum of $-5.9$ (nothing). The 63-letter zone of the other text (logs/30): tops $-5.3$ to $-5.5$ at the 63-letter shuffled maximum.
 - Near-neighbour alphabets, within two transpositions of the two reference orders, 100,752 alphabets (logs/38): the planted swap-alphabet control ranked first and read $-3.94$; zones $-5.24$ against shuffled maxima $-5.75$ to $-5.90$ and $-5.91$ against $-6.1$ to $-6.3$.
 - Numeric-grid alphabets, 1.56M (logs/41): zones $-5.42$ and $-5.82$, whole texts $-6.49$ / $-6.36$, all at their nulls. Two-keyword alphabets, 425k (logs/35): zones $-5.48$ and $-5.85$ to $-5.89$.
+
+A target-absent related-text preflight derived eight literal alphabets from four fixed serializations and two completion orders. For each alphabet it searched all $13^7$ period-seven Porta row keys with an exact cyclic dynamic program. A separate implementation enumerated the same spaces by fixing three rows and directly scoring the remaining four, reproduced every optimum and tie, and checked 5,408 scalar Porta transformations. This verifies the finite derived-alphabet workflow and exact downstream search, not any unknown upstream plaintext.
 '''
 
 [[blocks]]
@@ -162,6 +178,24 @@ note = "Round-2 phrase result (202,504 alphabets; targets -6.54 / -6.35), numeri
 path = "withmath/STEP3_REVIEW.md"
 kind = "note"
 note = "Section 7: near-neighbour family excluded on both zones with the planted control ranked first at -3.94."
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/PK89_PLAINALPHA680_DESIGN.md"
+kind = "design"
+note = "Defines deterministic alphabets from a separately recovered related text, route and completion provenance, exact downstream Porta search, and strict upstream admission."
+ref = "LOG680"
+
+[[provenance]]
+path = "withmath/logs/680_plainalpha_preflight_20260906T054502Z_1788673502608255000.json"
+kind = "data"
+note = "Target-absent finite-family preflight over eight derived alphabets with exact cyclic row-key optima and complete ties."
+ref = "LOG680"
+
+[[provenance]]
+path = "withmath/logs/680_plainalpha_preflight_audit_20260906T054502Z_1788673502608255000.json"
+kind = "audit"
+note = "Independent exhaustive reconstruction of the derived alphabets, key spaces, scores, ties, self-consistency filters, and scalar forwards."
+ref = "LOG680"
 
 [[references]]
 title = "Elementary Cryptanalysis"

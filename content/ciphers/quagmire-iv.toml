@@ -3,12 +3,12 @@ section = "ciphers"
 title = "Quagmire IV"
 subtitle = "Repeat shifts between separate mixed alphabets for plaintext and ciphertext"
 status = "POWER-LIMITED"
-status_note = "Blind annealing over two unknown alphabets recovered 0% of 153-letter planted controls. When both alphabets came from a 7,438 x 7,438 word bank or two fixed orders, exact searches passed their controls. Tests then ruled out those structured forms for the project texts."
+status_note = "Blind annealing over two unknown alphabets recovered 0% of 153-letter planted controls. Exact searches passed their controls when both alphabets came from a 7,438 x 7,438 word bank or two fixed orders, but the arbitrary two-alphabet case remains power-limited."
 family = "Polyalphabetic substitution"
 tags = ["periodic", "keyed alphabet", "polyalphabetic", "quagmire", "power limit"]
-related = ["quagmire-i", "quagmire-ii", "quagmire-iii", "keyword-mixed-alphabet", "dictionary-attack", "simulated-annealing", "exact-period-alignment", "conjugacy-and-gauge", "quagmire-lab"]
-summary = "Quagmire IV uses one mixed alphabet for plaintext and another for ciphertext, with a repeating shift between their index positions. It is the broadest periodic additive form; Vigenère and the other Quagmires are special cases. Two arbitrary alphabets are too hard to search from short text. If each alphabet comes from a known bank, an exact search can check every pair."
-updated = "2026-09-04"
+related = ["quagmire-i", "quagmire-ii", "quagmire-iii", "keyword-mixed-alphabet", "dictionary-attack", "simulated-annealing", "exact-period-alignment", "two-dial-translation-factorization", "conjugacy-and-gauge", "quagmire-lab"]
+summary = "Quagmire IV uses one mixed alphabet for plaintext and another for ciphertext, with a repeating shift between their index positions. It is the broadest periodic additive form; Vigenère and the other Quagmires are special cases. Two arbitrary alphabets are too hard to search from short text. If each alphabet comes from a known bank, an exact search can check every pair. If the period-class substitutions are already complete, quotient factorization gives an exact algebraic test."
+updated = "2026-09-06"
 
 [[blocks]]
 kind = "definition"
@@ -31,8 +31,8 @@ Rotating $C$ by $r$ and adding $r$ to every shift leaves the cipher unchanged, a
 kind = "variants"
 body = '''
 - **Vocabulary-by-vocabulary**: both alphabets keyed by words from a bank of 7,438 candidates, both relations, i.e. 55 million alphabet pairs per text.
-- **Fixed-order pairs**: $(P, C)$ from the straight order and one keyword-mixed order in all four combinations, with free shifts. This is the index-alphabet grid used by many of the program's exact lanes.
-- **Keyed plaintext side over a known ciphertext order** with a transposition underneath: the reading the program's first Quagmire IV solver was built for, with an exhaustive columnar stage for widths 3 to 9.
+- **Fixed-order pairs**: $(P, C)$ from the straight order and one keyword-mixed order in all four combinations, with free shifts. This gives a small index-alphabet grid for exact search.
+- **Keyed plaintext side over a known ciphertext order** with a transposition underneath: a staged solver can combine the substitution search with an exhaustive columnar stage for widths 3 to 9.
 '''
 
 [[blocks]]
@@ -52,6 +52,7 @@ body = '''
 2. **Cryptogram stage.** With a ciphertext order fixed, the aligned index text is a simple substitution of the plaintext; anneal the plaintext alphabet and the shifts jointly under quadgrams, restarting from every combination of near-tie coset shifts.
 3. **Bank stage.** Keyword plaintext alphabets times 26 offsets times two relations, scored by an order-free monogram likelihood and by quadgrams.
 4. **Transposition stage.** Exhaustive columnar widths 3 to 9 (annealed 10 to 20) on the order-free hits.
+5. **Complete-map stage.** If every period-class substitution has already been reconstructed as a full permutation, [two-dial translation factorization](/algebra/two-dial-translation-factorization) exactly tests whether all classes share two cyclic dial coordinates and preserves every compatible root. It filters supplied maps; it does not infer them from ciphertext.
 '''
 
 [[blocks]]
@@ -95,7 +96,7 @@ function ATTACK(c, m, candidate_orders):
 [[blocks]]
 kind = "complexity"
 body = '''
-Vocabulary pairs: $7{,}438^2 \approx 5.5 \times 10^7$ pairs times two relations per text. The sweep ran as a subsampled batch with shuffled tops as the null. Blind two-alphabet annealing: the state has two permutations and $m$ shifts, about $26! \cdot 26! \cdot 26^m$ raw states. No budget the program tried made a dent at 153 letters.
+Vocabulary pairs: $7{,}438^2 \approx 5.5 \times 10^7$ pairs times two relations per text. The sweep ran as a subsampled batch with shuffled tops as the null. Blind two-alphabet annealing: the state has two permutations and $m$ shifts, about $26! \cdot 26! \cdot 26^m$ raw states. No recorded budget made a dent at 153 letters.
 '''
 
 [[blocks]]
@@ -109,7 +110,7 @@ body = '''
 [[blocks]]
 kind = "controls"
 body = '''
-Vocabulary-by-vocabulary Quagmire IV (both relations) on the 95-letter zone, the whole 144-letter text and the 153-letter text: best rates $-5.71$, $-6.25$ and $-6.22$, at the subsampled shuffled tops (log 28). The first Quagmire IV solver's planted control (keyed plaintext alphabet, keyword-mixed ciphertext order, with and without a columnar transposition underneath) reached 100% anneal match on the plain case and read English through the columnar stage on the transposed case. Blind two-alphabet annealing recovered 0/4 planted controls (log 8). A full-spelling wordlist search under four fixed-order alphabet pairs recovered all eight planted controls exactly before its live run (log 472).
+Vocabulary-by-vocabulary Quagmire IV (both relations) on a 95-letter zone, a 144-letter text and a 153-letter text gave best rates $-5.71$, $-6.25$ and $-6.22$, at the subsampled shuffled tops (log 28). A staged solver's planted control (keyed plaintext alphabet, keyword-mixed ciphertext order, with and without a columnar transposition underneath) reached 100% anneal match on the plain case and read English through the columnar stage on the transposed case. Blind two-alphabet annealing recovered 0/4 planted controls (log 8). A full-spelling wordlist search under four fixed-order alphabet pairs recovered all eight planted controls exactly before its measured evaluation (log 472).
 '''
 
 [[blocks]]
@@ -132,7 +133,7 @@ Check position 6: R is letter 3 of $P$; $3 + 3 = 6$, and letter 6 of $C$ is `B`.
 [[blocks]]
 kind = "notes"
 body = '''
-For the corpus texts the program's conclusion was that every structured $(P, C)$ pair it could enumerate is excluded and the unstructured pair is unreachable. The alphabet-free class structure of one text (three cosets sharing one substitution) is the only Quagmire IV-compatible fact that survived, and it constrains key words rather than alphabets.
+An exact bank search can exclude every structured $(P,C)$ pair it enumerates, but it says nothing about alphabet pairs outside that bank. Alphabet-free class structure can constrain a possible shift pattern without identifying either alphabet. Keep those two evidence scopes separate.
 '''
 
 [[provenance]]

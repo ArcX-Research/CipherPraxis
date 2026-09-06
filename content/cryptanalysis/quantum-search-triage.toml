@@ -1,0 +1,132 @@
+id = "quantum-search-triage"
+section = "cryptanalysis"
+title = "Quantum search triage"
+subtitle = "Separate quantum protocols from quantum speedups and cipher evidence"
+status = "VERIFIED"
+status_note = "The distinctions and asymptotic speedups are standard results from the cited literature. They classify when a quantum method is relevant; they do not claim that a particular ciphertext came from quantum machinery."
+family = "Family identification"
+tags = ["quantum computing", "Grover search", "Shor algorithm", "model selection", "key search"]
+related = ["family-identification", "observable-function-fingerprinting", "exhaustive-enumeration", "rsa-textbook", "one-time-pad", "planted-controls"]
+summary = "A static ciphertext does not become a quantum-cryptography problem merely because it looks random or mentions quantum ideas nearby. Quantum key distribution is a physical key-establishment protocol. Shor's algorithm targets factoring and discrete logarithms, while Grover's algorithm speeds up a defined unstructured search. First identify the cipher's observable behavior and the exact search oracle; only then ask whether quantum computation changes the cost."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Three subjects are often mixed together:
+
+- **Quantum cryptography** uses quantum states and measurements in a communication protocol, most commonly to establish or test a shared key.
+- **Quantum cryptanalysis** uses a quantum computer to attack a mathematically specified cryptosystem.
+- **Quantum-inspired search** is an ordinary classical optimisation method whose design borrows language or ideas from quantum physics. It runs on conventional hardware and has no automatic cryptanalytic advantage.
+
+A printed symbol string normally records only the classical output. Without protocol records, measurement choices, or another physical trace, the string alone does not identify quantum key distribution.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "The two main speedups"
+body = '''
+Shor's algorithm solves integer factoring and discrete logarithms in polynomial time on a fault-tolerant quantum computer. That matters for public-key systems whose security is built on those problems, such as textbook RSA.
+
+Grover's algorithm searches an unstructured space of size $N$ with order $\sqrt{N}$ oracle calls instead of order $N$. The oracle must already recognise a correct key or plaintext:
+
+$$f(k)=1 \quad\text{exactly when key }k\text{ passes the declared check.}$$
+
+Grover search changes the cost of searching a known family. It does not choose the family, construct a missing oracle, resolve non-identifiable plaintexts, or turn a language score into proof.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- A Shor-style attack requires a factoring or discrete-logarithm structure.
+- A Grover-style attack requires a finite key space, a coherent implementation of a correctness oracle, and enough quantum resources to run it.
+- A quantum-annealing or quantum-inspired optimiser remains a proposal mechanism. Its misses are inconclusive unless matched controls establish recovery power.
+- Classical observables such as repeated periods, equality patterns, preserved histograms, and change points remain evidence about the transformation regardless of how a later search is accelerated.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to decide whether quantum methods matter"
+body = '''
+1. Identify what is actually observed: a static ciphertext, a public modulus, protocol traffic, or physical measurement data.
+2. Test model-free invariants before naming a cipher family.
+3. State a finite family and an exact acceptance oracle.
+4. Estimate the classical search cost after algebraic pruning, symmetry reduction, and meet-in-the-middle methods.
+5. Only then compare a quantum algorithm's resource model with the best classical attack.
+
+For a short classical ciphertext, better modelling and stronger constraints usually matter more than replacing one heuristic optimiser with another.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function QUANTUM_TRIAGE(observation, proposed_family):
+    if observation includes quantum states or measurement records:
+        analyse the protocol and its physical assumptions
+    else:
+        measure classical invariants in the ciphertext
+
+    if proposed_family reduces security to factoring or discrete logarithms:
+        evaluate a Shor-style resource estimate
+    else if proposed_family has a finite key space and an exact key oracle:
+        compare classical search with Grover-style search
+    else:
+        return MODEL_OR_ORACLE_MISSING
+
+    run matched controls for every practical solver
+    return only conclusions supported by those controls
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Grover search changes an unstructured key search from order $N$ oracle evaluations to order $\sqrt{N}$. Algebraic constraints can be more valuable: reducing the admissible family before search benefits both classical and quantum implementations. Shor's polynomial-time result applies to its specific number-theoretic problems, not to arbitrary substitution, transposition, or language-recovery tasks.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Random-looking means quantum.** Strong classical encryption, a one-time pad, compression, fractionation, or a wrong model can all look flat.
+- **Grover solves unknown ciphers.** It accelerates a declared oracle search; it does not perform family identification.
+- **Factoring is universal.** Factoring helps only when the construction exposes an integer-factorisation problem.
+- **A faster optimiser proves a negative.** Failure to find the planted truth still means the search is power-limited.
+- **Ignoring input and output costs.** A query bound is not a wall-clock estimate for loading data, evaluating a language model, error correction, and repeated verification.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Treat any practical quantum-inspired or simulated quantum solver like every other heuristic: use fresh planted ciphertexts with the same length and key freedom, hide the truth from the selector, report exact recovery rather than readability alone, and include valid-family nulls. If the solver misses its controls, a live miss says nothing about the family.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked decision example"
+body = '''
+Suppose a ciphertext shows a stable repeated coset pattern. That is direct evidence for a periodic or repeated mapping. It is not evidence for a quantum protocol. First test the periodic family and derive its exact key oracle. Grover search would become relevant only if the remaining key space were still an unstructured finite set and a suitable quantum computer were available.
+'''
+
+[[references]]
+title = "Algorithms for Quantum Computation: Discrete Logarithms and Factoring"
+author = "Peter W. Shor"
+year = 1994
+url = "https://doi.org/10.1109/SFCS.1994.365700"
+
+[[references]]
+title = "A Fast Quantum Mechanical Algorithm for Database Search"
+author = "Lov K. Grover"
+year = 1996
+url = "https://doi.org/10.1145/237814.237866"
+
+[[references]]
+title = "Quantum Cryptography: Public Key Distribution and Coin Tossing"
+author = "Charles H. Bennett and Gilles Brassard"
+year = 1984
+url = "https://doi.org/10.1016/j.tcs.2014.05.025"
+
+[[provenance]]
+path = "withmath/docs/project-notes/QUANTUM_SEARCH_TRIAGE.md"
+kind = "note"
+note = "Literature review separating physical quantum protocols, number-theoretic quantum attacks, oracle search, and classical quantum-inspired heuristics."

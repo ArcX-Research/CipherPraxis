@@ -1,0 +1,171 @@
+id = "selector-fibre-cardinality-invariant"
+section = "exact"
+title = "Selector fibre cardinality"
+subtitle = "Reject a hidden partition before recovering its labels"
+status = "VERIFIED"
+status_note = "Independent implementations agreed on every declared alignment and on planted boundary cases. The result verifies a necessary-condition test; a passing alignment still needs a full cipher model and language evidence."
+family = "Alphabet-free invariants"
+tags = ["fibres", "hidden alphabets", "periodic selectors", "necessary conditions", "exact rejection"]
+related = ["porta", "exact-period-alignment", "isomorph-analysis", "all-different-constraints", "exhaustive-enumeration"]
+summary = "Some ciphers map several key symbols to the same observable table or operation. If one periodic position must always select one operation, every source symbol seen at that position must belong to a single fibre of the selector. The number of distinct source symbols is therefore bounded by the largest fibre, even when the alphabet order and fibre labels are completely unknown."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $\Sigma$ be a symbol alphabet and let
+
+$$\pi:\Sigma\rightarrow T$$
+
+choose one operation from a set $T$. The fibre above $t$ is
+
+$$\pi^{-1}(t)=\{x\in\Sigma:\pi(x)=t\}.$$
+
+Assume every fibre has at most $b$ symbols. If an aligned source stream $S_i$ supplies a selector whose value depends only on residue $i\bmod p$, then for each residue $r$ there is a value $t_r$ such that
+
+$$\pi(S_i)=t_r\quad\text{whenever }i\equiv r\pmod p.$$
+
+Consequently,
+
+$$\left|\{S_i:i\equiv r\pmod p\}\right|\le b.$$
+
+This is a necessary condition. It uses only equality and distinctness of source symbols, so an unknown alphabet permutation cannot change it.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "The Porta pair case"
+body = '''
+In a Porta table, adjacent key letters choose the same row. For an unknown alphabet order $A$,
+
+$$\pi_A(x)=\left\lfloor\frac{\operatorname{pos}_A(x)}{2}\right\rfloor,$$
+
+so every fibre contains exactly two letters. If one aligned source letter chooses each fixed periodic row, then every residue class may contain at most two distinct source letters:
+
+$$\max_r\left|\{S_i:i\equiv r\pmod p\}\right|\le2.$$
+
+Changing $A$, swapping the two letters inside a pair, renaming rows, exchanging alphabet halves, or rotating an underlying cycle leaves this inequality unchanged.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Uniform fibres:** every selector value has the same number $b$ of preimages.
+- **Unequal fibres:** use the global maximum for a quick test, or a matching problem if individual fibre sizes are known.
+- **Several allowed rows per residue:** if residue $r$ may use a declared set $U_r$, replace $b$ by $|\bigcup_{t\in U_r}\pi^{-1}(t)|$.
+- **Fixed-bijection transfer:** applying one bijection to every source symbol pooled in a residue preserves its distinct count, so the test can pass through an unknown monoalphabetic layer.
+- **Alignment families:** test every predeclared window, direction, cyclic offset, or affine index map and preserve every alignment in the result.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "When the bound transfers"
+body = '''
+- One source symbol selects one operation through the declared map $\pi$.
+- The selected operation is constant in each tested periodic residue.
+- The stated fibre bound is valid for every allowed hidden alphabet.
+- A transfer through an unknown cipher is valid only when the pooled positions share one bijection. Different substitutions can merge or split the observed symbol sets.
+- Every alignment is fixed before the data is measured, or the final decision accounts for the whole selected alignment family.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Run the alphabet-free screen"
+body = '''
+Choose a source stream and a complete, predeclared family of alignments into the destination positions. For each alignment, group selected source symbols by destination residue, count the distinct symbols in every group, and compare the largest count with the fibre bound. An alignment exceeding the bound in any residue is impossible for every hidden alphabet in the declared model.
+
+Keep the complete count vector and alignment description. A zero-survivor result is an exact rejection of the selector relation. A survivor is only a structural possibility: it does not recover the hidden alphabet, key, or plaintext.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function FIBRE_SCREEN(source, destination_length, period, fibre_bound,
+                      alignments):
+    results = []
+    for alignment in alignments:
+        groups = [empty set for residue in 0..period-1]
+        indices = alignment(destination_length)
+        require indices are valid for source
+        for position in 0..destination_length-1:
+            residue = position mod period
+            groups[residue].add(source[indices[position]])
+        counts = [SIZE(group) for group in groups]
+        survives = MAX(counts) <= fibre_bound
+        results.append(alignment, counts, survives)
+    return results
+
+function EXACT_ZERO(results):
+    require every declared alignment appears exactly once
+    return no result has survives = true
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+For $A$ alignments, destination length $n$, and period $p$, direct evaluation takes $O(An)$ time and $O(p|\Sigma|)$ temporary set space. No search over the $|\Sigma|!$ hidden alphabet orders is needed. Canonical index-sequence hashes can reveal duplicate descriptions across alignment families without discarding their provenance.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Wrong direction.** The source letter is assumed to choose a row when the real construction derives it from several symbols or from a coordinate difference.
+- **Changing maps inside a residue.** A transfer claim crosses positions encrypted by different substitutions, so distinctness is no longer preserved.
+- **Uncounted alignment search.** Only the most promising offset or stride is reported after looking at the data.
+- **Sufficiency error.** A residue count within the bound is called a decryption even though no common hidden partition has been constructed.
+- **Overbroad closure.** A zero result for literal one-symbol selection is said to reject derived alphabets, transpositions, multi-symbol selectors, or unrelated periodic ciphers.
+- **Description duplication.** Equivalent index sequences are counted as independent evidence instead of retained as aliases.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The validated implementation used independent primary and brute-force paths. Twenty-six checks covered an exact boundary pass with two symbols per residue, a one-symbol perturbation producing an exact failure with three, source-length boundaries, family sizes, and cross-family aliases. The public measurement evaluated 7,364 declared descriptions representing 6,912 distinct index sequences; the two implementations agreed on every selected index, symbol set, count, residue label, and alias.
+'''
+
+[[blocks]]
+kind = "example"
+title = "A three-residue pair selector"
+body = '''
+Suppose a selector has fibres of size two and an aligned stream is grouped at period three:
+
+```trace
+residue  0      1      2
+symbols  A B A  C D C  E F E
+count    2      2      2
+```
+
+The distinct-count condition passes. If one position in residue one changes to `G`, that group becomes $\{C,D,G\}$ and has size three. No reordering of the hidden alphabet can put three different symbols into one two-symbol fibre, so that alignment is impossible.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The principle is a pigeonhole argument expressed through selector fibres. Its cryptanalytic value is that equality structure survives an unknown relabelling. It is most useful as a cheap front gate before an expensive hidden-alphabet or joint-language solver.
+'''
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/PK89_PORTAPAIR679_AUDIT.md"
+kind = "audit"
+note = "Defines the hidden-pair invariant, exact scope, alignment families, transfer condition, and completed measurement."
+ref = "LOG679"
+
+[[provenance]]
+path = "withmath/scripts/experiments/cross/wm_pk89_portapair679.py"
+kind = "solver"
+note = "Independent primary and brute-force implementations of the fibre screen, alignment generators, alias accounting, and boundary checks."
+ref = "LOG679"
+
+[[provenance]]
+path = "withmath/logs/679_portapair_kat_20260906T051625Z_37123.log"
+kind = "log"
+note = "Known-answer receipt for the twenty-six exact checks."
+ref = "LOG679"
+
+[[provenance]]
+path = "withmath/logs/679_portapair_public_20260906T051625Z_37123.log"
+kind = "data"
+note = "Complete alignment, count-vector, and alias census used by the audit."
+ref = "LOG679"

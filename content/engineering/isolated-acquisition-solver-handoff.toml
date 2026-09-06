@@ -1,0 +1,153 @@
+id = "isolated-acquisition-solver-handoff"
+section = "engineering"
+title = "Isolated acquisition and solver handoff"
+subtitle = "Bind a minimal input packet before a model-bearing worker starts, then replay its proof in the parent"
+status = "VERIFIED"
+status_note = "A target-absent end-to-end preflight exercised the split parent/worker protocol and passed 25 mutation and incompleteness refusals plus independent forward-and-inverse replay. This verifies the interface pattern, not any unknown-text result."
+family = "Reproducible solver architecture"
+tags = ["process isolation", "hash binding", "solver handoff", "certificate replay"]
+related = ["reproducibility-receipts", "seal-and-audit-protocol", "tautological-gate-rule", "kat-harness", "bound-benchmarks-and-certificates", "endpoint-specific-control-contracts", "seed-determinism"]
+summary = "Keep public-input acquisition in a small standard-library parent that cannot load language models or attack modules. Canonically serialise and hash a minimal packet before launching a separate worker. Require a result bound to that packet and independently replay every public equation in the parent before accepting it."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+An **isolated acquisition and solver handoff** separates three trust domains:
+
+1. A minimal parent acquires the declared public input, validates its shape, and writes an immutable, hash-bound packet before any model-bearing code starts.
+2. A worker imports the solver stack only after verifying the packet, source, environment manifest, and exclusive claim. It returns a provenance-bound result and a complete certificate.
+3. The parent parses the result strictly, checks its origin and completeness, and independently replays the full forward and inverse equations without importing the worker's numerical or model libraries.
+
+The separation is a provenance and defect-containment boundary. It is not automatically a security sandbox against a malicious process.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Binding relations"
+body = '''
+Let canonical serialisation be $J(\cdot)$ and let $H$ be a cryptographic hash. The packet identifier is
+
+$$h_P=H(J(P)),$$
+
+and the result envelope must bind at least
+
+$$h_R=H\big(J(R)\big),\qquad R.\text{packet}=h_P,\qquad
+R.\text{solver}=H(\text{worker source}),\qquad R.\text{manifest}=h_M.$$
+
+Acceptance additionally requires an independent predicate
+
+$$\operatorname{Forward}_{\rm parent}(R.\text{plaintext},R.\text{key})=P.\text{ciphertext},$$
+
+plus any declared inverse, membership, score, witness-count, and completeness equations. Hash agreement proves identity of bytes, not correctness; replay supplies the semantic check.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Local process handoff:** parent and worker communicate through exclusively created files in a private directory.
+- **Pipe handoff:** canonical packet bytes are committed first, then supplied through an inherited descriptor.
+- **Remote worker:** signatures or an authenticated channel replace assumptions about a local private directory.
+- **Deterministic replay worker:** expensive early stages are reused only when their artefact hashes match a prior receipt.
+- **Exact-solver certificate:** the worker returns bounds, tie counts, and witnesses in addition to a candidate key.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and boundary"
+body = '''
+- Canonical serialisation rejects duplicate keys, non-finite numbers, unexpected fields, and ambiguous encodings.
+- Packet, marker, manifest, worker path, and output path are created or opened with no-clobber and no-symlink checks; writes are flushed before launch.
+- The parent contains no dynamic import path into the solver stack and obtains no answer-dependent resource after committing the packet.
+- The worker's complete source and transitive resources are pinned, including model files and package versions when they affect output.
+- Independent replay is separately implemented. Calling a worker helper from the parent would collapse the boundary.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Protocol"
+body = '''
+The parent validates authority and input, creates a private work directory and exclusive claim, writes the smallest sufficient canonical packet, flushes it, and records its digest. Only then does it start the worker with the packet location and an immutable manifest. The worker refuses any drift, runs the frozen solver, and writes a complete result envelope atomically. The parent rejects partial, extra, origin-mismatched, or non-finite output before independently recomputing the cipher equations and certificate census.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function ACQUIRE_AND_COMMIT(public_source, frozen_manifest):
+    require PARENT_IMPORTS_ONLY_STANDARD_LIBRARY()
+    input = READ_ONCE(public_source)
+    packet = VALIDATE_AND_MINIMISE(input, frozen_manifest.schema)
+    directory = CREATE_PRIVATE_DIRECTORY()
+    claim = CREATE_EXCLUSIVE_NOFOLLOW(directory, "claim")
+    packet_bytes = CANONICAL_SERIALISE(packet)
+    WRITE_EXCLUSIVE_FLUSHED(directory, "packet", packet_bytes)
+    packet_hash = HASH(packet_bytes)
+    return directory, claim, packet_hash
+
+function SOLVE_HANDOFF(directory, packet_hash, manifest):
+    worker = START_PINNED_WORKER(directory, packet_hash, manifest)
+    require worker exits normally and writes one atomic result
+    result = STRICT_PARSE(READ_NOFOLLOW(directory, "result"))
+    require result.packet_hash == packet_hash
+    require result.solver_hash == manifest.worker_hash
+    require RESULT_IS_COMPLETE(result, manifest.certificate_schema)
+    require PARENT_FORWARD(result.plaintext, result.key) == result.ciphertext
+    require PARENT_INVERSE_AND_WITNESSES_AGREE(result)
+    return result with packet, manifest and replay receipt
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Packet hashing, strict parsing, and parent replay are linear in the artefact sizes. They are normally small beside the solver. Mutation tests add fixed preflight cost and should exercise each trust-boundary predicate before real acquisition is enabled.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Worker-before-commit.** Model-bearing code starts while input or configuration can still change.
+- **Oversized packet.** Private registries, unused corpora, or mutable paths cross the boundary even though the worker needs only a short public payload.
+- **Origin-free result.** A plausible result cannot be tied to the packet, source, and manifest that produced it.
+- **Partial certificate acceptance.** A top row is accepted without the promised tie count, witness set, batch census, or completion flag.
+- **Tautological replay.** Parent verification imports and calls the worker's transform.
+- **Path substitution.** A symlink or clobbered output redirects validation to different bytes.
+- **Hash fetishism.** Matching digests are treated as proof of algebraic correctness without semantic replay.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The preflight should replace any real source with arbitrary symbols and mutate one boundary at a time: packet bytes, source and manifest hashes, claim collision, duplicate or non-finite data, symlinked paths, output origin, completeness fields, plaintext shape, key, witness set, and forward result. The recorded implementation passed all 25 declared refusals. Its minimal parent imported neither the model stack nor the attack module and independently checked every position in both forward and inverse directions.
+'''
+
+[[blocks]]
+kind = "example"
+title = "A rejected one-coordinate mutation"
+body = '''
+A parent commits a canonical packet containing the ciphertext coordinates, family identifier, bounds, and solver-manifest hash. The worker returns a key, plaintext coordinates, full witness list, packet digest, and source digest. Before acceptance, the parent reconstructs every ciphertext coordinate from the returned plaintext and key. If one reported plaintext coordinate is changed after the worker exits, the file hash changes; even if an attacker also rewrites the envelope hash, the independent forward equation fails. Both identity and meaning are checked.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+This concrete acquisition/worker/replay protocol was developed in this project. It generalises a tested engineering boundary and does not claim that process separation, content-addressed artefacts, or independently checked certificates are new ideas.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK89_PIPELINE631_LIVE_RELEASE.md"
+kind = "design"
+note = "Target-absent release-boundary preflight: stdlib parent, exclusive committed packet, separately imported solver worker, provenance envelope, and independent full-equation replay."
+ref = "LOG631"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk89_pipeline631_live.py"
+kind = "script"
+note = "Reference implementation of strict canonical parsing, no-clobber handoff, pinned worker launch, result binding, mutation refusals, and parent replay."
+
+[[provenance]]
+path = "withmath/logs/631_pipeline_preflight_20260905T182137Z_1788632497260304000.log"
+kind = "log"
+note = "Frozen target-absent receipt with 25 refusal regressions and complete independent parent replay."
+ref = "LOG631"

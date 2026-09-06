@@ -1,0 +1,222 @@
+id = "turning-grille"
+section = "ciphers"
+title = "Turning grille"
+subtitle = "Read one rotating set of holes four times to permute a square board"
+status = "VERIFIED"
+status_note = "Independent controls recovered 8/8 fresh shared-grille plants exactly up to the declared four-phase gauge; 8/8 matched shuffled pairs stayed below the frozen prose gate. A separate observed-text miss remains a bounded result for one frozen heuristic and family, not an exact exclusion of every grille construction."
+family = "Transposition"
+tags = ["transposition", "turning grille", "Fleissner grille", "rotation orbits", "gauge", "shared key"]
+related = ["route-transposition", "permutation-cycles", "conjugacy-and-gauge", "simulated-annealing", "quadgram-log-likelihood", "planted-controls", "held-out-gates", "selection-overfit-check", "evidence-scope-ladder", "g-transposition-grid"]
+summary = "A turning grille is a square sheet with holes. Write or read through the holes, turn the sheet by a quarter-turn, and repeat until every board cell has been used once. The key chooses one starting hole from each four-cell rotation orbit. This gives a large but highly structured transposition key. Its four possible starting orientations form a phase gauge that must be handled explicitly in controls."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Take an even $n \times n$ board. A quarter-turn sends cell $(r,c)$ to
+
+$$R(r,c)=(c,n-1-r).$$
+
+Every cell belongs to an orbit $(x,Rx,R^2x,R^3x)$. There are $n^2/4$ such orbits. A valid grille key chooses one starting cell from every orbit. On each turn it therefore exposes $n^2/4$ cells, and four turns cover the whole board exactly once.
+
+Fix an order for the open cells, such as row-major board order. A turning grille is then an ordinary permutation cipher: its letters do not change, but their positions do. It is often called a Fleissner grille. A fixed cut-out that is not turned is a related Cardan grille.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Route, key size, and the four-phase gauge"
+body = '''
+Store orbit $o$ as $(x_o,Rx_o,R^2x_o,R^3x_o)$. Let $h_o \in \mathbb Z_4$ choose its first hole and let $d \in \{-1,+1\}$ choose the turning direction. Turn $t$ opens
+
+$$H_t=\{R^{h_o+d t}(x_o):o=0,\ldots,n^2/4-1\}.$$
+
+Sort each $H_t$ by the agreed cell order and concatenate the four lists to get route $g_h$. If the ciphertext is the completed board in row-major order, decryption is
+
+$$P_j=C_{g_h(j)},$$
+
+and encryption writes $P_j$ back to board cell $g_h(j)$. A $12 \times 12$ board has $36$ orbits, so its hole choices form $4^{36}=2^{72}$ raw keys before direction and other conventions are counted.
+
+There is also a real choice of origin. Add the same phase $a$ to every hole choice: $h'_o=h_o+a$. The route's four $36$-letter blocks rotate by
+
+$$b=d a \pmod 4.$$
+
+The same board then decodes to the plaintext with its four blocks rotated by $b$. If no physical mark says which turn was first, these four descriptions are one gauge class. After quotienting by that free action, the $12 \times 12$ hole pattern has $4^{35}=2^{70}$ phase classes. A control must compare both the key route and the correspondingly rotated plaintext, not only one arbitrary representative.
+
+That gauge belongs to the grille-only cipher. An added position-dependent layer can break it. For example, an inner period-seven key on a 144-cell board does not survive a 36-position block rotation: 36 changes the key phase by one, but wrapping at 144 changes it by four because $144 \bmod 7=4$. No single cyclic key shift fixes both parts. In that composite cipher, the four masks are still rotations of one physical cut-out, but they are four distinct cryptographic states and literal phase recovery is required.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Clockwise or counterclockwise:** changing $d$ reverses the order in which later orbit cells appear. Search both unless the convention is known.
+- **Write-through or read-through:** one convention writes successive plaintext blocks through the grille and reads the finished board by rows; the inverse fills the board first and reads through the grille. They are inverse permutations, but they are different attack cells when input order is fixed.
+- **Shared grille:** two or more messages may use the same hole pattern. Their language scores can be added, giving the key more evidence without changing the route.
+- **Grille plus another layer:** a substitution or running key before or after the transposition creates a much larger family. Power measured for the grille-only case does not transfer automatically.
+- **Shared physical periodic key:** two messages can share key letters while using different alphabet orders. If $a_s$ gives a letter's position in message $s$'s alphabet, the shared letter $L_r$ contributes $a_s(L_r)$. The two numbers need not be equal. Sharing raw numeric shifts across mixed alphabets silently tests the wrong cipher.
+- **Odd boards and marked centres:** an odd square has a fixed centre cell, so it needs a separate rule instead of the clean four-cell-orbit construction above.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "What must be fixed before searching"
+body = '''
+- Board size, cell numbering, quarter-turn formula, direction choices, and the order used inside each turn are part of the cipher definition.
+- The grille must choose exactly one member of each rotation orbit. This is what guarantees full coverage without overlap.
+- The plain grille preserves the complete letter histogram. An added substitution layer does not preserve letter identities in the same way.
+- A shared-key attack assumes every input uses the same physical hole pattern and route convention.
+- If a longer input is tested through several square windows, all window starts and the rule for keeping omitted letters must be frozen before scores are seen.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to attack it"
+body = '''
+1. Build the rotation orbits and test that every proposed mask produces a permutation of all board cells.
+2. Freeze all route conventions. Treat clockwise, counterclockwise, write-through, and read-through as separate cells when they are genuinely open.
+3. Search the four choices in each orbit. Exhaustive search grows too quickly on a large board, so practical solvers use annealing, coordinate improvement, constraint search, or a combination.
+4. Decode every text that shares the grille and add their language scores. Keep integer scores when exact replay matters.
+5. For every saved result, rebuild the route independently, decode again, score again, and write the plaintext forward to the original board.
+6. Measure recovery on fresh planted grilles. Judge recovery modulo the global phase and include matched shuffled inputs to expose language-score overfit.
+
+When two board texts also share a physical periodic key, aligned ciphertext pairs provide a useful route-free prefilter. A transposition changes their order but preserves their pair histogram. For each possible physical key letter, build the expected product distribution of the two ciphertext symbols from the language monogram model, using each stream's own alphabet coordinates and relation. Fit the observed histogram as a mixture of these 26 components. The largest mixture weights give a shortlist of plausible physical key letters before the route search starts.
+
+This shortlist is heuristic. A short sample can give a wrong letter more weight than a true one, so a missing planted letter is a power failure rather than an exclusion. The full route selector must still score both reconstructed languages; a difference stream that cancels a shared additive key can be much less informative than the two texts separately.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function ORBITS(n):
+    mark every board cell unused
+    for each unused cell x:
+        emit (x, R(x), R(R(x)), R(R(R(x))))
+
+function ROUTE(mask, direction, orbits):
+    route = empty
+    for turn in 0..3:
+        holes = empty
+        for each orbit o:
+            holes.add(orbits[o][mask[o] + direction * turn mod 4])
+        route.append(SORT_BY_BOARD_POSITION(holes))
+    require route is a permutation of every board cell
+    return route
+
+function DECRYPT(board_text, mask, direction):
+    g = ROUTE(mask, direction, ORBITS(board_width))
+    return CONCAT(board_text[g[j]] for every j)
+
+function ENCRYPT(plain, mask, direction):
+    g = ROUTE(mask, direction, ORBITS(board_width))
+    for every j: board[g[j]] = plain[j]
+    return READ_BOARD_BY_ROWS(board)
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+An even $n \times n$ grille has $m=n^2/4$ independent four-way orbit choices, so direct enumeration costs $4^m$. At $n=12$, this is $4^{36}$. One full decode and language score is linear in the board area for each shared text, but a heuristic may evaluate millions of nearby masks. Incremental scoring can reduce the cost of one move; it does not make the search complete.
+
+This distinction matters when reporting a miss. A finished list of declared heuristic runs is exact as a record of those outputs. It is not an exhaustive proof about all $4^m$ masks unless the search itself has a completeness certificate.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Ignoring the phase gauge.** A solver can recover the correct physical grille while returning a plaintext rotated by one or more turn blocks. Literal key comparison wrongly calls this a miss.
+- **Inheriting a gauge through another layer.** The four grille phases cease to be equivalent when a later clock does not divide the message length. Prove the action for the complete cipher before quotienting it.
+- **Equating mixed-alphabet key coordinates.** The same physical key letter usually has different positions in two keyed alphabets. Map the letter through each alphabet separately.
+- **Using the wrong route convention.** Row-major holes, column-major holes, write-through, and read-through create different permutations. A control must cover the convention actually searched.
+- **Calling a round trip language evidence.** Every valid permutation can decrypt and re-encrypt its own output. Forward replay proves wiring, not readability or key correctness.
+- **Confusing control power with family evidence.** Recovering planted members shows that the frozen solver can work when its assumptions are true. It does not show that a separate ciphertext uses a turning grille.
+- **Calling a heuristic miss an exact family exclusion.** If every saved output stays below a frozen language gate, the below-gate statement is exact for those outputs. It does not prove that an unvisited mask, another convention, or a grille with an added layer cannot work.
+- **Selecting the best window without calibration.** When several overlapping windows are searched, the selected maximum must be judged against a gate or null that includes the same window selection.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+A strong positive control draws generic plaintexts and a random valid mask, encrypts them through the exact route, then gives only the ciphertexts to the solver. It passes only when the recovered route is in the planted four-phase class, both plaintexts have the matching block rotation, and independent forward writes reproduce both boards.
+
+One sealed confirmation used eight fresh shared-grille pairs. All eight were recovered exactly modulo phase; seven used the literal phase and one used phase three. Eight histogram-preserving shuffled pairs all stayed below the frozen prose gate. This establishes recovery power for that grille-only model, control distribution, and budget.
+
+A later observed-text run completed ten predeclared windows. An independent scalar audit rebuilt the source parser, every window and leftover, all routes, twenty plaintext decodes, all language and profile scores, every forward map, the rank order, and the gate decision without rerunning the optimizer. All ten stored outputs were below the gate. That is a bounded, powered miss for the strict frozen selector. It is not an exact exclusion of all turning grilles, because the search was heuristic and broader conventions were outside scope. The control result and the observed-text result answer different questions and must stay separate.
+
+A separate composite control added one shared physical period-seven key across two alphabet orders. At the true route, the correct alphabet/relation cell ranked first among all 16 choices and the true route ranked first against 1,000 random routes. Even so, a search using basin starts, mixture filtering, replica exchange, crossover, large-neighbourhood moves, and key polish did not recover the planted state. This is a useful warning: a selective score does not guarantee that a heuristic can reach its optimum. The failed control blocks use of that optimizer; it does not reject the composite cipher.
+'''
+
+[[blocks]]
+kind = "example"
+title = "A 4 by 4 example"
+body = '''
+Use the four rotation orbits of a $4 \times 4$ board, choose the first stored member of each orbit, and turn clockwise. The resulting route is
+
+```text
+0 1 2 5 | 3 6 7 11 | 10 13 14 15 | 4 8 9 12
+```
+
+Writing `MEETMEBYTHEOLDYX` along that route gives the row-major board ciphertext:
+
+```text
+M E E M
+L T E B
+D Y T Y
+X H E O
+```
+
+so the ciphertext is `MEEMLTEBDYTYXHEO`. Reading through the original grille returns `MEETMEBYTHEOLDYX`. Adding one to every hole choice moves the first turn block to the end and returns `MEBYTHEOLDYXMEET`; writing that rotated plaintext through the shifted grille produces the same board. This is the four-phase gauge in a small, checkable case.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The useful tension in a turning grille is that the algorithm is simple while the key is large. Orbit algebra supplies the structure: it guarantees coverage, gives a compact key representation, and exposes the phase gauge. Language search supplies reachability, while controls and independent replay define how much a result can honestly claim.
+'''
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/TURNGRILLE703_DESIGN.md"
+kind = "design"
+note = "LOG703 defines the even-square rotation orbits, direct route, raw key size, global four-phase action, search budget, and evidence boundaries."
+ref = "LOG703"
+
+[[provenance]]
+path = "withmath/logs/703_turngrille_controls_20260906T091944Z_10087.json"
+kind = "log"
+note = "Eight fresh shared-grille positive pairs recovered exactly modulo phase; eight matched histogram-preserving shuffled pairs stayed below the fixed gate."
+ref = "LOG703"
+
+[[provenance]]
+path = "withmath/logs/703_turngrille_audit_20260906T093400Z_10087.json"
+kind = "audit"
+note = "Independent scalar control replay verifies eight planted encryptions, 32 phase identities, all 16 result and profile scores, all forwards, deterministic shuffles, and terminal logic."
+ref = "LOG703"
+
+[[provenance]]
+path = "withmath/logs/703_turngrille_live_20260906T093351Z_87405.json"
+kind = "log"
+note = "A separately frozen ten-window observation completed below its language gate; the record keeps every omitted letter and all solver outputs."
+ref = "LOG703"
+
+[[provenance]]
+path = "withmath/logs/703_turngrille_live_audit_20260906T094056Z_87405.json"
+kind = "audit"
+note = "Independent non-optimizing replay checks the pre-read attempt, source hashes and parsing, all ten windows and leftovers, routes, scores, forwards, ranking, and the bounded below-gate terminal."
+ref = "LOG703"
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/TURNGRILLE705_SHARED_P7.md"
+kind = "design"
+note = "Defines a shared physical period-seven key across mixed alphabet coordinates, derives the broken phase gauge, and records the route-free paired-mixture prefilter."
+ref = "LOG705"
+
+[[provenance]]
+path = "withmath/logs/705_shared_controls_20260906T101057Z_6236_audit.json"
+kind = "audit"
+note = "Independent target-free replay verifies mixed-alphabet physical-key forwards, the 16-cell selector, route nulls, mixture support, gauge checks, and the positive-control power failure."
+ref = "LOG705"
+
+[[references]]
+title = "Elementary Cryptanalysis"
+author = "Helen Fouché Gaines"
+year = 1939

@@ -1,0 +1,150 @@
+id = "ciphertext-coordinate-feedback"
+section = "ciphers"
+title = "Ciphertext-coordinate feedback"
+subtitle = "Advance a running alphabet state from ciphertext coordinates already emitted"
+status = "VERIFIED"
+status_note = "The recurrence and closed-form peel pass independent coordinate checks, and a complete 1,300-cell selector recovered four fresh full-length controls exactly at rank one. Those controls establish bounded capability; they do not replace a matched-null calibration for a new application."
+family = "Stream and machine ciphers"
+tags = ["ciphertext feedback", "state recurrence", "mixed alphabet", "self-synchronising"]
+related = ["plaintext-coordinate-feedback", "right-to-left-plaintext-feedback", "symmetric-second-order-plaintext-feedback", "alberti-progressive", "autokey", "linear-recurrences-lcg", "parameter-versus-plaintext-recovery"]
+summary = "Subtract a running displacement from each ciphertext coordinate, then update that displacement from the observed ciphertext coordinate itself. Because the driver is public, every parameter cell has a closed-form peel into one ordinary substitution problem. This differs from plaintext feedback, whose future state depends on a latent coordinate."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Work in $\mathbb{Z}_{26}$. Let $x_i$ be the observed ciphertext coordinate in a declared outer alphabet, $a_i$ a running displacement, $u_i=x_i-a_i$ the latent coordinate, and $M$ an arbitrary substitution. The update is
+
+$$P_i=M(u_i),\qquad a_{i+1}\equiv a_i+\beta+\lambda x_i\pmod{26},$$
+
+with canonical $a_0=0$, $\beta\in\mathbb{Z}_{26}$, and nonzero $\lambda\in\mathbb{Z}_{26}$. For encryption, emit $x_i=u_i+a_i$ and then feed that emitted coordinate into the state update. Decryption sees the same driver directly in the ciphertext.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Closed-form peel"
+body = '''
+Unrolling the public state gives
+
+$$a_i\equiv i\beta+\lambda\sum_{j=0}^{i-1}x_j\pmod{26},$$
+
+and hence
+
+$$u_i\equiv x_i-i\beta-\lambda\sum_{j=0}^{i-1}x_j\pmod{26}.$$
+
+Thus a prefix sum of observed coordinates evaluates every cell without solving a hidden recurrence. The initial phase can be absorbed into the arbitrary map $M$, so fixing $a_0=0$ removes a gauge rather than a key family.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Zero feedback:** $\lambda=0$ leaves the constant-slope schedule $a_i=i\beta$ and is treated as a neighbouring family.
+- **Plaintext-coordinate feedback:** replace observed $x_i$ in the update by latent $u_i$; the resulting recurrence and equality functions differ.
+- **Classical ciphertext feedback modes:** modern block-cipher feedback modes use a keyed block primitive and shift register; the construction here is a classical alphabet-state analogue, not the same security mechanism.
+- **External progressive schedule:** precompute $a_i$ without using message or ciphertext values.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- One outer coordinate system, intercept, feedback coefficient, and substitution apply throughout the text.
+- The entire ciphertext prefix used by each state is available without error.
+- Nonunit feedback values remain valid because no modular division is performed.
+- Structural-cell recovery, substitution fitting, and exact plaintext recovery are reported as separate endpoints.
+- Re-encoded outer alphabets are not added as trial axes without an explicit gauge analysis.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to attack it"
+body = '''
+Build one prefix-sum array for each declared outer representative. Enumerate every intercept and nonzero feedback coefficient, evaluate the closed-form latent stream, canonicalise its equality pattern, and fit one arbitrary monoalphabetic substitution. Retain ties and any data-dependent aliases. Recompute the selected row with the direct recurrence, then independently encrypt every disclosed plaintext and map.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function PEEL_CIPHERTEXT_FEEDBACK(cipher_coordinates, beta, lambda):
+    prefix = 0
+    for i in 0..LENGTH(cipher_coordinates)-1:
+        state = (i * beta + lambda * prefix) mod 26
+        latent[i] = (cipher_coordinates[i] - state) mod 26
+        prefix = (prefix + cipher_coordinates[i]) mod 26
+    return latent
+
+function FORWARD_CIPHERTEXT_FEEDBACK(plaintext, inverse_map, beta, lambda):
+    state = 0
+    for i in 0..LENGTH(plaintext)-1:
+        latent = inverse_map[plaintext[i]]
+        output[i] = (latent + state) mod 26
+        state = (state + beta + lambda * output[i]) mod 26
+    return output
+
+function SEARCH(ciphertext):
+    enumerate declared outers, every beta, and every nonzero lambda
+    peel by prefix sums, group equality classes, and fit substitutions
+    independently replay direct state updates and every reported forward
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+For $o$ outer representatives over an alphabet of size $q$, excluding the zero-feedback boundary gives $o q(q-1)$ raw cells. Two representatives over $\mathbb{Z}_{26}$ give $1{,}300$. Prefix sums make each peel linear in text length, with substitution fitting again the dominant cost.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Wrong driver.** Feeding $u_i$ rather than $x_i$ silently changes to plaintext feedback.
+- **Off-by-one prefix.** The state before position $i$ includes ciphertext positions strictly before $i$, never $x_i$ itself.
+- **Constant-slope duplication.** Including $\lambda=0$ charges a previously declared schedule again.
+- **Round-trip tautology.** An encryptor and decryptor sharing the same off-by-one error can agree.
+- **Heuristic-inner overclaim.** Exhausting all schedules does not exhaust all arbitrary substitution maps when their fitter is heuristic.
+- **Missing null.** Control recovery alone does not calibrate how fluent the best of all cells can look under the null family.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The recorded known-answer tests compare direct recurrence, closed form, encryption, and decryption across all admitted parameter types. Four disjoint full-length prose controls span both outer representatives and unit and nonunit feedback values. The complete structural selector recovered all four exact plaintexts and cells at rank one, and every displayed candidate passed a separately written forward transform. The worker's language corpus excluded the control windows.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked synthetic example"
+body = '''
+Use the straight outer alphabet, identity $M$, $\beta=1$, $\lambda=2$, and plaintext `ATTACK`. Starting at $a_0=0$, the emitted ciphertext coordinates are $0,20,9,9,4,21$, or `AUJJEV`. For example, after emitting $x_1=20$, the state becomes $a_2=1+1+2\cdot20=42\equiv16$, so the next output is $19+16\equiv9$.
+
+The closed-form peel at position two gives $u_2=9-2-2(0+20)=-33\equiv19$, matching the plaintext coordinate. Direct recurrence and prefix-sum evaluation agree at every position.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The bounded alphabet-state family, its reduction to one substitution per cell, and its control protocol were developed in this project. This local provenance does not assert that ciphertext-driven state updates are globally novel.
+'''
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "LOG554 defines the observed-coordinate feedback family, cell count, control separation, and completed selector result."
+ref = "LOG554"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_feedback554.py"
+kind = "script"
+note = "Controller with closed-form and recurrence KATs, isolated control construction, exact cell enumeration, and independent forward checks."
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_feedback554_core.cpp"
+kind = "solver"
+note = "Compiled complete schedule scan using the frozen arbitrary-substitution engine."
+
+[[provenance]]
+path = "withmath/logs/554_feedback_20260904T221957Z.log"
+kind = "log"
+note = "Frozen receipt: four full-length controls exact at rank one and complete 1,300-cell schedule scan."
+ref = "LOG554"

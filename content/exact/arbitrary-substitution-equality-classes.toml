@@ -1,0 +1,173 @@
+id = "arbitrary-substitution-equality-classes"
+section = "exact"
+title = "Arbitrary-substitution equality classes"
+subtitle = "Decide exact compatibility by pattern and count every unused-label completion"
+status = "VERIFIED"
+status_note = "The compatibility rule is an exact consequence of bijectivity. A compiled class scanner retains the planted schedule, and an independent controller checks the same restricted-growth pattern and factorial completion count."
+family = "Exact equivalence tests"
+tags = ["arbitrary substitution", "equality pattern", "restricted growth string", "completion count", "permutation"]
+related = ["latent-label-identifiability", "observable-function-fingerprinting", "isomorph-analysis", "all-different-constraints", "all-different-enumeration", "partial-permutation-completion-bounds"]
+summary = "Two symbol sequences are related by one arbitrary monoalphabetic permutation exactly when they have the same equality pattern. A restricted-growth string makes that test canonical. If the pattern uses only part of the alphabet, the unused input and output symbols may still be paired in factorially many ways."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For a sequence $y$, its restricted-growth string $R(y)$ names the first distinct value $0$, the next unseen value $1$, and so on. It records equality and inequality between positions while discarding the literal symbol names.
+
+Let $u$ and $p$ be equal-length sequences over alphabets of the same size, and let $M$ be an arbitrary bijection applied at every position. Then
+
+$$p_i=M(u_i)\text{ for all }i
+\quad\Longleftrightarrow\quad
+R(p)=R(u).$$
+
+This is both a necessary invariant and a sufficient construction test. It can reject an entire parameter cell without fitting a language model.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Why the test is sufficient, and how many keys remain"
+body = '''
+A bijection preserves equality, so the forward direction is immediate. For the reverse direction, matching patterns define one observed partial map
+
+$$M(u_i)=p_i.$$
+
+The equality pattern makes this definition consistent, and its inequalities make it injective. It can therefore be extended to a bijection on the full alphabet.
+
+If the alphabet has size $m$ and the sequences use $k$ distinct symbols, there are $m-k$ unused inputs and the same number of unused outputs. With no further restrictions, the exact number of full-key completions is
+
+$$N_{\rm complete}=(m-k)!.$$
+
+The observed plaintext can thus be unique even when the literal full substitution key is not.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Pattern-only class:** keep only $R(u)$ when literal labels are a nuisance symmetry.
+- **Observed partial map:** retain the forced pairs $u_i\mapsto p_i$ and count unused completions.
+- **Constrained substitution:** keyword, involution, derangement, or cycle restrictions require a constrained completion count instead of $(m-k)!$.
+- **Many-to-one map:** homophonic or collapsing maps do not preserve both directions of equality, so this theorem does not apply.
+- **Schedule alias scan:** enumerate structural parameters, compute their latent streams, and group every stream with the same restricted-growth string before scoring.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions"
+body = '''
+- One stationary bijection maps the latent alphabet to the output alphabet across the whole sequence.
+- The source and output alphabets have the declared finite size.
+- Equality is exact. Similar frequencies or similar language scores are not equality constraints.
+- The factorial count applies only when the unused pairs have no additional restrictions.
+- Literal-key recovery and observed-text recovery are reported as separate endpoints.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Use the quotient before language search"
+body = '''
+For each structural parameter cell, derive its latent sequence and canonicalise it to a restricted-growth string. Compare that string directly with a known or proposed plaintext pattern. On a match, build the forced partial map in both directions, count unused symbols, and preserve every parameter alias that gives the same observable class. Only then use language evidence to choose literal labels when they are not already known.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function RGS(sequence):
+    label = empty map
+    next = 0
+    for value in sequence:
+        if value not in label:
+            label[value] = next
+            next += 1
+        output.append(label[value])
+    return output
+
+function SUBSTITUTION_CLASS(latent, output, alphabet_size):
+    if LENGTH(latent) != LENGTH(output): return INCOMPATIBLE
+    if RGS(latent) != RGS(output): return INCOMPATIBLE
+    partial = empty map
+    for i in positions:
+        partial[latent[i]] = output[i]
+    used = SIZE(partial)
+    completions = FACTORIAL(alphabet_size - used)
+    return COMPATIBLE, partial, completions
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Canonicalising and comparing two sequences costs $O(n)$ time. Building the partial map and counting used symbols costs $O(n+m)$ with $O(m)$ memory. The number $(m-k)!$ should be stored as an arbitrary-precision integer when the alphabet is large; it need not be enumerated merely to report the count.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Testing only repeated positions.** Matching equalities without matching inequalities accepts a many-to-one map that is not a permutation.
+- **Counting observed maps as full keys.** One forced partial map can have many unused-label completions.
+- **Using a fresh map per segment.** That weakens one stationary substitution into a different, much larger family.
+- **Factoring under constraints.** An involution or fixed cycle type usually has fewer completions than $(m-k)!$.
+- **Treating class recovery as readable text.** The pattern names anonymous classes; language or side information is still needed to label them.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Generate random permutations and sequences with varied alphabet coverage. Require the original and every global relabelling to have the same restricted-growth string. Mutate one repeated position and one previously distinct position so each direction of the equivalence can fail. For small alphabets, enumerate every full permutation and compare the survivor count with $(m-k)!$ exactly.
+
+One larger handoff grouped 3,674 physical structural seeds into 3,483 exact equality classes before any substitution fit. It preserved every physical origin and tie in sidecars, derived deterministic search identities from each canonical class, and kept unused-label completions factored. A separate implementation replayed every class, origin, completion count, and 1,851,696 forward positions without rerunning the upstream search.
+'''
+
+[[blocks]]
+kind = "example"
+title = "One observed map, two full completions"
+body = '''
+Over a five-symbol alphabet, let
+
+$$u=(4,1,1,3),\qquad p=(2,0,0,4).$$
+
+Both have restricted-growth string $(0,1,1,2)$, so the forced observed map is $4\mapsto2$, $1\mapsto0$, $3\mapsto4$. Two source symbols and two output symbols remain unused, giving $(5-3)!=2$ full permutation keys. Both keys emit exactly the same four-symbol output.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Restricted-growth strings are a standard encoding of set partitions. This entry focuses on the exact existence theorem and completion count; [Latent-label identifiability](/algebra/latent-label-identifiability) explains what those remaining completions mean for reported recovery.
+'''
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_quartervelocity640_core.cpp"
+kind = "solver"
+note = "Implements an exact plaintext-class scan by enforcing source-to-output and output-to-source consistency across every position."
+ref = "LOG640"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_quartervelocity640_controls.py"
+kind = "script"
+note = "Independently computes restricted-growth strings, observed-symbol coverage, and factorial counts for unobserved substitution completions."
+ref = "LOG640"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "LOG640-B records an exact class scan retaining the generating schedule and a disclosed control whose unused labels have the independently reported completion count."
+ref = "LOG640"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_SEED667_HANDOFF.md"
+kind = "design"
+note = "Defines an oracle-free adapter from physical geometry seeds to canonical restricted-growth classes, stable class identities, and factored key lifts."
+ref = "LOG667"
+
+[[provenance]]
+path = "withmath/logs/667_handoff_20260906T025840Z_1788663520546086000.result.json"
+kind = "log"
+note = "Frozen handoff preserving every physical seed and metric origin while quotienting exact observed-equality aliases."
+ref = "LOG667"
+
+[[provenance]]
+path = "withmath/logs/667_reference_audit_20260906.log"
+kind = "audit"
+note = "Separate-code verification of equality classes, stable identities, factorial completion families, and literal forward lifts."
+ref = "LOG667"

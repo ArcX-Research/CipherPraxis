@@ -1,0 +1,150 @@
+id = "nihilist"
+section = "ciphers"
+title = "Nihilist substitution cipher"
+subtitle = "Add Polybius coordinate numbers to a repeating numeric key"
+status = "VERIFIED"
+status_note = "The construction is documented in standard classical-cipher references, and the worked example round-trips exactly. This page does not claim a dedicated blind solver."
+family = "Coordinate and additive ciphers"
+tags = ["polybius square", "numeric ciphertext", "repeating key", "addition"]
+related = ["polybius-square", "vigenere", "keyword-mixed-alphabet", "kasiski-examination", "frequency-analysis"]
+summary = "The Nihilist substitution cipher turns each plaintext letter into a two-digit Polybius coordinate. It turns a keyword into coordinates in the same way, repeats those key numbers, and adds them as ordinary integers. The result is a stream of numbers rather than letters."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Build a keyed $5 \times 5$ Polybius square over a 25-letter alphabet, normally with I and J sharing one cell. Number its rows and columns from 1 to 5. A letter at row $r$ and column $c$ becomes the integer $10r+c$.
+
+Convert a second keyword through the same square to obtain numeric key values. Repeat those values under the plaintext coordinates and add. Ciphertext numbers are normally separated so that two- and three-digit values remain unambiguous.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Coordinate addition"
+body = '''
+Let $q(x)=10r(x)+c(x)$ be the Polybius number of letter $x$, and let the numeric key be $u_0,\ldots,u_{m-1}$. Then
+
+$$y_i=q(p_i)+u_{i\bmod m}.$$
+
+Decryption subtracts the same key value,
+
+$$q(p_i)=y_i-u_{i\bmod m},$$
+
+and accepts the result only when both decimal digits are in $\{1,2,3,4,5\}$. The addition is ordinary integer addition, not digitwise addition and not reduction modulo 26.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- The square and the numeric keyword may use the same word or two different words.
+- Some conventions use a straight square; others use a keyword-mixed square.
+- A checkerboard or larger coordinate grid can replace the $5 \times 5$ square, but its valid-number set changes.
+- The similarly named Nihilist transposition is a different construction.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- Ciphertext number boundaries are known.
+- The square convention, merged-letter rule, and key alignment are fixed.
+- The numeric key repeats from a declared origin.
+- Every subtraction must land on a valid square coordinate.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to attack it"
+body = '''
+First estimate the key period from repeated numeric patterns or repeated differences. For each period, use the valid-coordinate rule to reject impossible key values: subtracting a proposed value from every number in one residue class must always leave a valid Polybius coordinate. Rank the surviving values by the row and column frequencies expected from language. Then search the square and key together with word-pattern, n-gram, or crib evidence, and require every recovered number to reproduce exactly.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function ENCRYPT(plain, square, key_word):
+    key = [COORD_NUMBER(letter, square) for letter in key_word]
+    out = empty
+    for i, letter in enumerate(plain):
+        x = COORD_NUMBER(letter, square)
+        append x + key[i mod length(key)] to out
+    return out as separated integers
+
+function DECRYPT(numbers, square, key_word):
+    key = [COORD_NUMBER(letter, square) for letter in key_word]
+    out = empty
+    for i, y in enumerate(numbers):
+        x = y - key[i mod length(key)]
+        require x is a valid coordinate in square
+        append LETTER_AT_COORD_NUMBER(x, square) to out
+    return out
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Encryption and decryption are linear in the message length when the square and key are known. Blind search is much larger: it combines the key period and values with a permutation of the 25-cell square. Coordinate validity can remove many key candidates before the square search begins.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Digitwise arithmetic.** Adding each decimal digit separately defines another cipher.
+- **Lost separators.** Concatenated values can be parsed in several ways because ciphertext values may have two or three digits.
+- **Wrong square.** A plausible numeric key can still decode through the wrong letter arrangement.
+- **Roundtrip overclaim.** Any fixed square and key define an inverse; a fitted roundtrip alone does not show that the plaintext is right.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+For a solver test, hide the square keyword, numeric keyword, key origin, and merged-letter convention. Include values that cross from two to three digits. Require the exact normalized plaintext and exact numeric reconstruction. If the solver reports the square, compare only the cells that the control actually observes unless the test was designed to exercise every cell.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+Use this I/J square keyed by `ZEBRAS`:
+
+```text
+Z E B R A
+S C D F G
+H I K L M
+N O P Q T
+U V W X Y
+```
+
+The key word `CODE` becomes $22,42,23,12$. Plaintext `MEETATNOON` becomes $35,12,12,45,15,45,41,42,42,41$. Adding the repeated key gives
+
+```trace
+plain   35  12  12  45  15  45  41  42  42  41
+key     22  42  23  12  22  42  23  12  22  42
+cipher  57  54  35  57  37  87  64  54  64  83
+```
+
+Subtracting the key returns the original coordinates and therefore `MEETATNOON`.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Unlike Vigenere, the visible symbols are sums of coordinate numbers, so decimal carries are part of the ciphertext. The coordinate-validity test is therefore stronger than merely checking a value modulo an alphabet size.
+'''
+
+[[provenance]]
+path = "content/references/literature-classical-ciphers.toml"
+kind = "note"
+note = "The catalog's classical-cipher bibliography supplies the standard reference trail for this literature-backed definition."
+
+[[references]]
+title = "Cryptanalysis: A Study of Ciphers and Their Solution"
+author = "Helen Fouché Gaines"
+year = 1939
+
+[[references]]
+title = "The ACA and You: Handbook of the American Cryptogram Association"
+author = "American Cryptogram Association"
+year = 2005
+url = "https://www.cryptogram.org/resource-area/cipher-types/"

@@ -1,0 +1,152 @@
+id = "feedback-state-gauges-and-cells"
+section = "algebra"
+title = "Feedback-state gauges and cell counting"
+subtitle = "Count observable parameter cells after removing coordinate conventions"
+status = "VERIFIED"
+status_note = "Target-absent exhaustive checks over small rings and independent modular probes confirm the phase gauge, affine outer-coordinate action, reversal rule, cell count, and separation from the compared neighbouring families."
+family = "Equivalence and identifiability"
+tags = ["gauge", "feedback", "parameter cells", "affine coordinates", "identifiability"]
+related = ["plaintext-coordinate-feedback", "right-to-left-plaintext-feedback", "symmetric-second-order-plaintext-feedback", "latent-label-identifiability", "parameter-versus-plaintext-recovery", "conjugacy-and-gauge", "affine-maps-mod-26", "units-mod-26", "group-actions-on-alphabets", "linear-recurrences-lcg"]
+summary = "A feedback cipher may have many written keys that describe the same observable transform. Translate the hidden state, or relabel the outer coordinates by an invertible affine map, and the parameters and substitution change together while every letter stays the same. Honest cell counting fixes one representative per gauge orbit, excludes boundary families, and keeps only genuinely different outer alphabets."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For the symmetric feedback state
+
+$$x_i=u_i+a_i, \qquad a_{i+1}=a_i+\beta+\lambda(u_i+u_{i-1}), \qquad P_i=M(u_i),$$
+
+all equations are modulo $q$. A **raw cell** is one declared triple $(B,\beta,\lambda)$ before fitting the arbitrary substitution $M$. An **observable cell** is an equivalence class of raw descriptions that induce the same coordinate-equality function after all allowed relabellings and boundary aliases are removed.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Two exact gauge actions"
+body = '''
+An initial-state translation by $h$ is
+
+$$a_i'=a_i-h, \qquad u_i'=u_i+h, \qquad \beta'=\beta-2\lambda h, \qquad M'(z)=M(z-h).$$
+
+It preserves $x_i=u_i+a_i$ and the boundary $u_{-1}=u_0$. Choosing $h=a_0$ proves that fixing $a_0=0$ loses no key.
+
+For a unit $s\in\mathbb{Z}_q^\times$ and any $t\in\mathbb{Z}_q$, an affine outer re-coordinate is
+
+$$x_i'=s x_i+t, \qquad a_i'=s a_i, \qquad u_i'=s u_i+t,$$
+
+$$\lambda'=\lambda, \qquad \beta'=s\beta-2\lambda t, \qquad M'(v)=M\big(s^{-1}(v-t)\big).$$
+
+Reversal uses $s=-1,t=-1$, hence $\beta'=2\lambda-\beta$. Rotations, reversals, and unit decimations of one outer alphabet are therefore coordinate aliases, not independent dimensions.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- With $o$ genuinely distinct literal outer representatives and nonzero $\lambda$, the raw count is $o q(q-1)$.
+- Including $\lambda=0$ adds the constant-slope boundary $a_i=i\beta$; it should be reported as a neighbouring family.
+- The unrestricted update $\beta+\lambda u_i+\mu u_{i-1}$ has another coefficient and can acquire boundary multiplicities. The symmetric diagonal $\mu=\lambda$ avoids that expansion.
+- Alternating feedback coefficients are not automatically closed under outer rotations: one shared intercept can split into phase-specific intercepts after re-coordination.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Only bijective coordinate changes are gauges; a nonunit scale can collapse symbols and is not a relabelling.
+- Literal outer alphabets are merged only when an explicit affine map relates them or when their peeled equality classes coincide on the actual text.
+- $\lambda$ is invariant under the affine action above. $\beta$ is coordinate-dependent and should not be compared literally across gauges.
+- A finite probe can prove two cells differ when it supplies a witness input. Failure to find a witness on a small probe is not, by itself, proof of equality.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to audit a family census"
+body = '''
+Write the most general allowed coordinate transformation, substitute it into the update, and solve for the transformed parameters. Canonicalise the initial state. Enumerate the remaining raw cells in a fixed order, map each peeled stream to a restricted-growth string that records equality only, and merge exact duplicates dynamically. Compare the resulting observable functions with boundary and neighbouring families. Report both the formal raw count and the data-dependent class count.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function CANONICAL_CELL(outer, beta, lambda, initial_phase):
+    h = initial_phase
+    beta = (beta - 2 * lambda * h) mod q
+    initial_phase = 0
+    outer = CANONICAL_AFFINE_REPRESENTATIVE(outer)
+    return (outer, beta, lambda)
+
+function CENSUS(ciphertext, outer_representatives):
+    groups = empty map from equality signature to raw cells
+    for outer in outer_representatives:
+        for beta in Z_q:
+            for lambda in Z_q excluding 0:
+                u = PEEL(ciphertext, outer, beta, lambda)
+                signature = RESTRICTED_GROWTH_STRING(u)
+                groups[signature].append((outer, beta, lambda))
+    report raw cells = count of appended triples
+    report observable classes = number of groups
+    report every alias list without dropping members
+    return groups
+
+function FAMILY_WITNESS(family_A, family_B, probes):
+    compare equality signatures on every probe input
+    return a differing input when one is found
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The census costs $O(o q(q-1)n)$ peel operations for text length $n$, before substitution fitting. For two literal outer representatives over $\mathbb{Z}_{26}$, excluding zero feedback leaves exactly $1{,}300$ raw cells. The arithmetic contains no division, so nonunit values do not need a separate implementation.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Counting notation instead of functions.** Adding every rotated alphabet multiplies descriptions but not observable hypotheses.
+- **Discarding zero divisors.** Requiring $\lambda$ to be invertible removes valid transforms even though the recurrence never divides by it.
+- **Merging by score.** Equal or near-equal language scores do not establish algebraic equivalence; compare the peeled equality functions.
+- **Forgetting the boundary.** Changing $u_{-1}$ can introduce a primer, break translation closure, or create aliases absent from the stated model.
+- **Declaring neighbouring families identical from one text.** A text-specific collision is not equality of the two transforms on all inputs.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The recorded algebra check compared four independent routes: direct state peeling, the forced second-order recurrence, a division-free closed form, and forward reconstruction. It exhausted short inputs over several small rings, then used independent probes over $\mathbb{Z}_{26}$. Separate tests exercised initial translations, all invertible affine outer maps, reversal, boundary identifiability, and observable intersections with first-order plaintext feedback, ciphertext feedback, constant slope, acceleration, alternating schedules, pulses, reverse feedback, autokey, and Condi-like relations.
+'''
+
+[[blocks]]
+kind = "example"
+title = "A reversal is an alias, not another cell"
+body = '''
+Take $q=26$, $\beta=7$, and $\lambda=3$. Reverse the coordinate ring by $x'=-x-1$. The transformed intercept is
+
+$$\beta'=2\lambda-\beta=6-7\equiv25\pmod{26},$$
+
+while $\lambda'=3$. If $u=4$, then $u'=-4-1\equiv21$. The transformed substitution uses $M'(21)=M(4)$, so the plaintext label is unchanged. Searching both descriptions as unrelated keys would count the same observable transform twice.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+This exact quotient analysis was developed in this project for a bounded feedback family. It is presented as reusable algebra, without a claim that the underlying idea is globally new.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_PLAINFEEDBACK630_SECONDORDER_THEORY.md"
+kind = "design"
+note = "Derives the initial-phase and affine outer gauges, reversal map, raw-cell count, boundary identifiability, and neighbouring-family comparisons."
+ref = "LOG630"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_plainfeedback630_secondorder_theory.py"
+kind = "script"
+note = "Independent exhaustive small-ring and modular witness implementation."
+
+[[provenance]]
+path = "withmath/logs/630_pk10_plainfeedback_theory_20260905T144704Z_1788619624826808000.log"
+kind = "log"
+note = "Frozen target-absent algebra receipt with pinned aggregate digests."
+ref = "LOG630"

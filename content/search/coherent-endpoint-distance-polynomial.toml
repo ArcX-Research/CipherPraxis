@@ -1,0 +1,107 @@
+id = "coherent-endpoint-distance-polynomial"
+section = "search"
+title = "Coherent endpoint distance polynomials"
+subtitle = "Keep whole proposal rows together, but do not mistake closeness for likelihood"
+status = "POWER-LIMITED"
+status_note = "Exact reduced-alphabet tests verified the coherent polynomial and shared-cycle legality. On three longer consumed controls, legal wrong cycles had strictly smaller endpoint distance than the planted cycle, so distance is not a safe primary rank or hard prune."
+family = "Proposal-guided constrained search"
+tags = ["coherent endpoints", "distance polynomial", "shared cycle", "proposal ranking", "counterexample"]
+related = ["unique-proposal-voting", "candidate-bank-lineage-and-cap-accounting", "relabeling-permutation-distance", "quadgram-log-likelihood", "local-language-model-prior", "planted-controls", "cross-residue-collision-alignment"]
+summary = "When several approximate substitution maps come from one search endpoint, preserve each complete row instead of combining its best cells with cells from other rows. For a legal candidate, count its distance to every physical endpoint and record the whole distance polynomial. This is a sound way to describe proposal support. It is not a language likelihood: a wrong legal key can be closer to the endpoint bank than the planted key. Use the polynomial to generate or order proposals, then select with an independently validated plaintext score."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let residue $r$ have a deduplicated bank $E_r$ of complete physical endpoint maps. For a candidate map $G_r$, define its endpoint-distance polynomial
+
+$$F_r(G_r;x)=\sum_{M\in E_r} x^{d_H(G_r,M)},$$
+
+where $d_H$ is Hamming distance on the declared observed domain. For a tuple $G=(G_0,\ldots,G_{p-1})$, keep only tuples that satisfy the shared algebra, such as powers or reflections of one regular cycle. The combined support can be represented by
+
+$$F(G;x)=\prod_r F_r(G_r;x).$$
+
+Its smallest nonzero degree is the minimum total distance to one coherent endpoint per residue. Coherence matters: every term comes from a whole physical row, never a per-cell plurality assembled from unrelated endpoints.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- Endpoint rows are deduplicated as physical maps before multiplicity is interpreted.
+- Distance uses a declared symbol domain; changing the domain changes the statistic.
+- Every output tuple passes the full shared-cycle or reflection legality test.
+- Zero-support edges remain searchable. Absence from an approximate proposal bank is not an algebraic contradiction.
+- Distance is proposal evidence only unless fresh controls independently prove it is a safe selector.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Use coherence without a distance trap"
+body = '''
+Build the exact polynomials from complete endpoint rows and enumerate only algebraically legal tuples. Preserve candidates from several distance bands or temperatures, including candidates with zero-vote edges. Give those candidates to the actual plaintext objective, such as a frozen n-gram score, and let that objective choose the final result. A useful implementation keeps a Pareto set over language score, endpoint distance, and proposal origin rather than deleting every state outside the minimum-distance shell.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function COHERENT_PROPOSALS(endpoint_banks, legal_generator, betas):
+    candidates = empty semantic set
+    for G in legal_generator:
+        polynomial = 1
+        for residue r:
+            polynomial *= sum(x ^ HAMMING(G[r], M) for M in endpoint_banks[r])
+        for beta in betas:
+            proposal_score = log E[exp(-beta * distance)] from polynomial
+            RETAIN_BY_DECLARED_BUDGET(candidates, G, beta, proposal_score)
+
+    candidates = SEMANTIC_DEDUPLICATE(candidates)
+    for G in candidates:
+        G.language_score = INDEPENDENT_PLAINTEXT_SCORE(DECRYPT(G))
+        require FORWARD_REPLAY(G)
+    return RANK_PRIMARILY_BY_LANGUAGE(candidates)
+```
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Frankenstein plurality.** Picking the most frequent image independently for every cell can create an injective-looking collection that no single endpoint or shared cycle supports.
+- **Nearest means true.** Approximate decoders can cluster around a smooth but wrong basin. Minimum Hamming distance then rewards the basin rather than the hidden key.
+- **Lexicographic lock-in.** If distance is the first sort key, an excellent language candidate at distance $d+1$ can never beat nonsense at distance $d$; a later language tie-break cannot repair this.
+- **Zero-vote pruning.** The true map may use edges absent from every retained endpoint. Exact reduced tests retained planted tuples with several such edges.
+- **Alias voting.** Gauge-equivalent coordinates or duplicate endpoints can multiply support without adding evidence.
+- **Control reuse called fresh.** A consumed control can falsify a selector, but success on it cannot admit a newly tuned selector.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+On reduced exact fixtures, two independent enumerators agreed on 11,546 legal rotation-map tuples and 11,160 legal reflection-map tuples. They preserved planted candidates with three zero-support edges per fixture and rejected per-cell Frankenstein pluralities; 544,944 scalar forward/decrypt letters agreed.
+
+A separate audit then applied minimum endpoint distance to three already-consumed longer controls. Blind legal, non-orbit cycles reached total distances $26<30$, $20<22$, and $28<31$ against the planted cycles. All three wrong distance winners had much worse quadgram scores than truth. This is a constructive counterexample: coherent distance is useful geometry, but minimum distance is not a truth-safe primary selector.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The polynomial preserves more information than a single minimum: its coefficients show how much support exists at every distance. Finite-temperature summaries can expose several basins, but temperature is a selector choice and needs fresh controls. The safest workflow is broad proposal acquisition, semantic deduplication, independent language ranking, and literal forward replay.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_COHERENT668_KAT.md"
+kind = "design"
+note = "Defines coherent endpoint-distance polynomials, exact shared-cycle enumeration, zero-support retention, and reduced-alphabet controls."
+ref = "LOG668"
+
+[[provenance]]
+path = "withmath/logs/668_coherent_kat_20260906T032148Z_1788664908571601000.json"
+kind = "log"
+note = "Frozen exact artifact: independent enumerations, complete physical tuple lists, invariance checks, and scalar forward replays."
+ref = "LOG668"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "ledger"
+note = "Independent consumed-control audit supplies strict legal counterexamples to minimum-distance truth ranking."
+ref = "LOG668"

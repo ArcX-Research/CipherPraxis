@@ -1,0 +1,153 @@
+id = "commit-before-reveal-evaluation"
+section = "validation"
+title = "Commit-before-reveal evaluation"
+subtitle = "Freeze and verify every blind output before opening one hidden answer"
+status = "VERIFIED"
+status_note = "A target-absent boundary test exercised 12 isolated synthetic cases, 24 classifier paths, and 13 refusal scenarios. It verified the event order and one-case access rule; it did not measure search or language-recovery power."
+family = "Blind evaluation"
+tags = ["blind evaluation", "output commitment", "single-case access", "one shot"]
+related = ["blind-controls", "seal-and-audit-protocol", "reproducibility-receipts", "isolated-acquisition-solver-handoff", "target-absent-controls", "endpoint-specific-control-contracts"]
+summary = "When a test answer must remain hidden, finish and commit the complete solver output first. A separate evaluator independently checks that commitment, records a durable one-shot attempt, and only then opens one answer file. The evaluator never loads an answer registry and never trusts a worker's claim that its output was verified."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+A **commit-before-reveal evaluation** separates blind production from answer checking. The producer receives public input and writes every raw output, score, alias, process record, and sidecar without access to hidden truth. A canonical manifest commits the complete file census. A separate evaluator verifies those bytes independently, durably consumes its one allowed attempt, and then opens exactly one small answer envelope.
+
+This differs from a hidden-seed control. The producer may know the public test input; what stays hidden is the answer used to judge its already-frozen output. It also differs from merely hashing a winning row: nonselected scores and intermediate records can affect whether that row was selected, so they belong to the commitment too.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Commitment and event order"
+body = '''
+Let $J$ be canonical serialisation, $H$ a cryptographic hash, $P$ the public input, $F$ the exact map from file names to file hashes, and $M$ the frozen source and runtime manifest. Define
+
+$$h_P=H(J(P)),\qquad h_F=H(J(F)),\qquad
+h_B=H(J(h_P,M,F)).$$
+
+The evaluator accepts the blind phase only if every declared file rehashes to $F$, the observed file census equals the declared census, and semantic replay succeeds. Its irreversible order is
+
+$$\operatorname{verify}(h_B,F,M)\prec
+\operatorname{fsync}(\text{attempt})\prec
+\operatorname{read}(T_j)\prec
+\operatorname{classify}(T_j,F),$$
+
+where $T_j$ is one answer envelope. A boolean such as `worker_verified=true` is not evidence; verification is recomputed inside the evaluator before the first truth read.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Single-case evaluator:** one process can open only the named answer file, never a multi-case registry.
+- **Batch reveal:** all outputs are committed before a release authority reveals a seed that regenerates the answer bank.
+- **Remote producer:** signatures bind the producer's bundle when file-system ownership is unavailable.
+- **Dual-view evaluation:** several frozen views of the same public input are judged together, but every view is committed before the shared answer opens.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Required boundary"
+body = '''
+- The output manifest is complete, canonical, source-bound, and written before truth is available.
+- The evaluator implements its own parsing and semantic replay instead of calling a producer-supplied `verify` result.
+- The answer is stored as one bounded, canonical envelope. A registry containing adjacent answers never enters the process.
+- An answer hash is a binding commitment, not automatic secrecy. Keep it outside the producer's scope when a low-entropy answer could be guessed by hashing candidates.
+- Attempt and result paths use exclusive creation, reject links, flush file contents, and flush the parent directory.
+- A post-open failure consumes the case. Retrying after learning anything from the answer would break blindness.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Use the boundary"
+body = '''
+Run the solver on public input while the answer path is inaccessible. Commit the complete output directory and a manifest of every source and runtime dependency. Launch a small evaluator with only the bundle commitment, one answer digest, and the frozen manifest. It replays the blind evidence, writes and flushes an exclusive attempt marker, reads one answer, computes the declared endpoint, rechecks that the bundle did not change, and writes one immutable result.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function EVALUATE_BLIND_BUNDLE(public_packet, bundle, manifest, truth_path):
+    require CANONICAL(public_packet, bundle, manifest)
+    require OBSERVED_FILES(bundle.directory) == bundle.file_census
+    for file in bundle.file_census:
+        require HASH(file) == bundle.file_census[file]
+    require INDEPENDENT_REPLAY(bundle, public_packet, manifest)
+    require TRUTH_READ_COUNT() == 0
+    marker = CREATE_EXCLUSIVE_NOFOLLOW("evaluation.attempt")
+    WRITE_FLUSH_AND_DIRECTORY_FSYNC(marker, HASH(bundle))
+    require REGISTRY_NOT_LOADED()
+    truth = READ_EXACTLY_ONCE(truth_path)
+    require HASH(truth) == public_packet.truth_hash
+    result = CLASSIFY_REPLAYED_OUTPUT(bundle, truth)
+    require HASHES_UNCHANGED(bundle, manifest)
+    WRITE_EXCLUSIVE_FLUSHED("evaluation.result", result)
+    return result
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The evaluator reads the full committed bundle at least once, so its time is $O(B+R)$ for $B$ bytes of artefacts and semantic replay cost $R$. Storage is $O(B)$. This cost is deliberate: checking only the winner cannot establish that the selection arose from the declared complete run.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Truth before commitment.** A score or candidate can be changed after its answer becomes known.
+- **Winner-only commitment.** Missing losing rows hide a tie, a different maximum, or post-hoc selection.
+- **Trusted verification flag.** The worker asserts success without exposing enough raw evidence for independent replay.
+- **Registry deserialisation.** Reading all answers while evaluating one case leaks future cases even if only one result is printed.
+- **Guessable answer digest.** Giving the producer a hash of a small answer space lets it test guesses offline.
+- **Retry after a post-open error.** The process has already learned from truth, so a fresh attempt is no longer blind.
+- **Hash-only acceptance.** Byte identity does not prove that the rows satisfy their equations or that the census is complete.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Use arbitrary-symbol cases and fabricated classifier envelopes to test the boundary without claiming solver power. Mutate source and freeze hashes, remove a witness, change the case label, add a registry-shaped field, precreate the attempt marker, forge a certificate, and fail after the answer read. Pre-authorisation defects must produce zero truth reads. Post-open defects must leave a durable consumed marker and refuse a second attempt.
+'''
+
+[[blocks]]
+kind = "example"
+title = "One answer, two frozen views"
+body = '''
+A producer writes `primary.json`, `stress.json`, their raw score tables, and all process records. The manifest lists every file and hash. The evaluator first proves both views complete and replays every reported score. It then flushes `evaluation.attempt`, opens `answer-07.json` once, compares the two frozen selections with that answer, and writes the result. `answer-08.json` is never opened. Deleting a losing score row or adding an undeclared file makes evaluation stop before the answer read.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Commitments, blinded evaluation, and isolated processes are established ideas. The reusable contribution documented here is their tested ordering as one strict computational-experiment boundary: complete blind evidence first, independent replay second, durable one-shot claim third, and one bounded truth read last.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK89_DUAL634_GATE.md"
+kind = "design"
+note = "LOG634 records the blind-output, durable-attempt, single-case-open, and no-registry boundary, together with its explicit software-only limitations."
+ref = "LOG634"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk89_dual634_evaluator.py"
+kind = "script"
+note = "Reference evaluator implementing complete pre-case checks, exclusive durable claim, one bounded case read, immutable recheck, and refusal of production modes."
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk89_dual634_evaluator_kat.py"
+kind = "script"
+note = "Boundary test covering isolated processes, strict event order, zero-read pre-authorisation failures, consumed post-open failures, and no-registry access."
+
+[[provenance]]
+path = "withmath/logs/634_dual_sealed_preflight_20260905T194319Z_1788637399746722000.log"
+kind = "log"
+note = "Frozen target-absent receipt: 12 synthetic cases, 24 classifier paths, 13 refusal scenarios, and one-case access checks."
+ref = "LOG634"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk89_dual638_controls.py"
+kind = "script"
+note = "Later composition requires the evaluator to replay the complete raw bundle itself before opening one case; a worker-supplied verification flag is not trusted."

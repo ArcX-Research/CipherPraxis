@@ -6,7 +6,7 @@ status = "POWER-LIMITED"
 status_note = "When the key text came from a known bank, an exact window test found the planted passage and rejected wrong windows within a few nodes. The general cascade also found a running-key link between two earlier solved texts. With an unknown English key, a joint beam decoder recovered only 41%, 50%, and 26% on controls at 63, 95, and 126 letters. That case is not identifiable with this method."
 family = "Stream and machine ciphers"
 tags = ["running key", "aperiodic", "book key", "two-language-stream"]
-related = ["vigenere", "book-cipher", "autokey", "one-time-pad", "running-key-relation-test", "key-cancellation", "beam-search", "viterbi-decoding", "constraint-satisfaction-forward-checking", "word-prefix-csp"]
+related = ["vigenere", "book-cipher", "autokey", "one-time-pad", "running-key-relation-test", "key-cancellation", "beam-search", "viterbi-decoding", "constraint-satisfaction-forward-checking", "word-prefix-csp", "transposed-running-key-endpoint-scoring"]
 summary = "A running-key cipher adds a long meaningful text to the plaintext one letter at a time. The key does not repeat, so there is no period to find. If the key passage is in a known bank, a solver can search for it. If it is unknown, both key and plaintext are language, and many wrong pairs can sound convincing. Tests solved the known-bank case but showed that the unknown-key decoder lacks power."
 updated = "2026-09-04"
 
@@ -32,7 +32,7 @@ kind = "variants"
 body = '''
 - **Book cipher**: the key is a passage identified by its location in a book; see [Book cipher](/ciphers/book-cipher).
 - **Chained running key**: one recovered plaintext keys the next message. The solved prefix of the corpus contains such a link, which the cascade recovered through its running-key decision (see [Running-key relation test](/cryptanalysis/running-key-relation-test)).
-- **Running key under a transposition**: score the plaintext side order-free (monograms only) and recover the key text from the ciphertext.
+- **Running key under a transposition**: when a complete key candidate is rearranged in blocks, neighbouring-block n-gram terms allow an exact subset-DP route search. Known letters of an incomplete key can supply an earlier assignment proxy; see [Transposed running-key endpoint scoring](/exact/transposed-running-key-endpoint-scoring).
 '''
 
 [[blocks]]

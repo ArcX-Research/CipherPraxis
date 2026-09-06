@@ -5,10 +5,10 @@ subtitle = "Improve one shift, or one neighboring pair, at a time until the scor
 status = "VERIFIED"
 status_note = "Coordinate descent finishes results from the periodic dynamic program, class solver, and Viterbi solver. It also drives the varied-copy key search. Logged 153-letter controls recovered at 100%, 71%, and 79%. Every dynamic-programming control that includes this finishing pass recovered 100%."
 family = "Deterministic heuristics"
-tags = ["coordinate ascent", "polish", "shift refit", "adjacent pair", "restarts"]
-related = ["hill-climbing", "viterbi-decoding", "periodic-substitution-dp", "expectation-maximisation", "simulated-annealing", "compound-periodic-key", "vigenere", "quadgram-log-likelihood", "shuffled-null-z-score", "selection-overfit-diagnostic"]
-summary = "Coordinate descent improves one part of a key at a time. For each coset, it tries all 26 shifts while keeping the others fixed. It repeats until no shift improves the score. A paired pass tries all 676 values for two neighboring shifts to escape simple traps. The method is cheap, repeatable, and exact for each chosen part. It works well after dynamic programming or annealing, and can solve keys whose shifts interact only weakly."
-updated = "2026-09-04"
+tags = ["coordinate ascent", "polish", "shift refit", "monogram MAP", "deterministic shortlist", "adjacent pair", "restarts"]
+related = ["hill-climbing", "viterbi-decoding", "periodic-substitution-dp", "expectation-maximisation", "simulated-annealing", "compound-periodic-key", "running-key-relation-test", "vigenere", "quadgram-log-likelihood", "family-wise-null", "permutation-test", "shuffled-null-z-score", "selection-overfit-diagnostic"]
+summary = "Coordinate descent improves one part of a key at a time. For each coset, it tries all 26 shifts while keeping the others fixed, then repeats until no shift improves the score. A useful deterministic cascade first builds a balanced shortlist with independent monogram-MAP fits, ranks the resulting plaintexts by quadgrams, and coordinate-polishes only the frozen finalists. Each update is exact for one coordinate, but shortlist and sweep caps make the overall search heuristic."
+updated = "2026-09-06"
 
 [[blocks]]
 kind = "definition"
@@ -39,6 +39,27 @@ Single-coordinate update: $k_b \leftarrow \arg\max_{s \in \mathbb{Z}_{26}} F(k_0
 Pair update: $(k_b, k_{b+1}) \leftarrow \arg\max_{(s,t) \in \mathbb{Z}_{26}^2} F(\dots, s, t, \dots)$.
 
 For a period-$p$ additive key the decrypt at coset $b$ is $P_i = A[(a(C_i) - k_b) \bmod 26]$; changing $k_b$ alters $n/p$ letters and therefore at most $4n/p$ quadgrams, so incremental scoring is possible although the corpus rescores the full text for simplicity.
+
+For a known source stream removed from ciphertext coordinates, let $y_i=a_A(C_i)-\beta a_A(X_{o+di})$. A deterministic monogram seed for residual coset $b$ is
+
+$$k_b^{(0)}=\operatorname{argmax}_{s\in\mathbb{Z}_{26}}
+\sum_{i\equiv b\pmod p}\log E\left(A\left[\epsilon(y_i-s)\bmod 26\right]\right).$$
+
+The second score is order-sensitive:
+
+$$F(k)=\sum_{i=0}^{n-4}\log Q(P_iP_{i+1}P_{i+2}P_{i+3}).$$
+
+Monogram MAP supplies a cheap start; it is not the final objective. Fixed tie rules are required at both stages so the same input always produces the same shortlist and endpoint.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Direct finisher:** polish one key produced by dynamic programming, alignment, or another search.
+- **Balanced deterministic cascade:** keep a fixed number of MAP seeds from every structural cell before applying a global quadgram cap, so a large source does not erase smaller cells merely by contributing more offsets.
+- **Single-coordinate sweep:** cheap and monotone, but vulnerable to coupled traps.
+- **Adjacent-pair sweep:** searches a larger local neighbourhood and may escape a single-coordinate optimum.
+- **Perturb-and-descend:** explores more basins, but the restart count becomes another frozen search cap.
 '''
 
 [[blocks]]
@@ -48,6 +69,8 @@ body = '''
 - The start is within the coordinate-wise basin: the DP or anneal has already placed most shifts correctly, or the exact period alignment supplies relative shifts and only 26 absolute offsets remain.
 - Coordinates are weakly coupled through the objective (each quadgram couples at most four cosets), so coordinate-wise optima are usually global; pair sweeps cover the commonest exception.
 - Free coordinates overfit short texts: a key with $7m$ sub-coset shifts on 153 letters gains score on shuffled text too, so the polished rate is read against a shuffled null.
+- Per-cell keep, global keep, polish keep, output keep, sweep count, and tie order are part of the algorithm. If any keep limit fills, an unretained start may be better than every reported endpoint.
+- Reaching stationarity proves only that no tested coordinate move improves the current endpoint. It does not prove global optimality or complete coverage of the cipher family.
 '''
 
 [[blocks]]
@@ -57,44 +80,36 @@ body = '''
 - **Finisher.** After the cyclic quadgram DP, an unrestricted 26-way coordinate and adjacent-pair pass lets a shift omitted by the monogram shortlist enter; after the open-chain Viterbi it repairs the wrap-around terms; in the rank-sharded selector four deterministic coordinate/pair polish rounds follow the width-8 DP; in the affine-map DP all 312 affine maps per residue enter through the same polish.
 - **Main search for varied-copy keys.** A key of $m \times 7$ letters ($m$ slightly different copies of one 7-letter word, period $7m$) is solved by exact period-7 alignment for the relative shifts, 26 absolute starts and the near-optimal alignment vectors as starts, then quadgram coordinate descent over the $7m$ sub-coset shifts (each moves about $n/7m$ letters) with random perturbation restarts. A constrained variant fits "copies differ by a constant" with $7 + m$ unknowns.
 - **Class solver polish.** The best candidates of a transposition search get a coordinate polish of all $7 + k$ shifts under quadgrams.
+- **Known-stream residual.** For every declared source/order/sign/orientation/offset/period cell, fit a monogram-MAP residual key. Keep a balanced cell shortlist, rank literal decrypts by quadgrams, then coordinate-polish a fixed global shortlist. Run this exact same capped cascade independently on every matched null.
 '''
 
 [[blocks]]
 kind = "pseudocode"
 body = '''
 ```text
-// Key k = (k_0, ..., k_{p-1}) over Z_26; objective F(k) = quadgram rate of
-// the full decrypt.
-function COORDINATE_DESCENT(k, F, pairs):
-    repeat:
-        changed = false
-        // single coordinate
-        for b in 0..p-1:
-            // 26 full decrypt-and-scores
-            s* = argmax over s in 0..25 of F(k with k_b = s)
-            if F(k with k_b = s*) > F(k): k_b = s*; changed = true
-        if pairs:
-            // adjacent pair, indices mod p
-            for b in 0..p-1:
-                // 676 values
-                (s*, t*) = argmax over (s, t) in Z_26 x Z_26 of F(k with k_b
-                        = s, k_{b+1} = t)
-                if F(k with k_b = s*, k_{b+1} = t*) > F(k):
-                    apply (s*, t*)
-                    changed = true
-    // F never decreases, so this terminates
-    until not changed
-    // a coordinate-wise (pair-wise) optimum
-    return k
+function MAP_QUADGRAM_SEARCH(c, cells, limits):
+    seeds = empty list
+    for cell in cells:
+        k = MONOGRAM_MAP_EACH_COSET(c, cell)
+        p = DECRYPT(c, cell, k)
+        KEEP_PER_CELL(seeds, (QUADGRAM(p), cell, k), limits.cell)
+    seeds = DETERMINISTIC_TOP(seeds, limits.global)
+    endpoints = empty list
+    for seed in FIRST(seeds, limits.polish):
+        endpoints.append(COORDINATE_POLISH(seed, limits.sweeps))
+    return DETERMINISTIC_TOP(endpoints, limits.output), CAP_CENSUS()
 
-function DESCENT_WITH_RESTARTS(k, F, restarts):
-    best = COORDINATE_DESCENT(k, F, true)
-    for r in 1..restarts:
-        // perturbation
-        k' = best with a few coordinates redrawn at random
-        k' = COORDINATE_DESCENT(k', F, true)
-        if F(k') > F(best): best = k'
-    return best
+function COORDINATE_POLISH(seed, max_sweeps):
+    k = seed.key; score = QUADGRAM(DECRYPT(seed.c, seed.cell, k))
+    for sweep in 1..max_sweeps:
+        changed = false
+        for b in 0..LENGTH(k)-1:
+            trials = every s in Z_26, with only k[b] replaced by s
+            best = ARGMAX_WITH_FIXED_TIES(trials, QUADGRAM_DECRYPT_SCORE)
+            if best.score > score:
+                k = best.key; score = best.score; changed = true
+        if not changed: return (k, score, stationary=true, sweeps=sweep)
+    return (k, score, stationary=false, sweeps=max_sweeps)
 ```
 '''
 
@@ -111,6 +126,8 @@ body = '''
 - **Overfit with many free coordinates.** Free sub-coset shifts on 153 letters lift shuffled-text nulls to $-5.8$ to $-5.9$ (four copies) and $-5.41$ to $-5.47$ (five copies); on a 95-letter zone to $-4.68$ to $-4.99$ and $-4.59$ to $-4.76$. A polished target rate that matches its null is noise.
 - **Wrong model still converges.** The descent reports a confident optimum for a key that does not exist. Only the null and the readability verdict distinguish it.
 - **Partial recovery at small changes.** The logged four-copy control (period 28) polished to $-4.948$ with 71% of the plaintext right, the wrong-$m$ control to 79%, while the three-copy control reached 100%: the descent lands near the truth but not always on it.
+- **Balanced cells, incomplete offsets.** A per-cell shortlist prevents high-cardinality cells from dominating the bank, but it can still discard the true offset inside its own cell.
+- **Cap saturation called a negative.** Filling a shortlist or ending at the sweep cap means only that the frozen heuristic returned these endpoints. Matched nulls calibrate their scores; they do not make the search exhaustive.
 '''
 
 [[blocks]]
@@ -181,3 +198,13 @@ note = "Planted width-8 and width-12 controls at -4.34, match 100%."
 path = "withmath/CROSSCHAIN_M13_RANKSHARD_VALIDATION291_AUDIT.md"
 kind = "audit"
 note = "Four deterministic polish rounds after the width-8 DP in the validated stage-two finisher."
+
+[[provenance]]
+path = "withmath/scripts/experiments/cross/wm_knownresidual657.py"
+kind = "solver"
+note = "Deterministic two-stage search: monogram-MAP residual shifts and balanced offset shortlists, followed by quadgram reranking and exhaustive coordinate updates of retained keys."
+
+[[provenance]]
+path = "withmath/docs/project-notes/KNOWNRESIDUAL657.md"
+kind = "design"
+note = "Records why fixed shortlist and sweep limits make the finite cell scan a measured heuristic rather than an exhaustive family proof."

@@ -27,7 +27,7 @@ pub fn FindPage() -> impl IntoView {
     view! {
         <section class="wrap page">
             <p class="eyebrow mono">"Search"</p>
-            <h1 class="display">"Search the knowledge base."</h1>
+            <h1 class="display">"Search the knowledge base"</h1>
             <form class="find-form" role="search" on:submit=move |ev| ev.prevent_default()>
                 <label class="sr-only" for="find-input">"Search query"</label>
                 <input

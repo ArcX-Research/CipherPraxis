@@ -1,0 +1,127 @@
+id = "endpoint-specific-control-contracts"
+section = "validation"
+title = "Endpoint-specific control contracts"
+subtitle = "Give detection, decoding, key recovery, and replay their own pass conditions"
+status = "VERIFIED"
+status_note = "A frozen control panel selected every planted structural cell but failed one exact-text case, demonstrating that the endpoint contracts make materially different decisions."
+family = "Control design"
+tags = ["endpoint contract", "planted controls", "decoder validation", "forward replay"]
+related = ["parameter-versus-plaintext-recovery", "planted-controls", "control-first-policy", "target-absent-controls", "tautological-gate-rule", "known-answer-tests", "reproducibility-receipts"]
+summary = "A system that detects a cipher family, estimates parameters, labels symbols, emits plaintext, and verifies a candidate has several endpoints. Each endpoint needs its own frozen truth object, comparator, threshold, and failure label. One passing endpoint cannot authorise another."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+An **endpoint contract** is a tuple
+
+$$\mathcal{C}_e=(I_e,O_e,T_e,d_e,\gamma_e),$$
+
+where $I_e$ is the permitted input, $O_e$ the required output schema, $T_e$ the control truth, $d_e$ the exact comparator or loss, and $\gamma_e$ the pass rule. Typical endpoints are family detection, structural-cell recovery, quotient-key recovery, literal-key recovery, exact plaintext, candidate-list coverage, and independent forward replay.
+
+Contracts are separate even when one program produces all outputs. A cell detector can pass while a plaintext selector fails; a replay checker can certify candidate consistency without certifying that the candidate is true.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Detection contract:** the planted family or cell appears at the required rank, modulo declared gauges.
+- **Coverage contract:** the truth appears anywhere in a complete candidate list or completion sidecar.
+- **Selection contract:** the frozen tie rule emits the truth.
+- **Exact-text contract:** all plaintext positions match.
+- **Key contract:** observed labels, quotient key, or literal full key match the specifically declared target.
+- **Replay contract:** an independent forward implementation reproduces the input from the disclosed candidate.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions"
+body = '''
+- Every contract, comparator, tie rule, and threshold is fixed before its controls run.
+- Truth objects are generated independently of the code path being tested where practical.
+- Gauge equivalence is explicit; a literal comparison is not silently substituted for a quotient comparison.
+- A combined release rule is the conjunction of named endpoint gates, not an informal judgement after seeing results.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Build a contract matrix"
+body = '''
+List each claimed capability as a row. For every row, write the exact output field, truth representation, equality rule, required control population, and threshold. Generate positive, neighbouring-family, and null controls. Run the program once, evaluate every row independently, then compute the preregistered combined decision. Preserve partial passes because they locate the failing stage, but do not let them change the combined result.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function RUN_CONTRACT_PANEL(frozen_runner, controls, contracts):
+    require HASHES_MATCH(frozen_runner, controls, contracts)
+    outcomes = empty table
+    for control in controls:
+        result = frozen_runner(control.public_input)
+        for contract in contracts:
+            observed = EXTRACT(result, contract.output_field)
+            truth = EXTRACT(control.truth, contract.truth_field)
+            outcomes[contract].append(contract.compare(observed, truth))
+        require INDEPENDENT_SCHEMA_CHECK(result)
+    for contract in contracts:
+        passed[contract] = contract.pass_rule(outcomes[contract])
+        emit contract name, every outcome, threshold and verdict
+    combined = AND(passed[name] for name in PREDECLARED_REQUIRED_ENDPOINTS)
+    emit combined verdict without replacing any endpoint verdict
+    return outcomes, passed, combined
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Most endpoint comparisons are linear in the output size. The expensive part is generating and solving the controls, which is already required for a credible validation panel. A contract matrix adds small bookkeeping cost and substantially narrows fault localisation.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Metric substitution.** Passing candidate coverage is reported as passing exact selection.
+- **Conjunct deletion.** A failed decoder gate is removed after a detector gate looks strong.
+- **Ambiguous key truth.** A literal key is compared where only a gauge class is identifiable, or vice versa.
+- **Replay inflation.** Candidate consistency is described as message correctness.
+- **Post-hoc tie handling.** A favourable tied candidate is chosen after the control truth is opened.
+- **Collapsed nulls.** Wrong-family sentinels and valid-family shuffled nulls are treated as interchangeable evidence.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The recorded panel used positive controls, neighbouring-family sentinels, independent-symbol negatives, and shuffled valid-family nulls. Its structural-cell row passed every positive. Its exact emitted-plaintext row failed one positive because two labels were wrong, even though the exact completion was retained. The preregistered combined gate therefore failed. A contract matrix preserves both facts without weakening either claim.
+'''
+
+[[blocks]]
+kind = "example"
+title = "One result, four verdicts"
+body = '''
+A control plants cell $\theta^*$ and map $M^*$. The runner selects $\theta^*$, lists $M^*$ second, emits another map $\hat M$, and forward-replays $\hat M$ exactly. The verdicts are: cell detection **PASS**, list coverage **PASS**, exact selection **FAIL**, and candidate replay **PASS**. If release requires exact selection, the combined verdict is **FAIL**. Replacing it with “mostly passed” destroys the point of the control.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+This explicit endpoint matrix was developed in this project after a structural detector and its downstream labeller diverged on a frozen positive. The general lesson is broader: validate exactly the claim that will be made.
+'''
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_plainfeedback632_secondorder_controls.py"
+kind = "script"
+note = "Frozen panel with separate planted-cell, completion, emitted-text, null, and independent-forward fields."
+
+[[provenance]]
+path = "withmath/logs/632_pk10_secondorder_plainfeedback_controls_20260905T150700Z_1788620820729932000.log"
+kind = "log"
+note = "Receipt in which the planted-cell contract passes all positives but the preregistered exact-emission contract fails one."
+ref = "LOG632"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_PLAINFEEDBACK630_SECONDORDER_THEORY.md"
+kind = "design"
+note = "Defines the distinction among structural cell, equality class, labels, plaintext, and forward certificate."
+ref = "LOG630"

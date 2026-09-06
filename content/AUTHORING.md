@@ -48,7 +48,7 @@ corpus. Read `../ARCHITECTURE.md` §1 and §4 first, then the exemplar `ciphers/
 8. Provenance `kind`: `solver`, `library`, `audit`, `design`, `note`, `log`, `script`, `data`,
    `ledger`. Provenance `note` may use internal file names but should still avoid quoting
    ciphertext or hints.
-9. Dates: `updated = "2026-09-04"`.
+9. Dates: use the `YYYY-MM-DD` date of the last material edit.
 
 ## Canonical ids (use these spellings for cross-links)
 
@@ -59,12 +59,20 @@ ciphers: `caesar-shift`, `affine-cipher`, `keyword-mixed-alphabet`, `vigenere`, 
 `columnar-transposition`, `route-transposition`, `rail-fence`, `myszkowski`,
 `sandwich-construction`, `interleaved-streams`, `compressocrat`, `additive-stream-wheels`,
 `rsa-textbook`, `mnemonic-wordlist-encoding`, `one-time-pad`, `book-cipher`, `nihilist`,
-`polybius-square`, `digraphic-slide`.
+`polybius-square`, `digraphic-slide`, `fractionated-morse`, `interrupted-key`, `nicodemus`,
+`homophonic-substitution`, `permutation-keystream`, `coordinate-columnar-fractionation`,
+`gronsfeld`, `baconian`, `ragbaby`, `monome-dinome`, `digrafid`,
+`sympathetic-alphabet-dial`, `plaintext-coordinate-feedback`, `right-to-left-plaintext-feedback`,
+`ciphertext-coordinate-feedback`, `symmetric-second-order-plaintext-feedback`,
+`alternating-velocity-disk-cipher`.
 
 algebra: `modular-arithmetic-z26`, `units-mod-26`, `modular-inverse-and-crt`,
 `affine-maps-mod-26`, `permutation-cycles`, `conjugacy-and-gauge`, `dihedral-group`,
 `finite-field-linear-algebra`, `linear-recurrences-lcg`, `difference-operators`,
-`all-different-constraints`, `matrix-invertibility-mod-26`, `lcm-of-periods`, `group-actions-on-alphabets`.
+`all-different-constraints`, `matrix-invertibility-mod-26`, `lcm-of-periods`, `group-actions-on-alphabets`,
+`feedback-state-gauges-and-cells`, `latent-label-identifiability`,
+`reflection-product-cycle-lift`, `semiregular-common-cycle-criterion`,
+`two-dial-translation-factorization`.
 
 cryptanalysis: `kasiski-examination`, `exact-period-alignment`, `coset-shift-recovery`,
 `crib-dragging`, `crib-driven-alphabet-recovery`, `key-cancellation`,
@@ -72,32 +80,47 @@ cryptanalysis: `kasiski-examination`, `exact-period-alignment`, `coset-shift-rec
 `order-free-width-statistic`, `phrase-keyed-alphabet-attack`, `segment-chain-analysis`,
 `shared-cycle-attack`, `change-point-zone-detection`, `family-identification`,
 `running-key-relation-test`, `multiple-rounds-analysis`, `transposition-width-recovery`,
-`frequency-analysis`, `isomorph-analysis`, `assumption-review-protocol`.
+`frequency-analysis`, `isomorph-analysis`, `assumption-review-protocol`,
+`parameter-versus-plaintext-recovery`, `neural-language-model-decipherment`,
+`observable-function-fingerprinting`, `mutual-information-column-order`,
+`relax-then-project-decoding`, `cascade-cancellation`, `columnwise-hamming-radius-invariant`.
 
 statistics: `index-of-coincidence`, `coincidence-lag-profile`, `chi-squared-fit`,
 `quadgram-log-likelihood`, `bayesian-evidence-model-selection`, `mahalanobis-family-distance`,
 `shuffled-null-z-score`, `family-wise-null`, `within-coset-null`, `permutation-test`,
 `power-analysis`, `selection-overfit-diagnostic`, `semi-markov-word-model`,
-`local-language-model-prior`, `english-gate-calibration`, `estimator-standard-error`.
+`local-language-model-prior`, `english-gate-calibration`, `estimator-standard-error`,
+`n-gram-language-scoring`, `combined-character-word-models`, `lexical-reranking-and-oov-bias`.
 
 search: `simulated-annealing`, `parallel-tempering`, `hill-climbing`, `beam-search`,
 `k-best-lists`, `viterbi-decoding`, `expectation-maximisation`, `coordinate-descent`,
 `meet-in-the-middle`, `rank-sharding`, `corpus-bank-screen`, `dictionary-attack`,
-`polish-basin-measurement`.
+`polish-basin-measurement`, `identity-plus-one-swap-neighborhood`, `bounded-permutation-shells`,
+`unique-proposal-voting`.
 
 exact: `constraint-satisfaction-forward-checking`, `cp-sat-and-smt-solvers`,
 `exact-dynamic-programming`, `exhaustive-enumeration`, `all-different-enumeration`,
 `exact-chain-oracle`, `bound-benchmarks-and-certificates`, `known-answer-tests`,
-`word-prefix-csp`, `periodic-substitution-dp`.
+`word-prefix-csp`, `periodic-substitution-dp`, `word-lattice-segmentation`,
+`maximum-weight-bipartite-assignment`, `partial-permutation-completion-bounds`,
+`partial-involution-conjugacy-query`, `partial-involution-edit-distance`,
+`two-involution-component-templates`, `full-residue-anchor-enumeration`,
+`translated-set-packing`, `partial-reflection-phase-equality`,
+`zero-aware-cartesian-product-cap`, `factorial-completion-resource-guards`,
+`selector-fibre-cardinality-invariant`, `best-first-frontier-memory`.
 
 validation: `planted-controls`, `control-first-policy`, `target-absent-controls`,
 `blind-controls`, `power-measurement`, `tautological-gate-rule`, `valid-model-nulls`,
 `seal-and-audit-protocol`, `reproducibility-receipts`, `ledger-reservations`,
 `correction-and-retraction`, `selection-overfit-check`, `throughput-fail`, `held-out-gates`,
-`gauge-defect-invalidation`.
+`gauge-defect-invalidation`, `endpoint-specific-control-contracts`,
+`fresh-holdout-after-selector-change`, `commit-before-reveal-evaluation`,
+`joint-statistic-release-gates`, `evidence-scope-ladder`, `immutable-artifact-postmortem`.
 
 engineering: `numpy-instrument-pattern`, `compiled-hot-cores`, `kat-harness`, `seed-determinism`,
-`drainability-and-throughput`.
+`drainability-and-throughput`, `isolated-acquisition-solver-handoff`,
+`candidate-bank-lineage-and-cap-accounting`, `degenerate-input-exact-frontier-kat`,
+`transitive-process-census`.
 
 labs (owned by the app author): `vigenere-lab`, `quagmire-lab`, `coincidence-lab`,
 `affine-lab`, `columnar-lab`, `hill-lab`, `bifid-lab`, `crt-lab`, `dihedral-lab`, `null-lab`.

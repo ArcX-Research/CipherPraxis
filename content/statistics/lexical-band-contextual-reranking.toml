@@ -1,0 +1,179 @@
+id = "lexical-band-contextual-reranking"
+section = "statistics"
+title = "Lexical-band contextual reranking"
+subtitle = "Keep near-best word candidates, then let context order only that ambiguity set"
+status = "PROMISING"
+status_note = "The frozen scorer passed known-answer, disclosed-development, and independent adversarial checks, including an exact band boundary and complete origin replay. A read-only consumed-panel diagnostic cleanly separated prose from nonprose, but no lexical cutoff or fresh recovery power has been validated."
+family = "Language-model cascades"
+tags = ["lexical likelihood", "ambiguity band", "contextual reranking", "score separation", "abstention"]
+related = ["strict-best-improvement-swap-ascent", "contextual-rare-symbol-relabeling", "lexical-reranking-and-oov-bias", "combined-character-word-models", "score-gap-ambiguity-bands", "candidate-bank-lineage-and-cap-accounting", "fresh-holdout-after-selector-change"]
+summary = "A word model and a contextual model often have useful but incompatible score scales. This cascade uses the word score only to define a near-best likelihood band, then uses context only to order candidates inside that band. It never adds the two raw totals. The band preserves plausible rare-word alternatives while stopping context from rescuing lexically implausible candidates from the whole search space."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $L(y)$ be a natural-log lexical likelihood for candidate $y$ and let
+
+$$L_{\max}=\max_{z\in\mathcal Y}L(z).$$
+
+For a frozen likelihood factor $R>1$, define the inclusive lexical band
+
+$$\mathcal B_R=\{y\in\mathcal Y:L(y)\ge L_{\max}-\ln R\}.$$
+
+Every admitted candidate is therefore within a factor $R$ of the lexical best under that model. Let $C(y)$ be a frozen contextual score. The final ordering is
+
+$$\operatorname*{argmax}_{y\in\mathcal B_R} C(y),$$
+
+with declared deterministic tie fields. No expression of the form $L(y)+\lambda C(y)$ is used.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Why the band has a likelihood meaning"
+body = '''
+If $L(y)=\ln p_{\rm lex}(y)$, then
+
+$$L(y)\ge L_{\max}-\ln R
+\quad\Longleftrightarrow\quad
+\frac{p_{\rm lex}(y_{\max})}{p_{\rm lex}(y)}\le R.$$
+
+This interpretation requires one lexical model, one logarithm base, and comparable candidate lengths. If the lexical value is an arbitrary reward rather than a log likelihood, the same subtraction still defines a score band, but it must not be described as likelihood odds.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Fixed likelihood-factor band:** choose $R$ on development data and retain the inclusive boundary.
+- **Fixed score band:** use a declared $\tau$ when the lexical score is not probabilistic, with $L(y)\ge L_{\max}-\tau$.
+- **Length-normalised band:** compare per-symbol values when candidate lengths differ, after calibrating the new scale.
+- **Top-count shortlist:** retain a fixed number with cutoff ties. It controls cost but has no stable likelihood interpretation.
+- **Top-set output:** keep all context ties or return the whole lexical band when contextual power is not validated.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The lexical model, segmentation rules, unknown-word handling, contextual model, prompt, tokenizer, runtime, band width, and tie order are frozen together.
+- $L_{\max}$ is computed over the union of all admitted structural endpoints, not separately inside each endpoint.
+- The band comparison is inclusive and uses one declared numeric precision.
+- Plaintext deduplication happens without losing any physical map or endpoint that produced the text.
+- Every physical origin passes an independent forward replay before its semantic candidate is scored or reported.
+- Passing disclosed development cases supports design; it does not replace a fresh control gate.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Separate admission from ordering"
+body = '''
+Produce complete semantic candidates from all retained structural endpoints. If a local relabeling stage is used, require a checked stationary endpoint before enumerating its final complete neighbourhood. Independently replay every physical origin, then group equal full plaintexts while preserving their origin lists. Compute every lexical score, find the single global maximum, and admit the inclusive frozen band. Only then compute contextual scores. Rank by context alone, retain exact ties, and report both lexical admission and contextual selection.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function LEXICAL_BAND_RERANK(physical_rows, log_factor, lexical, context):
+    buckets = empty map from full plaintext to semantic row
+    for row in physical_rows:
+        plain = DECODE_FROM_COMPLETE_ROW(row)
+        replayed_cipher = INDEPENDENT_FORWARD(plain, row.key, row.parameters)
+        require replayed_cipher == row.supplied_ciphertext
+        APPEND(GET_OR_CREATE(buckets, plain).origins, row.origin)
+    for bucket in buckets:
+        bucket.lexical = lexical(bucket.plaintext)
+    best_lexical = MAXIMUM(bucket.lexical for bucket in buckets)
+    band = [bucket for bucket in buckets
+            if bucket.lexical >= best_lexical - log_factor]
+    for bucket in band:
+        bucket.context = context(bucket.plaintext)
+    context_ties = ALL_MAXIMA(band, by=context)
+    ranked = SORT(band, by=(context descending, lexical descending,
+                            plaintext ascending, origin_tie_key ascending))
+    return ranked[0], context_ties, band and complete origin lists
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Let $N$ be the number of physical origins, $U$ the number of distinct plaintexts, $B$ the number inside the band, and $n$ the text length. Direct replay and lexical scoring cost $O(Nn+Un)$. The expensive contextual work is paid only for $B$ candidates. Memory is $O(N+Un)$ when complete origin lists and plaintexts are retained.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Raw-score addition.** Lexical and contextual totals are mixed despite different units, lengths, or calibration.
+- **Per-endpoint bands.** A weak endpoint contributes candidates that are nowhere near the global lexical best.
+- **Exclusive boundary.** Floating-point comparison drops a candidate exactly on the declared cutoff.
+- **Truth outside the band.** Context never sees the correct candidate; a confident final margin cannot repair admission failure.
+- **Out-of-vocabulary loss.** The lexical model heavily penalises a valid rare word, placing it beyond the band.
+- **Unchecked ascent.** The final neighbourhood is built around an endpoint returned only because a work cap fired.
+- **Representative-only replay.** One plaintext passes, but another physical origin attached to it encodes a different or invalid transform.
+- **Development reuse.** A band chosen after inspecting errors is called validated on those same cases.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Include a singleton band, a multi-candidate band where lexical preference is wrong but context is right, a candidate exactly on the boundary, one just outside it, exact contextual ties, duplicate plaintexts from several maps, a flat ascent landscape, and a cap-exhaustion refusal. Record truth presence in the full bank, lexical-band admission, contextual rank, tie-set size, and every physical replay as separate endpoints. Freeze the method after development, then evaluate recovery power on newly authored controls whose text was unavailable during tuning.
+
+A separate read-only diagnostic applied the frozen word-segmentation log score $W$ to one already-consumed set of completed outputs. All twelve prose rows scored above all forty nonprose rows. Prose scores ranged from $-856.653758$ to $-744.877159$ nats; the best nonprose score was $-1197.183067$, leaving a $340.529309$-nat gap below the weakest prose row.
+
+That diagnostic was computed in memory and has no durable receipt. Its summary digest and exact input/source hashes are recorded in provenance, but it is still consumed-panel evidence: the texts were already known, no lexical cutoff was frozen before scoring, and no full band-plus-context selection null was run. It supports the scorer as a useful feature; it does not validate a threshold or release rule.
+'''
+
+[[blocks]]
+kind = "example"
+title = "A common word and a coherent sentence"
+body = '''
+Suppose one relabeling yields `THE CRATE STOOD BY THE LAKE` and another yields `THE CRANE STOOD BY THE LAKE`. A word-frequency model may prefer the more common word `CRATE`, while a contextual model prefers something that can stand by a lake. If both candidates lie inside the frozen lexical band, context can order them. If `CRANE` lies outside, the correct outcome is a lexical-admission failure, not a contextual verdict.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Cascaded ranking and likelihood-ratio regions are established ideas. The practical lesson is to assign each model one role: lexical likelihood controls admission, contextual likelihood controls ordering, and independent cipher replay controls physical validity.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_LEXBAND649_DEVELOPMENT.md"
+kind = "design"
+note = "Defines strict lexical ascent, an inclusive natural-log likelihood band, context-only ordering, disclosed development results, and the required fresh-control boundary."
+ref = "LOG649"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_lexband650.py"
+kind = "solver"
+note = "Truth-free frozen scorer implementing complete final neighbourhoods, global band admission, context-only ordering, and mandatory origin replay."
+ref = "LOG650"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_LEXBAND650_INDEPENDENT_AUDIT.md"
+kind = "audit"
+note = "Independent checks cover the exact band boundary, deterministic ordering, best-improvement semantics, cap refusal, deduplication, and replay failure."
+ref = "LOG650"
+
+[[provenance]]
+path = "withmath/logs/650_pk10_lexband_disclosed_replay_20260905T233259Z.log"
+kind = "log"
+note = "Immutable disclosed-development replay receipt for the separately factored scorer."
+ref = "LOG650"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_plainfeedback633_secondorder_controls_v2.py"
+kind = "script"
+note = "Frozen lexical source used by the read-only diagnostic, SHA-256 0b0fd72b6be12ce4e47e094d9411bebf0a2b349b793b42856aa5b4806f13eaa9."
+
+[[provenance]]
+path = "withmath/logs/669_public_20260906T034536Z_1788666336609139000.outputs.json"
+kind = "data"
+note = "Frozen 52-row input to the read-only in-memory lexical diagnostic, SHA-256 8874dcf3df954a0bb25f5217a601a43ad93720010957112123f1d30871bdc9a0. No durable diagnostic receipt exists; summary digest 51e984261b10abbef8516b66acfbbeefd1cb1049682cc15e1fcef6d1e1373e8f."
+ref = "LOG669"
+
+[[references]]
+title = "Solving Substitution Ciphers with Combined Language Models"
+author = "Bradley Hauer, Ryan Hayward and Grzegorz Kondrak"
+year = 2014
+url = "https://aclanthology.org/C14-1218/"

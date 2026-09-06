@@ -1,0 +1,157 @@
+id = "full-residue-anchor-enumeration"
+section = "exact"
+title = "Full-residue anchor enumeration"
+subtitle = "Turn each admitted plaintext block into one complete periodic key"
+status = "VERIFIED"
+status_note = "A toy-ring reference found exactly the same survivors by exhaustive key search and by anchor enumeration under both signs. A separate full implementation passed 16 positive and 8 negative fixtures, followed by a different-agent audit of 20 gates."
+family = "Exact finite-language search"
+tags = ["periodic key", "anchor block", "finite language", "complete enumeration", "crib-induced key"]
+related = ["dictionary-attack", "word-prefix-csp", "exact-chain-oracle", "periodic-substitution-dp", "exhaustive-enumeration", "all-different-constraints", "candidate-bank-lineage-and-cap-accounting"]
+summary = "In an additive cipher with period p, a known plaintext block that visits every key residue once fixes all p key values. If the block is unknown but must belong to a frozen finite language, enumerate that language instead of every numeric key. Each anchor candidate produces one forced key; decrypt and validate the rest exactly."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $a$ map alphabet symbols to $\mathbb{Z}_m$. In a region encrypted by a period-$p$ additive key,
+
+$$a(C_j)\equiv \varepsilon a(P_j)+k_{r(j)}\pmod m,$$
+
+where $\varepsilon$ is a known unit, usually $+1$ or $-1$, and $r(j)$ selects a key residue. An **anchor** is a plaintext block whose positions contain every residue $0,\ldots,p-1$ exactly once. The block's value is unknown but is required to belong to a fixed finite bank $V$.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "One block forces the key"
+body = '''
+Let anchor position $j_b$ carry bank symbol $w_b$ and key residue $r(j_b)$. Then
+
+$$k_{r(j_b)}\equiv a(C_{j_b})-\varepsilon a(w_b)\pmod m.$$
+
+Because the anchor visits every residue once, these $p$ equations determine the whole key vector. Every other symbol in the periodic region is then forced:
+
+$$a(P_j)\equiv \varepsilon^{-1}\big(a(C_j)-k_{r(j)}\big)\pmod m.$$
+
+If two bank words induce the same key, they may be deduplicated for computation, but both word witnesses must remain attached to that key.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Word rows:** $V$ is a list of fixed-length words aligned to the key period.
+- **Finite codebooks:** anchors may be dates, symbols, identifiers, or other fixed-width records.
+- **Segmented keys:** use an anchor wholly inside one segment, then enumerate any remaining segment constants separately.
+- **Several anchor geometries:** test each predeclared origin or orientation and include the complete union in later selection and null calibration.
+- **Unknown alphabet:** the method no longer forces numeric key values directly; combine the anchor choices with a constraint solver for the alphabet.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and limits"
+body = '''
+- The alphabet coordinates, relation sign, period, phase, and anchor positions are fixed for one search cell.
+- The anchor covers every key residue. Missing residues remain free; repeated residues add consistency checks but do not fill the missing values.
+- The bank is frozen independently of the text and its exact normalisation, order, and bytes are recorded.
+- Completeness is only over the declared bank and geometry. A zero result does not reject other languages, boundaries, periods, or cipher families.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Replace a key cube with a language list"
+body = '''
+Select one deterministic full-residue anchor location. For every literal bank entry, derive the key vector with the equations above. Decrypt the entire constrained region, apply every fixed block and edge-membership rule, and replay the forward cipher. Deduplicate equal key vectors only after retaining their full witness lists. Enumerate any remaining constants and downstream cipher cells exactly. Language scores may rank complete survivors, but they must not decide which anchors are visited.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function ENUMERATE_ANCHORS(cipher, bank, anchor_positions, period):
+    survivors = map from key to witness list
+    for word in bank:
+        key = array(period, UNSET)
+        valid = true
+        for b in 0..period-1:
+            j = anchor_positions[b]
+            r = KEY_RESIDUE(j)
+            forced = COORD(cipher[j]) - sign * COORD(word[b]) mod modulus
+            if key[r] is set and key[r] != forced: valid = false
+            key[r] = forced
+        if not valid or any key entry is UNSET: continue
+        plain = DECRYPT_REGION(cipher, key)
+        if EXACT_LANGUAGE_AND_EDGE_CHECKS(plain, bank):
+            REQUIRE FORWARD(plain, key) == cipher
+            ADD_WITNESS(survivors, key, word, plain)
+    return survivors
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+For bank size $|V|$, constrained-region length $N$, and period $p$, direct enumeration costs $O(|V|(p+N))$ plus exact membership lookups. It replaces the $m^p$ numeric key cube when every valid key must arise from a bank anchor. Hash-set membership keeps each full-region validation linear in $N$.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **A partial anchor.** Treating an anchor that misses a residue as a complete key silently drops valid assignments.
+- **A chosen-afterward anchor.** Selecting the row with the fewest survivors uses the observed text twice.
+- **Scored pruning inside the bank.** A monogram shortlist or beam destroys the completeness proof.
+- **Dropped fragments.** A row crossing a key boundary and incomplete edge tokens still belong to the declared grammar.
+- **Witness loss.** Different bank entries can induce one key or one plaintext; discarding aliases can create a false uniqueness claim.
+- **Bank overclaim.** Exhausting one dictionary proves nothing about words absent from it.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+On a small ring, a reference enumerated all $5^7=78{,}125$ literal keys and compared the survivor set with the keys induced by an eight-entry anchor bank. The sets were identical under both signs and contained the planted answer. A larger controls-only implementation visited every entry of a 23,724-item bank across all declared cells. Sixteen positive and eight negative fixtures reached their exact expected terminals; a different-agent replay passed all twenty audit gates. The disclosed run used only one null, so it verifies enumeration and terminal behaviour, not statistical separation at a small significance level.
+'''
+
+[[blocks]]
+kind = "example"
+title = "A period-three anchor"
+body = '''
+Use ordinary coordinates $A=0,\ldots,Z=25$ and $a(C_j)=a(P_j)+k_{j\bmod3}$. Suppose an aligned ciphertext block is `KHO`, and the bank candidate is `CAT`. The forced shifts are
+
+$$k_0=10-2=8,\qquad k_1=7-0=7,\qquad k_2=14-19\equiv21\pmod{26}.$$
+
+This one word fixes key $(8,7,21)$. Decrypt every later position with those shifts and reject the candidate as soon as a required block falls outside the bank. Repeating this for every bank entry is complete for that fixed bank and alignment.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+This is the familiar crib-induced-key principle used as a complete finite-language enumerator. The important proof obligation is not that an anchor gives a key, but that every answer in the declared family contains an anchor that the enumerator must visit.
+'''
+
+[[provenance]]
+path = "withmath/docs/pk9/PK9_STRUCTURED_P7_CHAIN379_DESIGN.md"
+kind = "design"
+note = "Gives the full-residue equations, fixed-bank completeness proof, edge rules, and scope limits."
+ref = "LOG379"
+
+[[provenance]]
+path = "withmath/docs/pk9/PK9_STRUCTURED_P7_CHAIN379_INDEPENDENT_AUDIT.md"
+kind = "audit"
+note = "Independently checks the proof and compares anchor enumeration with exhaustive toy-ring search."
+ref = "LOG379"
+
+[[provenance]]
+path = "withmath/docs/pk9/PK9_STRUCTURED_P7_CHAIN383_CREATOR_AUDIT.md"
+kind = "audit"
+note = "Records the full bank implementation and sixteen positive plus eight negative fixtures."
+ref = "LOG383"
+
+[[provenance]]
+path = "withmath/docs/pk9/PK9_STRUCTURED_P7_CHAIN383_INDEPENDENT_AUDIT391.md"
+kind = "audit"
+note = "Different-agent frozen-byte and semantic audit with twenty passing gates."
+ref = "LOG391"
+
+[[provenance]]
+path = "withmath/scripts/wm_pk9_structured_p7_chain383.py"
+kind = "solver"
+note = "Complete fixed-bank anchor enumerator with exact decryption, membership checks, witness retention, and forwards."
+ref = "LOG383"

@@ -1,0 +1,176 @@
+id = "alternating-velocity-disk-cipher"
+section = "ciphers"
+title = "Alternating-velocity disk cipher"
+subtitle = "Advance a cipher disk by two alternating step sizes"
+status = "VERIFIED"
+status_note = "A target-absent panel recovered all six planted cases exactly and rejected three neighbouring-family cases and nineteen shuffled nulls. A separate production measurement was ambiguous and produced no plaintext claim."
+family = "Stream and machine ciphers"
+tags = ["cipher disk", "alternating schedule", "progressive alphabet", "arbitrary substitution"]
+related = ["alberti-progressive", "keyword-mixed-alphabet", "observable-function-fingerprinting", "latent-label-identifiability", "family-wise-null", "valid-model-nulls", "parameter-versus-plaintext-recovery"]
+summary = "This cipher moves an alphabet disk by one step size, then another, and repeats. Once the running disk position is subtracted from the ciphertext, the result is one ordinary substitution cipher. The two-step schedule is small and exact, while the substitution alphabet can carry much more key information."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Work in $\mathbb{Z}_{26}$. Let $x_i$ be the ciphertext letter's coordinate in a fixed outer alphabet, $a_i$ the disk position, and $M$ an arbitrary permutation from latent coordinates to plaintext letters. Choose velocities $v_0,v_1\in\mathbb{Z}_{26}$ and set
+
+$$a_0=0,\qquad a_{i+1}\equiv a_i+v_{i\bmod 2}\pmod{26},$$
+
+$$u_i\equiv x_i-a_i\pmod{26},\qquad P_i=M(u_i).$$
+
+The choice $a_0=0$ fixes a coordinate gauge. A different initial disk position can be absorbed into $M$.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Closed form and family boundary"
+body = '''
+For $i=2q$ or $2q+1$, the disk state is
+
+$$a_{2q}\equiv q(v_0+v_1),\qquad
+a_{2q+1}\equiv q(v_0+v_1)+v_0\pmod{26}.$$
+
+After twenty-six letters,
+
+$$a_{i+26}-a_i\equiv 13(v_0+v_1)\pmod{26}.$$
+
+The state therefore returns when $v_0+v_1$ is even and moves to the antipodal position when the sum is odd. The alternating schedule is also a constant-acceleration schedule exactly when
+
+$$2(v_1-v_0)\equiv0\pmod{26},$$
+
+so $v_1-v_0$ is $0$ or $13$. Removing those already-covered intersections leaves $2\cdot26\cdot24=1{,}248$ raw cells for two declared outer alphabets.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Equal velocities:** ordinary constant disk advance.
+- **Antipodal velocity difference:** a constant-acceleration schedule with acceleration thirteen.
+- **Unequal period-two schedule:** the genuinely additional family, with velocity difference neither zero nor thirteen.
+- **Longer periodic schedules:** use three or more velocities. They are a broader family and require their own controls and alias census.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The outer alphabet and schedule origin come from a declared finite set.
+- The same arbitrary substitution $M$ applies after every disk state is removed.
+- Two raw schedules that produce the same equality pattern in $u$ are observational aliases until a label map is chosen.
+- Finishing a fixed stochastic substitution budget is not a proof of the globally best substitution. Its recovery power must be measured on matched controls.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to attack it"
+body = '''
+Enumerate every admitted $(v_0,v_1)$ schedule, compute the closed-form state, and peel it from the ciphertext. Canonicalise the latent stream by its restricted-growth string so equivalent schedules share one substitution solve. Fit one monoalphabetic map to each distinct class, rank the classes, retain every raw alias behind each result, and independently run the recurrence forward for every disclosed candidate. The selector and all refinement stages must be repeated unchanged on matched shuffled nulls.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function PEEL(cipher, outer_order, v0, v1):
+    state = 0
+    for i in 0..length(cipher)-1:
+        x = POSITION(outer_order, cipher[i])
+        latent[i] = (x - state) mod 26
+        state = (state + (v0 if i mod 2 == 0 else v1)) mod 26
+    return latent
+
+function SELECT(cipher, outer_orders):
+    classes = empty map
+    for outer in outer_orders, v0 in Z26, v1 in Z26:
+        if (v1 - v0) mod 26 is 0 or 13: continue
+        latent = PEEL(cipher, outer, v0, v1)
+        ADD_ALIAS(classes[RGS(latent)], (outer, v0, v1, latent))
+    for class in classes:
+        class.map, class.score = FIT_SUBSTITUTION(class.latent)
+    rank distinct classes by the frozen score and tie rule
+    independently ENCRYPT every retained plaintext and alias
+    return ranked classes with complete alias lists
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Schedule peeling costs $O(n)$ per raw cell. The validated two-alphabet family has $1{,}248$ raw cells before equality-pattern grouping. Substitution fitting dominates the runtime; the target-absent panel's twenty-eight complete selector calls took $451.28$ seconds in total.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Double-counting the intersection:** equal or antipodal velocity differences belong to already-tested constant-slope or constant-acceleration families.
+- **Treating aliases as evidence:** several schedules may impose one latent equality pattern and must occupy one ranking slot.
+- **Calling a low language score a structural contradiction:** the schedule enumeration is exact, but the arbitrary-substitution optimiser is not exhaustive.
+- **Using different random objectives for observation and nulls:** a permutation test needs one fixed deterministic selector statistic across the whole bank.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The frozen target-absent panel used six positives covering both outer orders, return and antipodal monodromy, all velocity-parity combinations, and observed plaintext alphabets of sizes twenty-one through twenty-six. All six recovered the exact plaintext, map, schedule-alias group, completion count, and independent forward. Three neighbouring-family sentinels and nineteen histogram-preserving shuffled nulls were rejected. Every case enumerated all $1{,}248$ raw cells. A later production run was independently replayed and classified as ambiguous: seventy-eight of ninety-nine shuffled maxima met or exceeded its score.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+Use the straight outer alphabet, identity map $M$, and $(v_0,v_1)=(1,3)$. The states for `ATTACK` are $(0,1,4,5,8,9)$. Adding them gives:
+
+```trace
+plain   A T T A C K
+state   0 1 4 5 8 9
+cipher  A U X F K T
+```
+
+At position two, $T+4=19+4=23=X$. Peeling the same state sequence recovers `ATTACK` exactly.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Periodic disk motion is classical. The unequal two-velocity family, its exact overlap removal, equality-pattern grouping, and control contract shown here were developed and tested in this project.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_PERIOD2_616_CONTROLS.md"
+kind = "note"
+note = "Exact family, closed form, 1,248-cell census, monodromy, control design, completion counts, and target-absent result."
+ref = "LOG616"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_period2_616_controls.py"
+kind = "solver"
+note = "Frozen controller that reconstructs schedules and aliases, validates selector output, and independently replays candidates."
+
+[[provenance]]
+path = "withmath/logs/616_pk10_period2_controls_20260905T094646Z_1788601606297161000.log"
+kind = "log"
+note = "Canonical target-absent panel: six positives, three neighbouring-family sentinels, and nineteen shuffled nulls."
+ref = "LOG616"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_PERIOD2_618_AUDIT.md"
+kind = "audit"
+note = "Independent algebra and fixture reconstruction; establishes the overlap condition, monodromy, census, model boundary, and saved-row limitation."
+ref = "LOG618"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_PERIOD2_621_RESULT_INDEPENDENT_AUDIT.md"
+kind = "audit"
+note = "Independent production transcript replay and scoped ambiguous outcome with the complete permutation-null bank."
+ref = "LOG621"
+
+[[references]]
+title = "De Cifris"
+author = "Leon Battista Alberti"
+year = 1467
+
+[[references]]
+title = "The Codebreakers"
+author = "David Kahn"
+year = 1967

@@ -1,0 +1,156 @@
+id = "coordinate-columnar-fractionation"
+section = "ciphers"
+title = "Coordinate-columnar fractionation"
+subtitle = "Transpose a Polybius coordinate stream before pairing it again"
+status = "VERIFIED"
+status_note = "A finite-bank 153-letter control recovered every plaintext letter and reproduced the ciphertext exactly. The evidence validates the declared square and column-key banks; it does not establish blind recovery of an arbitrary square and arbitrary column order."
+family = "Fractionation and transposition"
+tags = ["polybius square", "coordinate stream", "columnar transposition", "ADFGX", "fractionation"]
+related = ["polybius-square", "bifid", "trifid", "columnar-transposition", "sandwich-construction", "transposition-width-recovery"]
+summary = "This construction turns plaintext into Polybius row and column digits, transposes that long digit stream by columns, and then either emits the coordinate symbols or pairs the digits back into letters. It is an ADFGX-style way to spread each plaintext letter across distant output positions."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $S$ be a $5 \times 5$ Polybius square. Replace each plaintext letter by its row and column digits, producing a stream of length $2n$. Write that stream row by row under a column key and read the columns in keyed order.
+
+Classic ADFGX emits the transposed coordinates using the labels A, D, F, G, and X. A letter-output variant groups the transposed digit stream back into pairs and looks each pair up in $S$. Both forms use the same coordinate transposition.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "One transform on the coordinate stream"
+body = '''
+For plaintext $p=(p_0,\ldots,p_{n-1})$, form
+
+$$\gamma_S(p)=\big(r(p_0),c(p_0),\ldots,r(p_{n-1}),c(p_{n-1})\big).$$
+
+Let $T_\pi$ be the exact ragged columnar permutation defined by key order $\pi$. The letter-output form is
+
+$$F_{S,\pi}(p)_j=S\!\left[(T_\pi\gamma_S(p))_{2j},(T_\pi\gamma_S(p))_{2j+1}\right].$$
+
+The ADFGX form replaces each digit of $T_\pi\gamma_S(p)$ by its public coordinate label instead of pairing it again.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- Row-then-column or column-then-row coordinates.
+- Encryption or inverse-columnar direction for the middle permutation.
+- ADFGX output over five coordinate letters or paired letter output through the square.
+- ADFGVX with a $6 \times 6$ square for letters and digits.
+- An additional outer substitution or periodic layer around the fractionation.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The square, merged-letter convention, coordinate order, and columnar convention are fixed.
+- Ragged column lengths are computed in natural column positions before keyed readout.
+- The coordinate stream has even length; the letter-output variant pairs it from its first symbol.
+- Padding is either absent or removed by an explicit rule.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to attack it"
+body = '''
+Estimate or enumerate the column width, undo each candidate column order, and test whether the restored coordinate pairs support language through a candidate square. When square and transposition keys come from finite word banks, enumerate the smaller side and rank the other with n-gram score. The coordinate marginals can provide a cheap filter before full text scoring. Keep row/column order and columnar direction as separate family cells, and reapply every layer for an exact check.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function ENCRYPT_LETTER_OUTPUT(plain, square, column_order):
+    digits = empty
+    for letter in plain:
+        append ROW(letter, square), COLUMN(letter, square) to digits
+    mixed = COLUMNAR_ENCRYPT(digits, column_order)
+    require length(mixed) is even
+    out = empty
+    for row_digit, column_digit in pairs(mixed):
+        append square[row_digit, column_digit] to out
+    return out
+
+function DECRYPT_LETTER_OUTPUT(cipher, square, column_order):
+    mixed = coordinates of every cipher letter in square
+    digits = COLUMNAR_DECRYPT(mixed, column_order)
+    return letters obtained from consecutive coordinate pairs in digits
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The transform is $O(n)$ for known keys. A blind arbitrary square and width-$w$ order create a search space on the order of $25!\,w!$. Finite keyword banks turn this into a bounded product, while arbitrary-key attacks need alternating or stochastic optimisation.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Transposing letters instead of digits.** That leaves each Polybius pair intact and defines a simpler cipher.
+- **Wrong ragged lengths.** Column lengths belong to natural columns, not readout ranks.
+- **Pairing from the wrong phase.** A one-symbol shift changes every output letter.
+- **Square-key aliasing.** Different words can induce the same deduplicated square or the same column order.
+- **Bank closure overclaim.** A complete finite word-bank search does not cover arbitrary squares or orders.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Plant a control with a ragged coordinate grid and hide the square-bank entry, column-key order, coordinate direction, outer relation if present, and periodic shifts. Require exact plaintext and full forward reconstruction. One recorded banked control recovered all 153 letters and its complete outer shift vector. Several different column words tied because they induced the same observable order; those aliases should be reported together rather than counted as independent solutions.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+Use the straight 25-letter square with I/J merged. Plaintext `TEST` has coordinate stream
+
+```trace
+plain   T   E   S   T
+pair    44  15  43  44
+stream  4 4 1 5 4 3 4 4
+```
+
+Write the digits under key `CAB` and read columns in A, B, C order:
+
+```text
+C A B
+4 4 1
+5 4 3
+4 4
+```
+
+The mixed stream is `44413454`. ADFGX coordinate labels turn it into `GGGAFGXG`. Pairing it through the same square gives `44 41 34 54`, or letter-output ciphertext `TQOY`. Undoing the columnar step restores `TEST`.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Bifid uses a fixed within-block coordinate rearrangement. Here the middle permutation is a keyed columnar over the whole coordinate stream, so its long-distance dependencies and ragged-edge rules are different.
+'''
+
+[[provenance]]
+path = "scripts/ck_frac.py"
+kind = "solver"
+note = "Finite square-bank and column-key search for the paired letter-output form under an outer periodic layer."
+
+[[provenance]]
+path = "ck_frac_report.txt"
+kind = "log"
+note = "Exact 153-letter banked control, observable key aliases, and bounded negative measurements."
+ref = "ck_logs/141_frac.log"
+
+[[provenance]]
+path = "ck_logs/141_frac.log"
+kind = "log"
+note = "Recorded full finite-bank run."
+ref = "CK141"
+
+[[references]]
+title = "Military Cryptanalysis, Part IV: Transposition and Fractionating Systems"
+author = "William F. Friedman"
+year = 1941

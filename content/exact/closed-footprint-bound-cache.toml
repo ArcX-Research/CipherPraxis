@@ -1,0 +1,138 @@
+id = "closed-footprint-bound-cache"
+section = "exact"
+title = "Closed-footprint bound cache"
+subtitle = "Reuse the shared part of an exact bound without merging distinct candidates"
+status = "VERIFIED"
+status_note = "A symbols-only comparison checked 736,834 cached bound queries against the original formula and preserved complete callback, alias, threshold, order, and cap behaviour across 482 comparisons. The result proves an exact shortcut, not a stronger bound or universal speedup."
+family = "Exact search acceleration"
+tags = ["memoization", "admissible bound", "search traversal", "involutions", "cache"]
+related = ["partial-permutation-completion-bounds", "bound-benchmarks-and-certificates", "pruned-traversal-equivalence-certificates", "exact-optimization-admission", "candidate-bank-lineage-and-cap-accounting", "permutation-cycles"]
+summary = "At one search node, many candidate involutions can have the same set of already closed edges. The expensive residual part of a relaxed upper bound then depends only on that closed-edge footprint. Cache the residual by footprint and add each candidate's own closed-edge score. This saves repeated work while keeping every candidate, alias, and callback distinct."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $S$ be the symbols placed at one search node and let $r$ be a candidate involution. Its **closed footprint** is
+
+$$F_r(S)=\{c\in S:r(c)\in S\}.$$
+
+For nonnegative directed weights $v(c,p)$, a common relaxed upper bound can be split into a candidate-specific constant and a shared residual:
+
+$$U_S(r)=C_S(r)+R_S(F_r(S)),$$
+
+$$C_S(r)=\sum_{c\in F_r(S)}v(c,r(c)),$$
+
+$$R_S(F)=\sum_{c\in S\setminus F}\max_{p\notin S}v(c,p)
++\sum_{c\notin S}\max_{p\notin F}v(c,p).$$
+
+At fixed $S$, candidates with the same $F$ share exactly the same $R_S(F)$. They need not share $C_S(r)$, their identity, their order, or the larger structures to which they belong.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Node-local cache:** clear the logical cache whenever $S$ changes. The key is only the footprint $F$.
+- **Cross-node cache:** possible only when the key also contains every dependency of the residual, including $S$, active rows, weights, and domain restrictions.
+- **Generation-tagged table:** attach the current node generation to each slot instead of clearing the whole table physically.
+- **Stronger residual solver:** replace independent row maxima by an exact matching value when its eligibility conditions hold. That changes the bound and needs a separate proof and cost test.
+- **No-bound fast path:** bypass the cache when the gate is inactive or its answer is already known, provided the bypass is proved equivalent.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The displayed residual formula is an admissible upper bound for the declared score and domain.
+- All candidates queried during one cache generation share the same placed set, active rows, weights, and allowed-image rules.
+- A cache hit returns only the residual. The candidate-specific closed-edge constant is recomputed and added afterward.
+- Hash collisions compare the full footprint key before reusing a value. Capacity or generation overflow causes a refusal, not silent replacement.
+- Candidate aliases and root memberships remain physical records. Sharing a calculation does not authorize semantic deduplication.
+- If signed weights, extra coupling, or a different domain rule invalidates the formula, the cache path refuses or uses a separately proved bound.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Insert the cache safely"
+body = '''
+Start from a trusted traversal and its original bound routine. At each node, begin a new cache generation and derive the placed-set state once. For every candidate, compute its closed footprint and closed-edge constant. Look up or calculate the residual, add the constant, and apply the original threshold comparison unchanged. During development, recompute the old bound on every query and require exact equality before measuring speed.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function BEGIN_NODE(placed_set, active_rows, weights):
+    generation = CHECKED_NEXT_GENERATION()
+    node_state = (placed_set, active_rows, weights)
+
+function CACHED_UPPER(candidate):
+    footprint = CLOSED_ENDPOINTS(candidate, node_state.placed_set)
+    constant = SCORE_CLOSED_EDGES(candidate, footprint, node_state.weights)
+    slot = FIND_SLOT(generation, footprint)
+    if slot contains this generation and the same footprint:
+        residual = slot.value
+    else:
+        residual = ORIGINAL_RELAXED_RESIDUAL(node_state, footprint)
+        STORE(slot, generation, footprint, residual)
+    answer = constant + residual
+    require answer == ORIGINAL_UPPER(node_state, candidate)
+    return answer
+
+function ACCEPT(candidate, threshold):
+    return CACHED_UPPER(candidate) >= threshold
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+If a node queries $m$ candidates but has only $f$ distinct footprints, the expensive residual is evaluated $f$ times instead of $m$ times. Candidate constants and footprint construction still cost work. The measured symbols-only traversal recorded 401,610 cache hits and 335,224 misses. This reduction is workload-dependent: a state with nearly unique footprints receives little reuse.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Whole-bound caching.** Reusing $U_S(r)$ by footprint silently drops the candidate-specific constant.
+- **Stale generation.** A residual computed for one placed set is used after the traversal changes $S$.
+- **Incomplete key.** Active rows, allowed images, or weights change without becoming part of the cache state.
+- **Alias collapse.** Several candidates share a footprint, so only one candidate or one root membership is emitted.
+- **Collision without equality.** A hash-table slot is treated as a hit without comparing the stored footprint.
+- **Unsupported weights.** A nonnegative-weight derivation is used on signed data without a new proof.
+- **Zero-work regression.** Cache bookkeeping runs when the original bound is inactive or almost free, making the exact program slower.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Compare three paths on the same generated fixtures: the original traversal and bound, a type-general copy with the old bound, and the cached bound with per-query original-bound checking enabled. Compare complete callback vectors, every alias in each callback, callback order, dynamic-threshold history, completion and cap fields, and the query/prune census. Include full and deliberately capped searches, dense and sparse partial maps, zero and nonzero weights, malformed reciprocal maps, empty output, and callbacks carrying several aliases. The recorded matrix covered 60 cases, including 34 expected capped cases and aliases of size 13.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+This is a quotient of repeated **calculation**, not a quotient of the search space. The closed-footprint identity and its exact traversal test were developed in this project. Memoization and admissible upper bounds are established techniques.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_FOOTPRINT639_BOUND.md"
+kind = "design"
+note = "Derives the closed-footprint decomposition, distinguishes the shared residual from each candidate's constant, and records the alias-preservation requirement."
+ref = "LOG639"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_FOOTPRINT647_TRAVERSAL.md"
+kind = "audit"
+note = "Defines the node-local cache, full traversal-equivalence contract, workload matrix, limitations, and production-admission boundary."
+ref = "LOG647"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_dihedral647_footprint_traversal.cpp"
+kind = "script"
+note = "Symbols-only reference, cached implementation, exact per-query checks, full callback comparison, and stratified timing harness."
+
+[[provenance]]
+path = "withmath/logs/647_footprint_traversal_20260905T230617Z_1788649577384322000.log"
+kind = "log"
+note = "Frozen receipt for 60 cases, 736,834 bound equalities, 482 full traversal comparisons, cache census, aliases, caps, and timing strata."
+ref = "LOG647"

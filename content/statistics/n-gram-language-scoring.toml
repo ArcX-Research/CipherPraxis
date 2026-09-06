@@ -1,0 +1,143 @@
+id = "n-gram-language-scoring"
+section = "statistics"
+title = "N-gram language scoring"
+subtitle = "Rank candidate text by local character-sequence likelihood"
+status = "VERIFIED"
+status_note = "Character n-gram likelihood is a standard decipherment objective with published substitution-cipher results. The implementation rules here are also exercised throughout the project's exact and heuristic solvers."
+family = "Language statistics"
+tags = ["n-gram", "language model", "log likelihood", "smoothing"]
+related = ["quadgram-log-likelihood", "neural-language-model-decipherment", "combined-character-word-models", "simulated-annealing", "beam-search", "selection-overfit-diagnostic", "english-gate-calibration"]
+summary = "Estimate probabilities of short character sequences from a generic corpus, then sum their log probabilities across a candidate plaintext. N-gram scores are fast, deterministic, and compatible with exact dynamic programs, but they measure local fit rather than meaning and require smoothing, pinned preprocessing, and matched nulls."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+An order-$m$ character model assigns a candidate $y_0\ldots y_{n-1}$ the overlapping-window score
+
+$$S_m(y)=\sum_{i=0}^{n-m}\log P(y_i\ldots y_{i+m-1}).$$
+
+Counts are learned from a declared corpus after frozen normalisation. Because products underflow and zero counts would make a candidate impossible, implementations use log probabilities and an explicit smoothing or backoff rule. Dividing by the number of scored windows gives a length-comparable rate; it does not change ranks among equal-length candidates.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Smoothed estimates"
+body = '''
+With alphabet size $q$, additive smoothing $\alpha>0$, window count $c(g)$, and total number $N_m$ of observed order-$m$ windows,
+
+$$\widehat P(g)=\frac{c(g)+\alpha}{N_m+\alpha q^m}.$$
+
+A conditional formulation estimates $P(y_i\mid y_{i-m+1}^{i-1})$ and can back off to shorter histories when a context is sparse. The corpus, alphabet, case folding, treatment of spaces, $m$, $\alpha$, logarithm base, and score normalisation are all part of the objective and must be pinned.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Monograms:** capture letter frequencies but no order.
+- **Bigrams and trigrams:** cheap local transition models with relatively dense estimates.
+- **Quadgrams and higher orders:** sharper local English signal, with greater sparsity and corpus sensitivity.
+- **Character-plus-boundary models:** include spaces or word-boundary symbols rather than scoring letters only.
+- **Backoff or interpolated models:** blend several orders instead of assigning one floor to unseen windows.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions"
+body = '''
+- Training text is representative of the candidate language and excluded from held-out controls.
+- Candidate strings use exactly the same alphabet and normalisation as the table.
+- Overlapping windows are treated as a scoring approximation; their summed values are not independent evidence.
+- A high language score ranks candidates inside a declared family. It does not prove that the family itself is correct.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Use in decipherment"
+body = '''
+Build and hash the table before searching. For each candidate key, decode the complete text, score every declared window, and apply deterministic tie handling. Use incremental score updates for local key moves, but recompute finalists from scratch. Calibrate the selected maximum against null ciphertexts that traverse the same key search, since searching many candidates raises the winning score.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function TRAIN_NGRAM(corpus, order, alpha, alphabet):
+    text = NORMALISE(corpus, alphabet)
+    counts = COUNT_OVERLAPPING_WINDOWS(text, order)
+    denominator = TOTAL(counts) + alpha * SIZE(alphabet) ^ order
+    for each possible window g:
+        log_probability[g] = LOG((counts[g] + alpha) / denominator)
+    return log_probability with corpus and preprocessing hashes
+
+function SCORE(candidate, model, order):
+    text = NORMALISE(candidate, model.alphabet)
+    total = 0
+    for each overlapping order-symbol window g in text:
+        total += model.log_probability[g]
+    return total, total / NUMBER_OF_SCORED_WINDOWS(text, order)
+
+function RANK(candidates, model):
+    score every complete candidate with SCORE
+    recompute tied finalists from scratch and retain all ties
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+A dense table has $q^m$ entries. Training and full rescoring are linear in corpus and candidate length respectively. For a local substitution swap, only n-gram windows touching occurrences of the exchanged letters need incremental updates, although a fresh full score should confirm every reported finalist.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Sparse-table brittleness.** An unseen but valid sequence receives an arbitrary floor that can dominate a short text.
+- **Corpus mismatch.** Genre, historical spelling, names, and technical vocabulary can change ranks.
+- **Search selection bias.** The best of a large key search is compared with an unsearched null or a raw English threshold.
+- **Boundary mismatch.** A letters-only table is used on text containing spaces, or chunk boundaries are scored inconsistently.
+- **Local fluency.** High-order fragments look plausible while the whole candidate is incoherent.
+- **Overflow or stale deltas.** Narrow integer indices and incorrect incremental updates silently change the objective.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Known-answer tests compare table construction and full scoring with a scalar reference, including unseen windows and boundary cases. Search controls plant a key in fresh text and verify both key recovery and exact plaintext. Matched nulls repeat the whole optimiser on shuffled or valid-model negatives, and finalists receive a from-scratch score plus an independent forward check.
+'''
+
+[[blocks]]
+kind = "example"
+title = "A tiny bigram model"
+body = '''
+Suppose a smoothed bigram table gives `TH`, `HE`, and `ER` log scores $-1.0$, $-1.2$, and $-1.5$, while `TX` has $-5.0$. Then `THER` scores $-3.7$ from its three overlapping bigrams, whereas `TXER` already pays a much larger first-window penalty. The calculation is a ranking feature, not a statement that `THER` is a complete word or a correct decryption.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Low-order n-gram objectives admit exact optimisation in some cipher formulations, while higher-order tables are often paired with beam search or stochastic key search. “Exact optimum” always means exact for the specified table and constraints, not semantic truth.
+'''
+
+[[provenance]]
+path = "withmath/scripts/wm_core.py"
+kind = "library"
+note = "Shared letters-only n-gram tables and complete-candidate scoring used across the solver corpus."
+
+[[provenance]]
+path = "withmath/docs/pk9/PK9_CHUNKMONO430_NOTE.md"
+kind = "note"
+note = "Documents order-invariant and full-text quadgram objectives, scalar checks, and a frozen language-selector gate."
+ref = "LOG430"
+
+[[references]]
+title = "Attacking Decipherment Problems Optimally with Low-Order N-gram Models"
+author = "Sujith Ravi and Kevin Knight"
+year = 2008
+url = "https://aclanthology.org/D08-1085/"
+
+[[references]]
+title = "Beam Search for Solving Substitution Ciphers"
+author = "Malte Nuhn, Julian Schamper and Hermann Ney"
+year = 2013
+url = "https://aclanthology.org/P13-1154/"

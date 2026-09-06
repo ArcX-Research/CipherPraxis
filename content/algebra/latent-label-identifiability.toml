@@ -1,0 +1,127 @@
+id = "latent-label-identifiability"
+section = "algebra"
+title = "Latent-label identifiability"
+subtitle = "Separate a recovered equality pattern from the names assigned to its symbols"
+status = "VERIFIED"
+status_note = "The distinction follows exactly from permutation symmetry, and synthetic exhaustive checks verify the stated observed-symbol and single-missing-symbol completion rules."
+family = "Equivalence and identifiability"
+tags = ["latent labels", "equality pattern", "permutation symmetry", "restricted growth string"]
+related = ["parameter-versus-plaintext-recovery", "feedback-state-gauges-and-cells", "isomorph-analysis", "relabeling-permutation-distance", "contextual-rare-symbol-relabeling", "all-different-constraints", "all-different-enumeration", "conjugacy-and-gauge"]
+summary = "A latent stream can reveal exactly which positions share a symbol while leaving the symbols' plaintext names unknown. Canonical equality patterns expose what the structure identifies; language evidence or side information assigns labels, and unused coordinates remain free unless permutation constraints force the final completion."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For a latent coordinate sequence $u_0,\ldots,u_{n-1}$, define its restricted-growth string $R(u)$ by naming the first new coordinate $0$, the next previously unseen coordinate $1$, and so on. Thus $R(u)_i=R(u)_j$ exactly when $u_i=u_j$. The sequence $R(u)$ is invariant under every bijective relabelling of the latent alphabet.
+
+If plaintext is $P_i=M(u_i)$ for an unknown permutation $M$, the dynamics can identify $R(u)$ without identifying the literal labels $M(z)$. A label is identifiable only when the available observations and constraints leave the same value in every admissible completion.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Observed and unobserved domains"
+body = '''
+Let $S=\{u_i:0\le i<n\}$ be the exercised latent coordinates and let $\mathcal{M}$ be the set of bijections consistent with all evidence. Coordinate $z$ has an identifiable label precisely when
+
+$$\big|\{M(z):M\in\mathcal{M}\}\big|=1.$$
+
+Exact plaintext needs singleton domains only for $z\in S$. A literal full key needs singleton domains for the entire alphabet. If a permutation has exactly one unassigned coordinate and one unused output letter, the all-different constraint forces that final pair; with two or more on each side, several literal keys can encode the same observed text.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Anonymous equality class:** only $R(u)$ is retained.
+- **Partially labelled class:** some latent coordinates have singleton plaintext domains.
+- **Observed-key recovery:** every $z\in S$ is labelled, enough for exact plaintext.
+- **Completed permutation:** all coordinates are labelled, including those absent from the text.
+- **Gauge-labelled key:** a canonical representative is reported after accounting for coordinate symmetries.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions"
+body = '''
+- $M$ is bijective. Homophonic or many-to-one alphabets require different completion rules.
+- Equality of latent coordinates is exact, not inferred from similar language scores.
+- Domains record all surviving labels; a heuristic top candidate is not treated as an identified label.
+- Coordinate gauges are canonicalised before literal keys are compared.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to test identifiability"
+body = '''
+Canonicalise the latent stream to its restricted-growth string, build one domain for every observed coordinate, and apply equality, inequality, and all-different constraints. Enumerate or symbolically represent all completions. A coordinate is identified only if its domain is a singleton across the complete survivor set. Report observed and unused coordinates separately.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function RESTRICTED_GROWTH_STRING(sequence):
+    name = empty map
+    next_name = 0
+    for symbol in sequence:
+        if symbol not in name:
+            name[symbol] = next_name
+            next_name += 1
+        output.append(name[symbol])
+    return output
+
+function IDENTIFIABLE_LABELS(latent, constraints, alphabet):
+    domains = INITIAL_DOMAINS(latent, constraints, alphabet)
+    completions = COMPLETE_ALL_DIFFERENT(domains)
+    for coordinate in alphabet:
+        values = {mapping[coordinate] for mapping in completions}
+        report coordinate as identified exactly when SIZE(values) == 1
+    separately report labels used by latent and labels absent from latent
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Computing $R(u)$ is linear in the text length. Enumerating arbitrary bijective completions is factorial in the number of unresolved labels, although constraint propagation and a compact bipartite-domain representation often avoid materialising them all.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Naming an anonymous class.** Equality structure alone never tells whether its first class is `A`, `E`, or another letter.
+- **Discarding aliases too early.** A score tie may contain several legitimate label completions.
+- **Confusing unused with incorrect.** A full literal key can be underdetermined even when every emitted plaintext position is exact.
+- **Assuming one missing pair is ambiguous.** Under a true permutation, the last unused input and output force each other.
+- **Mixing gauges and labels.** Coordinate relabelling can change the written map while preserving every plaintext letter.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Use synthetic streams with known permutations and deliberately vary alphabet coverage. Check that arbitrary global relabellings preserve the restricted-growth string, that every observed singleton domain yields the same plaintext in all completions, that two unused pairs remain ambiguous, and that one unused pair is forced by all-different completion.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Pattern first, names second"
+body = '''
+The latent stream $4,1,1,19$ has restricted-growth string $0,1,1,2$. A map could label it `MEET`, but another bijection could label the same equality structure `NOON`; the dynamics alone distinguishes neither naming. If other constraints fix $4\mapsto M$, $1\mapsto E$, and $19\mapsto T$, the observed text becomes exact even though every coordinate absent from the four positions may still be freely permuted.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The application of this identifiability audit to feedback-cell recovery was developed in this project. Restricted-growth strings and permutation identifiability are established combinatorial tools.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_PLAINFEEDBACK630_SECONDORDER_THEORY.md"
+kind = "design"
+note = "Uses equality-pattern canonicalisation to distinguish observable cells from literal substitution labels and proves the single-missing-symbol completion rule for the bounded family."
+ref = "LOG630"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_plainfeedback630_secondorder_theory.py"
+kind = "script"
+note = "Exhaustive small-ring checks of canonical equality patterns and label symmetries."

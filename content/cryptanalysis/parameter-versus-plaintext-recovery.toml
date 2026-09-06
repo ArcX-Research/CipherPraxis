@@ -1,0 +1,133 @@
+id = "parameter-versus-plaintext-recovery"
+section = "cryptanalysis"
+title = "Parameter recovery versus plaintext recovery"
+subtitle = "Keep structural, labelling, message, and certificate endpoints distinct"
+status = "VERIFIED"
+status_note = "Synthetic controls demonstrate that the correct algebraic cell can be recovered while the selected symbol labelling still gives an inexact message. The distinction is therefore an observed failure boundary, not merely a reporting preference."
+family = "Recovery endpoints"
+tags = ["parameter recovery", "plaintext recovery", "latent labels", "certificates"]
+related = ["symmetric-second-order-plaintext-feedback", "feedback-state-gauges-and-cells", "latent-label-identifiability", "identity-plus-one-swap-neighborhood", "endpoint-specific-control-contracts", "isomorph-analysis", "bound-benchmarks-and-certificates", "tautological-gate-rule"]
+summary = "Many attacks have a structural stage and a labelling stage. A structural parameter can determine the right latent equality pattern without naming its symbols correctly. Report recovery of the parameter cell, quotient class, labelled key, plaintext, and forward certificate as separate facts."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let a structural parameter $\theta$ transform ciphertext $C$ into a latent stream
+
+$$u_\theta=F_\theta(C).$$
+
+A labelling $M$ then gives a candidate plaintext $P_{\theta,M}=M(u_\theta)$. **Parameter recovery** means selecting the planted or otherwise certified structural cell $\theta$. **Plaintext recovery** means obtaining every symbol of $P$ exactly. **Label recovery** means identifying the required entries of $M$, and **literal-key recovery** asks for one written key rather than only its gauge class. These endpoints can differ even when the structural search has a unique winner.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "A useful endpoint ladder"
+body = '''
+For a planted control, record separate indicators
+
+$$I_{\rm cell}=[\hat\theta\sim\theta^*],\qquad
+I_{\rm class}=[R(u_{\hat\theta})=R(u_{\theta^*})],$$
+
+$$I_{\rm text}=[P_{\hat\theta,\hat M}=P^*],\qquad
+I_{\rm forward}=[E_{\hat\theta,\hat M}(P_{\hat\theta,\hat M})=C],$$
+
+where $\sim$ is the declared parameter gauge and $R$ is a restricted-growth encoding of symbol equality. The implication $I_{\rm text}\Rightarrow I_{\rm class}$ usually holds, but neither $I_{\rm cell}$ nor $I_{\rm forward}$ implies $I_{\rm text}$. A wrong candidate can be internally consistent with its own forward transform.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Cell recovery:** the correct dynamical or transposition parameters, modulo declared symmetries.
+- **Equality-class recovery:** the correct pattern of repeated latent symbols, before names are assigned.
+- **Observed-label recovery:** every mapping entry exercised by the text is correct.
+- **Full-key recovery:** all mapping entries are correct, including unused ones; this may be unidentifiable.
+- **Exact-text recovery:** every emitted plaintext symbol is correct.
+- **Candidate consistency:** the disclosed key and plaintext reproduce the ciphertext under an independent forward implementation.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions"
+body = '''
+- The gauge relation on structural cells is fixed before scoring.
+- Exact text comparison is available only in synthetic or otherwise authorised controls. An unknown message can receive a certificate, not an oracle correctness claim.
+- A complete sidecar retains tied cells and admissible mapping completions. The displayed winner alone is not a complete account of recovery.
+- The forward checker is implemented independently of the inverse or peeling routine.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to report a staged attack"
+body = '''
+Freeze one contract for each endpoint. Search and deduplicate structural cells first. Fit labels only after a cell exists, retaining ties and all logically forced completions. Compare each control against its planted cell, equality class, observed map, full map, and exact text separately. Finally, replay the public forward equations from the disclosed artefacts. Promote only the endpoint whose own gate passed.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function EVALUATE_CONTROL(ciphertext, truth):
+    ranked_cells = SEARCH_STRUCTURAL_CELLS(ciphertext)
+    selected_cell = FIRST_WITH_ALL_TIES(ranked_cells)
+    latent = PEEL(ciphertext, selected_cell)
+    mappings = FIT_AND_ENUMERATE_COMPLETIONS(latent)
+    selected_mapping = CHOOSE_BY_FROZEN_RULE(mappings)
+    candidate = APPLY(selected_mapping, latent)
+    report cell_ok = GAUGE_EQUIVALENT(selected_cell, truth.cell)
+    report class_ok = EQUALITY_PATTERN(latent) == truth.equality_pattern
+    report observed_labels_ok = AGREES_ON_OBSERVED(selected_mapping, truth.map)
+    report full_key_ok = selected_mapping == truth.map
+    report text_ok = candidate == truth.plaintext
+    report forward_ok = INDEPENDENT_FORWARD(candidate, selected_cell,
+                                            selected_mapping) == ciphertext
+    retain ranked_cells, mappings, candidate and every tie in the receipt
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Separating endpoints does not enlarge the structural search. It adds exact comparisons on controls and one linear-time forward replay per disclosed candidate. Enumerating unobserved-map completions can be factorial, so a receipt may store a compact all-different description when literal enumeration is unnecessary.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Endpoint promotion.** Calling a recovered cell a solved plaintext hides errors made by the label selector.
+- **Literal-key overclaim.** Unused symbols may leave many full keys consistent with one exact message.
+- **Winner-only output.** A correct answer in a tied or completion sidecar is evidence of coverage, not evidence that the selector emitted it.
+- **Self-consistency mistaken for truth.** A wrong labelled candidate can pass its own forward equation.
+- **Gauge-blind comparison.** Treating two equivalent parameter descriptions as different turns a correct quotient recovery into a false failure.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+In the recorded control panel, every positive selected its planted algebraic cell. One positive nevertheless emitted a plaintext with two letter errors because the language-optimal map was not the planted map. The exact map and text remained in the complete singleton completion sidecar. Under the preregistered exact-emission contract the decoder failed, while the cell detector passed. This cleanly separates structural coverage, selector choice, and exact output.
+'''
+
+[[blocks]]
+kind = "example"
+title = "One correct cell, one wrong label"
+body = '''
+Suppose a certified peel gives latent coordinates `0 1 1 2 0`, whose planted map is $0\mapsto A$, $1\mapsto L$, $2\mapsto E$. The structural output is therefore the equality pattern `0 1 1 2 0`. If a language scorer instead chooses $2\mapsto I$, the cell and equality class are still exact but the emitted text ends in the wrong label wherever coordinate $2$ appears. A forward replay can reproduce the ciphertext under that wrong candidate; only comparison with the planted text detects the decoding failure.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The endpoint ladder and the specific staged control contract were developed in this project. They are stated as a reusable reporting discipline, without a claim of global novelty.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_PLAINFEEDBACK630_SECONDORDER_THEORY.md"
+kind = "design"
+note = "Separates algebraic-cell identifiability, observable equality classes, substitution labels, and exact plaintext."
+ref = "LOG630"
+
+[[provenance]]
+path = "withmath/logs/632_pk10_secondorder_plainfeedback_controls_20260905T150700Z_1788620820729932000.log"
+kind = "log"
+note = "Frozen control receipt: all planted cells selected; one emitted mapping produced two letter errors while the exact completion remained in the sidecar."
+ref = "LOG632"

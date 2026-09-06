@@ -1,0 +1,147 @@
+id = "score-gap-ambiguity-bands"
+section = "statistics"
+title = "Score-gap ambiguity bands"
+subtitle = "Treat a small winning margin as uncertainty, not proof"
+status = "POWER-LIMITED"
+status_note = "A frozen 16-case relabeling control selected 14 exact texts. One wrong winner had only a small positive margin, while another truth was removed before final scoring. The result supports stage-aware ambiguity reporting but does not yet validate a universal cutoff."
+family = "Decision calibration"
+tags = ["score margin", "ambiguity", "likelihood ratio", "shortlist", "abstention"]
+related = ["combined-character-word-models", "k-best-lists", "endpoint-specific-control-contracts", "selection-overfit-diagnostic", "fresh-holdout-after-selector-change", "valid-model-nulls"]
+summary = "A top score is only the winner under one model and candidate set. Compare it with the runner-up, calibrate a minimum trustworthy gap on separate data, and return ambiguous when the gap is too small. In a cascade, also report whether the correct candidate reached the final scorer, because a large final margin says nothing about a candidate removed earlier."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $y_{(1)}$ and $y_{(2)}$ be the highest and second-highest admitted candidates under a frozen score $S$. The winner gap is
+
+$$\Delta=S(y_{(1)})-S(y_{(2)})\ge 0.$$
+
+Choose an ambiguity threshold $\tau$ using development controls, then freeze it. A simple decision rule is
+
+$$\Delta>\tau\Rightarrow\text{selected},\qquad
+\Delta\le\tau\Rightarrow\text{ambiguous}.$$
+
+If $S(y)=\log p(y)$ for one properly normalised model, then $\Delta$ is a log likelihood ratio and $e^\Delta$ is the likelihood ratio. For an unnormalised hybrid score, $\Delta$ is only a score margin unless a probabilistic interpretation has been established.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Admission and selection are separate"
+body = '''
+For a two-stage cascade, let $A_K$ be the shortlist admitted by the cheap score and let
+
+$$y_{(1)}=\arg\max_{y\in A_K}S(y).$$
+
+The reported runner-up gap is conditional on $A_K$. If the truth $y^*$ is not in $A_K$, neither a large $\Delta$ nor a unique winner compares $y_{(1)}$ with $y^*$. Controls should therefore record at least
+
+$$I_{\rm admit}=1[y^*\in A_K],\qquad
+I_{\rm select}=1[y_{(1)}=y^*],\qquad
+\Delta.$$
+
+When $I_{\rm admit}=0$, selection failure is attributed to the admission stage and the final margin is not evidence against the excluded candidate.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Fixed absolute band:** use one predeclared margin threshold on scores with a stable scale.
+- **Length-normalised band:** compare score per character when cases have different lengths.
+- **Empirical error band:** choose a threshold from development errors, then test its coverage on a fresh bank.
+- **Null-relative band:** require the winner gap and the winner's absolute score to clear matched null distributions.
+- **Top-set output:** return every candidate within $\tau$ of the maximum instead of forcing one label.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions"
+body = '''
+- The score, scale, candidate set, shortlist rule, and tie order are frozen together.
+- Threshold calibration data is separate from the final evaluation data.
+- Exact ties are retained before the ambiguity rule is applied.
+- Candidate admission is measured separately from final selection.
+- A score gap is called a likelihood ratio only when the score construction supports that interpretation.
+- Abstention is an allowed terminal result.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Calibrate before selecting"
+body = '''
+On development controls, store the complete admitted rank table and label each final decision correct or wrong. Choose a gap rule before opening fresh controls. During evaluation, first record truth admission, then compute the top set and its margin. Return ambiguous inside the frozen band. If truth was excluded, report an admission failure regardless of how large the final winner gap appears. Compare any revised threshold or shortlist on a new holdout rather than recycling the failure cases.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function GAP_DECISION(all_candidates, cheap_score, final_score, K, tau):
+    ranked_first = SORT_WITH_DECLARED_TIES(all_candidates, cheap_score)
+    admitted = TOP_K_INCLUDING_CUTOFF_TIES(ranked_first, K)
+    ranked_final = SORT_WITH_DECLARED_TIES(admitted, final_score)
+    winners = ALL_EXACT_MAXIMA(ranked_final)
+    if LENGTH(winners) != 1:
+        return AMBIGUOUS_TIE, winners
+    winner = winners[0]
+    runner_up = FIRST_ROW_BELOW_MAXIMUM(ranked_final)
+    gap = final_score(winner) - final_score(runner_up)
+    if gap <= tau:
+        return AMBIGUOUS_SMALL_GAP, winner, gap
+    return SELECTED, winner, gap
+
+function CONTROL_RECEIPT(truth, admitted, decision):
+    truth_admitted = truth in admitted
+    truth_selected = decision is SELECTED and decision.winner == truth
+    emit truth_admitted, truth_selected, decision.gap
+    if not truth_admitted:
+        emit ADMISSION_FAILURE
+        require final margin is not described as evidence against truth
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Once candidates are scored, sorting $m$ first-stage rows costs $O(m\log m)$ and sorting $k$ admitted rows costs $O(k\log k)$. The ambiguity calculation itself is constant time. The real cost is obtaining enough independent controls to calibrate and validate the band.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Positive means correct.** Any nonzero gap is treated as proof even though the score can confidently prefer the wrong text.
+- **Excluded-truth comparison.** A large runner-up margin is reported after the truth was removed by the shortlist.
+- **Post-hoc threshold.** The band is placed just beyond an observed error and evaluated on the same cases.
+- **Hybrid called likelihood.** An arbitrary weighted sum is converted to odds without a valid probability model.
+- **Scale drift.** Text length, tokenisation, model files, or score weights change while the same threshold is reused.
+- **Forced choice.** The implementation has no ambiguous result and silently breaks close ties by row order.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Use controls with clear winners, exact ties, deliberately close wrong winners, and truths just above and below the first-stage cutoff. Record admission, final rank, top-set size, raw component scores, and the winner gap separately. Freeze the band on development cases and measure both error and abstention rates on a fresh bank. A recorded fresh relabeling gate exposed both key cases: a wrong admitted winner with a small positive gap, and a different truth removed before final scoring despite a large final runner-up margin.
+'''
+
+[[blocks]]
+kind = "example"
+title = "A large margin over the wrong comparison set"
+body = '''
+A lexical filter keeps candidates A, B, and C but removes the true candidate T. The final scorer ranks A well above B and C. That large margin shows only that A dominates the retained set; it does not compare A with T. The correct receipt says “truth not admitted,” not “confidently wrong.” In another case T is admitted but A leads it by a very small frozen-score margin; an independently calibrated ambiguity band may correctly abstain.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Likelihood-ratio decisions and abstaining classifiers are established statistical ideas. The reusable lesson here is stage-aware: attach every margin to the exact candidate set over which it was computed, and never let a downstream gap hide an upstream exclusion.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_CONTEXTRELABEL646_CONTROLS.md"
+kind = "audit"
+note = "Records a fresh frozen cascade with separate equality-class retention, shortlist admission, final rank, score margin, and independent replay outcomes."
+ref = "LOG646"
+
+[[references]]
+title = "Detection, Estimation, and Modulation Theory, Part I"
+author = "Harry L. Van Trees"
+year = 2001

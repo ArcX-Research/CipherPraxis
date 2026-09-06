@@ -1,0 +1,153 @@
+id = "plaintext-coordinate-feedback"
+section = "ciphers"
+title = "Plaintext-coordinate feedback"
+subtitle = "Advance a running alphabet state from the latent plaintext coordinate"
+status = "VERIFIED"
+status_note = "Independent algebra checks cover round trips, closed forms, affine gauges, boundary macroclasses, and neighbouring-family separation. A frozen target-absent panel passed all positives, wrong-family sentinels, independent-symbol negatives, and shuffled valid-family nulls."
+family = "Stream and machine ciphers"
+tags = ["plaintext feedback", "state recurrence", "mixed alphabet", "boundary identifiability"]
+related = ["ciphertext-coordinate-feedback", "symmetric-second-order-plaintext-feedback", "right-to-left-plaintext-feedback", "feedback-state-gauges-and-cells", "parameter-versus-plaintext-recovery", "latent-label-identifiability", "alberti-progressive", "autokey", "condi"]
+summary = "Subtract a running displacement from each outer ciphertext coordinate, name the result through an arbitrary substitution, and advance the displacement from that latent plaintext coordinate. The cipher is causal and division-free, but some intercepts differ only at the first plaintext symbol and must be selected as a suffix-equivalence macroclass."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Work in $\mathbb{Z}_{26}$. Let $x_i$ be a ciphertext coordinate in a declared outer alphabet, $a_i$ a running displacement, $u_i$ a latent plaintext coordinate, and $M$ an arbitrary substitution. The left-to-right cipher is
+
+$$u_i\equiv x_i-a_i,\qquad P_i=M(u_i),$$
+
+$$a_{i+1}\equiv a_i+\beta+\lambda u_i\pmod{26},$$
+
+with canonical $a_0=0$, $\beta\in\mathbb{Z}_{26}$, and nonzero $\lambda\in\mathbb{Z}_{26}$. Encryption obtains $u_i=M^{-1}(P_i)$, emits $x_i=u_i+a_i$, and applies the same update. No division is used, so nonunit feedback values are valid.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Forced recurrence and gauges"
+body = '''
+Putting $r=1-\lambda$ eliminates the state:
+
+$$u_0=x_0,\qquad u_{i+1}\equiv r u_i+x_{i+1}-x_i-\beta\pmod{26}.$$
+
+An initial-state translation by $h$ sends
+
+$$a'=a-h,\quad u'=u+h,\quad \beta'=\beta-\lambda h,\quad M'(z)=M(z-h),$$
+
+so fixing $a_0=0$ loses no keys. Under the affine outer re-coordinate $x'=sx+t$ with unit $s$,
+
+$$a'=sa,\quad u'=su+t,\quad \lambda'=\lambda,\quad
+\beta'=s\beta-\lambda t,$$
+
+with $M'(v)=M(s^{-1}(v-t))$. Reversing coordinates uses $s=-1,t=-1$ and gives $\beta'=\lambda-\beta$.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Zero feedback:** $\lambda=0$ is the constant-slope progressive schedule $a_i=i\beta$, a neighbouring family rather than an admitted cell.
+- **Ciphertext-coordinate feedback:** update from observed $x_i$ instead of latent $u_i$; its state multiplier and observable equality functions differ.
+- **Right-to-left feedback:** process from the terminal position. Unit time-reversal strata alias this family, while nonunit strata can be genuinely different.
+- **Second order:** add the preceding latent coordinate to the update, producing a different recurrence and cell family.
+- **Autokey:** feed a delayed message symbol after a primer rather than a cumulative displacement.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- One outer alphabet, intercept, feedback coefficient, and substitution apply to the whole text.
+- Outer affine re-coordinates are aliases and are not charged as new search axes.
+- The arbitrary substitution is fitted after the latent stream is peeled; structural and label recovery are separate endpoints.
+- Boundary-equivalent intercepts are retained together, including all compatible first-symbol and mapping completions.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to attack it"
+body = '''
+For each genuine outer representative, enumerate every intercept and nonzero feedback value, peel the latent stream, and group identical equality patterns. Fit an arbitrary monoalphabetic map to each class. Then group intercepts whose suffixes differ only by a uniform latent translation, rank each complete macroclass by its best member, and measure the score gap only to a row outside that macroclass. Preserve all boundary completions and independently forward-check every disclosed mapping.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function PEEL_LEFT(cipher_coordinates, beta, lambda):
+    state = 0
+    for i in 0..LENGTH(cipher_coordinates)-1:
+        latent[i] = (cipher_coordinates[i] - state) mod 26
+        state = (state + beta + lambda * latent[i]) mod 26
+    return latent
+
+function FORWARD_LEFT(plaintext, inverse_map, beta, lambda):
+    state = 0
+    for i in 0..LENGTH(plaintext)-1:
+        latent = inverse_map[plaintext[i]]
+        output[i] = (latent + state) mod 26
+        state = (state + beta + lambda * latent) mod 26
+    return output
+
+function SEARCH_LEFT(ciphertext):
+    enumerate declared outers, every beta, and every nonzero lambda
+    peel, canonicalise equality patterns, and fit substitution maps
+    group complete suffix-translation macroclasses before ranking
+    retain every boundary completion and independently forward-check it
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+For $o$ declared outer representatives over an alphabet of size $q$, excluding zero feedback gives $o q(q-1)$ raw cells. With two representatives and $q=26$, this is $1{,}300$. Each peel is linear in text length; fitting the arbitrary substitution dominates the structural scan.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Discarding nonunits.** The implementation never divides by $\lambda$ or $1-\lambda$.
+- **Raw-cell scoring at the boundary.** Some intercepts encode the same suffix plaintext and differ only at position zero.
+- **Wrong gap denominator.** Comparing two members of one boundary macroclass manufactures a tiny or zero runner-up gap.
+- **Feedback-source confusion.** Updating from ciphertext coordinates tests a different family.
+- **Sign duplication.** Opposite additive conventions are absorbed by parameter and coordinate relabelling when the full nonzero range is already present.
+- **Exact-cell overclaim.** A correct macroclass need not identify the first plaintext label or the full substitution.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The frozen panel exercised six positives across both declared outers and boundary multiplicities, five neighbouring-family sentinels, three independent-symbol negatives, and nineteen shuffled valid-family nulls. The complete selector passed each declared endpoint. Independent checks rebuilt every raw and macroclass partition, every score, and every scalar forward. This establishes capability on the tested controls, not membership of an unknown text.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked synthetic example"
+body = '''
+Use the straight outer alphabet, identity $M$, $\beta=1$, $\lambda=2$, and plaintext `ATTACK`. The latent coordinates are $0,19,19,0,2,10$. The running states are $0,1,14,1,2,7$, so the emitted coordinates are $0,20,7,1,4,17$, giving `AUHBER`.
+
+For instance, after the second letter the new state is $1+1+2\cdot19=40\equiv14$, and the next ciphertext coordinate is $19+14\equiv7$. Peeling `AUHBER` under the recurrence recovers every latent coordinate, and a separate forward calculation reproduces the ciphertext.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The bounded family, exact boundary-macroclass theorem, affine census, and control protocol were developed in this project. This is a local provenance statement, not a claim that no equivalent feedback construction exists elsewhere.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_PLAINFEEDBACK623_CONTROLS.md"
+kind = "design"
+note = "Full family definition, gauges, suffix macroclasses, cell census, selector contract, and completed target-absent panel."
+ref = "LOG623"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_PLAINFEEDBACK623_INDEPENDENT_DESIGN_NOVELTY_AUDIT.md"
+kind = "audit"
+note = "Independent derivations, small-ring exhaustive checks, affine completeness, observable-family comparison, and boundary correction."
+ref = "LOG623"
+
+[[provenance]]
+path = "withmath/logs/623_pk10_plainfeedback_controls_20260905T132430Z_1788614670209629000.log"
+kind = "log"
+note = "Frozen target-absent control receipt for the complete 1,300-cell selector."
+ref = "LOG623"

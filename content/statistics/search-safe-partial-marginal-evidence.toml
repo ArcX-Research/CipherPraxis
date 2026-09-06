@@ -1,0 +1,344 @@
+id = "search-safe-partial-marginal-evidence"
+section = "statistics"
+title = "Search-safe partial marginal evidence"
+subtitle = "Sum verified probability mass instead of treating the best searched candidate as unselected"
+status = "VERIFIED"
+status_note = "Exact rational enumeration and separate forward implementations verified both safe directions of partial marginal accounting. A partial found numerator gives a lower evidence bound when the null denominator is complete. A later retained-geometry shortcut gave an upper bound on the found subset without completing the denominator: 40 disclosed nonprose controls were declined by proof, while 12 disclosed prose controls escalated and passed the complete calculation. Because that panel was already consumed, this is positive method evidence, not fresh-bank admission or a family negative."
+family = "Marginal likelihood bounds"
+tags = ["marginal likelihood", "adaptive search", "e-values", "nuisance keys", "symmetry", "lower bounds", "upper bounds"]
+related = ["conditional-language-evidence", "certified-language-probability-bounds", "bayesian-evidence-model-selection", "selection-overfit-check", "valid-model-nulls", "arbitrary-substitution-equality-classes", "candidate-bank-lineage-and-cap-accounting", "group-actions-on-alphabets", "family-wise-null"]
+summary = "Searching many keys invalidates the likelihood ratio of the winning plaintext as a stand-alone significance measure. One safe construction sums the declared prior mass of verified, disjoint key families that the search found. Dividing that partial numerator by a complete upper-bounded null marginal gives a lower evidence bound. A second construction can end some cases early: upper-bound the same found numerator and lower-bound the null mass of just the geometries already represented. If that ratio is strictly below the decision threshold, the found subset cannot pass, so the remaining denominator calls may be skipped by proof. Neither result says that unfound keys cannot matter."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $C$ be a ciphertext, $\theta$ a complete cipher parameter, $D_\theta(C)$ its decoded text, and $\pi_\theta$ a fixed prior over parameter representations. With normalized language and null text distributions $P_E$ and $P_N$, define full ciphertext marginals
+
+$$Q_E(C)=\sum_\theta \pi_\theta P_E(D_\theta(C)),$$
+
+$$Q_N(C)=\sum_\theta \pi_\theta P_N(D_\theta(C)).$$
+
+A search may return only a set $B(C)$ of verified, pairwise disjoint parameter families. Sum their exact prior-weighted language mass:
+
+$$A_{\rm lo}(C)=\sum_{F\in B(C)}\sum_{\theta\in F}
+\pi_\theta P_E(D_\theta(C)).$$
+
+Every term is nonnegative, so $A_{\rm lo}(C)\le Q_E(C)$ even when the search chooses $B(C)$ after seeing $C$.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Two safe directions"
+body = '''
+If $D_{\rm hi}(C)$ is a certified upper bound on the complete null marginal, then
+
+$$E_{\rm lo}(C)=\frac{A_{\rm lo}(C)}{D_{\rm hi}(C)}
+\le \frac{Q_E(C)}{Q_N(C)}.$$
+
+Under the declared null distribution,
+
+$$\sum_C Q_N(C)E_{\rm lo}(C)\le 1,$$
+
+and therefore
+
+$$\Pr_{C\sim Q_N}\left(E_{\rm lo}(C)\ge\frac{1}{\alpha}\right)\le\alpha.$$
+
+This is the **lower-bound direction**. A partial numerator safely loses positive mass, while the denominator must be complete or bounded upward.
+
+There is also a useful **upper-bound direction** for the contribution of families already found. Suppose an $a$-symbol key is uniform over $a!$ permutations. Let $A$ be the unnormalised language mass of all found, disjoint observed-key families, including each exact unused-key multiplicity. Let
+
+$$D=\sum_{g\in\mathcal G}P_N(U_g(C))$$
+
+be the complete null sum over named geometries, and let $D_R$ sum only the distinct named geometries represented by the found families. If certified intervals give $A\le A_{\rm hi}$ and
+
+$$0<D_{R,\rm lo}\le D_R\le D,$$
+
+then the found subset's contribution obeys
+
+$$E_{\rm found}=\frac{A}{a!D}
+\le \frac{A_{\rm hi}}{a!D_{R,\rm lo}}=E_{\rm found,hi}.$$
+
+If $E_{\rm found,hi}$ is strictly below a fixed threshold, no omitted denominator term can make the found subset pass. The complete denominator may therefore be skipped for that decision. Equality must escalate. This upper bound cannot produce a positive lower-evidence certificate, and it says nothing about language mass in key families the search did not find.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Exact denominator:** enumerate every structural parameter and compute $Q_N(C)$ directly.
+- **Certified denominator bound:** use outward-rounded rational, interval, or dyadic arithmetic to obtain $D_{\rm hi}(C)\ge Q_N(C)$.
+- **Observed partial keys:** one injective assignment on $k$ observed symbols of an $m$-symbol alphabet represents $(m-k)!$ unrestricted full substitution keys.
+- **Nonuniform prior:** replace factorial counts by the summed prior mass of each represented full-key family.
+- **Several searches:** take the union of their verified parameter families and remove overlaps before summing mass.
+- **Retained-geometry upper shortcut:** lower-bound the null mass of distinct named geometries already represented by found families. Use it only to prove that the found subset is below a threshold.
+- **Label-invariant geometry cache:** if $P_N$ depends only on a geometry's equality pattern, calculate its probability interval once per pattern but multiply it by the number of distinct named geometries carrying prior weight.
+- **Escalation branch:** when the shortcut is equal to or above the threshold, calculate the complete denominator before making a lower-evidence claim.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Required probability accounting"
+body = '''
+- $P_E$ and $P_N$ are normalized distributions, not raw language scores.
+- The same frozen prior over named parameter representations is used in both full marginals.
+- Every retained family has a verified forward relation to $C$ and a correct prior mass.
+- Families summed in $A_{\rm lo}$ are disjoint. Duplicate restarts, aliases, and repeated completions do not receive extra mass.
+- Quotienting equivalent states preserves their total prior weight; unique classes are not averaged uniformly unless that is the declared prior.
+- A positive lower-evidence certificate uses a null denominator that covers the complete declared family or has a proved outward upper bound. The found-subset shortcut instead carries an explicit upper-only label and a positive retained-denominator lower bound.
+- Repeated appearances of the same named geometry count once in $D_R$. Different named aliases retain separate prior weight even when they have the same equality pattern.
+- Caching a label-invariant null probability by equality class saves computation; it does not merge the named geometries in the prior.
+- A shortcut branch is taken only on a strict certified inequality. An interval touching the threshold escalates.
+- The tail statement concerns the specified family-marginal null, not every possible wrong cipher or adversarial source.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Turn search output into certified mass bounds"
+body = '''
+Freeze the decoder family, text distributions, and parameter prior. Run any search that proposes complete keys or verified partial-key families. Reconstruct each physical origin from the source-side geometry rather than trusting a saved plaintext label. Rebuild its coordinate stream, replay literal encryption, list the occupied key coordinates, and identify the observed-key family by `(named geometry, occupied assignment)`. A family that fixes $k$ coordinates represents exactly $(a-k)!$ full permutation keys. Union duplicate families before adding their mass, while preserving every physical origin for audit.
+
+Compute the null marginal across every structural parameter. When the null text model is invariant under a nuisance relabelling, calculate one interval per equality pattern while retaining the multiplicity of distinct named geometries. If a retained-geometry lower bound makes the found-subset upper ratio strictly smaller than the fixed threshold, emit a proof-skipped receipt. Otherwise run the complete denominator and use its upper endpoint for the lower-evidence statistic.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function PARTIAL_MARGINAL_EVIDENCE(ciphertext, search, prior, language, null):
+    proposed = search(ciphertext)
+    families = empty disjoint set of full parameter keys
+    numerator = 0
+    for proposal in proposed:
+        require INDEPENDENT_FORWARD_REPLAY(proposal, ciphertext)
+        family = EXACT_FULL_KEY_FAMILY(proposal)
+        fresh = family minus UNION(families)
+        numerator += PRIOR_WEIGHTED_LANGUAGE_MASS(fresh, prior, language)
+        families = families union fresh
+
+    denominator_upper = COMPLETE_OR_CERTIFIED_NULL_MARGINAL(
+        ciphertext, prior, null)
+    require denominator_upper covers every declared parameter
+    evidence_lower = numerator / denominator_upper
+    return evidence_lower, families, complete denominator receipt
+
+function FOUND_SUBSET_BRANCH(ciphertext, physical_origins, threshold):
+    families = empty map keyed by (named geometry, occupied assignment)
+    retained_geometries = empty set of named geometries
+    for origin in physical_origins:
+        coordinates = RECONSTRUCT_SOURCE_COORDINATES(origin.geometry)
+        require LITERAL_FORWARD(origin.key, coordinates) == ciphertext
+        occupied = SORTED_DISTINCT(coordinates)
+        family_id = (origin.named_geometry, origin.key[occupied])
+        families[family_id].origins.add(origin.id)
+        retained_geometries.add(origin.named_geometry)
+
+    A = OUTWARD_SUM_LANGUAGE_MASS_WITH_FACTORIAL_COMPLETIONS(families)
+    D_R = OUTWARD_SUM_NULL_MASS_BY_DISTINCT_NAMED_GEOMETRY(
+        retained_geometries, cache_by_equality_pattern=true)
+    found_upper = A.high / (FACTORIAL(alphabet_size) * D_R.low)
+
+    if found_upper < threshold:
+        return FOUND_SUBSET_BELOW_THRESHOLD(
+            full_denominator_calls=SKIPPED_BY_PROOF,
+            lower_evidence_not_computed=true)
+
+    full_D = COMPLETE_NULL_DENOMINATOR_WITH_INTERVAL_RECEIPT()
+    return ESCALATED_LOWER_EVIDENCE(
+        A.low / (FACTORIAL(alphabet_size) * full_D.high))
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The numerator cost follows the number of verified families found by the search. A symmetry can make the denominator much cheaper: if a nuisance key has no effect on $P_N$, its whole prior sum collapses to one term per remaining structural parameter. The retained-denominator shortcut follows the number of distinct equality patterns represented by the found geometries, not the whole geometry universe. Its benefit is largest when many cases can be declined before an expensive complete denominator, but every source reconstruction and retained interval must still finish. Family overlap and large exact rational values may require canonical set representations and arbitrary-precision arithmetic.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Winner likelihood called evidence.** The best text from a large search is treated like one candidate chosen in advance.
+- **Truncated denominator.** Only promising null parameters are summed and the result is presented as positive lower evidence. A subset denominator is safe here only in the separately proved upper-bound direction.
+- **Bound direction reversed.** A retained-denominator lower bound is used to claim positive lower evidence. It supports only an upper bound on the found subset.
+- **Alias voting.** Repeated restarts or several descriptions of the same full key receive extra prior mass.
+- **Uniform class averaging.** Equality classes of different sizes are given equal weight even though the declared prior is over named parameters.
+- **Overlapping families.** Two partial keys represent some of the same full keys and their shared mass is counted twice.
+- **Geometry occurrence counted twice.** The same named geometry appears behind several origins and its null probability is added repeatedly.
+- **Named aliases erased.** Several named geometries share an equality pattern, so their distinct prior weights are mistakenly collapsed to one.
+- **Unnormalized score.** A quadgram total is inserted where a probability distribution is required.
+- **Floating certificate.** An ordinary floating log-sum is described as a rigorous tail bound without outward error control.
+- **Null scope inflation.** A guarantee under one declared family-marginal null is presented as protection against all alternatives.
+- **Proof skip called cap.** Omitted denominator calls are described as unfinished work even though a strict upper inequality made them unnecessary, or a real cap is mislabeled as a proof skip.
+- **Found-subset decline called family negative.** The certified found mass is small, but unsearched key families may still carry mass.
+- **Consumed panel called admission.** A method built or checked on an already disclosed panel is treated as prospective evidence for a new bank.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The exact validation exhausted 1,082 ciphertexts and 284,344 full key-and-geometry rows over four small finite panels. Both full ciphertext marginals normalized exactly. Explicit key enumeration matched the symmetry-collapsed null, and factorial family mass matched the full language sum. All 32 exact tail inequalities passed, including 11 nonempty tails.
+
+A separate forward-encryption implementation enumerated the full finite spaces without importing the producer and reproduced every rational value and preimage count. The panel also contained 310 counterexamples to averaging unique equality classes without their representation weights. These results verify the algebra and accounting at small size; they do not establish full-alphabet language power or a practical numerical certificate.
+
+The retained-geometry shortcut was then checked independently on every binary length-8 ciphertext, 32 named geometries, and two keys. All 256 ciphertexts and 16,384 full-key rows passed: 64 cases were strictly declined by the found-subset upper bound and 192 escalated. A full-model tie at exactly one escalated, and a deliberately doubled denominator that would falsely report one half was refused. Alias and unused-key traps confirmed that repeated geometry occurrences are deduplicated, distinct named geometries keep their weight, and exact factorial completions are counted once per disjoint family.
+
+A later already-disclosed 52-case capability panel preserved 10,449 endpoints, 11,022 physical origins, and 10,218 disjoint observed-key families. Their retained denominator used 3,483 equality classes representing 3,674 distinct named geometry weights. Twelve cases escalated and used two complete denominator implementations each: 24 calls covering 21,934,848 geometry slots. Forty cases had strict found-subset upper bounds below one, so the other 80 denominator calls were **skipped by proof**, not stopped by a cap and not claimed as full enumeration. All twelve disclosed prose selections were exact with certified lower ratios above one; all forty disclosed nonprose cases had found-subset upper ratios below one.
+
+The separate replay rebuilt every origin and literal forward, united every family, and checked 2,817,805 probability-interval containments using 7,428 independently computed binomial exponential bounds. This is positive capability evidence on a consumed panel. It does not admit a future bank, estimate a fresh false-positive rate, bound unfound language mass, or support a family negative.
+'''
+
+[[blocks]]
+kind = "example"
+title = "One partial key can represent several full keys"
+body = '''
+Suppose a substitution alphabet has size $m$, but a verified plaintext uses only $k$ distinct latent symbols. Its observed injective map has $(m-k)!$ unrestricted completions. Under a uniform prior on all $m!$ substitution keys, this family carries prior mass
+
+$$\frac{(m-k)!}{m!}.$$
+
+If several restarts find the same observed map, that mass is still added once. If a second observed map represents a disjoint family, its mass may also be added. A capped search may miss other families, but missing positive numerator terms only makes the reported evidence smaller.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Marginal likelihoods, likelihood-ratio bounds, and nonnegative test statistics are established ideas. The useful synthesis here is operational: an adaptive cryptanalytic search can contribute any verified subset of full parameter mass without requiring optimizer completeness, provided the denominator and representation weights remain complete and auditable.
+
+If $P_N$ is invariant under every global label bijection and parameters split into structure $g$ and label key $k$, then the nuisance-key average collapses:
+
+$$\sum_k\pi(k\mid g)P_N(k(U_g(C)))=P_N(U_g(C)).$$
+
+This removes work without changing the prior. It does not allow the language numerator to collapse, because $P_E$ normally depends on the literal labels.
+'''
+
+[[blocks]]
+kind = "notes"
+title = "A full-alphabet composition check"
+body = '''
+A later integration bound 1,002 saved search endpoints and 1,059 physical origins to their complete request, process, packet, candidate, and forward sidecars before deduplication. They represented 1,051 globally distinct observed-key families; eight duplicate families were merged without losing their origins. A 513-family test also proved that a 512-row arithmetic limit must be handled as two additive chunks, not by truncating one row.
+
+For each of four public 26-symbol cases, a native implementation and a separate coordinate implementation enumerated all 913,952 named geometries for the matching null denominator. The normalized-language numerator used the actual frozen integer language table and certified dyadic arithmetic. Eight denominator calls completed, and a separate full replay passed.
+
+The resulting lower likelihood ratios were tiny, with base-two floors from $-1,621$ to $-470$. This is not negative evidence against the cipher family: the numerator contains only the verified key families found by an incomplete search. The result demonstrates an important asymmetry in practice—partial numerator mass is safe but can be extremely weak, while denominator completeness remains mandatory.
+
+The later retained-geometry construction adds the matching early-decline asymmetry: a lower bound on part of the denominator can upper-bound the contribution of the numerator families already found. This can save complete-denominator work, but it cannot turn a found-subset decline into a statement about the unfound part of the family.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_MARGINAL674.md"
+kind = "design"
+note = "Derives the relabelling-invariant null collapse, adaptive partial-numerator inequality, representation-weight rule, and exact validation scope."
+ref = "LOG674"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_marginal674.py"
+kind = "library"
+note = "Pure exact-rational definitions for normalized finite text models, full parameter marginals, collapsed nulls, and partial evidence bounds."
+ref = "LOG674"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_marginal674_kat.py"
+kind = "script"
+note = "Exhaustive controller for normalization, alias multiplicity, adaptive subset mass, tail inequalities, and refusal tests."
+ref = "LOG674"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_marginal674_audit.py"
+kind = "audit"
+note = "Separate forward-encryption oracle that independently counts full-key preimages and recomputes every rational statistic."
+ref = "LOG674"
+
+[[provenance]]
+path = "withmath/logs/674_rational_20260906T043359Z_1788669239688123000.json"
+kind = "data"
+note = "Durable exact finite-panel results, normalization identities, tail checks, alias counterexamples, and malformed-case outcomes."
+ref = "LOG674"
+
+[[provenance]]
+path = "withmath/logs/674_forward_reference_20260906T0437Z.log"
+kind = "audit"
+note = "Durable separate-code forward marginal audit receipt."
+ref = "LOG674"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_MARGINAL689.md"
+kind = "note"
+note = "Defines source-bound worker admission, global family union before chunking, matching full denominator enumeration, and evidence limits."
+ref = "LOG689"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_marginal689_bridge.py"
+kind = "library"
+note = "Binds physical proposal origins to disjoint observed-key families and composes certified numerator and denominator intervals."
+ref = "LOG689"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_marginal689_audit.py"
+kind = "audit"
+note = "Separate-code reconstruction of every origin, family, language interval, denominator trace, and final lower ratio."
+ref = "LOG689"
+
+[[provenance]]
+path = "withmath/logs/689_full_20260906T072052Z_1788679252688087000.json"
+kind = "data"
+note = "Full source-bound four-case composition with eight complete denominator calls and certified lower likelihood ratios."
+ref = "LOG689"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_RETAINED694.md"
+kind = "design"
+note = "Defines the retained-geometry found-mass upper inequality, source-side reconstruction, named-geometry accounting, proof-skip branch, controls, and claim boundary."
+ref = "LOG694"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_retained694.py"
+kind = "library"
+note = "Pure exact-rational retained-basis construction, label-invariant null grouping, and strict found-subset upper decision."
+ref = "LOG694"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_retained694_kat.py"
+kind = "script"
+note = "Exhaustive small-alphabet test of the upper-bound inequality, strict decision branches, aliases, ties, duplicate-denominator traps, and refusal semantics."
+ref = "LOG694"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_retained694_audit.py"
+kind = "audit"
+note = "Separate-code enumeration of full forward fibres, families, geometries, exact null probabilities, and both bound branches."
+ref = "LOG694"
+
+[[provenance]]
+path = "withmath/logs/694_public_20260906T081007Z_1788682207330658000.json"
+kind = "data"
+note = "Frozen exhaustive retained-mass arithmetic and malformed-input control artifact."
+ref = "LOG694"
+
+[[provenance]]
+path = "withmath/logs/694_separate_audit_1788682218257407000.log"
+kind = "audit"
+note = "Durable independent mathematical replay of the small retained-mass panel."
+ref = "LOG694"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_retained694_controls.py"
+kind = "script"
+note = "Source-bound controller that rebuilds saved origins and families, applies one strict branch rule to every case, and records proof skips separately from caps."
+ref = "LOG694"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_retained694_controls_audit.py"
+kind = "audit"
+note = "Separate-code reconstruction of physical maps, families, named geometries, probability intervals, complete denominator calls, and final decisions."
+ref = "LOG694"
+
+[[provenance]]
+path = "withmath/logs/694_full_20260906T083221Z_1788683541809926000.result.json"
+kind = "data"
+note = "Frozen consumed-panel result containing twelve escalations, forty strict found-subset declines, and explicit proof-skipped calls."
+ref = "LOG694"
+
+[[provenance]]
+path = "withmath/logs/694_full_audit_1788683956475115000.log"
+kind = "audit"
+note = "Durable complete replay of the saved-panel result, source forwards, family union, probability intervals, and denominator traces."
+ref = "LOG694"

@@ -1,0 +1,135 @@
+id = "nicodemus"
+section = "ciphers"
+title = "Nicodemus"
+subtitle = "Shift letters by column, then read each small block in keyed column order"
+status = "VERIFIED"
+status_note = "Held-out Vigenere, Variant, and Beaufort controls each recovered the full plaintext, dimensions, shifts, and column order, then passed an independent forward check. The selector searched periods 4 through 8 and block heights 2 through 8."
+family = "Layered classical ciphers"
+tags = ["columnar transposition", "periodic substitution", "block", "ragged grid", "keyword"]
+related = ["columnar-transposition", "vigenere", "variant-beaufort", "beaufort", "sandwich-construction", "transposition-width-recovery", "simulated-annealing", "known-answer-tests"]
+summary = "Nicodemus combines a short periodic shift with a column readout. It handles the text in small row blocks, shifts each column with one key letter, and reads the columns in keyed order. Because the transposition restarts at every block, a decoder must model both the column order and the block height."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Choose a width $p$, block height $h$, shifts $k_0,\ldots,k_{p-1}$, and a column order $o$. Fill each block row by row with at most $hp$ plaintext letters. Apply shift $k_j$ to column $j$, then emit each column from top to bottom in order $o_0,\ldots,o_{p-1}$. Start a new grid for the next block.
+
+In the standard keyed form, one keyword supplies both the shifts and the stable alphabetical order of its letters. A more general analysis may fit shifts and order independently, then test whether they admit one keyword.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Substitution followed by block readout"
+body = '''
+For a plaintext cell $P_{r,j}$, form
+
+$$U_{r,j}=f(P_{r,j},k_j),$$
+
+where $f(p,k)$ is $p+k$ for Vigenere, $p-k$ for Variant, or $k-p$ for Beaufort, all modulo 26. The ciphertext block is
+
+$$U_{0,o_0},U_{1,o_0},\ldots,U_{h-1,o_0},
+U_{0,o_1},\ldots,U_{h-1,o_{p-1}},$$
+
+skipping cells beyond a ragged final block. Decryption places ciphertext chunks back into their columns and applies $f^{-1}$.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- Vigenere, Variant, and Beaufort supply three common column substitutions.
+- A standard keyword couples shifts and column order; a generalized form treats them as independent parameters.
+- The final block may be ragged. Natural columns below its remainder contain one extra cell.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- Blocks restart every $hp$ plaintext positions.
+- Text is filled row by row before the column readout.
+- Equal keyword letters use a stated stable tie rule.
+- Padding, if any, is distinguished from real plaintext.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to attack it"
+body = '''
+Enumerate plausible widths, block heights, and sign conventions. For each geometry, optimise the column order and shifts together under a language score, or alternate between them. Decrypt ragged blocks with the exact long-column convention. Rescore the best generalized states under the stricter keyword-coupling rule if the historical form is required, and independently re-encrypt every retained plaintext.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function ENCRYPT(plain, width, height, shifts, order, relation):
+    out = empty
+    for block in chunks(plain, width * height):
+        grid = fill_rows(block, width)
+        for each existing cell (row, col):
+            grid[row, col] = APPLY_RELATION(grid[row, col], shifts[col])
+        for col in order:
+            for row from 0 while cell(row, col) exists:
+                append grid[row, col] to out
+    return out
+
+function DECRYPT(cipher, settings):
+    for each ciphertext block:
+        compute the exact length of every column
+        split the block in declared column order
+        restore columns to natural positions
+        undo each column shift and read rows
+    return concatenated rows
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+One encryption or decryption is $O(n)$. Exhaustive search over independent column orders and shifts costs $p!\,26^p$ per geometry, so practical attacks use assignment, alternating optimisation, or permutation search. Enumerating widths and heights adds only the size of the declared grid range.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Treating it as one global columnar.** The readout restarts for every small block.
+- **Wrong ragged convention.** The last block's column lengths depend on the natural column index, not its readout rank.
+- **Generalized-state overclaim.** A good independent `(order, shifts)` state need not come from one standard keyword.
+- **Layer-blind scoring.** Scoring before the block readout is undone hides ordinary language adjacency.
+- **Roundtrip tautology.** A fitted order and shifts always define an inverse; held-out exact recovery is the meaningful gate.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Use several complete blocks plus a ragged final block. Hide width, height, order, shifts, and relation. Require exact plaintext, exact geometry and parameters, and independent forward reconstruction. Recorded controls used width 6 and height 5 while the selector searched widths 4 through 8 and heights 2 through 8; Vigenere, Variant, and Beaufort controls all passed.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+Take plaintext `ATTACKATDAWN`, width 3, height 2, key `KEY`, and Vigenere. Stable alphabetical key order is columns `1,0,2`. The first block `ATTACK` shifts to rows `KXR / KGI`; reading columns `1,0,2` gives `XGKKRI`. The second block `ATDAWN` becomes `KXB / KAL` and gives `XAKKBL`. The ciphertext is therefore `XGKKRIXAKKBL`.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Nicodemus is best understood as a short substitution-transposition sandwich whose transposition boundary repeats. That boundary is useful structure, but only when the block height is modelled correctly.
+'''
+
+[[provenance]]
+path = "withmath/docs/cipher-methods/COLOSSUS_DYNAMIC_AUDIT.md"
+kind = "audit"
+note = "Defines the generalized and keyword-coupled forms and records exact held-out gates."
+ref = "Log 186"
+
+[[provenance]]
+path = "withmath/scripts/wm_colossus_dynamic.py"
+kind = "solver"
+note = "Independent forward implementation and controls-first search wrapper."
+
+[[provenance]]
+path = "withmath/logs/186_colossus_dynamic_nicodemus.log"
+kind = "log"
+note = "Exact plaintext, configuration, and forward reconstruction for all three relation controls."

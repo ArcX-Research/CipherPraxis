@@ -1,0 +1,217 @@
+id = "cost-projected-all-different-bounds"
+section = "exact"
+title = "Cost-projected all-different bounds"
+subtitle = "Join mini-bucket estimates and exact matching rules without losing a safe search bound"
+status = "VERIFIED"
+status_note = "Two independent test series proved the projected bounds admissible and no looser than the base mini-bucket bound. A row-only version tightened 2,414 of 8,965 small-case prefixes. A later row-and-column version tightened 379 of 32,062 prefixes and caught two conflicts designed for it. At 26 symbols, however, the later version improved one fresh root by only 5 score units and did not complete either capped search."
+family = "Lagrangian upper bounds"
+tags = ["all-different", "Lagrangian relaxation", "mini-bucket elimination", "assignment problem", "branch and bound", "dual bounds", "forbidden edges"]
+related = ["admissible-bound-selectivity", "mini-bucket-elimination", "all-different-constraints", "maximum-weight-bipartite-assignment", "partial-permutation-completion-bounds", "bound-benchmarks-and-certificates", "exact-optimization-admission"]
+summary = "A mini-bucket bound can ignore links between repeated cipher variables. Split those links into exact matching problems: values may need to differ within each row, differ across rows for the same input symbol, or avoid forbidden row-to-symbol pairs. Add integer costs to the mini-bucket factors and subtract the same costs in the matching factors. They cancel for every legal completion, so the combined result is still a safe upper bound. This can expose conflicts that the mini-buckets miss, but a mathematically stronger bound may still save too little work at a full alphabet size."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $x_v$ be repeated discrete variables scored by local factors $Q(x)$. Suppose the variables are arranged in row groups $V_g$ and same-symbol column groups $W_c$. Values must be different within every row and within every column. Some row-to-value pairs may also be forbidden by the cipher algebra. A base mini-bucket relaxation $B_4(a)$ is an upper bound below partial assignment $a$, but it may optimize copies of these linked variables independently.
+
+Give each variable-value pair two integer costs: $\alpha_v(j)$ for its row rule and $\beta_v(j)$ for its column rule. Add both costs to the mini-bucket relaxation. Subtract $\alpha$ in exact row matchings and $\beta$ in exact column matchings. Let $R_g(a)$ contain every legal injective row completion, including the proven forbidden pairs, and let $C_c(a)$ contain every legal injective column completion. Define
+
+$$D_{\alpha,\beta}(a)=\operatorname{MBE}_4\left(Q+\sum_v[\alpha_v(x_v)+\beta_v(x_v)]\mid a\right)
++\sum_g\max_{r\in R_g(a)}\left[-\sum_{v\in V_g}\alpha_v(r_v)\right]
++\sum_c\max_{s\in C_c(a)}\left[-\sum_{v\in W_c}\beta_v(s_v)\right].$$
+
+The strengthened bound is
+
+$$B^*(a)=\min\bigl(B_4(a),D_{\alpha_1,\beta_1}(a),\ldots,D_{\alpha_m,\beta_m}(a)\bigr).$$
+
+The earlier row-only form is the special case $\beta=0$. Using both sets of costs gives a rook-like decomposition: row matchings and column matchings enforce two directions of the same assignment table.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Why the projected bound is safe"
+body = '''
+Take any legal completion $x\succeq a$. It is feasible in every row set $R_g(a)$ and every column set $C_c(a)$. The mini-bucket term is at least
+
+$$Q(x)+\sum_v\alpha_v(x_v)+\sum_v\beta_v(x_v).$$
+
+The row matching terms together are at least
+
+$$-\sum_v\alpha_v(x_v),$$
+
+and the column matching terms together are at least
+
+$$-\sum_v\beta_v(x_v).$$
+
+Adding the three inequalities cancels every $\alpha$ and $\beta$ cost exactly, leaving at least $Q(x)$. Therefore $D_{\alpha,\beta}(a)$ is at least the score of every legal completion for any finite integer cost tables. The costs can be weak without making the bound unsafe.
+
+The minimum of several upper bounds remains an upper bound. Including $B_4$ proves pointwise
+
+$$F^*(a)\le B^*(a)\le B_4(a),$$
+
+where $F^*(a)$ is the exact best legal descendant score.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Row-only projection:** set $\beta=0$ and use one exact matching for each all-different row.
+- **Rook projection:** use both $\alpha$ and $\beta$ to catch conflicts that are legal in every row but illegal across rows for the same symbol.
+- **Forbidden edges:** remove a row-to-value edge only when the cipher equations prove it impossible. A common example is a nonzero modular shift that cannot map a symbol to itself.
+- **Fixed costs:** derive integer costs once from generic local max-marginal deficits.
+- **Several scales:** include several divided or rounded versions and take their minimum.
+- **Node-adaptive dual costs:** update costs from disagreement between the relaxed local solution and the exact row and column matchings, under a fixed iteration rule.
+- **Subgradient or bundle method:** optimize the dual upper bound for a fixed number of iterations; every intermediate value remains admissible.
+- **Separator-conditioned projection:** retain a small shared separator exactly before applying the assignment projection.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Conditions for exact pruning"
+body = '''
+- Every $\alpha$ cost appears once in the mini-bucket term and once with the opposite sign in its row matching. Every $\beta$ cost does the same in its column matching.
+- Each matching maximum includes every injective completion consistent with the partial state.
+- Mini-bucket maximization and assignment weights use compatible exact integer units.
+- Assigned values, used columns, and rectangular groups are handled consistently in both parts of the bound.
+- A forbidden edge is removed only after an algebraic proof that no legal completion can use it. A guessed restriction can create a false negative.
+- Strict pruning uses `bound < incumbent`; equality survives when tied optima matter.
+- A finite dual-optimization iteration count affects tightness, not admissibility.
+- A resource cap in the outer exact search still means incomplete.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Build and test the bound"
+body = '''
+Construct the same repeated-variable factor graph used by the exact objective. Build one rectangular weight matrix for each row group and one for each same-symbol column group. A matrix row represents a still-free physical variable and a matrix column represents an available value. Remove only edges that the equations prove impossible. Solve every maximum injective assignment exactly, for example with a rectangular Hungarian algorithm or exact min-cost flow.
+
+Add the chosen $\alpha+\beta$ costs to the local factors before mini-bucket elimination. At each search node, evaluate the old bound and all declared projected bounds, then take their minimum. First enumerate every legal descendant on small alphabets and require exact optimum $\le B^*\le B_4$ at every reachable prefix. Also include crafted cases that isolate row collisions, column collisions, forbidden edges, and a legal saturated optimum. Only after that proof should larger controls measure strict-tightening frequency, bound gap, nodes, re-expansions, wall time, memory, witness rank, and completion.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function PROJECTED_BOUND(partial, alpha, beta):
+    language_upper = MINI_BUCKET_MAX(
+        local_factors + ADD_COSTS(alpha + beta), partial, i_bound=4)
+    correction = 0
+    for row in row_groups:
+        matrix = [-alpha[v][value]
+                  for v still free in row
+                  for value still available in row
+                  if edge(v, value) is algebraically legal]
+        correction += EXACT_MAX_INJECTIVE_ASSIGNMENT(matrix)
+    for column in same_symbol_groups:
+        matrix = [-beta[v][value]
+                  for v still free in column
+                  for value still available in column]
+        correction += EXACT_MAX_INJECTIVE_ASSIGNMENT(matrix)
+    return language_upper + correction
+
+function STRONG_BOUND(partial):
+    candidates = [BASE_MBE4(partial)]
+    for alpha, beta in fixed_cost_schedules:
+        candidates.append(PROJECTED_BOUND(partial, alpha, beta))
+    return MIN(candidates)
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The mini-bucket part has the same exponential dependence on its i-bound as the base relaxation, with extra constant work for cost-adjusted messages. A rectangular assignment with $r$ free variables and $c$ available values is polynomial; a Hungarian implementation is commonly $O(r^2c)$ when $r\le c$. The rook form solves one matching per row group and one small matching per repeated-symbol column group for every cost schedule.
+
+Evaluating several cost schedules multiplies bound time. This is worthwhile only if their tighter values remove enough outer search nodes. Measure total solve time rather than the number of mathematically tighter prefixes alone.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Cost sign mismatch:** the language and matching terms reinforce rather than cancel.
+- **One occurrence charged twice:** a repeated physical variable receives several unmatched cost copies.
+- **Greedy matching:** an approximate assignment score is used where an upper maximum is required.
+- **Wrong assigned columns:** the matching still uses a value already fixed elsewhere, or removes the wrong value.
+- **Unsafe forbidden edge:** a plausible-looking diagonal or row-to-value pair is removed without proving that every legal completion excludes it.
+- **Missing column link:** row matchings pass even though two rows assign the same output to the same input symbol.
+- **Small-case tightening assumed to scale:** costs separate low-alphabet controls but become exactly vacuous at 26 symbols.
+- **Small numerical gain mistaken for search power:** the root bound improves, but not enough to cross useful pruning thresholds.
+- **Bound cost ignored:** a few tighter nodes are outweighed by repeated matching and message work.
+- **Dual tuning on a known witness:** multiplier scales or iterations are selected from witness-path behavior rather than generic structural diagnostics.
+- **Cap called optimum:** the bound is sound, but the outer search still has live nodes when stopped.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The first tested construction used row matchings and three integer cost scales derived from local max-marginal deficits with divisors 8, 4, and 2. Independent exhaustive controls covered two modular cipher relations at alphabet sizes 5, 6, and 7. Across 8,965 reachable prefixes, every exact descendant optimum satisfied $F^*\le B^*\le B_4$. The projected bound was strictly smaller at 2,414 prefixes, and exact top-k boundary ties, lexicographic representatives, scores, and forward transformations agreed.
+
+The same frozen costs were then tested on nine 26-symbol controls. At every visited node, $B^*=B_4$: zero strict improvements. Easy and medium cases still completed with truth rank one. Hard Vigenere, hard Beaufort, and an untouched holdout still reached their caps with truth rank one. Runtime rose to 2.22–52.55 seconds and memory reached 83–85 MiB. The exact method passed; this multiplier schedule failed its power gate and should not be rerun unchanged.
+
+A later rook version added same-symbol column matchings and algebraically forbidden diagonal edges. Separate exhaustive code checked both modular relations at sizes 5, 6, and 7. Across 32,062 reachable prefixes, every exact descendant optimum again satisfied $F^*\le B^*\le B_4$, with 379 strict improvements. A crafted column-conflict case fell from 2,500 to 2,424; a column-only cost witness already reached 2,428. A crafted forbidden-diagonal case fell from 1,100 to 1,052. A legal saturated case stayed exactly 2,500, showing that the stronger rule did not cut away a reachable optimum.
+
+The rook version preserved all candidates and ties on nine 26-symbol regression controls, but their bounds did not improve. On a fresh 95-observation development case, the root moved only from 9,200 to 9,195; search still stopped at its 30,000-node cap after 108.373 seconds without reaching an exact leaf. The untouched companion case stayed at 9,200 and also reached its cap. The generalized bound is exact and sometimes stronger, but this implementation is still a power failure at full degree.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+This construction is a Lagrangian or dual-decomposition view of exact matching rules. It is useful when the mini-bucket solution, row matchings, and same-symbol column matchings prefer incompatible values: the costs expose that disagreement. Forbidden edges add useful information only when they remove values that the base relaxation would otherwise favor. If all relaxed parts can absorb the costs without disagreement, the projected bound equals the base bound.
+
+A correct inequality and a useful search method are different achievements. Even a strict five-point root improvement can leave almost the same search tree. A credible successor must expose more of the missing dependency, improve bounds near the pruning boundary, or reduce its own evaluation cost. Its cost rule should be fixed before the larger holdout, and its benefit must be measured at the full alphabet size.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_COSTPROJ692.md"
+kind = "design"
+note = "Defines the cost-cancellation proof, exact matching correction, frozen multiplier schedule, exhaustive checks, and degree-26 power result."
+ref = "LOG692"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk9_costproj692_core.cpp"
+kind = "solver"
+note = "Native mini-bucket, exact rectangular assignment, projected-bound, and threshold-search implementation."
+ref = "LOG692"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk9_costproj692_reference.py"
+kind = "library"
+note = "Independent small-alphabet exact descendants, bounds, cycles, ties, and forwards."
+ref = "LOG692"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk9_costproj692_audit.py"
+kind = "audit"
+note = "Separate-code admissibility, strict-tightening, packet-refusal, and degree-26 checkpoint audit."
+ref = "LOG692"
+
+[[provenance]]
+path = "withmath/logs/692_costproj_controls_20260906T072954Z_49120_1788679794140526000.json"
+kind = "data"
+note = "Frozen small-case exact proof and nine-case degree-26 POWER_FAIL artifact."
+ref = "LOG692"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_ROOKDUAL695.md"
+kind = "design"
+note = "Defines the row-and-column decomposition, forbidden-edge rule, exact cancellation proof, fixed optimizer, controls, and decision semantics."
+ref = "LOG695"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk9_rookdual695_core.cpp"
+kind = "solver"
+note = "Native mini-bucket, exact row and column matching, projected-bound, and memory-linear threshold-search implementation."
+ref = "LOG695"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk9_rookdual695_audit.py"
+kind = "audit"
+note = "Independent exhaustive descendant, matching, admissibility, tie, forward-equation, packet-refusal, and checkpoint audit."
+ref = "LOG695"
+
+[[provenance]]
+path = "withmath/logs/695_rookdual_controls_20260906T082536Z_79200_1788683136019331000.json"
+kind = "data"
+note = "Frozen small-alphabet proof, crafted conflict controls, degree-26 regressions, and fresh full-degree power measurements."
+ref = "LOG695"

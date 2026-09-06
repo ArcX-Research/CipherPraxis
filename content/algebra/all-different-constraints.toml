@@ -6,9 +6,9 @@ status = "VERIFIED"
 status_note = "The one-position-per-letter rule turns a linear system over Z26 into a decision. Rank alone rejected none of 40 wrong crib pairs. The CRT version matched brute force across 538,656 solutions with 0 errors. Exact solvers using it passed 32/32 planted controls and produced exact negatives within stated scopes."
 family = "Combinatorial constraints"
 tags = ["all-different", "bijection", "CSP", "forward checking", "enumeration"]
-related = ["modular-inverse-and-crt", "finite-field-linear-algebra", "permutation-cycles", "residue-class-graphs", "all-different-enumeration", "constraint-satisfaction-forward-checking", "exact-chain-oracle", "word-prefix-csp", "corpus-bank-screen", "crib-driven-alphabet-recovery", "g-all-different", "g-nullity"]
-summary = "An unknown cipher alphabet gives each of 26 letters its own position. Any answer must therefore satisfy an AllDifferent constraint. Linear equations alone rarely reject a wrong guess. Requiring their answers to form a permutation reveals the conflict. The solver applies this rule during search and through an exact CRT split, and it keeps every distinct valid permutation rather than only the best-scoring one."
-updated = "2026-09-04"
+related = ["modular-inverse-and-crt", "finite-field-linear-algebra", "permutation-cycles", "permutation-keystream", "residue-class-graphs", "all-different-enumeration", "constraint-satisfaction-forward-checking", "maximum-weight-bipartite-assignment", "exact-chain-oracle", "word-prefix-csp", "corpus-bank-screen", "crib-driven-alphabet-recovery", "g-all-different", "g-nullity"]
+summary = "An unknown cipher alphabet gives each letter its own position. Any answer must therefore satisfy an AllDifferent constraint. Assigned-value collision checks are only the first layer: Hall's condition or a covering bipartite matching can reject a partial branch even before any two assigned letters collide. Modular equations, CRT structure, and matching feasibility can be maintained together during exact search."
+updated = "2026-09-06"
 
 [[blocks]]
 kind = "definition"
@@ -21,6 +21,11 @@ kind = "equations"
 body = '''
 - **CRT form.** $z$ is a permutation of $0..25$ iff each residue modulo 13 occurs exactly twice and the two carriers have opposite parity. The parity requirements are linear in the $\mathrm{GF}(2)$ null-space coefficients once the $\mathrm{GF}(13)$ vector is fixed.
 - **Potential form (union-find).** Maintaining $z(x) = s\, z(\mathrm{root}) + t$ with $s = \pm 1$ along accepted edges, a new edge is rejected if it forces two letters equal. A sign-mismatch cycle pins the root to a solution of $2z = c$, and a pinned root must admit a collision-free value.
+- **Hall form.** Let each unassigned letter $x$ have its current allowed-position set $D_x$. An injective completion exists only if
+
+$$\left|\bigcup_{x\in S}D_x\right|\ge |S|\qquad\text{for every set of letters }S.$$
+
+For a finite bipartite domain graph, this condition is equivalent to a matching that covers every unassigned letter. A failed covering-matching test is therefore an exact rejection. Passing it proves extendability for the current domains alone; other modular equations may still fail later.
 - **Key-free shadow.** Bijectivity of $z$ implies, within one key class, $C_i = C_j \Leftrightarrow P_i = P_j$. The equality partitions of ciphertext and plaintext must agree. This is the necessary condition tested before any algebra.
 - **Cycle-type shadow.** A single 26-cycle solution must have no closed sub-cycle in any partial map (see [Permutation cycles](/algebra/permutation-cycles)).
 '''
@@ -30,6 +35,8 @@ kind = "assumptions"
 body = '''
 - One alphabet; with several unrelated alphabets the constraint applies per alphabet and is much weaker.
 - The linear relations are exact. A single wrong crib letter turns a feasible system into an infeasible one, which is the point.
+- Domain sets used by the Hall check already include every currently known modular and pairwise restriction. Omitting a restriction weakens pruning; inventing one can remove a real solution.
+- A covering matching is recomputed or incrementally repaired after domain changes. Checking only the number of unused positions misses Hall deficits shared by several letters.
 '''
 
 [[blocks]]
@@ -37,7 +44,7 @@ kind = "attack"
 body = '''
 1. Solve the linear relations over $\mathrm{GF}(2)$ and $\mathrm{GF}(13)$ and enumerate only permutation lifts. A guess whose null space admits no permutation is rejected exactly.
 2. Retain **every** distinct all-different read of a system for later ranking.
-3. In depth-first word or block assignment, check injectivity of each observed residue map after every assignment, run the CRT feasibility test on the incremental echelon bases, and defer (never reject) a branch whose test exceeds its cap.
+3. In depth-first word or block assignment, check injectivity of each observed residue map after every assignment, run cheap Hall subsets or a covering-matching test on remaining domains, and run the CRT feasibility test on the incremental modular state. Defer, never reject, a branch whose exact feasibility test exceeds its cap.
 4. Use the equality-partition gate and the collision implications as free pre-filters on candidate texts.
 5. Score survivors by language only after the exact stage, and require independent forwards.
 '''
@@ -46,18 +53,12 @@ body = '''
 kind = "pseudocode"
 body = '''
 ```text
-// Partial coordinate map z: assigned letters -> Z26. AllDifferent requires z
-// injective.
 function INJECTIVE(z):
     used = empty set
     for each assigned letter x:
-        if z[x] in used: return false           // two letters at one position
+        if z[x] in used: return false
         add z[x] to used
     return true
-
-// CRT form for a full vector z over all 26 letters: z is a permutation of
-// 0..25 iff each residue mod 13 is carried by exactly two letters and those
-// two have opposite parity.
 function IS_PERMUTATION_CRT(z):
     for r in 0..12:
         carriers = { x : z[x] mod 13 == r }
@@ -66,16 +67,22 @@ function IS_PERMUTATION_CRT(z):
         if z[x] mod 2 == z[y] mod 2: return false
     return true
 
-// Key-free shadow: within one key class, C_i = C_j iff P_i = P_j. S =
-// positions of one key class
+function HALL_FEASIBLE(domains of unassigned letters):
+    graph = edge (letter x, position y) whenever y is in domains[x]
+    matching = MAXIMUM_CARDINALITY_BIPARTITE_MATCHING(graph)
+    return SIZE(matching) == NUMBER_OF_UNASSIGNED_LETTERS
+
 function EQUALITY_PARTITION_GATE(C, P, S):
     for i in S, j in S with i < j:
         if (C[i] == C[j]) != (P[i] == P[j]): return REJECT
     return PASS
 
-// Depth-first use: run INJECTIVE on the observed residue map after every
-// assignment; run the CRT feasibility test on the incremental echelon bases;
-// a branch whose test exceeds its cap is deferred, never rejected.
+function PARTIAL_BRANCH_FEASIBLE(z, domains, modular_state):
+    if not INJECTIVE(z): return REJECT
+    if not HALL_FEASIBLE(domains): return REJECT
+    result = CRT_FEASIBLE(modular_state)
+    if result exceeded its cap: return DEFER
+    return result
 ```
 '''
 
@@ -92,6 +99,9 @@ body = '''
 - **Keeping only the best partial read.** A planted system whose true read ranked 2nd of 6 all-different reads was lost under that rule. The corrected rule retains all reads.
 - **Rejecting on cap exhaustion** instead of deferring the branch.
 - **Single-word guesses.** One English word of up to about 20 letters leaves nullities far too large to enumerate; exact rejection needs two long cribs or one crib plus enough fixed letters.
+- **Assigned-only collision check.** Three unassigned letters may all be restricted to the same two positions; no assignment collision exists yet, but Hall's condition already proves failure.
+- **Counting free labels only.** The total number of free positions is large enough, but a subset of letters shares too small a union of domains.
+- **Matching called full feasibility.** A covering matching exists for the current domains, but coupled modular equations not represented by those domains can still make the branch impossible.
 '''
 
 [[blocks]]

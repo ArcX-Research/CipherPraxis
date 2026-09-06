@@ -3,12 +3,12 @@ section = "search"
 title = "Simulated annealing"
 subtitle = "Explore nearby keys while slowly becoming less willing to accept worse moves"
 status = "VERIFIED"
-status_note = "Both single-search and batched NumPy versions are implemented. Planted 5x5-square, one-sided keyed-alphabet, and transposition-order controls recovered at 100%, with saved records. On a two-sided unknown alphabet in Quagmire III at 63–96 letters, the same search stops at 30–40% correct. Parallel-tempering and search-basin pages measure that limit."
+status_note = "Both single-search and batched NumPy versions are implemented. Planted 5x5-square, one-sided keyed-alphabet, and transposition-order controls recovered at 100%, with saved records. On a two-sided unknown alphabet in Quagmire III at 63–96 letters, the same search stops at 30–40% correct. A separate adjacent-reflection control also missed both planted texts even though each hidden truth outscored every reached proposal. Parallel-tempering and search-basin pages measure that limit."
 family = "Stochastic local search"
 tags = ["metropolis", "cooling schedule", "swap moves", "batch chains", "quadgram objective"]
 related = ["parallel-tempering", "hill-climbing", "polish-basin-measurement", "coordinate-descent", "quadgram-log-likelihood", "bifid", "playfair", "quagmire-i", "quagmire-iii", "columnar-transposition", "planted-controls", "shuffled-null-z-score", "numpy-instrument-pattern", "g-move-set", "g-temperature-schedule", "g-objective-function"]
 summary = "Simulated annealing explores a key by making random small changes. It always keeps improvements and sometimes accepts worse moves, with that chance falling as the temperature cools. A language model scores each trial decryption. The method works well for keyed squares over fixed inner text, alphabets whose shifts a crib fixes, and many transposition orders. It fails on short texts when one unknown alphabet acts on both sides; the score landscape, not just the computing budget, blocks progress."
-updated = "2026-09-04"
+updated = "2026-09-06"
 
 [[blocks]]
 kind = "definition"
@@ -112,6 +112,7 @@ kind = "failure_modes"
 body = '''
 - **Rugged landscape (two-sided alphabet).** When the same alphabet indexes both plaintext and ciphertext sides, a swap is simultaneously a cryptogram move and a re-slotting of two ciphertext letters, corrupting about four of 26 mapping entries in every coset. On a planted 96-letter instance the polished best reaches only 29-40% of the alphabet, and best-of-$N$ does not improve with $N$: 500 chains $\to -5.045$, 2,000 $\to -4.829$, 8,000 $\to -4.916$ (same instance, two further seeds $-4.971$ and $-4.876$). The polish basin is at most three swaps wide, so the annealer's best states (about ten swaps away) never fall into it.
 - **Identifiable but unreachable.** On a chained construction the true state scored $-10.01$ per letter against $-12.71$ one swap away and $-16.57$ for random states, yet swap annealing plateaued at a total of $-2101$ against the truth's $-1477$ over 12 restarts of 40,000 iterations. Separation of the optimum does not imply a reachable optimum.
+- **The score works, but the proposal path does not.** In a 63-letter adjacent-reflection control, one hidden 26-letter permutation acted on the source, ciphertext, and derived plaintext at once. The planted truth would have ranked first by the frozen quadgram score in both a development and an untouched confirmation case, but neither ordinary swaps nor moves grouped by modulo-13 coordinate pairs proposed it. Even after the correct direction, window, and sign were supplied, 512 restarts of 100,000 moves missed in all four arm/control combinations. This is a proposal-access failure, not evidence against the cipher model or the language score.
 - **Partial solves.** A 144-letter Playfair square annealed to a $-5.20$ "partial" state with 60% of the plaintext right while the 153-letter Bifid and the 297-letter joint problem solved at 100%.
 - **Selection freedom.** Refitting free shifts on every move buys score on short texts; without shuffled nulls a wrong-placement score of $-5.5$ looks like signal.
 '''
@@ -122,6 +123,7 @@ body = '''
 - Squares, no outer layer: planted 153-letter Bifid (period 7) solved at rate $-4.34$, 100% match; planted 297-letter joint Bifid+Playfair sharing one random square solved at $-4.43$, 100%/100%; planted 144-letter Playfair only 60% ($-5.20$).
 - Crib-pinned one-sided alphabets: Quagmire I with a known ciphertext alphabet solved 3/3 seeds at every crib length $\ge 7$ (9-16 of 16 restarts converge); Quagmire II solved 12/21 seed-by-length cases (0-7 of 16 restarts); Quagmire III 0/21 even with a 25-letter crib, 200,000 steps and 32 restarts.
 - Transposition orders: planted width-8 and width-12 sandwiches read at $-4.34$ with 100% match; word-pair, triple-columnar and rail-fence planted constructions likewise at $-4.34$, 100%.
+- Direct hidden-permutation generator: two target-absent length-63 plants, two move sets, all 324 direction/window/sign cells, and matched histogram-preserving null searches. Exact recovery was 0/2; correct-cell oracle recovery was 0/4. The planted score was counterfactually rank one in every linked arm, cleanly separating score quality from proposal access.
 '''
 
 [[blocks]]
@@ -194,6 +196,12 @@ path = "withmath/COORDINATION.md"
 kind = "ledger"
 note = "Chained-construction annealing: true rate -10.01 vs one swap -12.71 vs random -16.57, yet swap annealing plateaued at -2101 against the truth's -1477 over 12 restarts x 40,000 iterations."
 ref = "LOG409b"
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/PK89_PORTADELTA714.md"
+kind = "note"
+note = "Target-absent direct-permutation generator: two length-63 plants, ordinary and CRT-pair-aware moves, all 324 quotient cells, and 512 x 100,000-move correct-cell diagnostics. Truth score was counterfactually rank one in every linked arm, but exact recovery was 0/2 and oracle recovery 0/4; terminal POWER_FAIL."
+ref = "LOG714"
 
 [[references]]
 title = "Optimization by Simulated Annealing"

@@ -1,0 +1,154 @@
+id = "joint-statistic-release-gates"
+section = "validation"
+title = "Joint statistic release gates"
+subtitle = "Require every predeclared signal to pass its own matched null rank"
+status = "VERIFIED"
+status_note = "Target-absent classifier checks verify conjunctive decisions, inclusive ties, duplicate retention, and refusal on missing nulls. This validates the decision contract, not recovery power or membership in a cipher family."
+family = "Null design and interpretation"
+tags = ["joint gate", "multiple statistics", "permutation rank", "conjunction", "release"]
+related = ["permutation-test", "family-wise-null", "score-gap-ambiguity-bands", "valid-model-nulls", "endpoint-specific-control-contracts", "exact-integer-separation-gates", "evidence-scope-ladder", "candidate-bank-lineage-and-cap-accounting"]
+summary = "A solver may need several different signs of quality, such as a lexical score and a context score. Freeze each statistic and its threshold before evaluation, compute every statistic on the observation and the same complete null runs, and release only when all gates pass. A conjunction cannot be replaced by a fitted weighted sum, a best-of-statistics choice, or an informal review of whichever score looks strongest."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $T_1,\ldots,T_m$ be predeclared statistics produced by one complete deterministic selector. For observation $X_0$ and $B$ matched null replicates $X_1,\ldots,X_B$, define an inclusive upper-tail rank for each statistic:
+
+$$R_j=\sum_{b=1}^{B}\mathbf{1}[T_j(X_b)\ge T_j(X_0)],\qquad
+p_j=\frac{R_j+1}{B+1}.$$
+
+A **joint release gate** is conjunctive:
+
+$$A=\bigcap_{j=1}^{m}\{p_j\le\alpha_j\}\ \cap\ Q,$$
+
+where $Q$ contains non-statistical requirements such as complete execution, an unambiguous semantic winner, independent replay, and unchanged source and model files.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Why conjunction does not inflate the tail"
+body = '''
+If every $p_j$ is valid under the same declared null, then
+
+$$\Pr_0(A)\le \Pr_0(p_j\le\alpha_j)\le\alpha_j$$
+
+for every $j$, hence
+
+$$\Pr_0(A)\le\min_j\alpha_j.$$
+
+No independence assumption is needed. Requiring *all* valid gates can reduce power, but it does not increase the false-release probability beyond the least restrictive component bound. This argument does not apply to an **OR** rule, choosing the best statistic after inspection, or trying several conjunctions and reporting the one that passes. Those choices need their own family-wise calibration.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Shared-null conjunction:** all statistics use the same transformed inputs and each retains its own rank.
+- **Dependent statistic:** one score may be computed from a candidate chosen by another stage. That whole dependency becomes part of the statistic and is repeated on every null.
+- **Calibrated scalar:** a sum, minimum, product, or learned classifier is allowed only when frozen first and calibrated as one complete statistic on fresh nulls.
+- **Disjunctive discovery rule:** accepting when any statistic passes requires a max-statistic, minimum-$p$, or other multiple-testing calibration.
+- **Diagnostic statistic:** a useful measurement may be printed without entering the release predicate. Its role is fixed in advance.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and tie rules"
+body = '''
+- The statistics, directions, thresholds, candidate set, and Boolean rule are frozen together.
+- Every null repeats the full search, fitting, shortlist, polish, reranking, and ambiguity decision.
+- A null score equal to the observed score counts in $R_j$; equality loses under a strict gate.
+- A tie between distinct semantic candidates is an ambiguous result even if a secondary sort gives one row first.
+- Several physical keys that produce the same semantic candidate are aliases, not a semantic tie. Keep every origin for replay but score that candidate once.
+- Identity transformations, duplicate transformations, and repeated transformed inputs remain in a with-replacement null sample.
+- Missing, capped, non-finite, or runtime-drifted replicates make the whole decision incomplete.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Build the gate as one decision"
+body = '''
+Write one function that returns the complete semantic candidate, all physical origins, and the fixed statistic vector. Run it unchanged on the observation and every precommitted null. Build one inclusive rank per vector coordinate. Check semantic ties and all replay and completeness conditions before evaluating the conjunction. Persist the full vector panel so an independent verifier can recompute every numerator and confirm that no statistic, null, or alias was dropped.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function JOINT_GATE(observation, null_inputs, FULL_SELECTOR, alpha):
+    require statistics, directions, thresholds, and Boolean rule are frozen
+    require every null input was committed before scoring
+    inputs = [observation] + null_inputs
+    results = []
+    for input in inputs:
+        result = FULL_SELECTOR_FROM_CLEAN_START(input)
+        require result is complete and all scores are finite
+        require every physical origin independently replays
+        require aliases are retained but semantic candidates are scored once
+        if result has several distinct top semantic candidates:
+            return AMBIGUOUS
+        results.append(result)
+    for j in 1..NUMBER_OF_STATISTICS:
+        exceed[j] = COUNT(b in 1..LENGTH(results)-1 where
+                          results[b].score[j] >= results[0].score[j])
+        p[j] = (exceed[j] + 1) / LENGTH(results)
+        pass[j] = p[j] <= alpha[j]
+    persist every result, score, exceedance count, tie, and origin
+    if not ALL(pass): return NUMERICAL_GATE_FAIL, p
+    return NUMERICAL_GATE_PASS_PENDING_REVIEW, p
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The cost is $B+1$ complete selector runs. Computing $m$ ranks afterward costs $O(mB)$. Sharing the same null inputs avoids extra transformations, but it does not permit sharing an observation-fitted key or endpoint with null runs.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Best statistic wins.** Several scores are inspected and the most favourable one is treated as predeclared.
+- **Uncalibrated blend.** Weights are chosen from the observed score vector, then the blend is presented as one test.
+- **One statistic replayed incompletely.** The lexical maximum is fully reselected on nulls, while context is evaluated only on the observed winner.
+- **Passing component hides a failing component.** One small $p$ is described as a joint pass even though another required rank fails.
+- **Tie broken into certainty.** A stable sort turns a semantic top tie into a unique result.
+- **Alias multiplication.** Many physical descriptions of one candidate are counted as independent support.
+- **Partial null panel.** A failed worker is omitted from one denominator or assigned a favourable sentinel score.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Exercise a panel where every component passes, each component fails alone, a null ties each observed statistic, two semantic candidates tie at the top, many physical aliases produce one candidate, a transformed input repeats, and one null is missing or capped. Identical inputs in different roles must give byte-identical score summaries. A parser mutation that changes any numerator, denominator, statistic name, or Boolean rule must be refused.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Two required scores"
+body = '''
+Suppose a selector has two frozen scores and 99 null replicates. The first score has no null at least as large, so its plus-one rank is $1/100$. The second has one equal null, so its inclusive rank is $2/100$. A rule requiring both ranks to be at most $1/100$ refuses the result. If both numerators are one, the software may report that the numerical conjunction passed, but separate evidence is still required before calling the candidate a decipherment.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+This is an intersection rule over already valid component tests. It does not turn conditional null ranks into posterior probabilities, establish that the searched family generated an observed text, or replace a readable plaintext and literal forward check.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_NULLRELEASE652_PROTOCOL.md"
+kind = "design"
+note = "Freezes two conjunctive statistics, inclusive plus-one ranks, semantic-tie handling, physical-alias retention, complete-null requirements, and a numerical-pass-only ceiling."
+ref = "LOG652"
+
+[[provenance]]
+path = "withmath/logs/652_nullrelease_preflight_20260906T000231Z_1788652951740611000.log"
+kind = "log"
+note = "Target-absent classifier checks cover both-statistic pass, one-statistic ties, all-tie ranks, duplicate inputs, missing nulls, aliases, ambiguity, non-finite scores, and evidence mixing."
+ref = "LOG652"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_PLAINFEEDBACK635_SECONDORDER_LIVE_DESIGN.md"
+kind = "design"
+note = "Earlier two-statistic release design requires both matched plus-one comparisons and makes equality lose in each."
+ref = "LOG635"

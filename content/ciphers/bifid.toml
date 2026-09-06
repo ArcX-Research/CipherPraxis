@@ -8,7 +8,7 @@ family = "Fractionation"
 tags = ["fractionation", "polybius square", "period", "5x5"]
 related = ["trifid", "playfair", "two-square-four-square", "polybius-square", "sandwich-construction", "family-identification", "simulated-annealing", "exhaustive-enumeration", "bifid-lab", "g-fractionation", "g-period"]
 summary = "Bifid looks up each letter's row and column in a 5 x 5 square. Within each block, it writes all row numbers, then all column numbers, and pairs the digits into new letters. One ciphertext letter can mix parts of two plaintext letters. This flattens letter frequencies and hides letter-pair patterns, though block edges remain. Tests covered Bifid alone and beneath a periodic key shared by two texts."
-updated = "2026-09-04"
+updated = "2026-09-06"
 
 [[blocks]]
 kind = "definition"
@@ -28,6 +28,17 @@ Within a full block of period 7 the two coordinates of $y_j$ come from fixed pla
 '''
 
 [[blocks]]
+kind = "equations"
+title = "The square has a 120-way gauge"
+body = '''
+The coordinate digits have arbitrary names. For any permutation $\pi \in S_5$, define a new square by
+
+$$S^\pi[\pi(r),\pi(c)] = S[r,c].$$
+
+Every row and column digit in the fractionated stream changes by the same $\pi$, and the final square lookup changes it back. Thus $E_{S^\pi}(P)=E_S(P)$ for every plaintext. A recovered square must be compared across all 120 simultaneous digit relabellings, not by raw grid equality. Permuting row labels and column labels independently is not a gauge, because a row digit can later be used as an output column and vice versa.
+'''
+
+[[blocks]]
 kind = "variants"
 body = '''
 - **Direct Bifid** with an arbitrary or keyword square and period 2 to 40.
@@ -43,6 +54,7 @@ body = '''
 - 25-symbol alphabet. A direct Bifid ciphertext cannot contain all 26 letters, so an outer layer is required for the corpus texts.
 - Invariant: ciphertext letters inside a block depend only on that block; block boundaries at multiples of the period are recoverable by period estimation.
 - Invariant: coordinate roles fix which plaintext positions feed each output, so histograms of decoded symbols inside the three row-only and three column-only residues align when the outer key is right.
+- The block origin is part of the key description. A substring can be decrypted on its own only when it begins at a declared block boundary; shifting the origin or cutting through a larger block is a different cell.
 - Round-trip of a fitted square is tautological.
 '''
 
@@ -92,7 +104,7 @@ function DECRYPT(c[0..n-1], S, m):
 [[blocks]]
 kind = "complexity"
 body = '''
-Square space $25!$ up to gauge. Direct 504-letter annealing selects the period among the estimated candidates inside the external engine's standard budget. Shared square under a period-7 key: 105,000 keys per cell times a 512-state beam, then deep solves; 8 cells (two orders, two relations, omitted J or X) were completed for the aligned-key case, and 40,500 and 43,200 keys per cell for the two length-predicted relative phases.
+Square space $25!/120 \approx 1.29 \times 10^{23}$ after simultaneous coordinate-label relabelling. Direct 504-letter annealing selects the period among the estimated candidates inside the external engine's standard budget. Shared square under a period-7 key: 105,000 keys per cell times a 512-state beam, then deep solves; 8 cells (two orders, two relations, omitted J or X) were completed for the aligned-key case, and 40,500 and 43,200 keys per cell for the two length-predicted relative phases.
 '''
 
 [[blocks]]
@@ -102,6 +114,8 @@ body = '''
 - **Ordering statistic with a heavy tail.** A 300-control audit found the coordinate-role histogram statistic can rank the true key low, so it may order the search but never truncate it.
 - **Underpowered square panel.** A 24 x 40,000 fixed-key panel recovered 94/100 and was rejected; 64 x 80,000 gave 100/100.
 - **Unmotivated phases.** The relative-phase lane closed only phases 0, 3 and 6; phases 1, 2, 4, 5 are not silently claimed.
+- **Raw-square equality.** Two squares related by the same permutation of all five row and column labels are the same Bifid key. Requiring their printed grids to match would reject a correct recovery.
+- **Cropped blocks.** Restarting the period at the start of a convenient substring silently changes the cipher unless that position is a true block boundary.
 '''
 
 [[blocks]]
@@ -155,6 +169,11 @@ ref = "logs/04_abc.log"
 path = "ck_lib.py"
 kind = "library"
 note = "bifid_encrypt / bifid_decrypt with period handling."
+
+[[provenance]]
+path = "withmath/docs/cipher-methods/ZONE25_707_INDEPENDENT_REVIEW.md"
+kind = "audit"
+note = "Derives the 120-way simultaneous coordinate-label gauge and states the block-origin rule for short substrings."
 
 [[references]]
 title = "Traité Élémentaire de Cryptographie"

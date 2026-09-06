@@ -1,0 +1,190 @@
+id = "finite-language-key-signature-join"
+section = "exact"
+title = "Finite-language key-signature join"
+subtitle = "Turn two constrained plaintext searches into one exact shared-key lookup"
+status = "VERIFIED"
+status_note = "A frozen control panel searched two independent 1,024-sentence languages. It recovered the unique planted pair in all 16 linked cases and returned no pair in all 16 matched unlinked cases. A separate saved-artifact audit reproduced every candidate, tie, and forward encryption."
+family = "Exact finite-language search"
+tags = ["finite language", "shared key", "hash join", "periodic key", "exact search", "matched controls"]
+related = ["full-residue-anchor-enumeration", "meet-in-the-middle", "exhaustive-enumeration", "vigenere", "beaufort", "planted-controls", "valid-model-nulls", "fresh-holdout-after-selector-change", "reproducibility-receipts", "candidate-bank-lineage-and-cap-accounting", "lcm-of-periods"]
+summary = "When two ciphertexts use the same physical periodic key and each plaintext belongs to a finite language, test each plaintext separately. Each candidate either fails its own equations or produces a complete key signature. Join equal signatures to get every compatible plaintext pair without trying the full Cartesian product."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let stream $s\in\{A,B\}$ use an alphabet-coordinate map $a_s$ into $\mathbb Z_m$. For one fixed period $p$ and relation sign $\varepsilon_s\in\{+1,-1\}$,
+
+$$a_s(C_s[i])\equiv \varepsilon_s a_s(P_s[i])+a_s(L_{i\bmod p})\pmod m,$$
+
+where $L_0,\ldots,L_{p-1}$ are the **physical key letters** shared by both streams. The two streams may number those letters differently because their keyed alphabet orders may differ.
+
+For a candidate plaintext $P_s$, every position in residue class $r$ implies a key coordinate
+
+$$a_s(L_r)\equiv a_s(C_s[i])-\varepsilon_s a_s(P_s[i])\pmod m.$$
+
+The candidate is locally compatible only when all positions with residue $r$ imply the same physical letter. Its key signature is then
+
+$$K_s(P_s)=(L_0,\ldots,L_{p-1}).$$
+
+A pair is compatible exactly when $K_A(P_A)=K_B(P_B)$.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Join letters, not coordinate numbers"
+body = '''
+If the alphabet orders differ, equal numeric shifts do not necessarily name the same key. Convert each derived coordinate back through that stream's inverse alphabet map:
+
+$$L_r=a_s^{-1}\!\left(a_s(C_s[i])-\varepsilon_s a_s(P_s[i])\bmod m\right).$$
+
+Only then compare signatures. The exact survivor set for fixed model cell $h$ is
+
+$$J_h=\{(P_A,P_B):P_A\in G_A,\ P_B\in G_B,\ K_A(P_A)=K_B(P_B)\}.$$
+
+Build a hash table from signatures to every candidate and witness on one side, then probe it with the other side. This is a meet-in-the-middle join over a physical invariant, not a language score.
+
+If a later selector searches many placements and model cells, let $L_h(k)$ and $R_h(k)$ be the candidate buckets carrying physical signature $k$ in cell $h$. A family-wise collision statistic is
+
+$$M=\max_h\sum_k |L_h(k)|\,|R_h(k)|.$$
+
+For a permutation $\pi$ of physical key letters, a matched cross-link null replaces $R_h(k)$ by $R_h(\pi^{-1}(k))$. This keeps every marginal bucket and alias count unchanged while breaking only the proposed identity of the physical key across streams.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "What the result does and does not prove"
+body = '''
+- Both streams share the same physical key letters at the declared residues. Their coordinate orders and relation signs may still differ.
+- Each grammar, normalisation rule, model cell, enumeration order, and tie rule is frozen before outcomes are read.
+- Every valid sentence in the declared finite languages is enumerated. A beam or score cutoff removes the exactness claim.
+- A successful join selects from the supplied languages. It does not generate unrestricted natural language or prove that the languages cover an unknown plaintext.
+- A complete empty join excludes only the declared language pair and cipher cells.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Search two compositional languages exactly"
+body = '''
+Freeze two finite grammars or candidate banks before evaluation. Enumerate every sentence in each bank under every declared period, relation, phase, and alphabet-order cell. Reject a candidate only on an exact within-stream contradiction. Store every surviving physical key signature with all candidates that produced it. Intersect the two signature maps, preserve all boundary ties, and replay both encryptions for every joined pair.
+
+Compositional grammars are especially useful here: a modest set of choices per slot can describe many complete, grammatical sentences without hand-writing each sentence. The result is complete only for those frozen grammars and model cells.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function SIGNATURE(cipher, plain, alphabet, sign, period):
+    key = array(period, UNSET)
+    for i in 0..length(cipher)-1:
+        r = i mod period
+        value = coord(cipher[i]) - sign * coord(plain[i]) mod modulus
+        letter = inverse_alphabet(value)
+        if key[r] is SET and key[r] != letter: return INCOMPATIBLE
+        key[r] = letter
+    if any key entry is UNSET: return INCOMPATIBLE
+    return tuple(key)
+
+function EXACT_SHARED_KEY_JOIN(cipher_a, grammar_a, cipher_b, grammar_b, cells):
+    output = []
+    for cell in cells in frozen order:
+        left = map from signature to complete witness list
+        for plain_a in ENUMERATE_ALL(grammar_a):
+            sig = SIGNATURE(cipher_a, plain_a, cell.a, cell.period)
+            if sig != INCOMPATIBLE: left[sig].append(plain_a)
+        for plain_b in ENUMERATE_ALL(grammar_b):
+            sig = SIGNATURE(cipher_b, plain_b, cell.b, cell.period)
+            for plain_a in left.get(sig, []):
+                require ENCRYPT_A(plain_a, sig, cell) == cipher_a
+                require ENCRYPT_B(plain_b, sig, cell) == cipher_b
+                output.append((cell, sig, plain_a, plain_b))
+    return output with every tie and witness
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+For grammar sizes $|G_A|$ and $|G_B|$, text lengths $N_A,N_B$, and $H$ declared model cells, signature construction costs
+
+$$O\!\left(H(|G_A|N_A+|G_B|N_B)\right).$$
+
+Hash joining adds expected $O(H(|G_A|+|G_B|)+|J|)$ work, where $|J|$ is the number of reported pairs. Memory is linear in the retained signatures and witnesses. Directly testing every plaintext pair would instead multiply the bank sizes, so the join can remove a large avoidable factor.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **The plaintext is supplied to the check.** Asking whether one known sentence can fit a ciphertext tests the equation wiring, not whether the method can discover or select that sentence.
+- **An easy fixture is chosen after a cap failure.** Replacing a failed seed with a previously observed easy seed turns the result into development evidence. Freeze a corrected rule and use an untouched holdout.
+- **Coordinate signatures are compared directly.** Different alphabet orders can represent one physical key letter with different numbers.
+- **One witness per signature is kept.** Several plaintexts can imply the same key. Dropping aliases creates false uniqueness and loses boundary ties.
+- **A finite-prefix border is called a shorter key period.** A key block of length $p$ has proper cyclic period $d$ only when $d$ divides $p$ and $L_i=L_{i\bmod d}$ for every position. Equality of a short prefix and suffix is not enough.
+- **A clean unlinked result is overread.** It measures false joins for the frozen banks and controls; it is not a universal false-positive rate.
+- **The evaluation searches more cells than the controls.** Per-cell unlinked cases do not account for choosing the best placement, phase, or model. Replay the complete frozen selector inside every null and compare its maximum.
+'''
+
+[[blocks]]
+kind = "controls"
+title = "Use linked and matched unlinked cases"
+body = '''
+A useful positive encrypts one plaintext from each bank with the same physical key. A matched unlinked case keeps the same plaintexts, lengths, alphabet choices, relations, periods, and search path, but encrypts the streams with different keys. The true plaintext on each side must still produce its own marginal signature; only their intersection should disappear. This separates genuine cross-stream discrimination from a broken generator or a candidate missing before the join.
+
+One frozen panel used two 1,024-sentence compositional languages and crossed its declared alphabet and relation choices. All 16 linked cases returned exactly one pair, while all 16 matched unlinked cases returned none. Half the model specifications were reserved as an untouched holdout. A separate implementation reconstructed all 32 rows, all candidate ties, and both forward mappings from the saved artifact.
+
+When the final selector adds placements or other model choices, calibrate that expanded selection directly. Generate a deterministic nonidentity permutation $\pi$ of the physical alphabet, apply it to every signature on one side, and recompute $M$ over every cell. With $R$ frozen null permutations, report
+
+$$p_{\mathrm{emp}}=\frac{1+\#\{r:M_r\ge M_{\mathrm{obs}}\}}{R+1}.$$
+
+Use the same permutation across the whole selector in one replicate; choosing a convenient permutation separately for each cell destroys the family-wise comparison. This null measures accidental signature joins conditional on the two frozen banks. It does not test whether either bank covers unrestricted language.
+'''
+
+[[blocks]]
+kind = "example"
+title = "A two-slot language"
+body = '''
+Suppose the first finite language contains every sentence formed by choosing one of four openings and one of four endings. The second language is built the same way, giving 16 candidates per side. Under a fixed model cell, each compatible sentence produces a period-$p$ physical-letter signature. If three candidates on the left yield `MANGO` and two on the right yield `MANGO`, the exact join contains all six pairs. Forward replay may reject a software error, but it must not be used to discard valid aliases simply because one pair scores better as prose.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Hash joins, finite grammars, crib-induced keys, and permutation tests are established tools. The useful combination is the exact physical-letter signature at the boundary between two independently enumerated languages, together with matched unlinked controls that retain each marginal truth and a full-selector signature derangement that removes only the shared-key identity.
+'''
+
+[[provenance]]
+path = "withmath/docs/pk8-pk9/PK89_STORYJOIN708_CONTROLS.md"
+kind = "design"
+note = "Documents the first controls-only design, its known-plaintext power audit, and the cyclic-period definition defect found before an artifact was accepted."
+ref = "LOG708"
+
+[[provenance]]
+path = "withmath/docs/pk8-pk9/PK89_STORYJOIN709_CONTROLS.md"
+kind = "design"
+note = "Defines the corrected physical-key signature join, complete finite grammars, linked and matched unlinked cases, and frozen development/holdout split."
+ref = "LOG709"
+
+[[provenance]]
+path = "withmath/logs/709_storyjoin_controls_20260906T101224Z_14344.json"
+kind = "data"
+note = "Frozen controls artifact: 16 linked exact recoveries, 16 matched unlinked zero-join cases, 32 complete searches, and exact forward mappings."
+ref = "LOG709"
+
+[[provenance]]
+path = "withmath/docs/pk8-pk9/PK89_STORYJOIN711_AUDIT.md"
+kind = "audit"
+note = "Specifies the saved-artifact audit boundary and the representation-only correction applied after the first independent audit refused."
+ref = "LOG711"
+
+[[provenance]]
+path = "withmath/logs/711_storyjoin_saved_audit_20260906T101515Z_29554.json"
+kind = "audit"
+note = "Separate-code replay of every row, signature, candidate tie, cyclic-period regression, and forward encryption; terminal POWER_PASS with evaluation data absent."
+ref = "LOG711"
+
+[[provenance]]
+path = "withmath/docs/pk8-pk9/PK89_STORYJOIN713_LIVE_RELEASE.md"
+kind = "design"
+note = "Defines a maximum-over-full-selection null that deranges physical key labels on one side while preserving every marginal signature bucket and candidate alias."
+ref = "LOG713"

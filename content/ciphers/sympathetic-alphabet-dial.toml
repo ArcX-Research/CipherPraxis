@@ -1,0 +1,159 @@
+id = "sympathetic-alphabet-dial"
+section = "ciphers"
+title = "Sympathetic alphabet dial"
+subtitle = "A historical paired-needle idea that becomes a substitution when the dial orders differ"
+status = "VERIFIED"
+status_note = "Historical sources document the alphabet-ringed needle proposal and also explain why its claimed action at a distance could not work. Its useful cryptographic content is the dial labelling, not the supposed magnetic link."
+family = "Historical signalling and cipher dials"
+tags = ["alphabet dial", "magnetic needle", "substitution", "cipher history", "paired instruments"]
+related = ["porta", "alberti-progressive", "keyword-mixed-alphabet", "permutation-cycles", "reflection-product-cycle-lift"]
+summary = "The sympathetic alphabet was an early modern proposal for sending letters with paired magnetic needles surrounded by alphabet dials. The physical premise was false. Mathematically, identical dial orders transmit symbols unchanged, while different orders define an ordinary monoalphabetic substitution."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let the transmitter dial carry an alphabet order $A$ and the receiver dial an order $B$. Selecting plaintext letter $p$ means selecting its dial position $j = \operatorname{pos}_A(p)$. If the receiver reproduces the same position, it reads
+
+$$c = B[j] = B[\operatorname{pos}_A(p)].$$
+
+When $A=B$, this is the identity map and provides no secrecy. When the orders differ, $B \circ A^{-1}$ is one fixed substitution. The historical claim that two distant needles would stay synchronized was physically mistaken; the equation describes only the symbolic dial interface.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "What changes when a dial turns"
+body = '''
+With a known position offset $r_i$ at step $i$,
+
+$$c_i = B[(\operatorname{pos}_A(p_i)+r_i) \bmod 26].$$
+
+A constant $r_i$ is still one substitution. A periodic offset produces a periodic polyalphabetic cipher. A changing mechanical schedule produces a progressive-disc cipher. Thus the same interface ranges from plain signalling to classical cryptography, depending on what is secret and what changes.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Matching dials:** direct letter signalling; no encryption.
+- **Different fixed orders:** monoalphabetic substitution.
+- **Shared rotating offset:** Caesar-like or periodic polyalphabetic substitution.
+- **Changing offset schedule:** an Alberti-style progressive disc.
+- **Rosicrucian sympathetic alphabet:** a later account replaced dials with letter-marked skin grafts and pricking. It belongs to the history of the belief, not to workable cryptography.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Both sides must agree on position, direction, alphabet order, and any offset schedule.
+- A fixed pair of alphabet orders preserves equality patterns: repeated plaintext letters become repeated ciphertext letters.
+- Security does not come from the needle or dial. It can come only from a secret order, offset, or schedule.
+- A claimed physical coupling needs an independent communication channel; ordinary magnets do not reproduce a distant needle's motion.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to analyze it"
+body = '''
+1. Decide whether both dials use the same alphabet order. If so, read the indicated letters directly.
+2. If the orders differ but stay fixed, solve the result as monoalphabetic substitution.
+3. If the relative position changes, recover its period or mechanical schedule before fitting the alphabet map.
+4. Separate the encoding rule from the transport claim: a functioning channel does not make an encoding secret, and an elegant encoding does not make a proposed channel function.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// A labels the sending dial; B labels the receiving dial.
+// offset(i) is zero for the historical matching-dial proposal.
+function SEND(plain[0..n-1], A, B, offset):
+    for i in 0..n-1:
+        j = position of plain[i] in A
+        shown = (j + offset(i)) mod length(A)
+        output[i] = B[shown]
+    return output
+
+function RECEIVE(cipher[0..n-1], A, B, offset):
+    for i in 0..n-1:
+        shown = position of cipher[i] in B
+        j = (shown - offset(i)) mod length(A)
+        output[i] = A[j]
+    return output
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Encoding and decoding take linear time in the message length once inverse alphabet maps are built. With fixed orders, cryptanalysis is exactly the ordinary monoalphabetic-substitution problem. A changing offset adds the search space of its schedule.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Mistaking a display for a cipher.** Matching alphabet dials merely copy letter positions.
+- **Assuming magnets provide a remote channel.** The historical sympathetic effect does not occur.
+- **Adding unconstrained rotations after seeing the text.** A free offset at every position is a one-time pad in disguise and is not identifiable from ciphertext alone.
+- **Ignoring equivalent descriptions.** Relabelling both dials together changes the drawing but not the observable substitution.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+A correct implementation should pass three structural checks: matching orders return the input, different fixed orders agree with the composed substitution $B \circ A^{-1}$, and every message round-trips under the same offset schedule. These checks establish the encoding algebra only; they do not validate the historical magnetic claim or show that an unknown ciphertext used such a dial.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+Let the sending dial use `ABCDEFGHIJKLMNOPQRSTUVWXYZ` and the receiving dial begin `QWERTYUIOPASDFGHJKLZXCVBNM`, with no rotation. The letter `A` selects position zero and is read as `Q`; `B` selects position one and is read as `W`; `C` becomes `E`. Thus `CAB` becomes `EQW`. Reading those positions back through the sending order returns `CAB`.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The dial is valuable as a bridge between communication history and cipher mechanics. Once the unsupported magnetic coupling is removed, its cryptographic possibilities reduce cleanly to familiar substitution and rotating-disc families.
+'''
+
+[[blocks]]
+kind = "history"
+body = '''
+Giambattista della Porta described an alphabet arranged around a magnetic needle in *Magia Naturalis* (1558). Two needles prepared with the same lodestone were supposed to move together across a distance, allowing correspondents to select matching letters. Later authors repeated and elaborated the proposal even after critics rejected its physics. Della Porta also wrote the cryptographic treatise *De Furtivis Literarum Notis* (1563), which is why this historical signalling idea sits unusually close to the development of cipher dials and reciprocal substitution.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/KRYPTOS_WEB_RESEARCH.md"
+kind = "note"
+note = "Dated web-research section separating the historical sources, dial algebra, and later interpretation."
+ref = "Section 17"
+
+[[references]]
+title = "The Makers of Electricity"
+author = "Brother Potamian and James J. Walsh"
+year = 1909
+url = "https://www.gutenberg.org/cache/epub/45446/pg45446-images.html"
+
+[[references]]
+title = "Heroes of the Telegraph"
+author = "John Munro"
+year = 1891
+url = "https://www.gutenberg.org/files/979/979-h/979-h.htm"
+
+[[references]]
+title = "How to Send a Secret Message from Rome to Paris in the Early Modern Period"
+author = "Christoph Sander"
+year = 2022
+url = "https://brill.com/view/journals/esm/27/5/article-p426_3.pdf"
+
+[[references]]
+title = "On Secret Writing"
+author = "University of Oklahoma Libraries"
+url = "https://galileo.ou.edu/exhibits/secret-writing.html"
+
+[[references]]
+title = "De Furtivis Literarum Notis"
+author = "Giambattista della Porta"
+year = 1563
+url = "https://books.google.com/books?id=sc-Zaq8_jFIC"

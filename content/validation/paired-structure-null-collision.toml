@@ -1,0 +1,141 @@
+id = "paired-structure-null-collision"
+section = "validation"
+title = "Paired-structure null collision"
+subtitle = "Check that a contrastive null really removes the shared parameter it is meant to break"
+status = "VERIFIED"
+status_note = "Sealed control protocols enforce generator-collision refusal before score comparison, and target-absent checks exercise both collision and non-collision paths. This validates the null-membership rule, not the power of a particular cipher search."
+family = "Null design and interpretation"
+tags = ["structural null", "paired data", "candidate support", "collision", "no redraw"]
+related = ["valid-model-nulls", "family-wise-null", "within-coset-null", "permutation-test", "blind-controls", "held-out-gates", "selection-overfit-check", "candidate-bank-lineage-and-cap-accounting", "parameter-versus-plaintext-recovery"]
+summary = "A paired null may be built by giving the second text an independent structural parameter. That construction is not automatically negative: the new parameter can accidentally appear in the first text's candidate support, restoring the shared relation. Test this collision explicitly before comparing scores, and never replace a collided null after seeing the result."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Suppose a paired hypothesis says that texts $A$ and $B$ share one latent parameter class $\theta$, such as a cycle, alphabet action, or transition system. Let $S_A$ and $S_B$ be the exact parameter classes admitted by the two observed texts under the declared model. The shared hypothesis is
+
+$$H(A,B):\quad S_A\cap S_B\ne\varnothing.$$
+
+A common contrastive null keeps $A$ fixed but constructs $B^{(0)}$ with an independently drawn generator $\theta_0$. Merely drawing $\theta_0$ independently does not prove that the null breaks $H$. A **generator collision** occurs when
+
+$$[\theta_0]\in S_A,$$
+
+where brackets mean the same canonical symmetry class used by the solver. If $B^{(0)}$ uniquely identifies its generator, this collision restores a shared admissible class. If it does not, the stronger required check is $S_A\cap S_{B^{(0)}}=\varnothing$.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Separate null validity from score separation"
+body = '''
+Let $T(A,B)$ be the complete selected score and let $V_0$ be the event that the paired null satisfies its declared structural absence condition. A score contrast is interpretable only conditionally on $V_0$:
+
+$$V_0=\mathbf{1}[S_A\cap S_{B^{(0)}}=\varnothing],$$
+
+$$\Delta=T(A,B)-T(A,B^{(0)}).$$
+
+$\Delta>0$ with $V_0=0$ does not test the intended null, because the null pair still belongs to the shared family. Conversely, $V_0=1$ alone says nothing about language or selector separation; the complete scoring gate must still be run. Null construction, support membership, and score separation are three different endpoints.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Unique-generator null:** checking the canonical generating class against $S_A$ is sufficient.
+- **Non-identifiable null:** enumerate or certify the full $S_{B^{(0)}}$ set and test exact intersection.
+- **Several shared objects:** require the intended intersection to be empty for the complete tuple, not one coordinate at a time.
+- **Approximate candidate bank:** a missing generator is a measured support outcome, not proof of mathematical non-membership; calibrate support power separately.
+- **Permutation null:** when the randomisation itself guarantees structural absence, prove that invariant instead of running a generator lookup.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- The equivalence relation for parameter classes is frozen before generating the null.
+- The generator and all data needed for the collision check are committed before any score is read.
+- Candidate support is complete for the claimed collision test, or its incompleteness is reported explicitly.
+- A collision follows the preregistered invalidation rule. It is never silently counted as a successful negative.
+- A collided null is not redrawn or replaced after inspection; doing so selects favourable randomisations.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Audit the null before using its score"
+body = '''
+Commit the positive and null pairs, their generators, and the parameter-class canonicalisation. Run the same frozen acquisition path on the fixed first text. Independently replay every retained class and test whether the null's complete admissible set intersects it. Record the collision result before score comparison. If the required absence check fails or support enumeration is incomplete, stop with a typed invalid or incomplete result. Otherwise run the unchanged full selector on both pairs and evaluate the frozen score gate.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function CHECK_PAIRED_NULL(text_a, null_b, null_generator):
+    support_a, complete_a = ENUMERATE_PARAMETER_CLASSES(text_a)
+    if not complete_a: return INCOMPLETE_SUPPORT
+    support_b, complete_b = NULL_ADMISSIBLE_CLASSES(null_b)
+    if support_b is known to be the singleton {null_generator}:
+        collision = CANONICAL(null_generator) in support_a
+    else:
+        if not complete_b: return INCOMPLETE_NULL_SUPPORT
+        collision = INTERSECTS(support_a, support_b)
+    RECORD_COLLISION_RESULT_BEFORE_SCORING(collision)
+    if collision: return INVALID_NULL_NO_REDRAW
+    positive_score = FULL_SELECTOR(text_a, positive_b)
+    null_score = FULL_SELECTOR(text_a, null_b)
+    return APPLY_FROZEN_SCORE_GATE(positive_score, null_score)
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+With canonical hash sets, intersection costs $O(|S_A|+|S_B|)$ expected time after the support sets have been built. In practice, generating those exact sets is usually the expensive step. If a heuristic bank replaces an exact set, the collision result must be labelled as bank membership rather than mathematical absence.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Independent draw assumed disjoint.** Two independently sampled parameters may still occupy the same symmetry class.
+- **Raw-key comparison.** Gauge or phase aliases are compared literally, hiding a collision in the canonical class.
+- **Score before validity.** A favourable score difference is accepted before learning that the null still satisfies the shared model.
+- **Collision reroll.** The failed null is replaced, turning the control into an outcome-selected sample.
+- **Support miss overclaim.** A bounded search fails to retain the null generator and reports exact absence.
+- **Validity called power.** A structurally valid null passes its construction check, but the selector is never shown to separate it from positives.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Construct one pair whose independent generator is in the first text's canonical support and one whose generator is outside it. Include a raw description that differs only by a proved gauge, a non-identifiable null with several admissible classes, an incomplete support enumeration, and a collision discovered after a tempting score. Require collision refusal before scoring, exact-class rather than raw-key comparison, persistent evidence, and no redraw.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Different labels, same class"
+body = '''
+Assume the first text admits canonical classes $S_A=\{G_2,G_5\}$. A null companion is generated under a raw parameter that canonicalises to $G_5$, even though its literal phase label differs from the stored representative. The null collides because $G_5\in S_A$. Its score cannot be used as evidence for a pair with no shared class. A second companion generated under $G_8$ passes the membership check, but still needs the full frozen score comparison.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+This rule applies to contrastive nulls designed to remove a shared structural parameter. It does not replace valid-model nulls whose purpose is to keep the cipher algebra present while removing language order; those deliberately remain inside the model and test a different endpoint.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK89_PIPELINE614_EXACT_GATE.md"
+kind = "design"
+note = "Defines a committed paired control in which collision of the independently generated structural class invalidates the null without replacement."
+ref = "LOG614"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK89_DUAL622_GATE.md"
+kind = "design"
+note = "Separates null-class collision, support misses, exact selection, score separation, and manual joint review in one frozen gate."
+ref = "LOG622"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK89_DUAL638_GATE.md"
+kind = "audit"
+note = "Requires exact collision accounting in a source-bound evaluator and records that software verification is distinct from language capability."
+ref = "LOG638"

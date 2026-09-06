@@ -6,9 +6,9 @@ status = "VERIFIED"
 status_note = "The mixture and order-free width solvers recovered four planted layered ciphers from a cold start. Widths were 8, 9, 9, and 12; inner periods were 2 and 3. The true width ranked first at z +4.3 to +12.8. An exact width-9 solver passed 23/24 development controls. Tests ruled out this reading for the two short project texts."
 family = "Composite constructions"
 tags = ["composite", "layered", "transposition", "mixture", "periodic"]
-related = ["vigenere", "columnar-transposition", "compound-periodic-key", "mixture-inference-under-transposition", "order-free-width-statistic", "bayesian-evidence-model-selection", "expectation-maximisation", "within-coset-null", "g-period", "g-transposition-grid"]
+related = ["vigenere", "columnar-transposition", "coordinate-columnar-fractionation", "compound-periodic-key", "mixture-inference-under-transposition", "order-free-width-statistic", "bayesian-evidence-model-selection", "expectation-maximisation", "within-coset-null", "g-period", "g-transposition-grid"]
 summary = "A sandwich has the form c = Q_m(T(Q_k(p))): first a short-period substitution, then a transposition, then a longer-period substitution. The inner layer flattens letter statistics. The transposition hides its period and letter-pair order. The outer layer creates visible cosets. Because transposition does not change the inner letter counts, a solver can estimate the inner mixture first and find the width from its class pattern before knowing the column order."
-updated = "2026-09-04"
+updated = "2026-09-05"
 
 [[blocks]]
 kind = "definition"

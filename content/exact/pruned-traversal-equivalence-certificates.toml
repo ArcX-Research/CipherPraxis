@@ -1,0 +1,148 @@
+id = "pruned-traversal-equivalence-certificates"
+section = "exact"
+title = "Pruned-traversal equivalence certificates"
+subtitle = "Show exactly what a faster search preserves, both with and without resource caps"
+status = "VERIFIED"
+status_note = "A complete-enumeration comparison established 42 accepted-set equalities for an admissible pruning gate. A separate cache-only optimization preserved callbacks, aliases, threshold history, order, counters, and cap terminals across 482 comparisons."
+family = "Exactness guarantees"
+tags = ["equivalence certificate", "pruning", "callbacks", "caps", "determinism"]
+related = ["closed-footprint-bound-cache", "bound-benchmarks-and-certificates", "exact-optimization-admission", "exhaustive-enumeration", "known-answer-tests", "candidate-bank-lineage-and-cap-accounting", "reproducibility-receipts"]
+summary = "There are two different exactness claims. A new pruning rule must return the same complete accepted set as an unpruned reference. A cache or refactor that claims to preserve traversal must also keep callback contents and order, dynamic thresholds, counters, and the precise cap terminal. A capped comparison can prove bounded behavioural equivalence, but it cannot prove that the uncapped search is complete."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+A **semantic pruning certificate** compares a complete reference enumeration with a pruned search and proves that they return the same accepted physical witnesses, including aliases required by the model.
+
+A **traversal-preservation certificate** is stronger in a different direction. It applies when an implementation change claims not to alter search behaviour. It compares the exact sequence of callbacks, the witnesses inside each callback, threshold updates, counters, and the terminal status under the same caps.
+
+These certificates answer different questions. Legitimate pruning normally changes node counts, so it need not pass traversal preservation. A cache-only refactor may preserve the original pruning decisions exactly and can be required to pass both semantic and operational equality.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Set equality and safe threshold pruning"
+body = '''
+Let $K$ be the finite search space, $F(x)$ the exact score, $U(x)$ an admissible upper bound, and $\tau$ the current retained-list threshold. Admissibility means
+
+$$F(x)\le U(x)\quad\text{for every }x\in K.$$
+
+To preserve ties, prune only when
+
+$$U(x)<\tau,$$
+
+not when $U(x)=\tau$. For an uncapped reference, the central semantic certificate is
+
+$$W_{\rm pruned}=W_{\rm full},$$
+
+where each $W$ contains complete physical witnesses, not only deduplicated plaintexts or scores.
+
+For a traversal-preserving change, let $T$ contain ordered callback payloads, alias lists, threshold values, counters, and the terminal. Require $T_{\rm new}=T_{\rm reference}$ byte-for-byte after canonical serialization, apart from separately declared timing fields.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Complete semantic certificate:** both paths drain without caps and their physical accepted sets match.
+- **Bounded behavioural certificate:** both paths hit the same cap after the same ordered callbacks and threshold updates. The result remains incomplete.
+- **Per-query bound certificate:** the new bound value equals or safely dominates an independently evaluated reference value at every visited state.
+- **Order-insensitive consumer:** callback order may be canonicalized before comparison only when the downstream result is proved independent of order.
+- **Adaptive consumer:** when callbacks update a heap threshold, order is part of semantics and must be preserved or re-proved.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Reference and candidate paths receive identical immutable inputs, tie rules, numeric types, tolerances, and caps.
+- The reference is independently simple enough to trust and is complete on every fixture used for a complete semantic claim.
+- Every callback contains all physical witnesses needed later; aliases are not replaced by one representative before comparison.
+- A cap hit, timeout, memory stop, or partial family is recorded as incomplete even when both implementations agree perfectly.
+- Hashes are diagnostics. The harness compares canonical full records and verifies that every recorded witness independently replays.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Build the certificate"
+body = '''
+Freeze the inputs and run a small complete reference before enabling the optimization. Capture each physical callback and its ordered witness list, not just a final top result. For a new pruning rule, compare complete accepted sets and verify the bound inequality independently. For a cache or refactor, compare the entire execution trace, including threshold evolution and forced cap cases. Store source and input hashes with the resulting certificate.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function CERTIFY(reference, candidate, fixtures):
+    for fixture in fixtures:
+        full = RUN_WITH_TRACE(reference, fixture)
+        test = RUN_WITH_TRACE(candidate, fixture)
+        require REPLAY_ALL(full.callbacks, fixture)
+        require REPLAY_ALL(test.callbacks, fixture)
+        if fixture.claim == COMPLETE_SEMANTIC:
+            require full.complete and test.complete
+            require PHYSICAL_WITNESS_SET(test) == PHYSICAL_WITNESS_SET(full)
+            require EVERY_VISITED_BOUND_IS_ADMISSIBLE(test)
+        if fixture.claim == BOUNDED_BEHAVIOUR:
+            require test.callbacks == full.callbacks
+            require test.threshold_trace == full.threshold_trace
+            require test.counters == full.counters
+            require test.terminal == full.terminal
+            require not test.complete when either path hit a cap
+    return HASH_BOUND_CERTIFICATE(fixtures, reference, candidate)
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The complete reference is usually exponential and therefore belongs on reduced but discriminating fixtures. Trace comparison is linear in the number and size of callbacks. Per-query bound comparison adds the original bound cost to the development run; remove it only after the frozen certificate and keep it available as a diagnostic build.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Final-winner comparison.** Two paths choose the same winner while disagreeing on omitted ties or lower retained candidates.
+- **Semantic-only deduplication.** Several physical aliases collapse before their memberships or replay records are compared.
+- **Hash-only equality.** A compact digest matches, but the program never compares full in-memory records.
+- **Cap laundering.** Matching bounded prefixes are called proof that the full accepted set is empty or complete.
+- **Order blindness.** Callback order changes an adaptive threshold, yet only the final set is checked.
+- **Strict tie loss.** The gate prunes at equality and silently removes exact ties.
+- **Shared defect.** Reference and candidate call the same flawed helper for the property under test.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Use fixtures that produce empty output, one result, several tied results, and several physical aliases of one semantic result. Run uncapped cases that the reference can finish, then force independent node, leaf, pair, and output caps. Include a dynamic threshold updated by callbacks, reverse the timing order, mutate one callback member, reorder aliases, change a tie comparison, and falsify a completion flag; each relevant certificate check must fail. The recorded pruning test matched 42 complete accepted sets. The separate traversal test compared 60 workloads and produced 482 exact full-trace equalities, including 34 deliberately capped cases.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Complete-versus-pruned set comparison is a standard exact-search technique. The explicit split between semantic pruning and bounded operational preservation is useful in callback-driven cryptanalytic solvers, where caps and adaptive thresholds make the execution trace part of the contract.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_PHASE572_SUFFIX_FIRST.md"
+kind = "design"
+note = "Defines admissible threshold pruning, equality-safe tie handling, alias retention, and complete accepted-set comparison against an unpruned enumerator."
+ref = "LOG572"
+
+[[provenance]]
+path = "withmath/logs/572_phase_kat_20260905T014110Z.log"
+kind = "log"
+note = "Frozen receipt for 42 complete retained-set equalities and independent coordinate scoring under the pruning bound."
+ref = "LOG572"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_FOOTPRINT647_TRAVERSAL.md"
+kind = "audit"
+note = "Specifies the full callback, alias, threshold, order, counter, and cap comparison used for a traversal-preserving optimization."
+ref = "LOG647"
+
+[[provenance]]
+path = "withmath/logs/647_footprint_traversal_20260905T230617Z_1788649577384322000.log"
+kind = "log"
+note = "Frozen receipt for complete and bounded trace equality, per-query old/new bound equality, and malformed-input refusal."
+ref = "LOG647"

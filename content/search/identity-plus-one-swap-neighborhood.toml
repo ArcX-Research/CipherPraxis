@@ -1,0 +1,131 @@
+id = "identity-plus-one-swap-neighborhood"
+section = "search"
+title = "Identity-plus-one-swap neighbourhood"
+subtitle = "Audit a proposed alphabet with every single transposition and replay each candidate"
+status = "VERIFIED"
+status_note = "The neighbourhood is an exact radius-one transposition census. Fresh controls enumerate the identity and all 325 nontrivial swaps for a 26-symbol permutation, independently replay every candidate, and recover both planted rare-label repairs."
+family = "Local search and diagnostics"
+tags = ["single swap", "transposition neighbourhood", "permutation", "forward check"]
+related = ["strict-best-improvement-swap-ascent", "hill-climbing", "simulated-annealing", "polish-basin-measurement", "parameter-versus-plaintext-recovery", "endpoint-specific-control-contracts", "permutation-cycles", "tautological-gate-rule"]
+summary = "Given a baseline substitution, score the baseline and every mapping obtained by exchanging one pair of output labels. This identity-plus-one-swap set is a complete local diagnostic: it can repair one transposition, measure local optimality, and expose ties, but it cannot prove global optimality. Every disclosed mapping receives an independent forward check."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For a permutation $M$ on $q$ symbols, let $\tau_{ab}$ exchange distinct output labels $a$ and $b$. Its identity-plus-one-swap neighbourhood is
+
+$$\mathcal{N}_1(M)=\{M\}\cup\{\tau_{ab}\circ M:0\le a<b<q\}.$$
+
+It contains exactly $1+\binom{q}{2}$ distinct mappings. For a 26-letter alphabet this is the baseline plus 325 swaps, or 326 candidates in total. Applying the transposition to outputs makes the convention explicit; swapping input coordinates instead defines a related but different neighbourhood.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Output-label swap:** exchange two plaintext images of the current map.
+- **Input-coordinate swap:** exchange two latent-domain entries before applying the map.
+- **Restricted swap:** exchange only labels exercised by the text; faster, but it cannot audit the literal unused portion of a key.
+- **Radius two:** compose two swaps; it is much larger and contains duplicates unless canonicalised.
+- **Local certificate:** no neighbour improves the score. This is not a global-optimum certificate.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions"
+body = '''
+- The baseline is a bijection and each candidate remains a bijection.
+- The score, normalisation, tie rule, and text span are frozen before the neighbourhood is inspected.
+- All ties are retained, including a tie between the identity and a swap.
+- A separate implementation reconstructs the ciphertext from every disclosed candidate.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Use as a bounded selector"
+body = '''
+Start from a structurally justified or independently supplied baseline map. Generate the identity and all unordered label pairs in lexical order, score the corresponding complete plaintexts with the frozen objective, and retain the whole tied optimum. For each retained row, recompute the latent-to-plaintext map, run the public forward cipher independently, and reject any row that fails. Report whether the identity won, a swap won, or the optimum tied.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function ONE_SWAP_CANDIDATES(base_map, q):
+    yield ("identity", COPY(base_map))
+    for a in 0..q-1:
+        for b in a+1..q-1:
+            candidate = COPY(base_map)
+            SWAP_OUTPUT_LABELS(candidate, a, b)
+            yield ((a, b), candidate)
+
+function SELECT_AND_CHECK(base_map, latent, ciphertext, parameters, score):
+    rows = []
+    for move, mapping in ONE_SWAP_CANDIDATES(base_map, ALPHABET_SIZE):
+        plaintext = APPLY(mapping, latent)
+        value = score(plaintext)
+        replay = INDEPENDENT_FORWARD(plaintext, parameters, mapping)
+        require replay == ciphertext
+        rows.append((value, move, mapping, plaintext))
+    optimum = MAXIMUM_SCORE(rows)
+    return every row tied at optimum, with all forward-check receipts
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+There are $1+q(q-1)/2$ mappings. A direct implementation that decodes and scores a length-$n$ text from scratch costs $O(q^2n)$ time and $O(q+n)$ working memory. Incremental scorers can update only windows touched by the two exchanged labels, but the independent final replay remains linear.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Global overclaim.** A strict one-swap optimum may still be far from the best permutation.
+- **Wrong swap side.** Exchanging input coordinates when the contract specifies output labels changes the candidate set.
+- **Invisible swaps.** Two unused labels can change the literal key without changing the decoded text or its score.
+- **Sequential mutation.** Reusing the previously swapped map accidentally walks through permutations instead of evaluating every neighbour of the fixed baseline.
+- **Shared-code replay.** A forward check that calls the inverse routine's helpers may preserve the same bug.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Check the exact count and uniqueness of candidate mappings, plant the optimum at identity and at one known swap, exercise a tied score, and include a swap of two unused labels. Forward-replay every row rather than only the score winner. A fresh panel evaluated 36 complete 326-map neighbourhoods, including two unseen rare-label traps, and independently replayed all 11,736 candidates. A separate permutation audit has used the complete 325-swap shell to show that a planted alphabet can be locally optimal even when stochastic search never enters its basin.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Four-symbol census"
+body = '''
+For the identity map `ABCD`, the complete neighbourhood has seven candidates: the identity and the six swaps `AB`, `AC`, `AD`, `BC`, `BD`, and `CD`. If the baseline decodes `ABACA` and swapping `B` with `C` yields the best frozen score, disclose both the `BC` map and its plaintext, then independently encrypt that plaintext. Evaluating a further `AC` swap from the already modified `BC` map would be a radius-two walk and is outside this census.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The use of the complete identity-plus-one-swap shell as a provenance-bound decoder sidecar was developed in this project. Single-transposition neighbourhoods themselves are standard permutation-search tools. Repeating this complete scan after every strict gain gives [Strict best-improvement swap ascent](/search/strict-best-improvement-swap-ascent).
+'''
+
+[[provenance]]
+path = "withmath/docs/cipher-methods/CONDI_EXACT_AUDIT.md"
+kind = "audit"
+note = "Complete evaluation of all 325 single swaps around planted 26-symbol alphabets, including local-optimum and basin diagnostics."
+
+[[provenance]]
+path = "withmath/logs/632_pk10_secondorder_plainfeedback_controls_20260905T150700Z_1788620820729932000.log"
+kind = "log"
+note = "Records the need to retain complete map completions and independently replay disclosed mappings when the structural cell and language-optimal labels differ."
+ref = "LOG632"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_PLAINFEEDBACK633_SECONDORDER_CONTROLS_V2.md"
+kind = "audit"
+note = "Independent audit of 36 complete identity-plus-one-swap neighbourhoods and every candidate forward replay."
+ref = "LOG633"
+
+[[provenance]]
+path = "withmath/logs/633_pk10_secondorder_plainfeedback_v2_controls_20260905T185614Z_1788634574907215000.log"
+kind = "log"
+note = "Fresh receipt in which both planted rare-label swaps win uniquely."
+ref = "LOG633"

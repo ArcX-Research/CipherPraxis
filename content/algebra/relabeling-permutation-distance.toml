@@ -1,0 +1,145 @@
+id = "relabeling-permutation-distance"
+section = "algebra"
+title = "Relabeling permutation distance"
+subtitle = "Count the fewest label swaps between two substitution maps"
+status = "VERIFIED"
+status_note = "The distance formula follows exactly from permutation cycle decomposition. Complete radius-one control banks also confirm the identity plus every single output-label swap without duplicates."
+family = "Permutation metrics"
+tags = ["permutation distance", "relabeling", "transpositions", "cycle decomposition"]
+related = ["permutation-cycles", "latent-label-identifiability", "identity-plus-one-swap-neighborhood", "strict-best-improvement-swap-ascent", "bounded-permutation-shells", "contextual-rare-symbol-relabeling", "group-actions-on-alphabets", "conjugacy-and-gauge"]
+summary = "Two substitution maps may differ in several labels even when one simple relabeling connects them. Compose one map with the inverse of the other, split the result into cycles, and subtract the number of cycles from the alphabet size. The result is the exact minimum number of label swaps needed to move between the maps."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $M$ and $N$ be bijections from the same source alphabet to the same output alphabet of size $q$. For output-label moves, form the relative permutation
+
+$$\rho=N\circ M^{-1}.$$
+
+If $c(\rho)$ counts every cycle of $\rho$, including fixed points, then the minimum number of output-label transpositions that changes $M$ into $N$ is
+
+$$d_{\rm swap}(M,N)=q-c(\rho).$$
+
+The order matters when defining the relative permutation, but $\rho$ and $\rho^{-1}$ have the same cycle lengths, so the distance is symmetric.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Why cycle count gives the exact distance"
+body = '''
+A cycle of length $\ell$ can be built from exactly $\ell-1$ transpositions. If the non-overlapping cycles of $\rho$ have lengths $\ell_1,\ldots,\ell_r$, fixed points included, then
+
+$$d_{\rm swap}=\sum_{j=1}^{r}(\ell_j-1)
+=\sum_j\ell_j-r=q-c(\rho).$$
+
+No shorter sequence exists because one transposition can increase the cycle count by at most one, while reaching the identity requires increasing it from $c(\rho)$ to $q$.
+
+Distance zero means identical maps. Distance one means exactly one pair of output labels is exchanged. Hamming distance is different: one transposition moves two labels but has swap distance one.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Output-label distance:** use $N\circ M^{-1}$, a permutation of output labels.
+- **Input-coordinate distance:** use $M^{-1}\circ N$, a permutation of source coordinates.
+- **Restricted observed distance:** compare only exercised symbols. This can understate literal full-key distance when unused labels differ.
+- **Distance to a proposal bank:** take the minimum distance from the candidate to any proposal, while retaining every proposal that attains that minimum.
+- **Weighted swaps:** if some exchanges have different costs, the cycle-count formula no longer solves the problem by itself.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions"
+body = '''
+- Both maps are complete bijections on the same alphabet.
+- The move convention is fixed: output-label and input-coordinate swaps are not silently mixed.
+- Fixed points count as cycles.
+- Gauge-equivalent map descriptions are canonicalised before distance is used as evidence.
+- Distance measures key movement, not plaintext quality or probability.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Measure a relabeling shell"
+body = '''
+Canonicalise both maps, build the relative permutation on the declared side, decompose it into cycles, and compute $q-c(\rho)$. Use that exact value to define radius-zero, radius-one, or larger search shells. Generate candidates independently, deduplicate complete maps, and recompute their distance before scoring. Keep physical proposal origins as provenance rather than extra votes.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function RELABEL_DISTANCE(base_map, candidate_map, side):
+    require base_map and candidate_map are permutations of the same alphabet
+    if side == OUTPUT_LABELS:
+        relative = COMPOSE(candidate_map, INVERSE(base_map))
+    else if side == INPUT_COORDINATES:
+        relative = COMPOSE(INVERSE(base_map), candidate_map)
+    else:
+        return INVALID_SIDE
+    seen = empty set
+    cycles = 0
+    for symbol in alphabet:
+        if symbol in seen: continue
+        cycles += 1
+        x = symbol
+        while x not in seen:
+            add x to seen
+            x = relative[x]
+    return SIZE(alphabet) - cycles
+
+function VERIFY_SHELL(base_map, candidates, radius, side):
+    unique = DEDUPLICATE_COMPLETE_MAPS(candidates)
+    for candidate in unique:
+        require RELABEL_DISTANCE(base_map, candidate, side) <= radius
+    return unique
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Inverting a map, composing two maps, and counting cycles each take $O(q)$ time and $O(q)$ memory. Verifying $m$ complete candidates costs $O(mq)$ after deduplication.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Endpoint count used as distance.** A swap changes two images but costs one transposition.
+- **Wrong composition side.** Input-coordinate moves are measured with the output-label convention, producing the wrong relative action.
+- **Partial maps treated as complete.** Different completions can have different distances.
+- **Path length used instead of minimum distance.** A generator may reach the same map through redundant swaps.
+- **Alias multiplicity.** The same complete map reached from several proposals is counted several times.
+- **Radius overclaim.** A local radius-one optimum is described as a global optimum.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+For small alphabets, enumerate every permutation and compare the cycle formula with breadth-first search over all transpositions. Include identity, one long cycle, disjoint cycles, input-side and output-side moves, and maps reached through several swap paths. For a 26-symbol radius-one bank, require one identity and exactly one candidate for every unordered label pair, then independently verify that every non-identity row has distance one.
+'''
+
+[[blocks]]
+kind = "example"
+title = "A three-cycle costs two swaps"
+body = '''
+Suppose the relative output relabeling sends `A` to `B`, `B` to `C`, and `C` to `A`, while every other label stays fixed. The only nontrivial cycle is $(A\ B\ C)$. It costs two swaps, for example $(A\ C)$ followed by $(A\ B)$. Hamming distance counts three moved labels, so it is not the same metric.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Minimum transposition distance is a standard consequence of permutation cycle decomposition. Its practical value in cryptanalysis is that a phrase such as “one relabeling away” becomes an exact, reproducible search boundary. A rare-symbol error may change very few plaintext positions while still having a precise map distance; text accuracy and permutation distance should therefore be reported separately.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_CONTEXTRELABEL646_CONTROLS.md"
+kind = "audit"
+note = "Defines a complete identity-plus-one-output-label-swap bank and requires exhaustive independent replay of every physical map."
+ref = "LOG646"
+
+[[references]]
+title = "Abstract Algebra"
+author = "David S. Dummit and Richard M. Foote"
+year = 2004

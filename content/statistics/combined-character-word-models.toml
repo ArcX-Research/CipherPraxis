@@ -1,0 +1,139 @@
+id = "combined-character-word-models"
+section = "statistics"
+title = "Combined character and word models"
+subtitle = "Blend local orthographic evidence with lexical evidence under a frozen scale"
+status = "POWER-LIMITED"
+status_note = "Combined character-and-word scoring is supported by published substitution-decipherment work. Project controls confirm complementary rank changes but a frozen combined selector did not meet its full gate, so local use remains power-limited."
+family = "Language statistics"
+tags = ["character model", "word model", "interpolation", "reranking"]
+related = ["n-gram-language-scoring", "neural-language-model-decipherment", "word-lattice-segmentation", "lexical-reranking-and-oov-bias", "semi-markov-word-model", "selection-overfit-diagnostic"]
+summary = "Character models score every string and are robust to missing vocabulary; word models reward coherent lexical units and longer context. Combining their normalised scores can exploit both signals, provided segmentation, weights, candidate caps, and out-of-vocabulary handling are frozen and tested together."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $S_c(y)$ be a character-level score for plaintext candidate $y$ and $S_w(y)$ the score of its best or marginalised word segmentation. A simple combined objective is
+
+$$S(y)=\widetilde S_c(y)+\eta\widetilde S_w(y),$$
+
+where tildes denote declared length or scale normalisation and $\eta$ is fixed on development data. The two components answer different questions: whether local letter sequences look plausible and whether the text can be explained by likely lexical units.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Segmentation-aware word component"
+body = '''
+For an unspaced candidate, the max-segmentation word score can be written
+
+$$S_w(y)=\max_{0=t_0<\cdots<t_k=n}\sum_{j=1}^{k}\log P_w(y_{t_{j-1}:t_j}),$$
+
+with explicit unknown-token and edge-fragment transitions. The character score may be an n-gram sum or a neural full-sequence likelihood. Raw values from different logarithm bases or numbers of terms are not directly comparable, so their calibration is part of the frozen selector.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Linear interpolation:** a fixed weighted sum of normalised component scores.
+- **Rank fusion:** combine within-list ranks when numerical scales are incompatible.
+- **Cascade:** use a cheap character model to retain candidates, then apply the word model.
+- **Joint tree search:** update both scores during key expansion.
+- **Mixture over segmentations:** sum probability across word paths rather than taking only the best path.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions"
+body = '''
+- Both models use compatible text normalisation, and word boundaries are either supplied or inferred by a fixed algorithm.
+- The interpolation weight, component scaling, unknown-token penalty, lexicon, and candidate-retention cap are fixed before evaluation.
+- Development text is disjoint from the final holdout and from model training where required.
+- The first-stage cap has enough recall; reranking cannot recover a candidate that was discarded earlier.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Calibrated combination"
+body = '''
+Compute both raw components for every development candidate, choose one normalisation and weight by a predeclared tuning rule, and freeze the whole cascade. On fresh controls, measure first-stage retention separately from final rank. Retain component scores in the receipt so a lexical failure can be distinguished from a character-model or cap failure. Forward-check the selected plaintext independently.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function COMBINED_SCORE(text, character_model, word_lattice, config):
+    char_raw = CHARACTER_LOG_SCORE(text, character_model)
+    word_raw, segmentation = VITERBI_SEGMENT(text, word_lattice)
+    char_score = NORMALISE(char_raw, config.character_scale, LENGTH(text))
+    word_score = NORMALISE(word_raw, config.word_scale, LENGTH(text))
+    total = char_score + config.word_weight * word_score
+    return total, char_score, word_score, segmentation
+
+function RERANK(candidates, frozen_models, frozen_config):
+    require HASHES_MATCH(frozen_models, frozen_config)
+    for candidate in candidates:
+        row = COMBINED_SCORE(candidate, frozen_models.character,
+                             frozen_models.words, frozen_config)
+        retain candidate with every component and segmentation
+    return all candidates tied at the maximum total score
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Character scoring is linear in text length. A trie-backed word lattice with maximum token length $L$ can be scored in $O(nL)$ time for one candidate, before language-model state or beam factors. In a cascade, total cost is proportional to the retained candidate count, making retention power as important as reranker speed.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Scale domination.** One component wins because of units or length, not evidence.
+- **Lexical overreach.** A proper name, inflection, or rare word is absent and a common but wrong spelling wins.
+- **Character-only locality.** All short substrings look plausible while word order or meaning is wrong.
+- **Cap loss.** The correct candidate never reaches the word scorer.
+- **Weight selection bias.** Many mixtures are tried on the evaluation set and the best is reported without a fresh holdout.
+- **Boundary hacking.** The segmentation model earns an artificially good score through unrestricted fragments or single-letter tokens.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Controls should span ordinary prose, rare but valid words, names, short boundary fragments, and null strings. Report character-only, word-only, and combined ranks, plus whether the truth entered the retained list. In a recorded broad bank, the combined selector improved some ranks but did not meet its frozen rank-one requirement; validation data remained unopened after development failure.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Complementary evidence"
+body = '''
+Candidate A has normalised character score $-2.1$ and word score $-4.0$; candidate B has $-2.3$ and $-2.5$. With $\eta=0.5$, A totals $-4.1$ while B totals $-3.55$, so B wins even though its character score is weaker. This is useful only if the word model's vocabulary and the weight were fixed before this comparison.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Published combined models and the project's measured rerankers support the architecture, while the local failed gate cautions against treating a plausible mixture as automatically calibrated.
+'''
+
+[[provenance]]
+path = "withmath/docs/search-language/ROW_BOUNDARY_DEVELOPMENT.md"
+kind = "note"
+note = "Character, lexical, and combined full-candidate ranks on a broad disjoint development bank; identifies first-stage cap losses."
+
+[[provenance]]
+path = "withmath/docs/search-language/ROW_SEMANTIC_CONTROLS_AUDIT.md"
+kind = "audit"
+note = "Frozen combined reranker gate, component scores, stopping rule, and unopened validation set."
+
+[[references]]
+title = "Solving Substitution Ciphers with Combined Language Models"
+author = "Bradley Hauer, Ryan Hayward and Grzegorz Kondrak"
+year = 2014
+url = "https://aclanthology.org/C14-1218/"
+
+[[references]]
+title = "Decipherment of Substitution Ciphers with Neural Language Models"
+author = "Nishant Kambhatla, Anahita Mansouri Bigvand and Anoop Sarkar"
+year = 2018
+url = "https://doi.org/10.18653/v1/D18-1102"

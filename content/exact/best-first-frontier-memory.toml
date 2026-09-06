@@ -1,0 +1,176 @@
+id = "best-first-frontier-memory"
+section = "exact"
+title = "Best-first frontier memory limits"
+subtitle = "A strong bound can still fill memory before exact search reaches a leaf"
+status = "VERIFIED"
+status_note = "Independent exhaustive checks matched two best-first traversals on small cases. On a larger frozen control, both reached the declared frontier-memory limit before any leaf, so the result was correctly reported as incomplete rather than as evidence against the searched family."
+family = "Exact-search resource limits"
+tags = ["best-first search", "priority queues", "memory limits", "branch and bound", "incomplete search", "fair scheduling"]
+related = ["mini-bucket-elimination", "admissible-bound-selectivity", "bound-benchmarks-and-certificates", "k-best-lists", "drainability-and-throughput", "power-measurement", "evidence-scope-ladder"]
+summary = "Best-first branch and bound expands the open node with the strongest upper bound. This can find good leaves early, but it keeps every still-possible node in a priority queue. The queue may grow much faster than the number of expanded nodes. If a declared memory limit blocks a node that could still tie or beat the retained answer, the only exact terminal is incomplete. Fair service across root branches changes who receives work; it does not reduce the total frontier."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $U(s)$ be an admissible upper bound on the best legal leaf below partial state $s$. A best-first maximization search keeps an open frontier $Q$ ordered by decreasing $U$, then by frozen deterministic tie rules. When a complete top-$k$ list exists, let $L_k$ be its kth exact score.
+
+The search can discard a state only when
+
+$$U(s)<L_k,$$
+
+because equality may contain another tied answer. If memory runs out while a state with $U(s)\ge L_k$ is open or waiting to be inserted, that branch has not been proved irrelevant. If no complete leaf has been found, $L_k$ does not exist and every legal open state remains unresolved.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "The completeness test at a memory stop"
+body = '''
+For frontier budget $M$ bytes and a fixed record size $b$, the ideal record capacity is
+
+$$N_{\max}=\left\lfloor\frac{M}{b}\right\rfloor.$$
+
+Allocator and container overhead must either be included in $b$ or measured separately. Bound tables, model state, and the frontier need separate memory accounts.
+
+Let $Q$ be the stored frontier and $S$ the nodes whose insertion was blocked by the limit. Define
+
+$$U_{\rm rem}=\max\left(\max_{s\in Q}U(s),\max_{s\in S}U(s)\right).$$
+
+A top-$k$ search may still certify completion after a memory event only when a full exact top-$k$ list exists and $U_{\rm rem}<L_k$. Otherwise it must return `INCOMPLETE/MEMORY-LIMITED`. Silently dropping $S$ turns an exact search into an unlabelled beam search.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Global best-first:** one queue holds every root branch. It follows the strongest bound globally but can spend most work under a few roots.
+- **Fair-root best-first:** one queue per legal root is served in round-robin quanta. This bounds service imbalance among active roots but the combined queues can still fill memory.
+- **Depth-first branch and bound:** memory is usually linear in depth, but a poor child order may delay strong incumbents.
+- **Threshold or iterative-deepening search:** expand only nodes above a bound threshold, then lower the threshold. Memory falls at the cost of repeated work.
+- **External-memory frontier:** spill a content-addressed queue to disk and account for ordering, crash recovery, and I/O explicitly.
+- **Beam search:** retain only a fixed number of nodes. This is useful heuristically, but it is not exact unless discarded nodes are independently proved unable to win.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Conditions for an exact terminal"
+body = '''
+- The priority value is an admissible bound for the exact leaf objective, not a proposal score.
+- The queue order, root schedule, tie rule, top-$k$ policy, node budget, and byte budget are frozen before evaluation.
+- Every legal root is represented; structurally inactive roots are named separately rather than included in fairness averages.
+- Frontier records have a checked byte size, and the bound-table allocation is counted separately.
+- A memory limit stops before a viable node is lost. The receipt records the strongest bound that could not be retained.
+- `COMPLETE` requires every unresolved branch to be drained or dominated by a strict score threshold.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Run and interpret a bounded best-first search"
+body = '''
+Compile and independently validate the bound first. Start each legal root under either one global queue or frozen fair-root queues. Before inserting a child, check the frontier byte limit. If it would be exceeded and the child is not already safely prunable, stop the entire exact search and preserve the frontier census and blocked bound. Do not keep a convenient prefix of the queue.
+
+Report expanded nodes, generated nodes, leaves, exact candidates, queue peak, record bytes, table bytes, every cap flag, per-root work, the current kth score, and the maximum unresolved bound. A fairness claim needs per-active-root service counts; a completeness claim needs the bound comparison.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function BEST_FIRST(root_nodes, bound, exact_score, top_k, memory_bytes):
+    queues = INITIALISE_FROZEN_POLICY(root_nodes)
+    retained = empty exact top-k with complete ties
+    while any queue is nonempty:
+        node = POP_NEXT_BY_FROZEN_POLICY(queues)
+        if retained is full and bound(node) < retained.kth_score:
+            continue
+        if node is a legal leaf:
+            retained.insert_with_ties(exact_score(node))
+            continue
+        for child in ORDERED_LEGAL_CHILDREN(node):
+            upper = bound(child)
+            if retained is full and upper < retained.kth_score:
+                continue
+            if FRONTIER_BYTES(queues) + RECORD_BYTES(child) > memory_bytes:
+                unresolved = MAX(upper, MAX_BOUND(queues))
+                return INCOMPLETE_MEMORY(retained, unresolved, TELEMETRY())
+            PUSH_BY_FROZEN_POLICY(queues, child, upper)
+    return COMPLETE(retained, TELEMETRY())
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+With a binary heap, each insertion or removal costs $O(\log |Q|)$ and memory is $O(|Q|)$. In a weakly pruned tree, $|Q|$ can grow exponentially with depth even when the number of expanded nodes remains below its separate cap. Fair-root scheduling uses the sum of all root-queue sizes, so fairness does not change this worst-case memory order.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Node budget mistaken for memory safety.** Generated frontier nodes outnumber expanded nodes, so the queue fills long before the node limit.
+- **Fairness mistaken for tractability.** Every active root receives nearly equal work, but every queue grows.
+- **Dropped insertion.** A child is omitted after the memory check and the search continues as though it were exact.
+- **Container overhead ignored.** Capacity is computed from payload fields while heap or allocator storage is excluded.
+- **Inactive root in fairness test.** A structurally impossible root receives no work and creates a false imbalance failure.
+- **No-leaf winner claim.** A run ending before its first leaf reports the best partial bound as a candidate.
+- **Capped miss called rejection.** Unresolved bounds can still beat the known or retained score, yet the family is described as absent.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The recorded implementation compared global and fair-root queues on six exhaustive small-alphabet cases under two algebraic relations. A separate implementation checked 37,411 reachable prefixes, both traversal traces, exact candidate sets, queue telemetry, a 24-way boundary tie, forced node and memory limits, and nine malformed-input refusals.
+
+On one frozen 95-symbol control, a 256 MiB frontier held at most 3,050,402 fixed 88-byte records. The fair arm stopped after 149,227 expanded nodes and the global arm after 148,696; both had more than 3,050,380 frontier entries, zero leaves, and zero candidates. Every active fair root received 23 or 24 quanta, so service fairness held. The strongest unresolved bounds remained above the known control score. The correct result was therefore `INCOMPLETE/MEMORY-LIMITED` for both policies.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Best-first search is often described in terms of expansion order, but its open-set memory is part of the algorithm. An admissible bound establishes safe pruning; it does not promise that the surviving frontier will fit. Memory-linear threshold traversal is a natural exact successor when the queue, rather than bound evaluation or leaf scoring, is the measured bottleneck.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_FAIRFRONTIER678.md"
+kind = "design"
+note = "Defines the two deterministic frontier policies, admissible-bound order, fair-root quantum, distinct node and memory budgets, tie rule, and typed terminals."
+ref = "LOG678"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk9_fairfrontier678_core.cpp"
+kind = "solver"
+note = "Native global and fair-root priority-queue search with exact byte accounting, strict tie retention, and complete frontier telemetry."
+ref = "LOG678"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk9_fairfrontier678_audit.py"
+kind = "audit"
+note = "Separate exhaustive implementation of bounds, traversals, active-root fairness, candidate sets, caps, and malformed-input checks."
+ref = "LOG678"
+
+[[provenance]]
+path = "withmath/logs/678_fairfrontier_kat_20260906T053227Z_1788672747331973000_7632.json"
+kind = "data"
+note = "Target-absent exhaustive cases and resource-limit regressions for the frozen launcher."
+ref = "LOG678"
+
+[[provenance]]
+path = "withmath/logs/678_fairfrontier_consumed_20260906T054057Z_1788673257866038000_51222.json"
+kind = "data"
+note = "Frozen larger-control telemetry for both memory-limited traversals, including entry sizes, queue peaks, root quanta, bounds, leaves, and candidates."
+ref = "LOG678"
+
+[[provenance]]
+path = "withmath/logs/678_fairfrontier_audit_v2_20260906T054320Z_1788673400096605000_64046.log"
+kind = "log"
+note = "Read-only audit of the sealed larger-control artifact with the active-root fairness correction."
+ref = "LOG678"
+
+[[references]]
+title = "A Formal Basis for the Heuristic Determination of Minimum Cost Paths"
+author = "Peter E. Hart, Nils J. Nilsson, and Bertram Raphael"
+year = 1968
+
+[[references]]
+title = "Depth-First Iterative-Deepening: An Optimal Admissible Tree Search"
+author = "Richard E. Korf"
+year = 1985

@@ -1,0 +1,179 @@
+id = "symmetric-second-order-plaintext-feedback"
+section = "ciphers"
+title = "Symmetric second-order plaintext feedback"
+subtitle = "A running alphabet state driven by the current and previous latent plaintext coordinates"
+status = "VERIFIED"
+status_note = "The modular recurrence, inverse, gauges, and family boundaries pass independent target-absent checks. After an initial selector exposed a rare-label error, a frozen fresh panel recovered all six planted structural cells and exact plaintexts while rejecting all thirty negatives."
+family = "Stream and machine ciphers"
+tags = ["plaintext feedback", "second order", "state recurrence", "mixed alphabet"]
+related = ["plaintext-coordinate-feedback", "ciphertext-coordinate-feedback", "right-to-left-plaintext-feedback", "feedback-state-gauges-and-cells", "parameter-versus-plaintext-recovery", "latent-label-identifiability", "identity-plus-one-swap-neighborhood", "endpoint-specific-control-contracts", "autokey", "condi", "alberti-progressive", "linear-recurrences-lcg", "modular-arithmetic-z26"]
+summary = "This cipher keeps a running alphabet displacement. After removing that displacement from each ciphertext coordinate, it uses an arbitrary substitution to name the latent plaintext coordinate. The next displacement depends equally on the current and previous latent coordinates. That one-symbol memory distinguishes the construction from ordinary plaintext feedback, ciphertext feedback, autokey, and a fixed progressive alphabet."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Work in $\mathbb{Z}_{26}$. Let $x_i$ be the ciphertext letter's coordinate in a declared outer alphabet, $a_i$ the running displacement, $u_i$ the latent plaintext coordinate, and $M$ an arbitrary permutation from coordinates to plaintext letters. The cipher is
+
+$$u_i \equiv x_i-a_i, \qquad P_i=M(u_i),$$
+
+$$a_{i+1}\equiv a_i+\beta+\lambda(u_i+u_{i-1})\pmod{26},$$
+
+with $a_0=0$, $u_{-1}=u_0$, $\beta\in\mathbb{Z}_{26}$, and nonzero $\lambda\in\mathbb{Z}_{26}$. The boundary $u_{-1}=u_0$ is a constant continuation: it adds no primer and treats both inputs to the first update symmetrically.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Inverse recurrence and forward reconstruction"
+body = '''
+Eliminating $a_i$ gives a division-free forced recurrence. Put $r=1-\lambda$ and $s=-\lambda$. Then
+
+$$u_{-1}=u_0=x_0,$$
+
+$$u_{i+1}\equiv r u_i+s u_{i-1}+x_{i+1}-x_i-\beta\pmod{26}.$$
+
+No inverse of $\lambda$ is required, so units and zero divisors are equally valid. In the forward direction, obtain $u_i=M^{-1}(P_i)$, emit $x_i=u_i+a_i$, and update the same state. Agreement among the state peel, this recurrence, a closed-form Green-kernel evaluator, and a separately written forward transform is stronger than a decrypt-then-encrypt check performed by one routine.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Generic second order:** $a_{i+1}=a_i+\beta+\lambda u_i+\mu u_{i-1}$. The admitted cipher is the exchange-symmetric diagonal $\mu=\lambda$.
+- **First-order plaintext feedback:** omit $u_{i-1}$. It is a different observable family, not the same cipher with a renamed parameter.
+- **Constant slope:** $\lambda=0$ gives $a_i=i\beta$ and is kept outside this family as a boundary case.
+- **Ciphertext feedback:** update from observed $x_i$ instead of latent $u_i$.
+- **Autokey and Condi:** autokey feeds a delayed message symbol after a primer; Condi uses a local relation between adjacent plaintext ranks. Neither uses this cumulative displacement state.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- One outer alphabet, one substitution $M$, and one pair $(\beta,\lambda)$ apply to the whole text.
+- The outer coordinate convention is declared. Affine rotations, reversals, and unit decimations are aliases handled by the gauge, not extra search axes.
+- Natural-language scoring is used only to fit $M$ and rank candidate cells. The modular peel itself makes no language assumption.
+- Recovering $(\beta,\lambda)$ does not by itself recover every label of $M$ or the exact plaintext. Those are separate endpoints.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to attack it"
+body = '''
+Enumerate each declared outer representative, every $\beta$, and every nonzero $\lambda$. Peel the latent coordinate stream by the forced recurrence, canonicalise its equality pattern, and fit an arbitrary monoalphabetic map with a language score. Group observationally identical streams before ranking. For each retained row, reconstruct the map completions, decode the text, and run a separate forward implementation. Report algebraic-cell recovery, exact text recovery, and exact key-label recovery separately; a pass at one endpoint must not be promoted to another.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// x is the ciphertext in one declared outer coordinate system.
+function PEEL(x[0..n-1], beta, lambda):
+    a = 0
+    u_prev = x[0]                  // u[-1] = u[0]
+    for i in 0..n-1:
+        u[i] = (x[i] - a) mod 26
+        a = (a + beta + lambda * (u[i] + u_prev)) mod 26
+        u_prev = u[i]
+    return u
+
+function ENCRYPT(P[0..n-1], inverse_M, beta, lambda):
+    a = 0
+    u_prev = inverse_M(P[0])       // constant boundary
+    for i in 0..n-1:
+        u = inverse_M(P[i])
+        x[i] = (u + a) mod 26
+        a = (a + beta + lambda * (u + u_prev)) mod 26
+        u_prev = u
+    return x
+
+function SEARCH(ciphertext):
+    for outer in DECLARED_OUTERS, beta in Z26, lambda in Z26 excluding 0:
+        u = PEEL(COORDINATES(ciphertext, outer), beta, lambda)
+        (mapping, score) = FIT_MONOSUBSTITUTION(u)
+        retain the cell, mapping, score, equality class and all ties
+    independently forward-check every disclosed retained mapping
+    return ranked cells with separate cell, plaintext and label verdicts
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+For $o$ declared outer representatives over an alphabet of size $q$, the raw structural scan has $o q(q-1)$ cells when zero feedback is excluded. Each peel is linear in text length; fitting the arbitrary substitution dominates the cost. With two literal outer representatives and $q=26$, the recorded lane has $2\cdot26\cdot25=1{,}300$ cells.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Correct dynamics, wrong labels.** A language optimiser can select the correct cell but choose a nearly correct substitution, especially when a rare word or rarely observed letter is poorly represented by its model.
+- **Gauge duplication.** Searching affine versions of one outer coordinate system as if they were new keys inflates the family and its null distribution.
+- **Neighbour-family leakage.** Including $\lambda=0$ silently mixes the constant-slope boundary into the second-order claim.
+- **Tautological round trips.** Decryption and encryption sharing the same mistaken convention can agree. A control needs an independently written forward path.
+- **Unobserved coordinates.** A text may not exercise every map entry, so literal full-key recovery can be impossible even when every plaintext letter is exact.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The first target-absent panel exercised positives across unit and nonunit feedback values, neighbouring-family sentinels, independent-symbol negatives, and histogram-preserving shuffled valid-family nulls. It selected every planted algebraic cell, but its direct language-optimal mapping missed one exact plaintext by two labels. That failed exact-text endpoint was retained.
+
+A revised selector was then frozen and evaluated on a fresh, disjoint panel. It selected all six planted structural cells, recovered all six exact 504-letter plaintexts, passed both unseen rare-letter traps, and rejected eight neighbouring-family cases, three independent-symbol cases, and nineteen histogram-preserving shuffles. Its complete identity-plus-325-swap sidecars made 11,736 independent forward checks. These controls verify synthetic family detection and exact-text recovery under the tested model; they do not establish that an arbitrary unknown ciphertext belongs to this family.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked synthetic example"
+body = '''
+Take the straight outer alphabet, identity $M$, $\beta=1$, $\lambda=2$, and plaintext `ATTACK`. Its latent coordinates are $0,19,19,0,2,10$. Starting with $a_0=0$ and $u_{-1}=u_0=0$ gives:
+
+```trace
+i       0   1    2    3    4   5
+u_i     0   19   19   0    2   10
+a_i     0   1    14   13   0   5
+x_i     0   20   7    13   2   15
+cipher  A   U    H    N    C   P
+```
+
+For example, $a_2=1+1+2(19+0)=40\equiv14$, so $x_2=19+14\equiv7$. Peeling `AUHNCP` with the same parameters recovers `ATTACK`; a separate forward calculation reproduces every ciphertext coordinate.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The exchange-symmetric specialization, its exact cell census, quotient analysis, and control protocol were developed in this project. That provenance statement is deliberately local: it does not claim that no equivalent construction exists elsewhere in the cryptographic literature.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_PLAINFEEDBACK630_SECONDORDER_THEORY.md"
+kind = "design"
+note = "Target-absent derivation of the symmetric second-order family, forced recurrence, closed form, gauges, cell count, identifiability, and comparisons with neighbouring feedback families."
+ref = "LOG630"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_plainfeedback630_secondorder_theory.py"
+kind = "script"
+note = "Independent small-ring and modular checks for the state peel, recurrence, closed form, forward transform, affine gauges, and observable-family fingerprints."
+
+[[provenance]]
+path = "withmath/logs/630_pk10_plainfeedback_theory_20260905T144704Z_1788619624826808000.log"
+kind = "log"
+note = "Frozen target-absent algebra receipt."
+ref = "LOG630"
+
+[[provenance]]
+path = "withmath/logs/632_pk10_secondorder_plainfeedback_controls_20260905T150700Z_1788620820729932000.log"
+kind = "log"
+note = "Frozen first control panel: every planted algebraic cell selected; one exact emitted-plaintext endpoint failed while its complete sidecar retained the exact completion."
+ref = "LOG632"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_PLAINFEEDBACK633_SECONDORDER_CONTROLS_V2.md"
+kind = "audit"
+note = "Frozen fresh-panel design, outcome, and independent reconstruction of every native and lexical packet."
+ref = "LOG633"
+
+[[provenance]]
+path = "withmath/logs/633_pk10_secondorder_plainfeedback_v2_controls_20260905T185614Z_1788634574907215000.log"
+kind = "log"
+note = "Fresh target-absent receipt for structural-cell recovery, exact text, rare-letter traps, neighbouring families, independent symbols, and shuffled nulls."
+ref = "LOG633"

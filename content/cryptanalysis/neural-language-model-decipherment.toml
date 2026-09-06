@@ -1,0 +1,131 @@
+id = "neural-language-model-decipherment"
+section = "cryptanalysis"
+title = "Neural language-model decipherment"
+subtitle = "Use full-sequence neural scores inside a constrained search, then verify exactly"
+status = "POWER-LIMITED"
+status_note = "Published work demonstrates neural language models in substitution decipherment. In this project's frozen local-model controls, however, proposal and reranking gates failed, so the technique is documented as literature-backed but not locally authorised as a decoder."
+family = "Language-guided cryptanalysis"
+tags = ["neural language model", "decipherment", "beam search", "reranking"]
+related = ["n-gram-language-scoring", "local-language-model-prior", "combined-character-word-models", "beam-search", "k-best-lists", "held-out-gates", "tautological-gate-rule"]
+summary = "A neural language model can score complete plaintext prefixes and supply a lookahead estimate while a beam searches substitution assignments. It captures longer context than a fixed n-gram table, but the beam is still heuristic, model provenance matters, and fluent output is not a cryptographic certificate."
+updated = "2026-09-05"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For a candidate plaintext $y_0\ldots y_{n-1}$, an autoregressive language model supplies
+
+$$L(y)=\sum_{i=0}^{n-1}\log P_\phi(y_i\mid y_0,\ldots,y_{i-1}).$$
+
+Substitution decipherment searches a constrained space of key assignments while carrying the model state for each partial hypothesis. A beam retains only a bounded set of promising prefixes. A future-cost or **rest-cost** estimate can rank partial hypotheses by an approximation to their best possible full-sequence score. The neural model defines the objective or proposal order; cipher equations and an independent forward transform define validity.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Character model:** scores letters directly and avoids a fixed word vocabulary.
+- **Word or subword model:** represents longer semantic units but requires a declared segmentation and tokeniser.
+- **Proposal prior:** suggests likely labels or branches while an exact back end makes the final decision.
+- **Complete-candidate reranker:** scores a finite list produced by structural search.
+- **Integrated beam:** expands key assignments and language-model states together, optionally with a rest-cost estimate.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions"
+body = '''
+- Model weights, tokeniser, preprocessing, direction, and numerical scoring settings are pinned.
+- Training data do not contain the evaluated control or unknown text, or contamination risk is explicitly reported.
+- The API exposes true full-sequence log likelihoods. Generated samples, chat preferences, or censored top-token lists are not substitutes.
+- Beam width and pruning rules are frozen; unless all states are retained, failure to find a key is not a proof of absence.
+- Exact cipher constraints are enforced at every expansion or by a complete downstream checker.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Constrained neural search"
+body = '''
+Choose the next unresolved cipher symbol or plaintext position. Expand only assignments consistent with injectivity and the cipher equations, update each hypothesis's neural state, add the declared rest-cost estimate, and keep the frozen beam width including boundary ties. At completion, deduplicate literal candidates, recompute full-sequence scores, and independently forward-check every disclosed result. The model must first pass fresh controls at the same text length and search budget.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function NEURAL_DECIPHER(ciphertext, cipher_constraints, model, beam_width):
+    beam = {EMPTY_HYPOTHESIS with INITIAL_MODEL_STATE(model)}
+    while some hypothesis is incomplete:
+        expanded = []
+        for hypothesis in beam:
+            variable = CHOOSE_NEXT_UNRESOLVED(hypothesis, cipher_constraints)
+            for value in LEGAL_VALUES(variable, hypothesis, cipher_constraints):
+                child = ASSIGN(hypothesis, variable, value)
+                emitted = NEWLY_DETERMINED_PLAINTEXT(child)
+                child.score += MODEL_LOGPROB(model, child.state, emitted)
+                child.bound = child.score + FROZEN_REST_COST(child)
+                expanded.append(child)
+        beam = TOP_WITH_TIES(expanded, beam_width, by=bound)
+    finalists = DEDUPLICATE_COMPLETE_PLAINTEXTS(beam)
+    recompute exact full-sequence model scores for finalists
+    independently forward-check every disclosed finalist
+    return finalists with scores, keys and replay certificates
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+With beam width $B$, average legal branching factor $d$, and $n$ expansion steps, the search performs roughly $O(nBd)$ model updates plus sorting or selection. Reusing recurrent states is much cheaper than rescoring each prefix, but memory grows with the beam and model-state size. The method is exact only if pruning cannot remove an optimal completion.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Early beam loss.** The correct lineage receives a weak prefix score and can never re-enter.
+- **Model contamination.** Memorised evaluation text looks like decipherment power.
+- **Fluency substitution.** A readable wrong plaintext outranks the structurally correct candidate.
+- **Incomplete scoring interface.** Top-token truncation hides required probabilities and invalidates an alleged global score.
+- **Surrogate drift.** A rest-cost heuristic or auxiliary score changes after controls without a fresh holdout.
+- **Shared forward code.** Neural ranking does not repair a convention error in both encrypt and decrypt paths.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Use fresh plaintexts outside model training, matched cipher parameters, known-answer constraints, shuffled or valid-model nulls, and an independent forward implementation. Record when the planted lineage leaves the beam, not merely its final absence. In the local evidence corpus, a proposal model missed required labels on every clean control panel and a complete-candidate neural reranker failed its frozen rank-one gate; those results limit the tested models rather than refuting the published method.
+'''
+
+[[blocks]]
+kind = "example"
+title = "A prefix that needs future evidence"
+body = '''
+Two legal partial decryptions have neural log scores $-18$ and $-20$. The second later admits a high-probability completion while the first forces unlikely letters. A greedy decoder discards the eventual winner immediately; a beam can retain both, and a rest-cost estimate may order them more usefully. If the width is one, however, the procedure remains greedy regardless of how strong the full-sequence model is.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The literature establishes a neural decipherment method, not universal superiority over n-grams. Architecture, search, data provenance, and exact constraints form one system and must be validated together.
+'''
+
+[[provenance]]
+path = "withmath/docs/search-language/ROW_SEMANTIC_CONTROLS_AUDIT.md"
+kind = "audit"
+note = "Frozen complete-candidate neural reranker and unopened validation protocol; the development gate failed."
+
+[[provenance]]
+path = "withmath/docs/search-language/ROW_LLAMA_SERVER_CAPABILITY_AUDIT.md"
+kind = "audit"
+note = "Demonstrates why censored next-token results cannot support a claimed full-sequence ordering."
+
+[[provenance]]
+path = "withmath/docs/pk9/PK9_NEURALPRIOR442_NOTE.md"
+kind = "note"
+note = "Character-model proposal prior, contamination audit, and clean-control hard-cap failure."
+ref = "LOG442"
+
+[[references]]
+title = "Decipherment of Substitution Ciphers with Neural Language Models"
+author = "Nishant Kambhatla, Anahita Mansouri Bigvand and Anoop Sarkar"
+year = 2018
+url = "https://doi.org/10.18653/v1/D18-1102"

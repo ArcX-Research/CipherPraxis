@@ -1,0 +1,175 @@
+id = "memory-linear-threshold-search"
+section = "exact"
+title = "Memory-linear threshold search"
+subtitle = "Trade repeated work for a depth-sized frontier while keeping exact score ties"
+status = "VERIFIED"
+status_note = "Six exhaustive degree-5 to degree-7 cases matched independent complete oracles. Degree-26 controls confirmed that the method fixes frontier memory, but hard cases stayed incomplete at 30,000 nodes and a development scale-up to 500,000 nodes."
+family = "Exact search traversal"
+tags = ["iterative thresholds", "depth-first search", "admissible bounds", "memory limits", "complete ties"]
+related = ["best-first-frontier-memory", "mini-bucket-elimination", "admissible-bound-selectivity", "pruned-traversal-equivalence-certificates", "exact-dynamic-programming", "reproducibility-receipts"]
+summary = "Best-first search can run out of memory because it keeps every open node. Threshold search visits only nodes whose admissible upper bound reaches the current threshold, using depth-first recursion. After each pass it lowers the threshold to the strongest skipped bound. This keeps the frontier proportional to depth, preserves exact ties, and can certify completion, at the cost of revisiting earlier prefixes."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $B(x)$ be an admissible upper bound on the best complete score below partial state $x$. Start with the root bound $T_0=B(\varnothing)$. Threshold pass $j$ explores, depth first, exactly the legal children with
+
+$$B(x)\ge T_j.$$
+
+Every legal child below the threshold is noted but not entered. The next threshold is the largest skipped value:
+
+$$T_{j+1}=\max\{B(x):B(x)<T_j\text{ and }x\text{ was encountered}\}.$$
+
+The sequence must decrease strictly. Unlike a beam, the traversal does not discard a state merely because only a fixed number of better states fit in memory.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Exact stopping rule"
+body = '''
+Keep the best $k$ complete results and every result tied with the kth score. Once the list contains at least $k$ distinct answers, call its kth score $L_k$. A partial state may be pruned only when
+
+$$B(x)<L_k.$$
+
+Equality stays searchable. After a threshold pass finishes, the search is complete when either no below-threshold child remains, or the strongest skipped bound satisfies
+
+$$T_{j+1}<L_k.$$
+
+The first condition exhausts the finite tree. The second proves that every unvisited leaf scores strictly below the retained boundary.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Bounded depth-first branch and bound:** one pass with the current incumbent; less repeated work, but child order can delay the useful region.
+- **Iterative deepening A\*:** the minimization form uses increasing cost thresholds. The rule here is its maximization counterpart for upper bounds.
+- **Best-first search:** usually reduces re-expansion, but its priority queue can dominate memory.
+- **Transposition table:** caching repeated states can reduce work, but memory is no longer strictly depth-linear and cache eviction must not change exactness.
+- **Parallel root passes:** roots may be processed separately if threshold updates, ties, and unresolved bounds are merged under a proved deterministic rule.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Conditions for a complete result"
+body = '''
+- $B$ is an upper bound on the exact leaf objective at every reachable state.
+- The search covers every legal root and child; proposal scores may order children but may not remove them.
+- Bound conditioning is correct for the assignment direction. A table compiled for reverse elimination cannot be read as though it were a forward bound.
+- The threshold, child order, answer identity, deduplication rule, top-$k$ value, and tie handling are fixed before evaluation.
+- Every cap counts repeated work as declared. Re-expansion is computation, not free replay.
+- Completion is decided from the final pass and skipped-bound certificate, not from how fluent the current winner looks.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Run the traversal"
+body = '''
+Build and validate the admissible bound first. On each pass, reset the mutable search state, walk children by a fixed deterministic order, and count every visit. Record the best bound below the current threshold. Complete leaves update the exact top-$k$ list and its tie boundary.
+
+Count first visits and re-expansions separately. Node, re-expansion, iteration, time, and memory caps are independent. If any cap fires before the stopping proof holds, return incomplete and preserve a conservative unresolved bound. A cap does not become harmless because a good leaf was already found.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function THRESHOLD_SEARCH(root, bound, top_k, limits):
+    threshold = bound(root)
+    previous = +infinity
+    retained = empty exact top-k with complete boundary ties
+
+    loop:
+        require threshold < previous
+        next_threshold = NONE
+        reset mutable search state
+
+        function VISIT(node):
+            enforce every declared cap; on a cap return INCOMPLETE
+            if retained is full and bound(node) < retained.kth_score: return
+            if node is a legal leaf:
+                retained.insert_with_ties(EXACT_SCORE(node))
+                return
+            for child in ORDERED_LEGAL_CHILDREN(node):
+                b = bound(child)
+                if b >= threshold: VISIT(child)
+                else: next_threshold = MAX(next_threshold, b)
+
+        VISIT(root)
+        if a cap fired: return INCOMPLETE(retained, unresolved=root bound)
+        if next_threshold is NONE: return COMPLETE(retained)
+        if retained is full and next_threshold < retained.kth_score:
+            return COMPLETE(retained)
+        previous = threshold
+        threshold = next_threshold
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+The active frontier is one recursion path plus one child list per level: $O(d)$ stack records and $O(qd)$ child records for depth $d$ and at most $q$ children per node. Time can be much larger than best-first search because a prefix may be visited in several threshold passes. If thresholds decrease slowly or the bound is flat, repeated work can dominate. The terminal should therefore report iterations, first visits, re-expansions, and per-pass node counts.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Equality pruned.** Using $B\le L_k$ drops answers tied at the kth boundary.
+- **Threshold guessed.** Lowering by a fixed amount can skip a bound level and miss legal winners. Use the greatest encountered skipped bound.
+- **Nondecreasing threshold.** Repeating the same threshold causes an infinite loop or duplicate work without progress.
+- **Cap hidden by a leaf.** The current best answer is printed as exact even though an unresolved branch can still tie or win.
+- **Re-expansions uncounted.** A node budget counts only first visits and understates total work.
+- **Root bound used as a score.** An incomplete run with no leaf reports a partial upper bound as a candidate.
+- **Mutable state leak.** A new pass starts with assignments or incumbent-local caches left from the previous pass.
+- **Weak bound mistaken for bad traversal.** If nearly every child reaches each threshold, changing queue discipline cannot make the search selective.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The validated implementation matched direct complete enumeration for six synthetic cases at alphabet sizes five, six, and seven, covering both Vigenere-like and Beaufort-like cycle relations. It preserved every exact kth-score tie, including a flat-score control with 24 answers tied at a top-$k$ boundary of two.
+
+Across the six cases it used 58 strictly descending threshold passes and 8,583 visits: 2,735 first visits and 5,848 exact re-expansions. The largest recursion stack held ten entries and the largest set of active child records held 32. A separate implementation checked 25,878 reachable prefixes for bound validity and monotonicity, replayed every threshold and count, and rejected altered traces. Forced node, re-expansion, and iteration caps all returned incomplete.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+This traversal solves a storage problem, not an information problem. It is most useful when a validated bound is already selective but a best-first queue grows too large. In the degree-26 power panel, easy and medium Vigenere and Beaufort plants completed exactly at truth rank one. Two calibrated hard cases and one untuned holdout also retained truth at rank one, but all stopped incomplete at 30,000 nodes. A hard development case stayed incomplete at 120,000 and 500,000 nodes. That pattern points to a weak upper bound or repeated threshold work, not a need for a larger queue.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_THRESHOLD684.md"
+kind = "design"
+note = "Defines the descending-threshold rule, exact stopping certificate, storage accounting, cap semantics, and control scope."
+ref = "LOG684"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk9_threshold684_core.cpp"
+kind = "solver"
+note = "Memory-linear threshold traversal over a validated mini-bucket upper bound."
+ref = "LOG684"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk9_threshold684_audit.py"
+kind = "audit"
+note = "Separate traversal and bound replay over complete small-alphabet search spaces."
+ref = "LOG684"
+
+[[provenance]]
+path = "withmath/logs/684_threshold_kat_20260906T060630Z_1788674790238978000_51528.json"
+kind = "data"
+note = "Machine-readable thresholds, visit counts, candidates, storage peaks, cap cases, and trace checks."
+ref = "LOG684"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_THRESHOLD686.md"
+kind = "note"
+note = "Degree-26 power panel separating exact traversal correctness from practical completion under a weak bound."
+ref = "LOG686"
+
+[[provenance]]
+path = "withmath/logs/686_threshold_power_20260906T064203Z_1788676923305189000_70879.json"
+kind = "data"
+note = "Nine-case power artifact with complete easy and medium rows, capped hard rows, re-expansion counts, and independent checkpoints."
+ref = "LOG686"

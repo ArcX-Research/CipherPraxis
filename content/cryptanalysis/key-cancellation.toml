@@ -5,10 +5,10 @@ subtitle = "Subtract two ciphertexts to remove a stream they share"
 status = "VERIFIED"
 status_note = "The exact cancellation checks covered 144 combinations of offset, direction, and sign, including both inverses and forward reconstructions. A segment-aware selector then recovered 16/16 hidden positive pairs and rejected 4/4 negatives, each against 99 full-pipeline nulls. It did not test the two project texts because an earlier family check found that the required chain did not fit them (segment-cancellation review, logs/373, coupling note)."
 family = "Relations between ciphertexts"
-tags = ["two ciphertexts", "running key", "difference", "gauge", "cancellation", "index map"]
-related = ["running-key", "vigenere", "beaufort", "one-time-pad", "segment-chain-analysis", "running-key-relation-test", "shared-cycle-attack", "affine-maps-mod-26", "conjugacy-and-gauge", "difference-operators", "valid-model-nulls", "target-absent-controls", "known-answer-tests", "g-key-cancellation", "g-selection-freedom"]
-summary = "Two ciphertexts may share one hidden stream because one plaintext keys the other or one running key is reused. Subtracting them with the right sign can remove that shared stream and leave a simpler cipher. This works only when both texts use the same alphabet index order, or orders linked by an affine map. It also leaves 26 equivalent shifts. The remaining cipher still needs to be solved and checked. Before any target run, key-independent patterns must support the shared-stream premise."
-updated = "2026-09-04"
+tags = ["two ciphertexts", "running key", "difference", "periodic IC", "gauge", "cancellation", "index map"]
+related = ["running-key", "vigenere", "beaufort", "one-time-pad", "segment-chain-analysis", "running-key-relation-test", "shared-cycle-attack", "exact-period-alignment", "index-of-coincidence", "within-coset-null", "family-wise-null", "affine-maps-mod-26", "conjugacy-and-gauge", "difference-operators", "valid-model-nulls", "target-absent-controls", "known-answer-tests", "g-key-cancellation", "g-selection-freedom"]
+summary = "Two ciphertexts may share one hidden stream because one plaintext keys the other or one running key is reused. Adding or subtracting aligned source indices with the right sign can remove that stream and leave a simpler periodic cipher. Whole-stream IC can miss that residual because it mixes differently shifted cosets, so the screen must measure periodic IC, aligned cosets, or shift-marginalised language evidence. Cancellation requires compatible index orders, leaves gauge aliases, and still needs exact reconstruction and matched nulls."
+updated = "2026-09-06"
 
 [[blocks]]
 kind = "definition"
@@ -22,8 +22,22 @@ The unknown plaintext $P$ has cancelled; $d$ is $Q$ under the (signed) key of te
 
 [[blocks]]
 kind = "equations"
-title = "Conditions, counts and gauge"
+title = "Derived streams, periodic evidence and gauge"
 body = '''
+- **Derived family.** Write the two aligned sources as $x_i=z_L(C_i)$ and $y_{\phi(i)}=z_R(D_{\phi(i)})$, where $\phi$ includes offset and orientation. Screen both
+
+$$d_i^{(\sigma)}=x_i+\sigma y_{\phi(i)}\pmod{26},\qquad \sigma\in\{-1,+1\}.$$
+
+If $y_{\phi(i)}=r_i+h_{i\bmod m}$ and $x_i=q_i-\sigma r_i$, then $d_i^{(\sigma)}=q_i+\sigma h_{i\bmod m}$. The high-entropy stream $r$ is gone, but the result is still a period-$m$ cipher rather than plain text.
+- **Why period-1 IC can miss.** Let $F_b(x)$ be the histogram of $d_i$ in positions $i\equiv b\pmod m$. If $F_b(x)=F(x-k_b)$, each coset has the peaked inner histogram $F$, while the whole histogram $H(x)=\sum_b F(x-k_b)$ is a mixture of rotations and can be nearly flat. Thus $\operatorname{IC}(d)\approx1/26$ does not reject the construction. A weighted periodic statistic keeps only within-coset pairs,
+
+$$\operatorname{pIC}_m(d)=\frac{\sum_b\sum_xF_b(x)(F_b(x)-1)}{\sum_b n_b(n_b-1)},\qquad n_b=\sum_xF_b(x).$$
+
+Exact coset alignment goes further: it finds relative rotations that maximise the union IC. A shift-marginalised monogram score integrates, rather than chooses, the unknown shift in every coset:
+
+$$M_1(d;m)=\frac{1}{n}\left[\sum_b\log\left(\frac1{26}\sum_{s=0}^{25}\exp\left(\sum_xF_b(x)\log E(x-s)\right)\right)+n\log26\right].$$
+
+For the reciprocal endpoint, apply the same score to $-d$. Periodic IC says that each coset is non-flat; alignment tests whether the coset histograms are rotations in the declared index order; $M_1$ asks whether those rotations resemble the reference distribution. None alone produces plaintext.
 - **Common index space.** If B's plaintext is indexed by $z_9$ and A converts the running-key letters by $z_8$, cancellation requires the physical-letter conversion $F(u) = z_8(z_9^{-1}(u))$ to be affine, $F(u) = au + b$ with $\gcd(a, 26) = 1$: then $a\epsilon_B x$ cancels the plaintext and $b$ is absorbed into the key. The straight order and the keyword-mixed order of the corpus admit **no** affine map between them (checked over all 12 units and 26 translations), so only matched-order cells cancel literally; mixed-order subtraction tests a shared numeric stream, not a shared plaintext.
 - **Signs.** With the plaintext sign convention, four sign cells $(\epsilon_B, \epsilon_A)$ give two observably different streams ($y - x$ and $y + x$) with two endpoint relations each. A convention that puts the sign on the key instead has only two effective cells. A production source must declare one convention and prove it with known-answer tests.
 - **Alignment.** For a cycled 144-letter key the offsets live in $\mathbb{Z}/144$; with two orientations there are 288 raw alignments (not 592, which counts non-wrapped edge overlaps of a different model).
@@ -35,6 +49,7 @@ kind = "assumptions"
 body = '''
 - The shared stream enters both texts additively in the same index order, at a known or enumerable alignment.
 - The residual key $K$ has enough structure to be solved from $d$ (periodic, segmented periodic, or constant).
+- The period and every selected source pair, order, sign, orientation, offset, and zone are either fixed in advance or re-selected inside every null replicate.
 - The family is consistent with the texts' invariants: adding a high-entropy running key destroys the coset structure of $y$, so a text that shows a strong periodic alignment cannot be the output of such a chain (see failure modes).
 '''
 
@@ -43,10 +58,11 @@ kind = "attack"
 title = "How to attack it"
 body = '''
 1. Fix the convention, the alignment $\phi$ and the common order; enumerate the sign cells (16 cells for two orders and two signs per text).
-2. Form $d$ for each cell and solve it as the cipher the residual key implies (a constant Caesar segment, a periodic segment, or both when the key changes regime, see [Segment chain analysis](/cryptanalysis/segment-chain-analysis)).
-3. Reconstruct both plaintexts and re-encrypt both texts independently; both forwards must reproduce the inputs exactly, which validates the implementation but is never evidence of language or uniqueness.
-4. Select by a language statistic of the recovered $Q$ only (P may be structured rather than prose); expand every same-order key through its 26 gauge states before selection; retain ties.
-5. Null: permute positions within the key groups of the derived stream (destroying adjacency and cross-text pairing, preserving group histograms), rerun the entire selector 99 times, and require the observed maximum to beat every replicate.
+2. Form every $d^{(\sigma)}$. Do not stop at whole-stream IC: for each declared period compute periodic IC, shift-marginalised monogram evidence, and exact or validated coset alignment. Treat these as structural gates, not decryptions.
+3. Solve admitted streams as the cipher the residual key implies (a constant Caesar segment, a periodic segment, or both when the key changes regime, see [Segment chain analysis](/cryptanalysis/segment-chain-analysis)).
+4. Reconstruct both plaintexts and re-encrypt both texts independently; both forwards must reproduce the inputs exactly, which validates the implementation but is never evidence of language or uniqueness.
+5. Select by a language statistic of the recovered $Q$ only (P may be structured rather than prose); expand every same-order key through its 26 gauge states before selection; retain ties.
+6. Use two matched nulls for two different questions. To calibrate histogram gates at a fixed geometry, permute one source within the physical period groups while holding the other fixed, rebuild every derived cell, and rerun the complete compatible family. To calibrate language order after a key exists, permute the derived stream within its key groups and rerun the endpoint. The second null cannot calibrate periodic IC, alignment, or $M_1$ because it leaves their inputs unchanged.
 '''
 
 [[blocks]]
@@ -65,6 +81,9 @@ function KEY_CANCELLATION(x, y, phi, orders):
     // 16 cells for two orders and two signs per text
     for each cell (order for x, order for y, eps_B, eps_A):
         d = CANCEL(y, x, phi, eps_B)
+        structural[cell] = (PERIODIC_IC(d), MARGINAL_SHIFT_SCORE(d),
+                ALIGN_COSETS(d))
+        if not STRUCTURAL_GATE(structural[cell]): continue
         // the cipher the residual key implies: a constant segment, a periodic
         // segment, or both
         K = SOLVE_RESIDUAL(d)
@@ -80,14 +99,15 @@ function KEY_CANCELLATION(x, y, phi, orders):
             score[cell, g] = LANGUAGE_STATISTIC(Q)
     return (the best (cell, K', Q, P), observed = max score)
 
-function SELECT_WITH_NULL(x, y, phi, orders, N):
-    (best, observed) = KEY_CANCELLATION(x, y, phi, orders)
-    // N = 99 full reruns of the entire selector
+function SELECT_WITH_NULL(x, y, fixed_geometry, orders, N):
+    (best, observed) = KEY_CANCELLATION(x, y, fixed_geometry, orders)
+    // Draw inside the source's physical groups, then rebuild and reselect all
+    // signs, orders, and relations compatible with this geometry.
     for r in 1..N:
-        null[r] = observed score of KEY_CANCELLATION with the derived stream
-                permuted within its key groups
-                  // destroys adjacency and the cross-text pairing, preserves
-                  // the group histograms
+        g = DRAW_MATCHED_SOURCE_PERMUTATION(fixed_geometry)
+        y_null = APPLY_PHYSICAL_PERMUTATION(y, g)
+        null[r] = observed score of KEY_CANCELLATION(x, y_null,
+                fixed_geometry, orders)
     return (best, observed, observed beats every null[r])
 ```
 '''
@@ -102,7 +122,9 @@ Cancellation is $O(n)$ per cell. The cost is in the residual solve and its nulls
 kind = "failure_modes"
 body = '''
 - **Wrong index space.** Subtracting a straight-order ciphertext from a keyed-order one cancels nothing. A selector must include a mismatched-index negative to prove it does not treat that as cancellation.
-- **Degenerate nulls.** Histogram-only gates (marginalised monogram evidence, exact coset alignment) are invariant under shuffles within the derived cosets, so such a null cannot calibrate them. A structural null must destroy the cross-source pairing while preserving each source's coset histograms.
+- **Period-1 blindness.** Raw IC pools all cosets. Differently shifted peaked histograms can average to an almost uniform histogram, so a flat derived stream does not rule out a periodic residual.
+- **Degenerate nulls.** Histogram-only gates (periodic IC, marginalised monogram evidence, exact coset alignment) are invariant under shuffles within the derived cosets, so such a null cannot calibrate them. A structural null must destroy the cross-source pairing while preserving each source's coset histograms. If the period or alignment is selected, the null must repeat that selection too.
+- **No common matched shuffle.** Different periods, zones, or position maps may induce incompatible groups. A permutation valid for one cell is not automatically exchangeable for their union. Use separate matched tests with a predeclared family-wise combination, or prove that a finer common partition both preserves every required margin and still contains non-identity permutations.
 - **Variable-length scores.** A raw sum of log-probabilities over segments of different length grows deterministically with the breakpoint. An earlier design was blocked for exactly this bias.
 - **Premise inconsistent with the data.** Simulated chains of this kind predict for the 153-letter text a period-7 alignment of $z +0.13$ (range $-1.1$ to $+2.0$) and a zone coset IC of about $0.040$, against the measured $+4.2$ and $0.066$. The chain premise is disfavoured at roughly 3 to 4$\sigma$ before any run, and a hidden-bank pass would validate a test for a family the text does not resemble.
 - **Reading too much.** A readable $Q$ determines $P$ only algebraically. A claim about $P$ needs its own predeclared criterion.
@@ -153,6 +175,16 @@ path = "withmath/wm_crossderive.py"
 kind = "solver"
 note = "Cross-derived streams over every ordered pair, order, sign, orientation and offset with a complete-selection shuffle null."
 ref = "logs/155_crossderive.log"
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/CROSS_DERIVED_STRUCTURAL_COVERAGE_AUDIT.md"
+kind = "audit"
+note = "Distinguishes the early period-1 IC screen from the later periodic monogram, coset-alignment, and bounded endpoint screen; records its exact search scope and limits."
+
+[[provenance]]
+path = "withmath/docs/pk8-pk9/PK89_SEGMENT_CANCELLATION_REVIEW.md"
+kind = "audit"
+note = "Derives the compatible-index condition, periodic and segmented cancellation geometry, and the distinction between source-pairing nulls for histogram gates and within-derived-group nulls for language order."
 
 [[provenance]]
 path = "withmath/wm_algebra.py"

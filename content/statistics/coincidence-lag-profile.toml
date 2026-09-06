@@ -3,12 +3,12 @@ section = "statistics"
 title = "Coincidence lag profile"
 subtitle = "Count matching letters at each gap to reveal periods and boundaries"
 status = "VERIFIED"
-status_note = "The test uses shuffled nulls within segments and cosets plus planted prose. A planted period-7 substitution has peaks at gaps 7, 14, and 21, with z +7.4, +4.9, and +3.1 at 153 letters. Adding a width-9 transposition outside that layer flattens the same profile to z -0.7."
+status_note = "Lag profiles pass planted periodic checks. A complete aligned-row extension also recovered four planted row copies, while a striking seven-of-26 observed match had selected-null p = 0.750 once all widths, gaps, and starts were included."
 family = "Coincidence and frequency statistics"
 tags = ["coincidence", "lag", "period detection", "zone detection", "fingerprint"]
 related = ["index-of-coincidence", "shuffled-null-z-score", "family-wise-null", "within-coset-null", "kasiski-examination", "exact-period-alignment", "change-point-zone-detection", "family-identification", "coincidence-lab"]
 summary = "At gap d, the coincidence rate is the share of pairs (i, i+d) that contain the same letter. With a key of period m, gaps that are multiples of m have the plaintext rate, about 0.066 for English. Other gaps stay near the random rate of 0.04. Plotting the rate across gaps can reveal the period. Computing it by segment or sliding window also shows where a periodic layer starts and stops. After coset alignment, its shape helps tell different layer orders apart."
-updated = "2026-09-04"
+updated = "2026-09-06"
 
 [[blocks]]
 kind = "definition"
@@ -29,6 +29,7 @@ body = '''
 - **Windowed lag map.** In a window of 42 letters at lag 7 there are 35 pairs. A period-7 substitution of prose expects about $2.3/35 = 0.066$ coincidences, uniform letters $0.038$. Sliding the window (step 7) draws where the periodic layer lives.
 - **Pooled same-coset rate.** Lags $7, 14, 21$ pooled against planted prose zones of the same geometry (300 plants) gives one number per zone with a simulated standard error.
 - **Alignment z-profile.** For each candidate period $p$, align the cosets by histogram rotation, take the union [IC](/statistics/index-of-coincidence), and report its $z$ against within-text shuffles. The vector of $z$ over $p \in \{3,4,7,9,14,17,21\}$ is compared with the same vector for planted constructions.
+- **Global aligned-row scan.** For every fitting width $w$, positive row gap $g$, and start $a$, count $K(w,g,a)=\sum_{j=0}^{w-1}[c_{a+j}=c_{a+gw+j}]$. Rank the complete family by a fixed-histogram binomial-tail score, then rerun the full maximisation on whole-multiset permutations. This tests a localized repeat without selecting its width or offset in advance.
 '''
 
 [[blocks]]
@@ -47,6 +48,7 @@ body = '''
 2. Slide a window along the text at the candidate lag to find where the periodic layer starts and stops. One zoned 153-letter text showed a lag-7 rate of $0.00$ in its first four 42-letter windows, $0.11$–$0.14$ across its middle and $0.00$ again at the end, and a 144-letter text rose from $0.03$–$0.09$ in its first half to $0.11$–$0.17$ in its second, i.e. periodic layers confined to zones.
 3. Run the alignment z-profile and compare with the planted library. At 153 letters a plain period-7 substitution reads $(p_7, p_{14}, p_{21}) = (+7.4, +4.9, +3.1)$ with nothing at $3, 4, 9, 17$. A period-7 substitution applied *under* a width-9 columnar transposition collapses to $-0.7$ at $p_7$. A Hill layer outside or inside the periodic layer gives $+0.5$. A target whose profile peaks at 7 with the inherited 14/21 tail therefore has its periodic layer outermost, and the magnitude of the peak estimates the inner text's IC.
 4. Hand the period to [exact period alignment](/cryptanalysis/exact-period-alignment) and the zone boundaries to [change-point detection](/cryptanalysis/change-point-zone-detection).
+5. If one localized row match was noticed after inspecting the text, replace the fixed-tuple reading with the global aligned-row scan. The null must choose its own best width, gap, and start.
 '''
 
 [[blocks]]
@@ -97,6 +99,7 @@ body = '''
 - **Plaintext repeats masquerade as key structure.** An excess at lag 28 in a 96-letter zone (rate $0.164$, $z = +2.6$ against a within-coset permutation null and about $+3$ against every planted prose model, including a 28-letter varied-copies key) is plaintext self-similarity at $4 \times 7$, not a period-28 key. A shuffle null also destroys such repeats, so repetition can mimic a key change in a change-point scan.
 - **Granularity.** Thirty-five pairs per window resolve the rate only in steps of $0.029$. A window that reads $0.00$ is compatible with a rate of $0.03$.
 - **Multiplicity.** Seventy lags are tested. A single lag at $z = +2.9$ is not significant on its own. Use a [family-wise null](/statistics/family-wise-null) for "any lag".
+- **Post-selected row geometry.** A small nominal tail for one chosen row pair can be ordinary when hundreds of thousands of widths, gaps, and starts were available. Report the rank of the global maximum under complete fixed-multiset permutations.
 - **Disagreement with alignment.** A text can show no individually significant lag (whole-text lag 7 at $z = +0.0$) while its coset histograms align at $z = +4$. When the key is zoned, the histogram alignment sees the zone and the whole-text lag profile dilutes it.
 '''
 
@@ -104,6 +107,8 @@ body = '''
 kind = "controls"
 body = '''
 Each segment profile includes a shuffle null made within that segment. The pooled same-coset rate for each zone is compared with 300 planted prose zones of the same shape. One zone gave $0.068$ against $0.064 \pm 0.022$, $z = +0.2$. The other gave $0.081$ against $0.065 \pm 0.017$, $z = +0.9$. The alignment z-profile is calibrated on 13 models at 153, 144, and 504 letters: plain periods 7, 14, and 21; period 7 combined with 2 or 3; sandwiches at widths 9 and 17; an outside transposition; and Hill inside and outside. At 504 letters, the plain period-7 model gives $z = +39$ at $p_7$, showing how quickly the test gains power as text grows.
+
+The global row scanner recovered four planted complete-row copies, each as the unique family winner with empirical rank $1/100$. Two fixtures containing exactly seven aligned matches at width 26 were not selected as their own global winner and had full-family ranks $0.54$ and $0.18$. On one 504-symbol observation the complete scan covered 495,747 physical tuples. Its unique seven-of-26 winner had a fixed-tuple nominal tail near $4.5\times10^{-5}$ but a selected-null rank of $0.750$ over 999 fixed-multiset permutations. A separate prefix-sum implementation reproduced all fixture scans, null maxima, ties, and the observation result.
 '''
 
 [[blocks]]
@@ -158,6 +163,30 @@ note = "Rounds 5c-5d: 'honest lag profiles', the windowed lag-7 zone maps, and t
 path = "withmath/REVIEW_A.md"
 kind = "audit"
 note = "Section 5.4: the lag-28 excess is plaintext self-similarity, not key structure; section 2.9a: shuffle nulls destroy plaintext repeats so repetition mimics a key change."
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_ROWEQ725.md"
+kind = "audit"
+note = "Defines the complete width-gap-start aligned-row family, fixed-histogram ranking statistic, full-reselection null, target-absent controls, and independently replayed null-like observation."
+ref = "LOG725"
+
+[[provenance]]
+path = "withmath/logs/725_roweq_controls_20260906T121540Z_22648.json"
+kind = "data"
+note = "Frozen controls for planted complete rows, seven-match diagnostics, and unlinked cases."
+ref = "LOG725"
+
+[[provenance]]
+path = "withmath/logs/725_roweq_controls_audit_20260906T121715Z_30257.json"
+kind = "audit"
+note = "Independent replay of all control streams, permutations, physical scans, tails, and ties."
+ref = "LOG725"
+
+[[provenance]]
+path = "withmath/logs/725_roweq_live_audit_20260906T121923Z_39122.json"
+kind = "audit"
+note = "Independent replay of the complete 495,747-cell observation scan and 999 selected-family null maxima."
+ref = "LOG725"
 
 [[references]]
 title = "Military Cryptanalysis, Part III"

@@ -1,0 +1,225 @@
+id = "additive-stream-wheels"
+section = "ciphers"
+title = "Additive stream wheels"
+subtitle = "Build one structured key by adding several repeating sequences"
+status = "VERIFIED"
+status_note = "The period bound, collapse rule, and residual test follow exactly from modular arithmetic. A complete four-wheel selector recovered four planted controls as unique global winners. On three separate application texts, the same finite selector finished exactly but its winners fell below held-out language floors and were beaten by many full-selector nulls."
+family = "Composite constructions"
+tags = ["periodic", "additive", "superposition", "structured key", "lcm"]
+related = ["vigenere", "compound-periodic-key", "permutation-keystream", "lcm-of-periods", "modular-inverse-and-crt", "exact-period-alignment", "key-cancellation", "known-answer-tests", "planted-controls", "valid-model-nulls", "selection-overfit-check", "family-wise-null", "g-period"]
+summary = "Several short words, phrases, or numeric sequences can run as repeating wheels and be added to form one keystream. The combined stream can look much less repetitive than any one source, but its period still divides the least common multiple of the wheel lengths. If several wheels have the same period, they collapse into one ordinary periodic key, so the ciphertext cannot identify the separate sources without extra restrictions. A sound attack searches a declared source bank, merges byte-identical effective keys while keeping their origins, verifies every symbol exactly, and compares the best result with the same full search on null data."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Represent the alphabet by $\mathbb{Z}_q$. Wheel $j$ is a sequence $w_j$ of length $p_j$, with phase $\phi_j$ and coefficient $s_j$. Its contribution at position $i$ is read cyclically. The combined key and an additive encryption are
+
+$$k_i = \sum_{j=1}^{r} s_j w_j[(i+\phi_j) \bmod p_j] \pmod q,$$
+
+$$c_i = e x_i + k_i \pmod q, \qquad e\in\{+1,-1\}.$$
+
+Usually $s_j$ is $+1$ or $-1$, but any fixed element of $\mathbb{Z}_q$ defines a valid weighted wheel. The final sign $e=+1$ gives the usual additive plaintext relation; $e=-1$ gives its reflected, Beaufort-like form. A source word becomes a numeric wheel by converting its letters to alphabet coordinates. The construction can therefore describe a long keystream with a short tuple of sources, signs, phases, and one final relation sign.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Period, collapse, and exact residual"
+body = '''
+Let
+
+$$T = \operatorname{lcm}(p_1,\ldots,p_r).$$
+
+Every wheel repeats after $T$, so $k_{i+T}=k_i$. The **minimal** period may be a proper divisor of $T$ when a wheel itself has a smaller period or when contributions cancel.
+
+If every wheel has the same period $p$, define
+
+$$u_t = \sum_{j=1}^{r} s_j w_j[(t+\phi_j) \bmod p] \pmod q.$$
+
+Then $k_i=u_{i\bmod p}$: all the wheels are observationally one period-$p$ key. The same collapse holds whenever every $p_j$ divides one common period $p$.
+
+With known or proposed plaintext and declared final sign, first derive $z_i=c_i-e x_i\pmod q$. A claimed source tuple has residual
+
+$$e_i = z_i-\sum_{j=1}^{r}s_jw_j[(i+\phi_j)\bmod p_j]\pmod q.$$
+
+Exact agreement means $e_i=0$ at every position and literal re-encryption reproduces every ciphertext symbol. This proves algebraic consistency, not that a plaintext or source tuple was discovered independently.
+
+The position map $i\mapsto(i\bmod p_1,\ldots,i\bmod p_r)$ is governed by the Chinese remainder theorem. Pairwise coprime periods visit every residue tuple once per $T$; shared factors permit only residue tuples that agree modulo the relevant greatest common divisors.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Signed wheels.** Choose $s_j\in\{+1,-1\}$ to add or subtract each source.
+- **Phased wheels.** Rotate each source independently by $\phi_j$ before combining it.
+- **Counter-rotation.** Read a wheel as $w_j[(\tau_j i+\phi_j)\bmod p_j]$, commonly with $\tau_j=+1$ or $-1$.
+- **Weighted wheels.** Use any declared coefficient $s_j\in\mathbb{Z}_q$. A non-unit coefficient can merge several source symbols into one contribution.
+- **Final relation sign.** Use $e=+1$ for an additive plaintext term or $e=-1$ for a reflected plaintext term. This choice belongs to the selector and must also be repeated in every null run.
+- **Source banks.** Draw wheels from words, phrases, measured sequences, or a finite numeric catalog instead of treating every key value as free.
+- **Different alphabet coordinates.** If layers use different mixed alphabets, simple addition no longer combines them into one wheel. That broader construction belongs to [Compound periodic key](/ciphers/compound-periodic-key).
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and identifiability"
+body = '''
+- All wheels use the same declared coordinate alphabet and the combination is additive modulo $q$.
+- Periods, phases, directions, and signs remain fixed over the analysed region. A reset or change point creates a different model.
+- The source bank and every allowed transformation are fixed before inspecting a winning candidate.
+- The ciphertext determines only the combined key after the plaintext is known. It does not normally determine a unique decomposition into wheels.
+- Same-period wheels collapse pointwise. More generally, component constants have a gauge: when $s_b$ is invertible, adding $\delta$ to wheel $a$ and subtracting $s_a s_b^{-1}\delta$ from wheel $b$ leaves the combined key unchanged.
+- Permuting identical component roles, rotating a source while changing its phase, and using a source with a hidden smaller period create further aliases. Report a canonical equivalence class, not a misleading raw tuple count.
+- If the observed length is shorter than $T$, some composite positions are never seen. Many different source tuples may then agree on the entire observation.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to attack it"
+body = '''
+1. Declare $q$, the number of wheels, the allowed source banks, signs, phases, directions, and periods.
+2. If plaintext is known or supplied as a fixed crib, compute the observed key stream $z_i=c_i-x_i\pmod q$. Otherwise, generate each candidate combined key and score its decrypted text.
+3. Build each full observed effective key stream exactly. Merge byte-identical streams before language scoring, but preserve every source tuple, sign pattern, phase, and role permutation that produced each stream.
+4. Enumerate source tuples directly, or split the wheels into two groups and join equal partial-sum vectors with a meet-in-the-middle table.
+5. Require an exact zero residual over the full observation, then re-encrypt independently from the reported sources, phases, signs, and plaintext.
+6. Run the unchanged maximum-selection pipeline on matched null data. The null must repeat every choice of source, order, phase, sign, direction, period, alphabet, and language polish.
+7. Report the raw source-tuple count, unique effective-key count, and every winning origin separately. Effective-key recovery does not imply a unique source decomposition when gauges or aliases remain.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function COMPOSE(wheels, signs, phases, n, q):
+    for i in 0..n-1:
+        key[i] = 0
+        for j in 0..len(wheels)-1:
+            p = len(wheels[j])
+            key[i] += signs[j] * wheels[j][(i + phases[j]) mod p]
+        key[i] = key[i] mod q
+    return key
+
+function VERIFY(plain, cipher, wheels, signs, phases, final_sign, q):
+    key = COMPOSE(wheels, signs, phases, len(cipher), q)
+    for i in 0..len(cipher)-1:
+        residual[i] = (cipher[i] - final_sign*plain[i] - key[i]) mod q
+    return ALL(residual[i] == 0), residual
+
+function SEARCH(observed_key, candidate_tuples, q):
+    origins_by_effective_key = {}
+    for tuple in CANONICALISE(candidate_tuples):
+        trial = COMPOSE(tuple.wheels, tuple.signs, tuple.phases,
+                        len(observed_key), q)
+        if trial == observed_key:
+            origins_by_effective_key[BYTES(trial)].append(tuple)
+    return origins_by_effective_key
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Generating one candidate stream costs $O(rn)$ time. If wheel $j$ has $N_j$ allowed source, phase, sign, and direction combinations, direct enumeration costs $O(rn\prod_jN_j)$. A balanced meet-in-the-middle search replaces the full product with two partial products, at the cost of storing partial-sum vectors. The least common multiple $T$ can grow much faster than the description length, so a direct free period-$T$ key search may be underdetermined even when the structured source search is small.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Treating roundtrip as discovery.** Decrypting with a chosen tuple and then re-encrypting with that same tuple always passes. Exact zero residual catches arithmetic and transcription errors; it becomes evidence only when the plaintext, source bank, or candidate was fixed independently.
+- **Claiming the individual wheels.** Same-period components and constant gauges can yield many source tuples with one identical composite key. Preserve and report all aliases or a proved canonical class.
+- **Assuming the period equals the lcm.** Cancellation or an internally repeating source can shorten it. Compute the minimal period of the finished stream.
+- **Searching sources after seeing the answer.** Expanding the word bank, allowed phases, or signs in response to a promising fragment adds selection freedom.
+- **Using a per-candidate null.** The best of many source tuples will look better than a typical tuple. Each null must repeat the full family maximum and every later refinement.
+- **Ignoring the final relation choice.** Testing both plaintext signs on the observed text but only one sign on nulls makes the observed selector larger and the comparison unfair.
+- **Mismatched shuffles.** For a language-scored periodic attack, whole-text shuffling may make the null too easy if the solver exploits coset counts. Preserve every nuisance structure that the tested claim permits while destroying the cross-wheel alignment or language order being measured.
+- **Too little coverage.** When $n<T$, an exact match may constrain only a small part of the composite cycle. State how many distinct residue tuples were observed.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Use planted controls that match the intended text length, source-bank size, periods, signs, phases, and scoring pipeline. Include coprime and non-coprime periods, a deliberately shortened minimal period, same-period aliases, a one-symbol near miss, and a case where the true source is absent from the bank. A control may pass composite-key recovery while correctly returning several equivalent source tuples.
+
+For significance, apply the complete search to every null replicate and compare the observed family maximum with the null family maxima. A position shuffle can test exact cross-wheel alignment when its preserved features are declared. A within-residue shuffle is safer when a periodic language solver is allowed to use coset histograms. Report the empirical exceedance, tie rule, number of nulls, and whether the planted truth survived every shortlist and polish stage.
+
+One exact four-wheel experiment searched 142,800 raw endpoints from a fixed 17-source bank, four distinct sources at a time, allowed coefficient signs, two coordinate alphabets, and both final plaintext signs. Full-stream deduplication found 35,700 unique effective keys per alphabet at each tested length, while retaining every raw origin. Four planted held-out controls were unique global winners above their language floors and above three complete-selector nulls; an independent-random-stream negative stayed below its floor. An independent implementation replayed the enumeration, winners, and forwards.
+
+The unchanged selector was then applied to three separate ciphertexts of lengths 153, 144, and 504, with 99 full-selector position-permutation nulls for each text. Every enumeration and forward check completed. The observed winners were below the held-out language floor and were equalled or beaten by 75, 74, and 30 null maxima respectively. This is a sound rejection of that finite source bank, phase-zero, four-wheel, two-alphabet, two-final-sign family. It says nothing about sources outside the bank, nonzero phases, a different number of wheels, transposition, or a running key. Strong planted-control power makes this scoped rejection useful; it does not make it broader than the selector that was actually tested.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Two wheels with periods two and three"
+body = '''
+Let $q=26$, $w_1=(1,4)$, $w_2=(3,0,2)$, with positive signs and zero phases. Their period divides $\operatorname{lcm}(2,3)=6$, and the six combined shifts are $(4,4,3,7,1,6)$. Encrypt `CLOCKS` with A = 0:
+
+```trace
+i       0   1   2   3   4   5
+plain   C   L   O   C   K   S
+x       2  11  14   2  10  18
+w1      1   4   1   4   1   4
+w2      3   0   2   3   0   2
+key     4   4   3   7   1   6
+cipher  G   P   R   J   L   Y
+e_i     0   0   0   0   0   0
+```
+
+The result is `GPRJLY`. The composite has minimal period six: it is not constant, period two, or period three. The residual row verifies every symbol, while the stated plaintext and wheels make the check independent and reproducible.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+This page treats superposition as a **structured key generator** in one coordinate alphabet. [Least common multiples of periods](/algebra/lcm-of-periods) gives the period theorem, [Modular inverses and CRT](/algebra/modular-inverse-and-crt) explains the residue tuples, and [Vigenère](/ciphers/vigenere) gives the resulting encryption. [Compound periodic key](/ciphers/compound-periodic-key) covers stacked operations, including different alphabets. The distinction matters because recovering the effective periodic key and identifying the sources that generated it are different endpoints. Use [Planted controls](/validation/planted-controls) to measure source recovery and the [Selection overfit check](/validation/selection-overfit-check) for a searched family.
+'''
+
+[[provenance]]
+path = "withmath/scripts/wm_compound.py"
+kind = "solver"
+note = "Implements two periodic additive components in one alphabet, alongside the distinct two-alphabet layered model, with planted controls and repeated shuffled fits."
+ref = "logs/06_compound.log"
+
+[[provenance]]
+path = "withmath/logs/06_compound.log"
+kind = "log"
+note = "Records exact planted-plaintext recovery for the same-alphabet two-component construction and the corresponding selected-family shuffle comparisons."
+ref = "logs/06_compound.log"
+
+[[provenance]]
+path = "withmath/scripts/wm_algebra.py"
+kind = "solver"
+note = "Implements least-common-multiple period reasoning, periodic residual screens, and additive sum and difference measurements."
+ref = "logs/03_algebra.log"
+
+[[provenance]]
+path = "withmath/logs/03_algebra.log"
+kind = "log"
+note = "Records the period and residual measurements used to check the algebraic instrument."
+ref = "logs/03_algebra.log"
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/FOURCLOCK696_DESIGN.md"
+kind = "design"
+note = "Defines the finite four-wheel family, coefficient and final-relation signs, effective-key deduplication with origin retention, held-out controls, and full-selector null contract."
+ref = "LOG696"
+
+[[provenance]]
+path = "withmath/logs/696_fourclock_controls_20260906T080753Z_99255_10196.json"
+kind = "data"
+note = "Records four unique planted global winners, complete full-selector nulls, a wrong-family negative, exact key recovery, and scalar forwards."
+ref = "LOG696"
+
+[[provenance]]
+path = "withmath/logs/696_fourclock_live_audit_20260906T081638Z_41449_5320.json"
+kind = "audit"
+note = "Independently replays all three observed selectors and 297 matched-null selectors, verifies the forwards, and confirms the scoped no-evidence terminal."
+ref = "LOG696"
+
+[[references]]
+title = "Military Cryptanalysis, Part II"
+author = "William F. Friedman"
+year = 1938
+
+[[references]]
+title = "The Codebreakers"
+author = "David Kahn"
+year = 1967

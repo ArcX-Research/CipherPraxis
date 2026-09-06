@@ -1,0 +1,150 @@
+id = "transitive-process-census"
+section = "engineering"
+title = "Transitive process census"
+subtitle = "Reconstruct every expected child invocation instead of trusting a pipeline's summary"
+status = "UNTESTED"
+status_note = "Single- and two-child process boundaries have passed exact replay, and the full conditional-DAG verifier passed static refusal tests. Its complete model-bearing multi-branch preflight was still running at the inventory cutoff, so end-to-end status remains untested."
+family = "Reproducible solver architecture"
+tags = ["process census", "execution DAG", "subprocess", "provenance", "replay"]
+related = ["isolated-acquisition-solver-handoff", "reproducibility-receipts", "kat-harness", "candidate-bank-lineage-and-cap-accounting", "seal-and-audit-protocol"]
+summary = "A multi-process solver should declare the child-process graph implied by its public inputs and intermediate decisions. An independent verifier reconstructs that graph, matches it exactly to committed process records, and replays every edge binding. Missing, extra, reordered, or unauthenticated children then fail even when the final summary claims success."
+updated = "2026-09-06"
+
+[[blocks]]
+kind = "definition"
+body = '''
+A **transitive process census** treats a solver pipeline as a directed acyclic graph $G=(V,E)$. Each vertex is one expected invocation and each edge carries a committed input or output artefact. The verifier derives $G$ from the frozen protocol and authenticated public results, not from a worker's reported process count.
+
+For every observed child it requires a process record containing the exact command, executable and source identities, standard-input hash, standard-output hash, standard-error hash, exit status, and declared output hashes. Acceptance requires a bijection between expected and observed vertices plus semantic replay along every edge.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Graph reconciliation"
+body = '''
+Let $V_E$ be the independently derived expected invocation multiset and $V_O$ the committed observed process-record multiset. The census condition is
+
+$$V_E=V_O$$
+
+under a canonical invocation identity, not merely $|V_E|=|V_O|$. For every edge $(u,v)\in E$, the producer hash written by $u$ must equal the consumer hash read by $v$:
+
+$$H(O_u)=h^{\rm out}_u=h^{\rm in}_v=H(I_v).$$
+
+If public stage output determines whether a conditional child exists, the verifier recomputes that predicate and derives the branch before consulting process summaries.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Linear pipeline:** one process per stage with a fixed order.
+- **Conditional DAG:** support misses or exact cap failures legitimately remove named descendants.
+- **Parallel shards:** the expected multiset contains every declared shard; completion is order-insensitive but census-sensitive.
+- **Replay stage:** a child may consume frozen output instead of rerunning an ancestor, provided that provenance and semantics are explicit.
+- **Remote jobs:** signed execution records replace local process files while the graph equality remains the same.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- Expected branches are functions of authenticated public state and frozen policy, never hidden truth.
+- Process records and every referenced stream are included in the pre-reveal output commitment.
+- Exit success alone is insufficient; empty standard error, complete record schema, and semantic output checks remain explicit requirements.
+- A replayed ancestor is labelled replayed. Its presence cannot be misreported as a new invocation or fresh power measurement.
+- The graph describes observable orchestration, not operating-system containment against a malicious child.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Audit a process pipeline"
+body = '''
+Write the frozen protocol as a small independent graph builder. Starting from the public packet, derive each mandatory child and each conditional branch. Parse all committed process files, reject undeclared files, and compare canonical invocation identities. For every vertex, rehash the executable, input, output, and sidecars, then independently parse and replay its semantics. Finally, check that output-to-input hashes agree on every graph edge and that no child ran after a withholding or support-miss terminal.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function VERIFY_PROCESS_DAG(public, bundle, protocol):
+    expected = DERIVE_EXPECTED_DAG(public, bundle.public_stage_results,
+            protocol)
+    observed = PARSE_ALL_PROCESS_RECORDS(bundle)
+    require CANONICAL_VERTEX_MULTISET(observed) == expected.vertices
+    for process in observed:
+        require HASH(process.executable) == process.executable_hash
+        require HASH(process.stdin) == process.stdin_hash
+        require HASH(process.stdout) == process.stdout_hash
+        require HASH(process.stderr) == process.stderr_hash
+        require process.exit_status == protocol.expected_exit(process)
+        require INDEPENDENTLY_REPLAY(process.stdout, process.stage)
+    for edge in expected.edges:
+        require OUTPUT_HASH(edge.parent) == INPUT_HASH(edge.child)
+    require NO_PROCESS_EXISTS_AFTER_WITHHELD_BRANCH(expected, observed)
+    return COMPLETE_PROCESS_CENSUS
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Graph construction is $O(|V|+|E|)$. Hashing and semantic replay dominate and are linear in committed stream size plus the cost of stage-specific checks. The method records more data than a final-summary receipt, because completeness cannot be reconstructed from a summary alone.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Count-only reconciliation.** Two wrong invocations replace two expected ones while the total remains unchanged.
+- **Self-reported authentication.** The orchestrator says a child was verified, but no independent raw record supports it.
+- **Uncommitted losing outputs.** Nonselected model scores or aliases disappear, making selection impossible to replay.
+- **Unsolicited batch.** An undeclared child explores another seed or branch and only its best result reaches the summary.
+- **Missing conditional child.** A branch predicate required work, but the absence is mislabelled as a support miss.
+- **Replay presented as execution.** Frozen results are described as a fresh run and incorrectly counted as new power evidence.
+- **Process success presented as method success.** A complete DAG proves orchestration, not that the search family is useful.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Use a small deterministic DAG and mutate each vertex and edge class: change a command, executable, input hash, output hash, standard error, exit status, stage order, or branch predicate; drop one expected process; add one unsolicited process; and retain a process after a declared withholding terminal. Require exact refusal. Then run the actual single-child and short-chain boundaries before attempting a large conditional graph.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Conditional three-stage graph"
+body = '''
+A proposal process always runs. Its authenticated output either contains no support, ending the graph, or requires a scoring child. Only a certified scoring winner may trigger an expansion child. If support exists, the expected graph is `proposal -> score -> expand`; a bundle containing only `proposal -> score` is incomplete. If support is empty, a committed `expand.process.json` is unsolicited and also fails. The final process count alone cannot distinguish these cases.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+Workflow provenance and execution graphs are established engineering ideas. This entry captures the stricter cryptanalytic use: exact process-file census, branch derivation from authenticated public state, and independent semantic replay before any hidden evaluation.
+'''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK89_PIPELINE631_LIVE_RELEASE.md"
+kind = "audit"
+note = "Target-absent handoff recorded and independently replayed an actual two-child native sequence while distinguishing replayed ancestors from executed stages."
+ref = "LOG631"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK89_PREFIX637_PROCESS.md"
+kind = "audit"
+note = "Single-child model-bearing process test binds command, input, output, stderr, exit, sources, checkpoints, and the complete emitted bank."
+ref = "LOG637"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK89_DUAL638_GATE.md"
+kind = "design"
+note = "LOG638 specifies the complete conditional worker graph, full process-file census, no-child-after-withholding rules, and current end-to-end limitation."
+ref = "LOG638"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk89/wm_pk89_dual638_verify.py"
+kind = "script"
+note = "Verifier reconstructs the expected child order, matches every committed process file, and rejects unsolicited batches."
+
+[[provenance]]
+path = "withmath/logs/638_dual_static_20260905T205549Z_1788641749025735000.json"
+kind = "log"
+note = "Static source-bound receipt with 23 targeted refusal checks; it contains fabricated process metadata and is not an end-to-end process run."
+ref = "LOG638"
