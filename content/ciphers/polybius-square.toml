@@ -8,7 +8,7 @@ family = "Fractionation"
 tags = ["fractionation", "coordinates", "checkerboard", "component"]
 related = ["bifid", "trifid", "digrafid", "playfair", "two-square-four-square", "nihilist", "monome-dinome", "coordinate-columnar-fractionation", "keyword-mixed-alphabet", "bifid-lab", "g-fractionation"]
 summary = "A Polybius square places 25 letters in a 5×5 grid, with I and J sharing one cell. Each letter becomes two digits from 1 to 5: its row and column. By itself, this is a simple substitution into digit pairs. It becomes more useful in Bifid, Trifid, ADFGX-style, and straddling-checkerboard ciphers, which rearrange those digits before turning them back into letters."
-updated = "2026-09-05"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -32,7 +32,7 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - The square is a bijection. The merged letter pair (usually I/J) is the only information loss.
-- Invariant: the multiset of coordinate digits is preserved by any fractionating rearrangement, so digit frequencies, and therefore the row and column frequencies of the square, survive the mixing even though letter frequencies do not.
+- Invariant: a fractionating rearrangement preserves the combined multiset of coordinate digits. It need not preserve the row-coordinate and column-coordinate marginals separately, because regrouping can move a former row digit into a later column slot.
 '''
 
 [[blocks]]
@@ -76,7 +76,7 @@ function DECODE(digits[0..2n-1], S):                // digit pair -> letter
 [[blocks]]
 kind = "complexity"
 body = '''
-There are $25! \approx 1.6 \times 10^{25}$ squares, of which keyword-mixed squares are a tiny enumerable subset (one per distinct keyword). Row and column permutations of a square give equivalent Bifid ciphers only up to the re-pairing rule, so the effective search space is not much smaller than $25!$ for the blind case.
+There are $25!\approx1.6\times10^{25}$ literal squares, of which keyword-mixed squares are a tiny enumerable subset. For standard Bifid, applying the same permutation to the five row labels and five column labels is an exact coordinate-label gauge, giving at most $25!/5!$ distinguishable square descriptions before data-dependent aliases. Independent row and column relabellings are not gauges because fractionation can pair two former row digits or two former column digits.
 '''
 
 [[blocks]]

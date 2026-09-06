@@ -3,12 +3,12 @@ section = "exact"
 title = "Known-answer tests for cipher cores"
 subtitle = "Use fixed answers, small brute-force checks, broken inputs, stop sentinels, and known negatives"
 status = "VERIFIED"
-status_note = "Every sealed core runs known-answer tests before controls. Checks include forward/back round trips across 2,725,632 schedule coordinates, dynamic programming against brute force at 8/8, algebra identities on 1,092 score cells, 23/23 rejected parser and transcript mutations, 7/7 gates forced to fail with nonzero exits, and 5/5 structured negatives. One missed defect, tests bypassing the real parser, remains recorded with its repair."
+status_note = "The cited sealed cores run known-answer tests before controls. Checks include forward/back round trips across 2,725,632 schedule coordinates, dynamic programming against brute force at 8/8, algebra identities on 1,092 score cells, 23/23 rejected parser and transcript mutations, 7/7 gates forced to fail with nonzero exits, and 5/5 structured negatives. One missed defect, tests bypassing the real parser, remains recorded with its repair."
 family = "Exactness guarantees"
 tags = ["KAT", "self-test", "mutation test", "parity", "sentinel", "tautological gate"]
 related = ["kat-harness", "tautological-gate-rule", "reproducibility-receipts", "seal-and-audit-protocol", "bound-benchmarks-and-certificates", "exhaustive-enumeration", "cp-sat-and-smt-solvers", "all-different-enumeration", "vigenere", "vigenere-lab", "seed-determinism", "g-certificate"]
 summary = "A known-answer test gives a core fixed input with an answer known from another source. Any difference must fail loudly. Useful solver checks include round trips across full parameter ranges, fast code compared with brute force on small cases, algebra identities checked cell by cell, damaged inputs or transcripts that must be rejected, and forced failures that prove each gate can stop the run. A check that cannot fail is not a real test."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -19,7 +19,7 @@ parity KAT:        for small instances: fast_core(instance) == brute_force(insta
 identity KAT:      for every cell: algebraic relation holds exactly (e.g. relabelling of per-residue scores)
 mutation KAT:      for every single-coordinate edit of a valid input/transcript: verifier rejects
 sentinel KAT:      with an impossible budget (node cap 1): core reports INCOMPLETE, exits non-zero, leaks no key
-negative KAT:      structurally wrong instances (wrong period, three cycles, reversed latent, random letters): rejected
+negative KAT:      constructed incompatible fixtures (including named wrong-period or cycle cases): rejected
 forced-failure:    edit each gate to be wrong, run the suite, require a non-zero exit naming that gate; delete the mutant
 ```
 

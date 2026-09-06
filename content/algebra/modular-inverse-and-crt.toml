@@ -3,12 +3,12 @@ section = "algebra"
 title = "Modular inverses and the Chinese remainder theorem"
 subtitle = "Find modular inverses, split Z26 into Z2 × Z13, and join the answers again"
 status = "VERIFIED"
-status_note = "Every exact cycle solver uses modular inverses and the split into two prime fields. Across 240 systems and 538,656 answers, the CRT form of the all-different rule matched brute force with 0 errors. Solvers using it passed 32/32 exact crib checks and 4/4 lagged-recurrence primer checks."
+status_note = "The cited exact cycle solvers use modular inverses and the split into two prime fields. Across 240 systems and 538,656 answers, the CRT form of the all-different rule matched brute force with 0 errors. Solvers using it passed 32/32 exact crib checks and 4/4 lagged-recurrence primer checks."
 family = "Number theory"
 tags = ["inverse", "CRT", "extended Euclid", "lift", "GF(13)"]
 related = ["modular-arithmetic-z26", "units-mod-26", "finite-field-linear-algebra", "all-different-constraints", "matrix-invertibility-mod-26", "linear-recurrences-lcg", "all-different-enumeration", "exact-chain-oracle", "crt-lab", "gromark", "g-residue-class", "g-nullity"]
 summary = "A value in Z26 has an inverse exactly when it shares no factor with 26. The extended Euclidean algorithm finds that inverse. The Chinese remainder theorem represents each Z26 value as a pair: one remainder modulo 2 and one modulo 13. A solver handles the two fields GF(2) and GF(13), then joins the answers. The same split makes the 26-letter permutation rule cheap enough for exact alphabet search."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -26,9 +26,9 @@ body = '''
 **All-different through CRT.** A vector $z \in \mathbb{Z}_{26}^{26}$ is a permutation of $0..25$ iff $x \mapsto (z_x \bmod 2, z_x \bmod 13)$ is a bijection onto $\mathbb{Z}_2 \times \mathbb{Z}_{13}$, iff
 (a) every residue modulo 13 occurs exactly twice, and
 (b) the two indices carrying each residue have opposite parity.
-Condition (a) filters the $\mathrm{GF}(13)$ factor alone; condition (b) joins the factors and, for a fixed $\mathrm{GF}(13)$ vector, is a set of linear equations on the $\mathrm{GF}(2)$ null-space coefficients. The work is $2^{d_2} + 13^{d_{13}}$ rather than the product.
+Condition (a) filters the $\mathrm{GF}(13)$ factor alone; condition (b) joins the factors and, for a fixed $\mathrm{GF}(13)$ vector, is a set of linear equations on the $\mathrm{GF}(2)$ null-space coefficients. A signature join that enumerates each factor once, or a linear solve for each surviving odd-field vector, avoids scanning the full Cartesian product. The former is output-sensitive, with exponential enumeration $2^{d_2}+13^{d_{13}}$ plus polynomial bookkeeping and the cost of emitting all matches; that additive expression is not an unconditional bound for every implementation or for materialising every lift.
 
-**Projective enumeration.** Non-zero $\mathrm{GF}(13)$ null vectors can be enumerated up to scalar multiples: multiplying all coordinates by a non-zero scalar preserves residue-pair equality, the parity equations and permutation feasibility.
+**Projective enumeration.** For a complete 26-coordinate candidate, the zero $\mathrm{GF}(13)$ vector cannot satisfy the exactly-twice residue condition. The remaining nonzero null vectors may be enumerated up to nonzero scalar multiples, because scaling preserves residue-pair equality, the parity equations, and permutation feasibility. In a projected system with only one or two observed letters, the zero odd-field vector can still be injective after the parity join and extend to a full map; test that vector separately rather than dropping it projectively.
 
 **Decimal running keys.** $\mathbb{Z}_{10} \cong \mathbb{Z}_2 \times \mathbb{Z}_5$ splits a lagged-Fibonacci digit recurrence into two independent recurrences, which allows a meet-in-the-middle over primer halves.
 '''
@@ -36,7 +36,7 @@ Condition (a) filters the $\mathrm{GF}(13)$ factor alone; condition (b) joins th
 [[blocks]]
 kind = "assumptions"
 body = '''
-- The modulus is squarefree with known factorisation ($26$, $10$). The CRT needs coprime factors. Prime-power moduli need Hensel lifting instead.
+- The modulus is squarefree with known factorisation ($26$, $10$). The displayed field split needs coprime prime factors. For prime powers, linear systems require an appropriate ring method, such as Smith-normal-form/module techniques or a justified lifting procedure; the field-nullspace argument cannot simply be reused.
 - Inverses exist only for units; equations with non-unit coefficients (for example $2x \equiv c$) are handled by the two-factor view, not by division.
 '''
 
@@ -47,7 +47,7 @@ body = '''
 2. Row-reduce the homogeneous system over $\mathrm{GF}(2)$ and, independently, over $\mathrm{GF}(13)$.
 3. Enumerate the $\mathrm{GF}(13)$ null space projectively and keep vectors with each residue exactly twice.
 4. For each survivor solve the parity conditions in the $\mathrm{GF}(2)$ null space; lift; verify a literal permutation of $0..25$; canonicalise over the 12 units; re-check every original equation.
-5. Rank crib guesses by $d_{13}$, which is the search cost, never by consistency, which is automatic for a homogeneous system.
+5. Use $d_{13}$ as a dominant exponential cost proxy, never homogeneous consistency as evidence. Include parity solving, output multiplicity, and completion work in the actual resource bound.
 '''
 
 [[blocks]]
@@ -89,7 +89,7 @@ function LIFT26(z_2, z_13):
 [[blocks]]
 kind = "complexity"
 body = '''
-$2^{d_2} + 13^{d_{13}}$ instead of $2^{d_2} \cdot 13^{d_{13}}$: a $2^5 \cdot 13^5 = 11{,}881{,}376$ geometry was resolved in 371,325 units of work, about $0.1$ s. Budgets seen in practice: $13^5 = 371{,}293$ vectors per system as an enumeration cap, $13^7 = 62{,}748{,}517$ as the per-system budget of an exact crib-pair solver. Caps of $2^{18}$ $\mathrm{GF}(2)$ vectors, $13^5$ $\mathrm{GF}(13)$ vectors and 1,500,000 CRT pairs are declared boundaries that return INCOMPLETE, never a negative.
+With precomputed factor signatures, the exponential input enumeration is $O(2^{d_2}+13^{d_{13}})$ rather than a blind $2^{d_2}13^{d_{13}}$ cross-product, plus polynomial lookup and output cost. In one $2^5\cdot13^5=11{,}881{,}376$ geometry, the implementation examined 371,325 factor vectors in about $0.1$ s. This measured shortcut does not remove the need to cap or factor all matching CRT outputs.
 '''
 
 [[blocks]]

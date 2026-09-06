@@ -3,12 +3,12 @@ section = "exact"
 title = "All-different enumeration over CRT null spaces"
 subtitle = "Split letter-position equations into GF(2) and GF(13), then keep only true permutations"
 status = "VERIFIED"
-status_note = "The split test says a partial assignment is one-to-one exactly when each GF(13) residue appears at most twice with opposite GF(2) parity. It matched brute force across 240 systems and 538,656 answers with zero errors. Planted cycles appeared in the full answer sets: 144 all-different answers containing the truth, and 312 for one gauge orbit. A complete search of 8,851 tail systems at 13^7 found zero readable results."
+status_note = "The split test says a partial assignment is one-to-one exactly when each GF(13) residue appears at most twice and equal residues have opposite GF(2) parity. It matched brute force across 240 systems and 538,656 answers with zero errors. Planted cycles appeared in the full answer sets: 144 all-different answers containing the truth, and 312 for one gauge orbit. A complete search of the admitted 8,851 tail systems found zero all-different reads; higher-nullity systems were outside that slice."
 family = "Constraint programming"
 tags = ["null space", "CRT", "GF(2)", "GF(13)", "all-different", "gauge", "nullity"]
 related = ["all-different-constraints", "modular-inverse-and-crt", "conjugacy-and-gauge", "units-mod-26", "permutation-cycles", "exact-chain-oracle", "word-prefix-csp", "constraint-satisfaction-forward-checking", "cp-sat-and-smt-solvers", "k-best-lists", "shared-cycle-attack", "gauge-defect-invalidation", "g-certificate"]
-summary = "Place a crib or proposed plaintext under a keyed substitution with an unknown alphabet. Each letter gives a homogeneous linear equation over Z26 in the alphabet positions. Rank alone cannot reject the system because the zero vector always solves it. The solver must list the null-space answers and require all 26 positions to differ. Splitting Z26 into GF(2) x GF(13) turns that rule into simple remainder counts. The feasibility work becomes 2^d2 + 13^d13 instead of their product."
-updated = "2026-09-04"
+summary = "Place a crib or proposed plaintext under a keyed substitution with an unknown alphabet. Each letter gives a homogeneous linear equation over Z26 in the alphabet positions. Homogeneous consistency is automatic because the zero vector solves the system; injectivity is the additional condition that can reject it. Splitting Z26 into GF(2) and GF(13) turns injectivity into exact residue-capacity and parity constraints. A factor-signature join can avoid scanning the blind Cartesian product, but enumerating every matching lift remains output-sensitive."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -39,7 +39,7 @@ $$z(P_i) - e_A\, z(C_i) + e_A e_B\, z(C'_i) - e_A e_B\, \kappa = 0 \pmod{26};$$
 
 differencing two positions in the same class removes $\kappa$. Gauges: translation $z \mapsto z + b$ is a symmetry with $\kappa \mapsto \kappa + b(1 + e_A e_B - e_B)$, fixed validly by one row $z(X_0) = 0$ (fixing $\kappa$ instead is invalid); unit multiplication $(z, \kappa) \mapsto (uz, u\kappa)$ for the 12 units is a symmetry of the homogeneous system and cannot be fixed by a linear row, so solutions are canonicalised after enumeration.
 
-Injectivity rule: with $z \equiv (z \bmod 2,\ z \bmod 13)$, two letters collide iff they share both residues; hence at most two letters per GF(13) residue and, when two share one, opposite parities. Cost: $2^{d_2} + 13^{d_{13}}$ instead of $2^{d_2} \cdot 13^{d_{13}}$.
+Injectivity rule: with $z\equiv(z\bmod2,z\bmod13)$, two letters collide iff they share both residues; hence at most two observed letters per GF(13) residue and, when two share one, opposite parities. For a complete 26-letter map, every residue occurs exactly twice. A factor-signature join enumerates the two null spaces separately in $2^{d_2}+13^{d_{13}}$ input work, plus lookup and output costs; a literal nested enumerator still has product worst case.
 '''
 
 [[blocks]]
@@ -74,6 +74,8 @@ function ALL_DIFFERENT_READS(rows, observed_letters, cap):
     // counted explicitly, never a rejection
     if d13 > cap: return UNRESOLVED
     reads = []
+    // Simple complete reference. It may take product time when many pairs
+    // match; an optimized signature join enumerates each factor once.
     // 13^d13 residue vectors mod 13
     for each v13 in span(N13):
         if some residue mod 13 is carried by three or more letters: continue
@@ -93,15 +95,16 @@ function ALL_DIFFERENT_READS(rows, observed_letters, cap):
     return CANONICALISE(reads)
 
 // Parity conditions are linear in the GF(2) null-space coefficients once v13
-// is fixed, so the inner loop can be solved instead of enumerated: work 2^d2
-// + 13^d13, not the product.
+// is fixed. A signature index or per-v13 linear solve avoids a blind product,
+// but every emitted matching lift and unused-label completion must still be
+// counted or represented exactly.
 ```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-Null spaces by Gaussian elimination over each field: $O(m \cdot r^2)$ for $m$ rows and $r$ unknowns. Enumeration $13^{d_{13}}$ residue vectors with early rejection, then $2^{d_2}$ parities for survivors; production caps at $d_{13} \le 5$ (word pairs) or $13^7$ (tail systems). Measured: 0.4-10 ms ($d_{13} \le 4$), 44-94 ms ($d_{13} = 5$).
+Null spaces by Gaussian elimination over each field cost $O(mr^2)$ for $m$ rows and $r$ unknowns. A naive join costs up to $2^{d_2}13^{d_{13}}$. A factor-signature implementation has $O(2^{d_2}+13^{d_{13}}+N_{\rm match})$ exponential enumeration and output work, apart from polynomial indexing, where $N_{\rm match}$ is the number of compatible factor pairs. The measured 0.4-10 ms and 44-94 ms figures apply only to the cited low-nullity implementation and fixtures.
 '''
 
 [[blocks]]

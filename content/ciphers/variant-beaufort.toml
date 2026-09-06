@@ -3,12 +3,12 @@ section = "ciphers"
 title = "Variant Beaufort"
 subtitle = "Ciphertext = plaintext minus key, the reverse direction of Vigenère"
 status = "VERIFIED"
-status_note = "Interrupted-key, Slidefair, and ciphertext-autokey tests all include Variant Beaufort as a third sign choice. The 504-letter Variant controls for interrupted-key and Slidefair passed exactly."
+status_note = "Interrupted-key, Slidefair, and ciphertext-autokey tests include the Variant convention and pass their recorded Variant controls. With free numeric shifts, Variant and Vigenère are the same observable family under complementary keys; the controls validate convention handling, not recovery of a distinguishable relation label."
 family = "Polyalphabetic substitution"
 tags = ["periodic", "additive", "polyalphabetic"]
 related = ["vigenere", "beaufort", "porta", "autokey", "digraphic-slide", "coset-shift-recovery", "g-tabula-recta"]
-summary = "Variant Beaufort subtracts the key from the plaintext. This is the same operation as Vigenère decryption. Its cosets are Caesar shifts by the negative key, so the same attacks work as for Vigenère. It still matters when a solver must choose among Vigenère, Beaufort, and Variant Beaufort, so tests select it as a separate relation."
-updated = "2026-09-04"
+summary = "Variant Beaufort subtracts the key from the plaintext. This is the same operation as Vigenère encryption with the complementary numeric key, so its cosets and ciphertext-only attacks are identical. The name matters only when the setter's literal key convention is constrained, or when it appears inside a larger transform whose implementation enumerates conventions."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"

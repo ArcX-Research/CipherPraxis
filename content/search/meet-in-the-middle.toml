@@ -7,8 +7,8 @@ status_note = "The standard two-table method is shown in a worked example. The i
 family = "Enumeration strategies"
 tags = ["bidirectional", "time-memory trade-off", "join", "beam", "reverse language model"]
 related = ["beam-search", "exhaustive-enumeration", "k-best-lists", "cp-sat-and-smt-solvers", "all-different-enumeration", "quagmire-iii", "shared-cycle-attack", "local-language-model-prior", "planted-controls", "g-beam-width"]
-summary = "Meet in the middle splits a key into two parts and lists each half separately. It joins only pairs that agree on a shared value. This replaces a search over every pair with two shorter lists and a lookup. For double encryption with N choices per key, the work falls from about N squared to about 2N plus a table. A decoding version grows plaintext from both ends and checks whether the partial key maps fit. On 63- and 95-letter controls, the truth ranked millions deep before exact rules could help."
-updated = "2026-09-04"
+summary = "Meet-in-the-middle search computes forward and backward intermediate values and joins equal values. For two key spaces of size N, it can reduce the main transform evaluations from order N squared to order N, at the cost of order N memory and any work needed to process collisions and verify candidates. The recorded bidirectional decoding variant remains a capped beam heuristic; on its cited short controls, the true pair fell below the retained pool before exact constraints became selective."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -24,13 +24,13 @@ for every k_2:
 
 Work is $|K_1| + |K_2|$ evaluations plus a table of size $|K_1|$, against $|K_1| \cdot |K_2|$ for direct search.
 
-Decoding form (bidirectional exact-meet beam): keep $W$ parent states, each holding a prefix, a suffix and one shared partial key map. For every parent form the exact $26 \times 26$ product of one more prefix letter (forward model) and one more suffix letter (reverse model), install both letters into the shared partial map, apply the cheap rotation/reflection identities, rank the $M$ best pairs, and at a compatibility checkpoint sample the ranked union maps with an exact all-different solver, removing only proven-infeasible states.
+Decoding form (bidirectional meet beam): keep $W$ parent states, each holding a prefix, a suffix and one shared partial key map. For every retained parent, enumerate the full $26 \times 26$ next-letter product, install both letters into the shared partial map, apply necessary rotation or reflection identities, and retain a ranked pool of size $M$. At declared checkpoints, an exact AllDifferent solver may remove states proved infeasible. The local expansion and feasibility decisions are exact, but the $W$ and $M$ cuts make the decoder heuristic.
 '''
 
 [[blocks]]
 kind = "equations"
 body = '''
-Join condition: $G_{k_1}(p) = F_{k_2}^{-1}(c)$. Expected number of spurious matches on one $b$-bit invariant is about $|K_1| |K_2| / 2^b$, so a second known pair is needed when $|K_1||K_2| > 2^b$.
+Join condition: $G_{k_1}(p) = F_{k_2}^{-1}(c)$. If the meeting values behave as independent uniform $b$-bit strings, the expected number of accidental pairs is $|K_1||K_2|/2^b$. Real cipher intermediates can be nonuniform and correlated, so candidate counts must be measured or verified; additional known pairs reduce collisions.
 
 Decoding budget per macro-step: raw pair scores $\le 676\,W$; with $W = 40{,}000$ that is $27{,}040{,}000$ candidates ranked to a pool of $M = 80{,}000$. The exact system tested at the meet is the shared-cycle system $a(C_i) \mp a(P_i) - k_{i \bmod 7} \equiv 0 \pmod{26}$ with all 26 positions distinct and $a(A) = 0$ as gauge.
 '''
@@ -39,7 +39,7 @@ Decoding budget per macro-step: raw pair scores $\le 676\,W$; with $W = 40{,}000
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- Classical: the two layers do not commute into a single layer (otherwise there is nothing to split) and an invariant computable from both sides exists.
+- Classical: the outer transform is invertible for each tested key, the same intermediate representation is computed from both directions, and all colliding keys are retained. If the composition collapses to a simpler single-key family, direct search may be preferable but the meet identity remains valid.
 - Decoding needs a reverse model trained and calibrated on reversed text. Applying the forward model to reversed strings is not equivalent. Train both models on data that does not overlap the controls.
 - Only `unsat` removes a state; `unknown`, timeouts and solver errors keep it.
 '''
@@ -55,50 +55,32 @@ The decoding form targets a period-7 keyed substitution with one unknown 26-cycl
 kind = "pseudocode"
 body = '''
 ```text
-// Classical form: c = F_{k_2}(G_{k_1}(p)) with known pairs (p, c) and (p',
-// c').
-function MEET_IN_THE_MIDDLE(p, c, p', c'):
-    // forward table of size |K_1|
+// Classical form with one join pair and one independent confirmation pair.
+function MEET_IN_THE_MIDDLE(p, c, p2, c2):
     T1 = empty table
     for every k_1 in K_1:
-        // several k_1 may share a value
-        T1[G_{k_1}(p)] = T1[G_{k_1}(p)] + [k_1]
+        APPEND(T1[G_{k_1}(p)], k_1)
     candidates = []
     for every k_2 in K_2:
-        // backward value; join condition G_{k_1}(p) = v
         v = F_{k_2}^{-1}(c)
         for each k_1 in T1[v]:
-            // confirmed on the second pair
-            if F_{k_2}(G_{k_1}(p')) == c':
-                candidates = candidates + [(k_1, k_2)]
-    // |K_1| + |K_2| evaluations instead of |K_1| * |K_2|
+            if F_{k_2}(G_{k_1}(p2)) == c2: APPEND(candidates, (k_1, k_2))
     return candidates
 
-// Decoding form (bidirectional exact-meet beam): W parent states, a ranked
-// pool of M pairs.
 function BIDIRECTIONAL_MEET(C, W, M):
-    // one shared partial key map per state
     parents = {(prefix = "", suffix = "", map = {})}
     repeat until the two fronts meet or no state is left:
         pool = []
         for each parent in parents:
-            for each (x, y) in the 26 x 26 product of a next prefix letter x
-                    and a next suffix letter y:
-                map' = parent.map with x and y installed and the
-                        rotation/reflection identities applied
+            for each next-letter pair (x, y):
+                map' = INSTALL_AND_PROPAGATE(parent.map, x, y)
                 if map' is consistent:
-                    pool = pool + [(parent.prefix + x, y + parent.suffix,
-                            map',
-                                                       score + forward log
-                                                               p(x) + reverse
-                                                               log p(y))]
-        pool = the M highest-scoring pairs in pool
-        at a compatibility checkpoint: sample the ranked union maps with the
-                exact all-different solver
-            and remove only states proven infeasible (unknown, timeout and
-                    solver error keep the state)
-        parents = the W best states of pool
-    // a pass needs the truth to stay inside W and M throughout
+                    APPEND(pool, EXTEND_AND_SCORE(parent, x, y, map'))
+        pool = TOP_WITH_TIES(pool, M)
+        if checkpoint:
+            status = EXACT_ALL_DIFFERENT_STATUS for each tested state
+            remove only states with status INFEASIBLE
+        parents = TOP_WITH_TIES(pool, W)
     return parents ranked by score
 ```
 '''
@@ -106,7 +88,7 @@ function BIDIRECTIONAL_MEET(C, W, M):
 [[blocks]]
 kind = "complexity"
 body = '''
-Classical: $|K_1| + |K_2|$ time, $|K_1|$ memory. Decoding: $676\,W$ pair scores per macro-step, $W = 40{,}000$, $M = 80{,}000$, GRU inference in chunks of 16,000 states. No $W \times W$ join is materialised. A naive join of two 20,000-state beams would be 400 million pairs before any exact check.
+Classical: $O(|K_1|+|K_2|+J)$ time after transform evaluation and expected $O(|K_1|)$ hash-table memory, where $J$ is the number of joined candidates inspected; worst-case collisions can make $J=|K_1||K_2|$. Decoding: $676\,W$ pair scores per macro-step, with the cited $W$, $M$, and model chunks recorded in provenance. No $W\times W$ join is materialized.
 '''
 
 [[blocks]]

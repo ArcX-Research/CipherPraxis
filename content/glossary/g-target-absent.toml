@@ -6,5 +6,5 @@ status_note = "Term as used in the research program's sealed designs and audits.
 family = "Validation vocabulary"
 tags = ["controls", "isolation"]
 related = ["target-absent-controls", "seal-and-audit-protocol"]
-summary = "Target-absent code has no way to read the live ciphertext. It has no loader import, ciphertext constant, or target mode, and its records contain target = ABSENT. The code can be built, sealed, audited, and published without tuning it to the target."
-updated = "2026-09-04"
+summary = "Target-absent code is designed and audited without access to the evaluated ciphertext. Its declared dependencies contain no target loader, embedded target value, or target execution mode, and its records mark that boundary explicitly. This reduces one route for outcome-dependent tuning, but it is an engineering claim about inspected code and inputs rather than proof of isolation from every possible external channel."
+updated = "2026-09-07"

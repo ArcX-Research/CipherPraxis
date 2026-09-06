@@ -8,23 +8,23 @@ family = "Modern and encoding schemes"
 tags = ["rsa", "modular exponentiation", "block", "base 26", "semiprime"]
 related = ["hill-cipher", "caesar-shift", "modular-inverse-and-crt", "units-mod-26", "exhaustive-enumeration", "family-wise-null", "selection-overfit-diagnostic", "g-polygraphic"]
 summary = "Textbook RSA raises a message block to a public power modulo a product of primes. For letters, a b-letter block is one base-26 number below 26^b. The modulus must also stay below 26^b if the result must fit in b letters. This makes small blocks a finite search. Tests covered all allowed modulus and exponent classes at widths 2 and 3, bank exponents at width 4, and a word-based prime family at width 9. Every answer had to pass a direct modular-power replay."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
 Serialise a block of $b$ letters in digit order $O$ (straight or keyword-mixed) and orientation $e(r)$ (most- or least-significant first):
 
-$$X_j = \sum_{r=0}^{b-1} O(x_{jb+r})\, 26^{e(r)}, \qquad C_j \equiv P_j^{E} \pmod N, \qquad P_j \equiv C_j^{D} \pmod N,$$
+$$X_j=\sum_{r=0}^{b-1}O(x_{jb+r})\,26^{e(r)},\qquad C_j\equiv X_j^E\pmod N,\qquad X_j\equiv C_j^D\pmod N,$$
 
-with $ED \equiv 1 \pmod{\lambda(N)}$, where $\lambda$ is the Carmichael function. Because $C_j < N < 26^b$, the ciphertext block is decoded back to $b$ letters by the same serialisation.
+with $ED\equiv1\pmod{\lambda(N)}$, where $\lambda$ is the Carmichael function. Each admitted plaintext representative must satisfy $0\le X_j<N$; otherwise reduction modulo $N$ loses information before encryption. Because $C_j<N<26^b$, the ciphertext representative can be decoded back to $b$ letters by the same serialisation.
 '''
 
 [[blocks]]
 kind = "equations"
 title = "Admissible moduli and exponent classes"
 body = '''
-The observed maximum ciphertext block $c_{\max}$ satisfies $c_{\max} < N < 26^b$, which leaves a narrow interval of moduli. Enumerating every distinct-prime semiprime $N = pq$ in that interval (and every squarefree $N$ with three or more prime factors) covers all standard RSA moduli of that size; prime powers are excluded because exponentiation is not a permutation modulo $p^k$. For the exponent, enumerating every unit class $D \in (\mathbb{Z}/\lambda(N))^{\times}$ covers both naming directions at once, since inversion permutes the group. Padding is modelled as a subset of block columns: either every omitted column is constant across blocks (deterministic pad) or the omitted columns are unconstrained (erasure), and every non-empty payload subset is scored.
+The observed maximum ciphertext block $c_{\max}$ satisfies $c_{\max}<N<26^b$, which leaves a narrow interval of moduli. Enumerating every distinct-prime semiprime $N=pq$ in that interval (and every squarefree $N$ with three or more prime factors) covers the declared squarefree RSA family at that size. Prime-power moduli are outside that family; for nontrivial exponents their action on representatives divisible by the prime can collapse values, so they require a separate correctness analysis rather than blanket inclusion. For the exponent, enumerating every unit class $D\in(\mathbb{Z}/\lambda(N))^\times$ covers both naming directions at once, since inversion permutes the group. Padding is modelled as a subset of block columns: either every omitted column is constant across blocks (deterministic pad) or the omitted columns are unconstrained (erasure), and every non-empty payload subset is scored.
 '''
 
 [[blocks]]
@@ -40,9 +40,9 @@ body = '''
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- Fixed-width serialisation in one of four cells. A modulus bounded by the block width.
+- Fixed-width serialisation in one of four cells, a modulus bounded by the block width, and every plaintext representative below that modulus.
 - Invariant: a literal modular-power replay must reproduce every ciphertext block, which is the gate a language score can never replace.
-- Invariant: any block cipher of width above 1 mixes every plaintext letter of a block into every ciphertext letter, so within-class equalities $c_i = c_j \Leftrightarrow p_i = p_j$ that the corpus texts exhibit are incompatible with it; width-1 RSA ($N < 26$) is a monoalphabetic substitution.
+- For the admitted squarefree moduli and inverse exponents, modular exponentiation is a permutation of representatives $0,\dots,N-1$. It therefore preserves equality of **whole block values** in both directions. It does not imply any universal equivalence between equality of individual letters at fixed positions; such letterwise patterns are, at most, model diagnostics. Width-1 RSA ($N<26$) reduces to a monoalphabetic map on its admitted representatives.
 '''
 
 [[blocks]]
@@ -73,6 +73,7 @@ function DESERIALISE(X, O, e):
 function ENCRYPT(p[0..n-1], b, N, E, O, e):
     for each block of b letters of p:
         X = SERIALISE(block, O, e)
+        require X < N
         // C < N < 26^b
         C = POWMOD(X, E, N)
         append DESERIALISE(C, O, e) to c
@@ -95,7 +96,7 @@ function DECRYPT(c[0..n-1], b, N, D, O, e):
 [[blocks]]
 kind = "complexity"
 body = '''
-Width 3 with all unit exponents: 1,348,830 exponent maps and 14,618,198 payload scores for two-prime moduli; 4,214 multi-prime moduli (3,267 three-factor, 881 four-factor, 66 five-factor) with 360,512 maps. Width 4 with the expanded bank and erasure: 1,653,009 exponent pairs and 50,429,456 projections. The full unit group at width 4 (about $1.02 \times 10^9$ maps) was refused as intractable and not identifiable at four-letter blocks. Width 9 word factors: 648,896 moduli and 4,799,164 maps on the blind gate.
+Width 3 with all unit exponents: 1,348,830 exponent maps and 14,618,198 payload scores for two-prime moduli; 4,214 multi-prime moduli (3,267 three-factor, 881 four-factor, 66 five-factor) with 360,512 maps. Width 4 with the expanded bank and erasure: 1,653,009 exponent pairs and 50,429,456 projections. The full unit group at width 4 contains about $1.02 \times 10^9$ maps and was not run; the cited design judged that cost too high for its four-letter-block identification gate. Width 9 word factors: 648,896 moduli and 4,799,164 maps on the blind gate.
 '''
 
 [[blocks]]
@@ -103,7 +104,7 @@ kind = "failure_modes"
 body = '''
 - **Short hits are selection noise.** The width-9 family produced two 16-letter and two 17-letter English-looking prefixes/suffixes; under 19 block-order permutations 13 of 19 (and 19 of 19) nulls scored at least as well, giving $p = 0.70$ and $p = 1.00$.
 - **Erased columns impose no forward constraint**, so replay is necessary but not sufficient there. An English threshold and a matched null are required.
-- **Scope.** Width 4 is only bank-complete; widths 5-8, 10 and above, non-word primes at width 9, variable-width serialisation, non-fixed pad positions and an external modulus remain open in principle, and none is both tractable and identifiable.
+- **Scope.** Width 4 is only bank-complete; widths 5–8, 10 and above, non-word primes at width 9, variable-width serialisation, non-fixed pad positions, and an external modulus remain open. The cited runs establish neither tractability nor identifiability for those untested families.
 '''
 
 [[blocks]]

@@ -8,7 +8,7 @@ family = "Monoalphabetic substitution"
 tags = ["monoalphabetic", "additive", "shift", "block addition"]
 related = ["vigenere", "affine-cipher", "keyword-mixed-alphabet", "coset-shift-recovery", "frequency-analysis", "modular-arithmetic-z26", "g-coset"]
 summary = "A Caesar shift adds one fixed value to every letter modulo 26. It has only 26 keys, and comparing letter counts usually breaks it. The same step matters inside larger ciphers: each coset of Vigenère, Beaufort, or Quagmire has its own shift. Tests also covered a non-repeating version that treats a whole base-26 block as one number and adds with carries."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -32,7 +32,7 @@ The program's block generalisation treats $b$ consecutive letters as one base-26
 
 $$X_j = \sum_{r=0}^{b-1} O(x_{jb+r})\, 26^{e(r)}, \qquad C_j \equiv X_j + K \pmod{26^b},$$
 
-with digit order $O$ (straight or keyword-mixed) and $e(r)$ most- or least-significant-first. Unlike a period-$b$ Vigenère, a borrow couples the positions inside a block, so the coset structure disappears.
+with digit order $O$ (straight or keyword-mixed) and $e(r)$ most- or least-significant-first. Unlike a period-$b$ Vigenère, a carry or borrow couples positions inside a block, so the letterwise coset structure disappears.
 '''
 
 [[blocks]]
@@ -50,7 +50,7 @@ title = "Assumptions and invariants"
 body = '''
 - The plaintext letter distribution is non-flat. A flat histogram makes every shift equally likely.
 - Invariant: coincidences $c_i = c_j$ are exactly the plaintext coincidences $p_i = p_j$ under a single shift, so the index of coincidence is unchanged by the cipher.
-- In the block form the invariant fails: two ciphertext blocks differ in every digit that a borrow crosses.
+- In the block form the letterwise invariant fails: a carry or borrow can change several digits. It need not change every digit of either block.
 '''
 
 [[blocks]]
@@ -58,7 +58,7 @@ kind = "attack"
 title = "How to attack it"
 body = '''
 1. Correlate the ciphertext histogram with the reference distribution over all 26 rotations (or all 26 rotations in each candidate order).
-2. Confirm with a language score of the decrypt; at 20 or more letters the correlation alone is decisive for English.
+2. Confirm with a language score of the decrypt. The sample size needed for a clear frequency peak depends on the plaintext distribution and the number of tried orders, so calibrate it on matched controls rather than using a universal letter threshold.
 3. For the block form, enumerate all $26^b$ keys at small $b$ and score each decrypt with quadgrams; at large $b$ use a least-significant-digit beam, keeping the best suffixes as digits are added.
 '''
 
@@ -100,13 +100,13 @@ function BLOCK_ENCRYPT(x[0..n-1], b, K, O, e):
 [[blocks]]
 kind = "complexity"
 body = '''
-Single shift: 26 correlations, $O(26 \cdot 26)$ work. Block addition at width 3: $17{,}576$ keys in each of four serialisation cells (two digit orders times two orientations), i.e. $70{,}304$ decrypt-and-score evaluations per objective. Width 9 ($26^9 \approx 5.4 \times 10^{12}$ keys) is not exhaustible. The program's beam kept every $26^3$ suffix through depth three and the best $20{,}000$ suffixes afterwards.
+Single shift: one $O(n)$ histogram and 26 correlations of 26 bins, for $O(n+26^2)$ work (linear in $n$ for a fixed alphabet). Block addition at width 3: $17{,}576$ keys in each of four serialisation cells (two digit orders times two orientations), i.e. $70{,}304$ decrypt-and-score evaluations per objective. Width 9 ($26^9 \approx 5.4 \times 10^{12}$ keys) is not exhaustible. The program's beam kept every $26^3$ suffix through depth three and the best $20{,}000$ suffixes afterwards.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Short samples.** Below roughly 12 letters the argmax shift is unreliable. A coset of a periodic cipher can be that short.
+- **Short samples.** A short coset can leave several shifts statistically indistinguishable. Report the likelihood gap or posterior and use matched controls; no fixed cutoff works for every plaintext distribution.
 - **Non-language plaintext.** A flat inner text gives no rotation signal even though the cipher is trivial.
 - **Beam truncation.** In the width-9 block search the first three key digits are ranked from only 16 or 17 letters of a 144- or 153-letter text. A control can be recovered while a different true key is lost when the beam truncates at depth four, so a width-9 miss is not a family exclusion.
 '''

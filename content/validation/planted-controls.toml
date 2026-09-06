@@ -8,7 +8,7 @@ family = "Control design"
 tags = ["controls", "synthetic truth", "power", "calibration", "matched power", "family evidence"]
 related = ["control-first-policy", "target-absent-controls", "blind-controls", "power-measurement", "valid-model-nulls", "held-out-gates", "fresh-holdout-after-selector-change", "endpoint-specific-control-contracts", "evidence-scope-ladder", "gauge-defect-invalidation", "power-analysis", "vigenere", "g-planted-control"]
 summary = "A planted control is a ciphertext made from known plaintext and key material with the exact model under test. A matched-power panel also mirrors the searched length, structural branches, nuisance parameters, input visibility, budgets, caps, and selection path. Passing such controls shows conditional recovery power when the model is true. It does not show that a separate unknown text belongs to that model."
-updated = "2026-09-06"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -32,9 +32,9 @@ For $N$ planted controls with recovery indicators $r_i \in \{0, 1\}$,
 
 $$\hat{\pi} = \frac{1}{N}\sum_{i=1}^{N} r_i$$
 
-is the empirical **power** of the test on that family at that length. A single control ($N = 1$) proves that the wiring works. It does not estimate power (see [Power measurement](/validation/power-measurement)).
+is the empirical **power** of the test on that family at that length. A single control gives the estimate zero or one with enormous uncertainty. It can demonstrate one successful code path, but it does not provide a useful power estimate (see [Power measurement](/validation/power-measurement)).
 
-A negative on the target is informative only in proportion to $\hat\pi$: with $\hat\pi = 0$ the negative carries no information, which is exactly how the program records the blind unknown-alphabet annealers (0 of 24 planted cases, and 0 of 21 for a two-sided keyed alphabet with a 25-letter crib).
+A target miss can be interpreted only relative to the measured recovery distribution and its uncertainty. With 0 recoveries in 24 or 21 planted cases, the method has demonstrated no positive recovery capability on those panels; the target miss cannot exclude the family. Zero observed successes is not proof that true power is exactly zero.
 
 Power is conditional:
 
@@ -69,7 +69,7 @@ body = '''
 kind = "attack"
 title = "How controls protect an attack pipeline"
 body = '''
-1. **Test check.** A control that decrypts to garbage means the tool is broken. Targets are not run.
+1. **Pipeline check.** If a required control does not recover its known answer, the pipeline has not demonstrated the capability claimed for it. This may reflect an implementation defect, an inadequate search budget, or a weak scoring model. Targets are not run.
 2. **Length calibration.** The same solver that recovers a 300-letter plant can fail at 63 letters; controls at the zone length expose this before a scoped negative is claimed.
 3. **Selection calibration.** When the solver picks the best of many placements or keys, the controls tell you what score a *correct* recovery reaches, and shuffled versions of the control tell you what the *maximum over wrong candidates* reaches (see [Selection overfit check](/validation/selection-overfit-check)).
 4. **Gauge discovery.** Comparing the recovered key with the plant reveals gauge freedoms (a shared constant across two shift vectors, a translation of a cycle) that must be quotiented out before "exact key" is demanded of the solver.
@@ -117,7 +117,7 @@ Controls multiply runtime: a launcher that runs $N$ controls before the target c
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Controls mismatched to the live problem.** An independent audit asked why lanes recovering plants at 97 to 100% power missed every live run. The controls were matched to the selectors, but they populated a region of the family whose statistics the target does not exhibit. A powered miss therefore said "no member of *this* family" and nothing about the premise.
+- **Controls mismatched to the live problem.** An independent audit asked why lanes recovering plants at 97 to 100% power missed every live run. The controls were matched to the selectors, but they populated a region of the family whose statistics the observed text does not exhibit. The high recovery rate therefore did not transfer to that text and could not support a family exclusion.
 - **Calibration range equal to plant range.** One engine calibrated its English gate on the same corpus tail it planted from. This affects gate calibration (optimistic thresholds) rather than recovery, but it was recorded as a defect.
 - **Plants that cannot exercise a code path.** Keys drawn without the zero shift never tested the orbit filter's handling of fixed points. When the filter was later found to reject valid identity and half-turn rotations, about 21% of planted truths for one relation had been silently discarded by the control's own filter.
 - **Gauge-fixed comparison.** A control compared the recovered secondary plaintext in one fixed gauge, so the true key "missed" in about 25 of 26 plants. See [Gauge-defect invalidation](/validation/gauge-defect-invalidation).
@@ -157,7 +157,7 @@ A target row printed under a `CONTROL GATE: FAIL` line is annotated as uninforma
 [[blocks]]
 kind = "notes"
 body = '''
-The controls in this atlas are planted from a generic English corpus and random keys. Because they share nothing with any live text, they can be published, replayed and audited freely. The only secret in a *blind* control is the seed, and that is committed by hash before the run and revealed in the transcript afterwards.
+The controls in this atlas are generated without reading observed-text material, using a generic English corpus and random keys. Their fixtures can therefore be published, replayed and audited without revealing an observed text. In a *blind* control the seed is hidden during development, committed by hash before the run, and revealed in the transcript afterward.
 '''
 
 [[provenance]]

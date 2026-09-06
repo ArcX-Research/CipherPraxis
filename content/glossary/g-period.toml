@@ -6,5 +6,5 @@ status_note = "Standard term."
 family = "Cipher structure"
 tags = ["periodic"]
 related = ["vigenere", "compound-periodic-key", "bifid", "kasiski-examination", "coincidence-lag-profile", "lcm-of-periods", "g-coset"]
-summary = "A period m is the number of letters before a key repeats, as in Vigenère, Quagmire, Porta, and Slidefair. For Bifid or Trifid, it is the block length used to regroup coordinates. A periodic key makes positions i and i + m behave alike, causing extra matches at lag m and its multiples. Two periodic layers in one alphabet combine to period lcm(m, q). Autokeys and running keys do not repeat this way."
-updated = "2026-09-04"
+summary = "A period m is a positive shift after which a key stream or position rule repeats; the fundamental period is the smallest such m. In Bifid or Trifid, 'period' instead commonly denotes the coordinate-regrouping block length. A periodic substitution can create excess coincidences at its period and harmonics, but finite samples need not show a clear peak. Two layers with periods m and q have a combined period dividing lcm(m, q), with equality only when no additional symmetry or cancellation shortens it."
+updated = "2026-09-07"

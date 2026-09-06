@@ -6,5 +6,5 @@ status_note = "Corpus term from the residue-pattern reduction; counts are comput
 family = "Cryptanalysis technique"
 tags = ["transposition", "columnar", "reduction"]
 related = ["order-free-width-statistic", "transposition-width-recovery", "sandwich-construction", "columnar-transposition", "g-order-free-statistic"]
-summary = "Suppose a width-w columnar transposition sits over a period-k substitution. An output position's inner class depends only on each column index modulo k, not on the full column order. This sequence of remainders is the residue pattern. There are w!/prod(mult!) patterns: 126 for width 9 and period 2, 1,680 for period 3, and 24,310 for width 17 and period 2. Testing patterns first makes a full search practical; language scores can choose among the surviving orders."
-updated = "2026-09-04"
+summary = "For a declared width-w columnar transposition composed with a period-k substitution, some layouts make an output position's inner class depend only on the column indices modulo k rather than their full order. The resulting residue sequence is a residue pattern. When residue multiplicities are fixed, the number of distinct patterns is w! divided by the product of their factorials: 126 for width 9 and period 2, 1,680 for width 9 and period 3, and 24,310 for width 17 and period 2. The reduction is exact only for the stated composition; language scores rank surviving orders heuristically."
+updated = "2026-09-07"

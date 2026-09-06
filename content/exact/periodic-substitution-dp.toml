@@ -1,14 +1,14 @@
 id = "periodic-substitution-dp"
 section = "exact"
 title = "Periodic-substitution dynamic programming"
-subtitle = "Recover repeating additive, Porta, or affine keys exactly and compare them with within-coset nulls"
+subtitle = "Optimize frozen additive, Porta, or affine key shortlists and compare them with within-coset nulls"
 status = "VERIFIED"
-status_note = "One cyclic three-step dynamic program handles three families. Additive-key controls passed 63/63, 95/95, and 126/126 across two alphabet orders and both signs. Free Porta-row controls passed at the same lengths. Period-7 affine controls passed at 63/63 and 95/95, but the period-26 affine control chose false English. Every target zone scored at or below its within-coset null maximum."
+status_note = "The cyclic dynamic program is exact within each frozen per-residue shortlist. Additive and Porta controls passed at the stated lengths; period-7 affine controls passed, but the period-26 affine control selected a false readable state. The shortlist plus local polish is not a global search of the full key product, so the recorded low scores are empirical screen results rather than exact family exclusions."
 family = "Dynamic programming"
 tags = ["periodic key", "cyclic DP", "shortlist", "within-coset null", "porta", "affine"]
 related = ["viterbi-decoding", "exact-dynamic-programming", "k-best-lists", "coordinate-descent", "vigenere", "beaufort", "porta", "affine-cipher", "affine-maps-mod-26", "within-coset-null", "valid-model-nulls", "planted-controls", "g-coset"]
-summary = "Given a text zone and period, this solver asks whether the zone uses a standard repeating substitution in a known alphabet order. Single-letter likelihood makes a shortlist of maps for each residue. A cyclic quadgram dynamic program finds the exact best key within their product. A final coordinate pass can add maps that missed the shortlist. The full process is repeated on ciphertext shuffled within each coset. Blind controls at the target sizes pass, while recorded target answers stay at the null level."
-updated = "2026-09-04"
+summary = "Given a text zone and period, single-letter likelihood makes a finite map shortlist for each residue. A cyclic quadgram dynamic program finds the exact best key within that Cartesian product. A subsequent coordinate and adjacent-pair polish is local search: it may add omitted maps but does not certify the optimum over the unrestricted key family. Within-coset shuffles calibrate the same selected pipeline empirically."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -30,7 +30,7 @@ Families: additive ($P_i = A[(a(C_i) - k_b) \bmod 26]$ or $A[(k_b - a(C_i)) \bmo
 [[blocks]]
 kind = "equations"
 body = '''
-Monogram shortlist (Vigenère): $L_b(s) = \sum_{i \equiv b} \ln E\big(A[(a(C_i) - s) \bmod 26]\big)$. The eight highest $s$ per residue enter the DP. Within-coset null: shuffle positions inside each coset, which preserves every coset histogram, monogram posterior, index of coincidence and repeated-letter fact while destroying only adjacency, so the DP's exact optimum on the null measures pure selection freedom.
+Monogram shortlist (Vigenère): $L_b(s)=\sum_{i\equiv b}\ln E(A[(a(C_i)-s)\bmod26])$. The eight highest $s$ per residue enter the DP. A within-coset shuffle preserves each coset histogram and every statistic determined only by those histograms, while disrupting the original positional order and cross-coset sequential dependence. Re-running the complete selected pipeline on such shuffles calibrates that null; it does not prove that adjacency is the only destroyed structure.
 '''
 
 [[blocks]]
@@ -46,7 +46,7 @@ body = '''
 kind = "attack"
 title = "How to attack it"
 body = '''
-Run the three families on each measured zone: 63 and 95 letters at period 7, and 126 letters at period 26. Test both alphabet orders and both relations. Any finish above the English gate receives a full within-coset familywise null. Otherwise no null budget is spent. Recorded finishes: additive $-6.037$, $-6.290$, $-5.107$ against five-null maxima $-5.770$, $-6.185$, $-5.021$; Porta $-6.2479$, $-6.3562$, $-5.7315$ (verdicts no / no / partial); affine $-5.2552$ and $-5.7742$ on the period-7 zones (partial, roundtripping overfits). None reached the gate, so the zones are not standard periodic substitutions in the two tested orders. An unknown alphabet, a non-language inner stream or a non-additive construction remain open.
+The recorded pipeline tested the named lengths, periods, two alphabet orders, and two relations. Its finishes are empirical outcomes of a width-eight shortlist followed by local polish. Falling below a frozen language trigger, or below the maximum of a small diagnostic null panel, means the pipeline found no lead; it does not prove that no full-family key exists. A formal negative would require exhaustive coverage of the unrestricted per-residue map product or an admissible certificate dominating every omitted key.
 '''
 
 [[blocks]]
@@ -85,9 +85,9 @@ function PERIODIC_DP(C, p, A):
     key = POLISH(C, p, A, key)
     return (key, RATE(DECRYPT(C, key)))
 
-// Verdict: ENGLISH only above the pre-declared rate. Null: the same solve on
-// ciphertexts shuffled within each period coset, maximised over both alphabet
-// orders and relations.
+// This returns the exact shortlist optimum followed by a local polish. Any
+// empirical label and null comparison applies to that selected pipeline, not
+// to keys omitted from the shortlist product.
 ```
 '''
 
@@ -102,7 +102,7 @@ kind = "failure_modes"
 body = '''
 - **Wide family, few observations.** At period 26 on 126 letters the affine family (312 maps per residue) manufactured a false state scoring $-4.2767$ that reads as English and roundtrips but is neither the hidden plaintext nor the hidden maps. The additive and Porta families with 26 and 13 options recover the same control exactly. The DP is not at fault. The family is too wide for four to five letters per residue.
 - **Attractive overfit.** The period-26 additive finish at $-5.107$ looks partial; its null maximum is $-5.021$. Without the within-coset null it would have been read as signal.
-- **Shortlist omission.** A map outside the eight best is unreachable except through the polish.
+- **Shortlist omission.** A map outside the eight best is unreachable to the exact DP and may remain unreachable after local polish. Therefore a miss is not an exhaustive negative for the unrestricted periodic family.
 - **Known order only.** The DP tests two alphabet orders. An unstructured alphabet is outside its scope and belongs to the constraint-programming entries.
 '''
 

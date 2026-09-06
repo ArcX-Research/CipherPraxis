@@ -8,7 +8,7 @@ family = "Fractionation"
 tags = ["fractionation", "polybius square", "period", "5x5"]
 related = ["trifid", "playfair", "two-square-four-square", "polybius-square", "sandwich-construction", "family-identification", "simulated-annealing", "exhaustive-enumeration", "bifid-lab", "g-fractionation", "g-period"]
 summary = "Bifid looks up each letter's row and column in a 5 x 5 square. Within each block, it writes all row numbers, then all column numbers, and pairs the digits into new letters. One ciphertext letter can mix parts of two plaintext letters. This flattens letter frequencies and hides letter-pair patterns, though block edges remain. Tests covered Bifid alone and beneath a periodic key shared by two texts."
-updated = "2026-09-06"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -52,7 +52,7 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - 25-symbol alphabet. A direct Bifid ciphertext cannot contain all 26 letters, so an outer layer is required for the corpus texts.
-- Invariant: ciphertext letters inside a block depend only on that block; block boundaries at multiples of the period are recoverable by period estimation.
+- Ciphertext letters inside a block depend only on that block. Candidate boundaries occur at multiples of the period, but recovering them from ciphertext is a statistical model-selection problem, not an invariant guarantee.
 - Invariant: coordinate roles fix which plaintext positions feed each output, so histograms of decoded symbols inside the three row-only and three column-only residues align when the outer key is right.
 - The block origin is part of the key description. A substring can be decrypted on its own only when it begins at a declared block boundary; shifting the origin or cutting through a larger block is a different cell.
 - Round-trip of a fitted square is tautological.

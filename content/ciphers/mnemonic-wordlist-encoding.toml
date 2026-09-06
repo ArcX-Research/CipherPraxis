@@ -7,8 +7,8 @@ status_note = "Exact solvers recovered hidden planted mnemonics, their alphabet 
 family = "Modern and encoding schemes"
 tags = ["mnemonic", "word list", "checksum", "structured key", "exact search"]
 related = ["quagmire-iii", "quagmire-iv", "keyword-mixed-alphabet", "word-prefix-csp", "constraint-satisfaction-forward-checking", "modular-inverse-and-crt", "all-different-enumeration", "shared-cycle-attack", "g-mixed-alphabet"]
-summary = "A standard mnemonic stores 128 to 256 random bits as 12 to 24 words from a fixed list of 2,048. Each word carries 11 bits, and the last word includes a hash checksum. The first four letters uniquely identify every English word, so 24 words fit in 96 letters. Exact solvers tested these blocks beneath repeating keyed ciphers and enforced the checksum as a rule, not just a score."
-updated = "2026-09-04"
+summary = "A standard mnemonic stores 128 to 256 random bits as 12 to 24 words from a fixed list of 2,048. Each word carries 11 bits, and the last word includes a hash checksum. Four letters suffice to identify every list word of length at least four; the 103 three-letter words need a separate fixed-width convention. Exact solvers tested declared layouts beneath repeating keyed ciphers and enforced the checksum as a rule, not just a score."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -22,7 +22,7 @@ $$\text{Vigenère: } z(c_i) - z(p_i) - k_{i \bmod m} \equiv 0, \qquad \text{Beau
 kind = "equations"
 title = "Exact search structure"
 body = '''
-The first $s - 1$ words are assigned most-constrained-first. The remaining $\mathrm{ENT} - 11(s-1)$ entropy bits leave at most eight tails, and SHA-256 fixes the last word's index for each, so the checksum prunes rather than scores. At every node the solver enforces equality and injectivity of each residue map, shared-cycle group identities (Vigenère maps must be restrictions of rotations of one cycle; Beaufort maps of reflections whose pair products are rotations), and homogeneous linear feasibility over $\mathrm{GF}(2)$ and $\mathrm{GF}(13)$ maintained as incremental echelon bases; CRT lifts a residue solution to a permutation of $\mathbb{Z}_{26}$ exactly when each residue is used twice with opposite parity. A cap overrun retains the branch, so caps cannot create false negatives. For period 2 the problem is an affine graph problem: each observed pair adds an edge $z(v) = s_v t + a_v$ and the components are packed exactly into the 26 coordinates.
+The first $s-1$ words are assigned most-constrained-first. They leave $\mathrm{ENT}-11(s-1)=11-s/3$ entropy bits in the last word: 7 bits for 12 words and 3 bits for 24 words, hence 128 down to 8 possible entropy tails. SHA-256 fixes the checksum bits and therefore the last word's full index for each tail, so the checksum prunes rather than scores. At every node the solver enforces equality and injectivity of each residue map, shared-cycle group identities (Vigenère maps must be restrictions of rotations of one cycle; Beaufort maps of reflections whose pair products are rotations), and homogeneous linear feasibility over $\mathrm{GF}(2)$ and $\mathrm{GF}(13)$ maintained as incremental echelon bases; CRT lifts a residue solution to a permutation of $\mathbb{Z}_{26}$ exactly when each residue is used twice with opposite parity. A cap overrun retains the branch, so caps cannot create false negatives. For period 2 the problem is an affine graph problem: each observed pair adds an edge $z(v)=s_vt+a_v$ and the components are packed exactly into the 26 coordinates.
 '''
 
 [[blocks]]
@@ -40,7 +40,7 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - The standard English list and checksum rule. A declared word count, block origin and cipher period.
-- Invariant: prefix uniqueness makes the four-letter encoding lossless.
+- For words of length at least four, the first four letters identify the list entry uniquely. A fixed four-character layout is lossless only after a padding or escape rule for the 103 shorter words is declared.
 - Invariant: an endpoint is accepted only if the checksum passes, $z$ is a permutation, a separately written literal decrypt yields the printed prefixes, and literal re-encryption reproduces every ciphertext letter. These are algebraic cross-checks, and only the checksum and literal replay are independent gates.
 '''
 
@@ -72,9 +72,10 @@ function VERIFY(word[0..s-1], list):
     entropy = bits[0 .. ENT-1]; checksum = bits[ENT .. ENT+CS-1]
     return checksum == the first CS bits of SHA256(entropy)
 
-function PREFIX_ZONE(word[0..s-1]):
-    // 4s letters, unique by prefix
-    return the first four letters of each word, concatenated
+function PREFIX_ZONE(word[0..s-1], short_word_rule):
+    // Four letters identify every word of length >= 4. Three-letter words
+    // require the separately declared fixed-width rule.
+    return each word serialized to four characters under short_word_rule
 
 // Cipher layer: one unknown 26-cycle z and shifts k by absolute position
 // (Vigenère form shown; Beaufort replaces z(c) - z(p) by z(c) + z(p)).
@@ -115,7 +116,7 @@ Period-7 tie (log 445): blind full-root Vigenère and Beaufort plants recovered 
 kind = "example"
 title = "Worked example"
 body = '''
-The all-zero entropy vectors show the checksum rule. With 128 zero bits, $\operatorname{SHA256}(16 \text{ zero bytes})$ begins `37...`, so the 4 checksum bits are `0011` $= 3$, and the 12-word mnemonic is `abandon` eleven times followed by word 3, `about`. With 256 zero bits, $\operatorname{SHA256}(32 \text{ zero bytes})$ begins `66...`, so the 8 checksum bits give index $102$, and the 24-word mnemonic is `abandon` twenty-three times followed by `art`. Written as four-letter prefixes, the 24-word vector is `ABAN` repeated 23 times and then `ART` padded, which is why three-letter words were treated as a separate model.
+The all-zero entropy vectors show the checksum rule. With 128 zero bits, $\operatorname{SHA256}(16 \text{ zero bytes})$ begins `37...`, so the 4 checksum bits are `0011` $=3$, and the 12-word mnemonic is `abandon` eleven times followed by word 3, `about`. With 256 zero bits, $\operatorname{SHA256}(32 \text{ zero bytes})$ begins `66...`, so the 8 checksum bits give index 102, and the 24-word mnemonic is `abandon` twenty-three times followed by `art`. The first 23 fixed-width fields can be `ABAN`; `art` supplies only `ART`, so a fourth character requires an explicit padding rule and lies outside the unpadded four-letter-prefix cell.
 '''
 
 [[blocks]]

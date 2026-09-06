@@ -7,8 +7,8 @@ status_note = "Independent audits and target-absent gates repeatedly enforce typ
 family = "Evidence and reporting"
 tags = ["evidence scope", "power", "family membership", "live evidence", "reporting"]
 related = ["endpoint-specific-control-contracts", "power-measurement", "power-analysis", "valid-model-nulls", "permutation-test", "family-wise-null", "joint-statistic-release-gates", "tautological-gate-rule", "target-absent-controls", "held-out-gates", "parameter-versus-plaintext-recovery"]
-summary = "Cryptanalysis produces several kinds of evidence that answer different questions. A wiring check asks whether code follows its specification. Planted controls ask whether the frozen method can recover members of a declared family. A matched null asks whether an observed result is unusual under one stated alternative. A decipherment claim needs a complete plaintext, a reproducible key recipe, and an independent forward check. Report each level separately so a strong control result is not mistaken for proof about an unseen text."
-updated = "2026-09-06"
+summary = "Cryptanalysis produces several kinds of evidence that answer different questions. A wiring check asks whether code follows its specification. Planted controls ask whether the frozen method can recover members of a declared family. A matched null asks whether an observed result is unusual under one stated null hypothesis. A decipherment claim needs a complete plaintext, a reproducible key recipe, and an independent forward check. Report each level separately so a strong control result is not mistaken for proof about an unseen text."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -17,7 +17,7 @@ Use four explicit evidence levels:
 
 1. **Implementation correctness:** known-answer tests, exact reference comparisons, parser refusals, and forward/inverse replay show that the program implements its declared function.
 2. **Algorithmic power:** fresh planted cases estimate how often that frozen program recovers truth when data really come from a declared family and fixture distribution.
-3. **Observed-text evidence:** a complete family-wise or valid-model null comparison measures how unusual the selected result is under one stated null. An exact complete search may instead give a scoped family exclusion.
+3. **Observed-text evidence:** a complete family-wise or valid-model null comparison measures how unusual the selected result is under one stated null. An exact complete search can give a scoped exclusion only when its acceptance criterion is itself logically necessary under the declared family and source assumptions.
 4. **Decipherment:** a coherent complete plaintext, a small reproducible key and algorithm, literal all-position forward encryption, and independent review support the final claim.
 
 The levels depend on earlier ones but are not equivalent to them.
@@ -46,7 +46,7 @@ body = '''
 - **Component power:** a shortlist or scorer is tested with the true upstream endpoint supplied. This does not measure integrated search power.
 - **Integrated power:** the whole native search, shortlist, scorer, ambiguity rule, and replay path receive only ciphertext.
 - **Heuristic family negative:** a miss is qualified by measured power, length, budget, and fixture distribution.
-- **Exact scoped exclusion:** a complete enumerator or proof certificate covers every member of the declared finite family and rejects all of them.
+- **Exact scoped exclusion:** a complete enumerator or proof certificate covers every member of the declared finite family, and the rejection predicate is proved necessary under the stated source assumptions.
 - **Conditional candidate:** a null-ranked result passes a numerical gate but still waits for coherent decoding and independent review.
 - **Solve:** every original symbol is accounted for by the stated algorithm and key, with no silent editing.
 '''

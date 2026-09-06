@@ -8,12 +8,16 @@ family = "Combinatorial constraints"
 tags = ["graph", "potential", "cycle space", "bipartite", "spanning tree", "components"]
 related = ["difference-operators", "lcm-of-periods", "finite-field-linear-algebra", "all-different-constraints", "dihedral-group", "key-cancellation", "segment-chain-analysis", "exact-chain-oracle", "g-residue-class", "g-invariant"]
 summary = "Suppose two ciphertexts share one plaintext but use different repeating keys. At each position, subtracting their coordinates leaves the difference between two key values. Draw a vertex for each key remainder and an edge for each position. The keys can exist exactly when every cycle in this graph sums to zero. This gives exact equations for the unknown alphabet without knowing either key. The number of separate graph parts tells us how many key offsets remain free."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
-Let the left key have period $m$ and the right key period $q$, and let position $i$ carry residues $(r_i, g_i)$ and an observed difference $d_i$. Form the bipartite graph with vertex set $\mathbb{Z}_m \sqcup \mathbb{Z}_q$ and one edge $(r_i, g_i)$ per position labelled $d_i$. Keys $A, B$ with $d_i = A_{r_i} - \varepsilon B_{g_i}$ exist iff the labels are a **potential difference**: the signed sum around every cycle vanishes. With $E$ edges, $V$ vertices and $c$ components the cycle space has rank $E - V + c$. A spanning forest supplies potentials and every chord supplies one independent cycle equation. Adding a constant to all potentials on one side leaves every $d_i$ fixed (the potential gauge).
+Let the left key have period $m$ and the right key period $q$, and let position $i$ carry residues $(r_i,g_i)$ and an observed difference $d_i$. Form the bipartite graph with vertex set $\mathbb{Z}_m\sqcup\mathbb{Z}_q$ and one edge $(r_i,g_i)$ per position labelled $d_i$. Keys $A,B$ with $d_i=A_{r_i}-\varepsilon B_{g_i}$ exist iff the labels are a **potential difference**: the signed sum around every cycle vanishes. With $E$ edges, $V$ vertices and $c$ components the cycle space has rank $E-V+c$. For each connected component, the exact gauge is
+
+$$A_r\mapsto A_r+t,\qquad B_g\mapsto B_g+\varepsilon t,$$
+
+which leaves every incident $d_i$ fixed. A spanning forest supplies potentials and each chord supplies one independent cycle equation.
 '''
 
 [[blocks]]

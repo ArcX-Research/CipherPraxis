@@ -6,9 +6,9 @@ status = "VERIFIED"
 status_note = "Every launcher uses the same fixed order and prints an explicit CONTROL_GATE PASS, CONTROL_GATE FAIL, or TARGET_REFUSED result. A failed control stops the run, and the no-repeat checklist forbids trying the target afterward."
 family = "Control design"
 tags = ["controls", "gating", "launchers", "policy"]
-related = ["planted-controls", "target-absent-controls", "blind-controls", "throughput-fail", "kat-harness", "seal-and-audit-protocol", "g-planted-control"]
+related = ["planted-controls", "target-absent-controls", "blind-controls", "throughput-fail", "kat-harness", "seal-and-audit-protocol", "g-planted-control", "endpoint-specific-control-contracts", "evidence-scope-ladder", "transitive-process-census"]
 summary = "Every run follows one order: self-tests, planted controls, and only then the live text if all controls pass. A failed control means the tool is not ready. The launcher stops and records that failure instead of loading the target. Enforcing this order in code prevents a weak test from creating a misleading negative result."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -19,14 +19,29 @@ A run under the control-first policy has three phases in a fixed order:
 2. **Planted controls** at the target's length and information budget, printed in full with their planted and recovered parameters (see [Planted controls](/validation/planted-controls)).
 3. **Target** rows, printed only if phase 2 ended in `CONTROL_GATE: PASS`.
 
-The policy is stated in the program's launcher as: every script prints planted controls before the targets. A control that fails means the tool is broken and the target rows below it mean nothing.
+The policy is stated in the program's launcher as: every script prints planted controls before the targets. A failed gate means that the method is not admitted for the target. It does not by itself prove a software defect: the objective, proposal support, information budget or search capacity may be inadequate.
 '''
 
 [[blocks]]
 kind = "equations"
 title = "Evidence conditional on the gate"
 body = '''
-Write $G$ for the event that the control gate passes and $E$ for a target reading. The policy asserts that a claim about the target has weight only through $\Pr[E \mid G]$: with $G$ false the likelihood ratio of any target reading is set to $1$ by fiat, because the same pipeline is known to produce garbage on a solvable instance. Formally the program records a failed gate as a **decoder-power result**, never as evidence about the target family.
+Write $C$ for certified execution completion, $K$ for a passing correctness test and $G$ for a passing matched power gate. The release rule requires
+
+$$\mathrm{target\_admitted}\implies C\land K\land G.$$
+
+This is an evidence-admission policy, not a derived Bayesian likelihood ratio. A completed power miss is evidence about the frozen decoder's capability. A capped or interrupted attempt is incomplete. Neither authorises a target test or an exclusion of the target's cipher family.
+'''
+
+[[blocks]]
+kind = "variants"
+title = "Audit completed failures as well as passes"
+body = '''
+Execution completion and a favorable scientific outcome are separate fields. A fully executed, source-bound control panel may correctly report that its frozen method failed the recovery threshold. That negative result must remain independently auditable, with its inputs, all case outcomes and raw receipts preserved.
+
+Freeze an explicit mapping from terminal receipts and observed exit codes to completed pass, completed failure and incomplete execution. A supervisor that accepts only a passing control payload can misclassify every honest power miss as infrastructure failure. Do not infer completion from a payload alone: source drift, resource caps, missing output, signals and an unclassified exit still invalidate completion.
+
+Test both completed outcomes through the real supervisor and auditor before a one-shot panel. A failed gate keeps the target locked and the consumed attempt closed; it is not permission for a favorable retry. Expected cap-refusal probes inside a completed KAT remain distinct from an unexpected cap that prevents the experiment from finishing.
 '''
 
 [[blocks]]
@@ -59,7 +74,7 @@ function RUN(mode):
     // phase 2: planted controls on the same code path, budget and task order
     // that the target phase will use, printed in full
     suite = CONTROL_SUITE()
-    // one control, then the target
+    // Smoke checks one control and never authorises target access.
     if mode == smoke: suite = suite[0:1]
     gate = PASS
     for control in suite:
@@ -73,7 +88,7 @@ function RUN(mode):
         // no target run until the family changes
         print "TARGET_REFUSED"
         return
-    if mode == controls: return
+    if mode in {controls, smoke}: return
     // phase 3: target rows, printed only under CONTROL_GATE: PASS
     for row in TARGET_ROWS():
         print SOLVE(row)
@@ -112,7 +127,7 @@ clang++ -std=c++17 -O3 -pthread solver_core.cpp -o "$core"
 "$core" --self-kat                       # phase 1: abort on failure
 case "${1:-live}" in
   controls) python3 driver.py --core "$core" --controls-only ;;
-  smoke)    python3 driver.py --core "$core" --controls 1 --target ;;
+  smoke)    python3 driver.py --core "$core" --controls 1 ;;
   live)     python3 driver.py --core "$core" --target 2>&1 | tee "logs/NNN_name_$(date -u +%Y%m%dT%H%M%SZ).log" ;;
 esac
 ```
@@ -145,3 +160,9 @@ path = "withmath/COORDINATION.md"
 kind = "ledger"
 note = "Blind control processed 2,393 of 708,732 pairs in 903.7 s without reaching its truth: CONTROL_GATE FAIL, TARGET_REFUSED; a separate lane released its live cell only after CONTROL_GATE PASS."
 ref = "LOG503"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "audit"
+note = "LOG741 full source review found that a complete POWER_FAIL payload exited1 but the guard and receipt auditor accepted only PASS, collapsing a scientific miss into execution INCOMPLETE. Static finding only; no control invocation occurred. Controls SHA b89bda6ba451908924bc50cdecf1ec5d5ec801e01e3dc95267612505b6b2a9ab; guard SHA8d09db85a678f58346a8c2c03e99ff418714c3932f19a9595374b71866670faf; audit SHAb7638ffa137d83ea1d9ef4b926aab27b83b694f6b3ecbd71e31ccd6547971368."
+ref = "LOG741"

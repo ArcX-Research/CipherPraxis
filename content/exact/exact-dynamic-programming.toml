@@ -8,12 +8,12 @@ family = "Dynamic programming"
 tags = ["dynamic programming", "optimal substructure", "column layout", "chain objective", "assignment"]
 related = ["viterbi-decoding", "periodic-substitution-dp", "order-free-width-statistic", "mixture-inference-under-transposition", "expectation-maximisation", "k-best-lists", "columnar-transposition", "sandwich-construction", "transposition-width-recovery", "known-answer-tests", "g-objective-function"]
 summary = "Dynamic programming finds an exact best answer by reusing solutions to smaller parts. It can choose the layout of long and short columns in an uneven grid, find a repeating key under overlapping quadgram scores, or assign column chunks to labels. It works when a large problem splits cleanly into linked smaller ones. Every dynamic program here is compared with brute force on a small case where checking every answer is practical."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
-**Long/short column layout.** A text of $n$ letters written in $w$ columns has $\text{rows} = \lceil n/w \rceil$ and $\text{extra} = n \bmod w$ long columns; in the unpadded convention the first $\text{extra}$ column indices are long. A block score $B(\text{start}, \text{len})$ is the best class-pattern score of a contiguous block of positions (best over the pattern phase). The best total over all $\binom{w}{\text{extra}}$ placements of long columns:
+**Long/short column layout.** A text of $n$ letters written in $w$ physical columns has $\text{rows}=\lceil n/w\rceil$ and $\text{extra}=n\bmod w$ long columns. Under the unpadded fill convention, the first $\text{extra}$ physical columns are long. If an unknown readout order permutes those columns, their long/short statuses can occupy any $\binom{w}{\text{extra}}$ positions in readout order; the dynamic program enumerates those placements. A block score $B(\text{start},\text{len})$ is the best declared class-pattern score of a contiguous readout block.
 
 ```
 dp[0][0] <- 0

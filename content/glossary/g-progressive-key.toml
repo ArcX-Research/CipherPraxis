@@ -6,5 +6,5 @@ status_note = "Standard term."
 family = "Cipher structure"
 tags = ["schedule", "disc"]
 related = ["alberti-progressive", "vigenere", "chaocipher", "g-gauge-class"]
-summary = "A progressive key changes by a fixed rule as the message continues instead of repeating. Its shift may grow by a fixed amount d per letter, as with Alberti's turning disc, or by a fixed acceleration. Because the change is a known function of position, subtracting it from the ciphertext leaves one fixed substitution. Each possible schedule can then be tested as a substitution problem."
-updated = "2026-09-04"
+summary = "A progressive key changes according to a position-dependent schedule instead of repeating a fixed short key. A simplified additive schedule may increase its shift by a fixed increment, or by an increment that itself changes. If the schedule and alphabet coordinates are known and additive, subtracting the scheduled term reduces the problem to a fixed substitution. Disc ciphers and other nonadditive variants require their own state update and cannot always be reduced by subtraction."
+updated = "2026-09-07"

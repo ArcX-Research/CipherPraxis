@@ -8,7 +8,7 @@ family = "Transposition"
 tags = ["transposition", "columnar", "keyword order", "width"]
 related = ["route-transposition", "myszkowski", "rail-fence", "sandwich-construction", "transposition-width-recovery", "order-free-width-statistic", "mixture-inference-under-transposition", "exact-dynamic-programming", "transposed-running-key-endpoint-scoring", "all-different-constraints", "columnar-lab", "g-transposition-grid"]
 summary = "A columnar transposition writes the message in rows of a chosen width, then reads columns in an order set by a keyword. The letters do not change, so their total frequencies stay the same. The task is to recover the width and column order. Tests checked every order at width 9, used annealing at larger widths, and used an order-free statistic to find the width when the transposition sat between two substitutions."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -24,7 +24,7 @@ A key word gives $O$ by the alphabetical ranks of its letters. With $n$ not a mu
 kind = "equations"
 title = "Interaction with a periodic layer"
 body = '''
-If a period-$m$ additive layer is applied after the transposition, ciphertext position $j$ in column chunk $q$ and row $r$ came from plaintext position $wr + c$ with $c = O_q$, and its outer key residue is $(wr + c) \bmod m$. For $w = 9$ and $m = 7$ this is $(2r + c) \bmod 7$, so a column order is characterised by a phase assignment with multiset $\{0, 0, 1, 1, 2, 3, 4, 5, 6\}$: exactly $9!/(2!\,2!) = 90{,}720$ phase classes, with columns 0/7 and 1/8 interchangeable at the profile level. The program's cross-derived lanes score all 90,720 phases exactly under a monogram model and then complete the order exactly by a subset DP over quadgram factors that straddle row ends.
+If a period-$m$ additive layer is applied **before** the transposition, output position $j$ in read-out chunk $q$ and row $r$ came from source position $wr+c$, where $c=O_q$, and therefore carries key residue $(wr+c)\bmod m$. For $w=9$ and $m=7$ this is $(2r+c)\bmod7$, so a column order is characterised by a phase assignment with multiset $\{0,0,1,1,2,3,4,5,6\}$: exactly $9!/(2!\,2!)=90{,}720$ phase classes, with columns 0/7 and 1/8 interchangeable at the profile level. If the periodic layer is applied after the transposition, its residue is instead simply $j\bmod m$ in ciphertext order. The program's cross-derived lanes score all 90,720 inner-layer phase patterns exactly under a monogram model and then complete an order by subset DP over quadgram factors that straddle row ends.
 '''
 
 [[blocks]]
@@ -44,7 +44,7 @@ title = "Assumptions and invariants"
 body = '''
 - Letter identities are preserved: the ciphertext has the plaintext's histogram and index of coincidence.
 - Invariant: the multiset of letters in each column is fixed once the width is fixed. Only their order is unknown.
-- Invariant: under a periodic layer applied *before* the transposition, the coset multisets are transposition-invariant; under one applied *after*, the column order fixes the residue pattern above.
+- Layer order matters. With a periodic layer before the transposition, its phase travels with each source position and a proposed column order determines the $(wr+c)\bmod m$ pattern above; arbitrary transposition does not preserve each output coset's multiset. With the periodic layer after the transposition, ciphertext cosets are fixed directly by $j\bmod m$.
 '''
 
 [[blocks]]
@@ -52,7 +52,7 @@ kind = "attack"
 title = "How to attack it"
 body = '''
 1. **Width.** Scan widths; for plain columnar, score adjacency of candidate column pairs by digram likelihood; under an outer periodic layer use the order-free width statistic (a DP over the long and short columns of the unpadded grid that measures the block pattern of coset classes without knowing the order).
-2. **Order.** Exhaustive for $w \le 9$ (or 10), dictionary words for 10 to 20 letters, restarted annealing with a full-neighbourhood finish beyond; or the exact 90,720-phase profile plus subset DP when a period-7 layer sits on top.
+2. **Order.** Exhaustive for $w \le 9$ (or 10), dictionary words for 10 to 20 letters, restarted annealing with a full-neighbourhood finish beyond; or the exact 90,720-phase profile plus subset DP when a period-7 layer sits inside the columnar transposition.
 3. **Joint refit.** A near-exact substitution peel and a nearly right column order polish each other; neither alone reads English, so re-solve the transposition inside every polish round.
 '''
 
@@ -90,7 +90,7 @@ function DECRYPT(c[0..n-1], w, O):
 [[blocks]]
 kind = "complexity"
 body = '''
-$w!$ orders: $9! = 362{,}880$, exhausted per configuration cell in compiled code (a 1,024-cell benchmark took 4.1 seconds; 185,088 cells took 963 seconds). Phase classes: 90,720 with exact 26-way key profiling per coordinate. Subset DP over the inner order: $2^9$ masks times last-three-label states per row, globally exact for one order given the other.
+$w!$ orders: $9! = 362{,}880$, exhausted per configuration cell in compiled code (a 1,024-cell benchmark took 4.1 seconds; 185,088 cells took 963 seconds). Phase classes: 90,720 with exact 26-way key profiling per coordinate. The subset DP over the inner order uses $2^9$ masks times last-three-label states per row and is exact conditional on its supplied phase/key candidates; the complete pipeline is not exhaustive when an earlier shortlist discards a candidate.
 '''
 
 [[blocks]]

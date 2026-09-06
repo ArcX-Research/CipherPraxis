@@ -7,8 +7,8 @@ status_note = "The shared math library and analysis tools use this pattern and p
 family = "Numerical engineering"
 tags = ["numpy", "vectorisation", "instruments", "batch search"]
 related = ["compiled-hot-cores", "seed-determinism", "kat-harness", "estimator-standard-error", "shuffled-null-z-score", "simulated-annealing", "exact-period-alignment", "index-of-coincidence"]
-summary = "An analysis tool should print its statistic, the matching result range when no signal is present, and the resulting z-score or evidence. NumPy array operations can score thousands of candidates, shuffles, or search chains in one call. Exact formulas or batched resampling provide error ranges, while the code stays short enough to review. Small compiled cores handle only the deepest loops that arrays cannot express well."
-updated = "2026-09-04"
+summary = "Array operations can evaluate batches of candidates, shuffles, or search chains while keeping the mathematical transform visible. A scientific instrument should report the observed statistic together with a null distribution generated under explicit exchangeability assumptions. Analytic sampling variance, Monte Carlo null spread, estimator uncertainty, and Bayesian evidence are different quantities and must not be called interchangeable error bars. If selection is data-dependent, every null replicate must rerun that complete selection."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -17,18 +17,18 @@ Three conventions define the pattern:
 
 1. **Letters are integers.** A text is an array over $\mathbb{Z}_{26}$. An alphabet order is a permutation array with its inverse, so re-indexing between orders is a gather (`f[..., src.inv[dst.A]]`) and a shift is a roll.
 2. **Everything is batched along a leading axis.** A histogram of every coset, the score of every candidate key, the state of every annealing chain, and the statistic of every shuffled null are computed by the same expression with an extra dimension. Jobs are split into batches of at most $B$ chains (`--max-chains`, default 2,400) so that memory, not code, bounds the batch.
-3. **Every reading carries its null.** A function returns the statistic and, from the same code path applied to shuffled inputs, the null mean and standard deviation. The printed line is `ev=… z=…`.
+3. **Every inferential reading names its null.** A function returns the statistic and a matched null distribution from the same frozen pipeline. It reports the preservation rule, replicate count, empirical rank, and descriptive summaries. A z-score is optional; evidence is a separate model-based quantity and is not produced merely by shuffling.
 '''
 
 [[blocks]]
 kind = "equations"
-title = "Exact error bars where they exist"
+title = "Sampling variation and null spread"
 body = '''
-For the index of coincidence of a coset with counts $G_x$ and $n = \sum_x G_x$,
+For the index of coincidence of a coset with counts $G_x$ and $n = \sum_xG_x\ge2$,
 
 $$\operatorname{IC} = \frac{\sum_x G_x (G_x - 1)}{n(n-1)},$$
 
-and its standard deviation under the null is available in closed form. The program reports $0.008$ for the mean of seven 22-letter cosets, which turned an earlier verbal claim ("the cosets are not monoalphabetic") into a $1.5\sigma$ statement. Where no closed form exists, the null is computed by pushing $B$ shuffles through the identical pipeline and the reported $z = (s - \mu_0)/\sigma_0$ is honest only because the shuffles repeat every selection step.
+Closed-form moments are available under specified iid or fixed-count null models; they are not distribution-free error bars. The cited program reports a null standard deviation of $0.008$ for its particular seven-coset model, turning an earlier qualitative difference into a $1.5\sigma$ descriptive displacement. Where an analytic null is unavailable, matched randomizations run through the full frozen selector. Report the empirical rank as the primary finite-randomization tail summary; $z=(s-\mu_0)/\sigma_0$ is a standardization, not automatically a normal-theory p-value.
 '''
 
 [[blocks]]
@@ -53,27 +53,22 @@ body = '''
 // Text = integer array over Z_26; an alphabet order = permutation array with
 // its inverse; the candidates (chains, keys, shuffles) form the leading axis
 // of one array.
-function INSTRUMENT(cidx[0..n-1], candidates, q4, shuffles, B):
-    // one statistic per candidate
-    s = SCORE_BATCH(cidx, candidates, q4, B)
-    // the reading, after the same selection step
-    stat = max(s)
+function INSTRUMENT(cidx, pipeline, null_generator, trials, seed):
+    require the pipeline is deterministic and the null design is valid under its stated hypothesis
+    observed = pipeline(cidx, seed).selected_statistic
     null = []
-    // identical code path on shuffled input
-    for each shuffled copy of cidx in shuffles:
-        null = null + [max(SCORE_BATCH(shuffled copy, candidates, q4, B))]
-    // or the closed-form s.d. where one exists
+    for j in 1..trials:
+        null_input = null_generator(cidx, seed, j)
+        // regenerate, search, polish, and select exactly as for the observation
+        null.append(pipeline(null_input, seed).selected_statistic)
     mu_0 = mean(null); sigma_0 = sd(null)
-    z = (stat - mu_0) / sigma_0
-    // every reading carries its null
-    print "ev=", stat, "z=", z
-    return stat, z
+    z = (observed - mu_0) / sigma_0 if sigma_0 > 0 else UNDEFINED
+    p = (1 + count(value >= observed for value in null)) / (trials + 1)
+    return observed, null, z, p and the preservation rule
 
-function SCORE_BATCH(cidx, candidates, q4, B):
+function SCORE_BATCH(cidx, candidates, q4, batch_limit):
     scores = []
-    // memory, not code, bounds the batch
-    for each batch of at most B rows of candidates:
-        // (rows, n) decrypts in one gather
+    for each batch of at most batch_limit rows of candidates:
         plain = batch[:, cidx]
         scores = scores + q4[plain[:, :-3], plain[:, 1:-2], plain[:, 2:-1],
                 plain[:, 3:]].sum(axis = 1)
@@ -109,8 +104,7 @@ body = '''
 # chains: (B, 26) candidate alphabets; cidx: (n,) ciphertext indices; q4: (26,26,26,26) log-scores
 plain = chains[:, cidx]                                   # (B, n) decrypts, one gather
 score = q4[plain[:, :-3], plain[:, 1:-2], plain[:, 2:-1], plain[:, 3:]].sum(axis=1)   # (B,)
-# null: same call on shuffled cidx, repeated for every selection step of the pipeline
-z = (score.max() - null.mean()) / null.std()
+# If candidates were selected from the data, regenerate and rescore them in each null replicate.
 ```
 '''
 

@@ -3,12 +3,12 @@ section = "search"
 title = "Hill climbing and iterated local search"
 subtitle = "Keep making small key changes that improve the score"
 status = "VERIFIED"
-status_note = "The finishing pass checks all 925 nearby alphabets and every swap, insertion, or relabelling of a column order. Repeated local search is also implemented. These methods appear in every passing planted control for layered, permutation, and crib pipelines. On a two-sided alphabet, they recover reliably only within about three swaps of the truth."
+status_note = "The implementations exhaust their declared local neighborhoods and pass the cited finite controls for several layered, permutation, and crib pipelines. On the recorded two-sided-alphabet perturbation panel, recovery fell sharply beyond nearby starts; this measures that fixture and search contract, not a universal radius."
 family = "Deterministic heuristics"
 tags = ["local search", "neighbourhood", "first improvement", "steepest ascent", "iterated local search", "polish"]
 related = ["simulated-annealing", "coordinate-descent", "polish-basin-measurement", "parallel-tempering", "columnar-transposition", "sandwich-construction", "quadgram-log-likelihood", "index-of-coincidence", "planted-controls", "g-move-set", "g-search-basin"]
-summary = "Hill climbing replaces the current key with a nearby key that scores better. It stops when no allowed small move helps. For alphabets, a finishing pass checks 925 swaps and insertions. For column orders, it checks swaps, insertions, and equivalent relabellings. Repeated local search makes three random moves from a local optimum and climbs again. This can turn a near-answer into the truth, but on a two-sided alphabet it works only from about three swaps away."
-updated = "2026-09-04"
+summary = "Hill climbing replaces the current key with a higher-scoring neighbor and stops at a local optimum for the declared move set. The recorded alphabet finisher checks a fixed set of swaps and insertions; column-order variants use their own declared moves. Iterated local search perturbs a local optimum and climbs again, which samples additional basins without becoming exhaustive. Recovery distance is empirical and depends on the objective, start distribution, tie rule, and fixture."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -41,7 +41,7 @@ Alphabet polish alternates two exact sub-steps until neither improves: for each 
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- The objective is a language score of the full decrypt. A state within the basin of the truth climbs to it, a state outside climbs to a spurious local optimum with a lower score.
+- For a fixed deterministic implementation, the truth's basin is defined as the starts that converge to it. Starts outside that basin can converge to another local optimum whose score may be lower, equal, or even higher under a misspecified language model.
 - The finish is deterministic given its start, so a polished score is reproducible from the (seed, chain) that produced the start.
 - Shift refits inside the polish are exact per coordinate. They add no randomness but do add selection freedom on short texts.
 '''
@@ -59,13 +59,11 @@ body = '''
 kind = "pseudocode"
 body = '''
 ```text
-// State s, objective E (maximised), neighbourhood N(s): the 925 alphabet
-// swaps/insertions, or the column-order moves.
+// Objective E is maximised over the declared neighbourhood N(s).
 function FIRST_IMPROVEMENT(s, E):
     repeat:
         improved = false
         for s' in N(s) in a fixed index order:
-            // restart the scan from the new s
             if E(s') > E(s): s = s'; improved = true; break
     until not improved
     return s
@@ -73,9 +71,9 @@ function FIRST_IMPROVEMENT(s, E):
 function STEEPEST_ASCENT(s, E):
     repeat:
         s' = argmax over N(s) of E
-        if E(s') > E(s): s = s' else return s
+        if E(s') <= E(s): return s
+        s = s'
 
-// k random moves = the kick
 function ITERATED_LOCAL_SEARCH(E, rounds, k):
     best = local_search(random start)
     for r in 1..rounds:
@@ -84,13 +82,10 @@ function ITERATED_LOCAL_SEARCH(E, rounds, k):
         if E(s) > E(best): best = s
     return best
 
-// alphabet polish: two exact sub-steps
 function POLISH(A, k, E):
     repeat:
-        // 26 candidates
         for each text and coset b:
             k_b = argmax over s in Z_26 of E(A, k with k_b = s)
-        // 925 neighbours, scored in one batch
         A = argmax over A' in N(A) of E(A', k)
     until neither step improved E
     return (A, k)
@@ -100,16 +95,16 @@ function POLISH(A, k, E):
 [[blocks]]
 kind = "complexity"
 body = '''
-One polish iteration costs one batch of 925 decrypt-and-scores plus $7 \times 26$ shift candidates per text, all vectorised. A full-neighbourhood finish over two column orders of width $w$ costs about $2(1.5\,w^2 + w)$ energies per round, each an exact shift refit. The corpus caps the alphabet polish at 60-80 iterations.
+For the recorded period-7 lane, one polish iteration costs one batch of 925 decrypt-and-scores plus $7 \times 26$ shift candidates per text, all vectorised. A full-neighbourhood finish over two column orders of width $w$ costs about $2(1.5\,w^2 + w)$ objective evaluations per round, each with its declared shift refit. The corpus caps the alphabet polish at 60-80 iterations.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Narrow basin.** On a planted two-sided alphabet, starting two swaps from the truth, steepest ascent and cold annealing already read $-6.1$ and cannot get back; from random alphabets 0 of 24 restarts across four schedules reached the basin. With a 13-letter crib the basin widens only to three swaps, with a 25-letter crib to six.
+- **Narrow basin.** On the recorded planted two-sided alphabet, starts two swaps from the truth converged to states near $-6.1$ rather than returning; from random alphabets 0 of 24 restarts across four schedules reached the truth's basin. On the cited fixture and perturbation panel, a 13-letter crib recovered starts through three swaps and a 25-letter crib through six; these are measured boundaries, not universal basin radii.
 - **Degenerate objectives.** A climb that maximises the decrypt's coincidence rate over ring and shifts collapses letters: on a planted control it found 594-601 coincidences against the truth's 383. The objective, not the climber, was wrong.
 - **Overfit climbs.** The monogram-evidence climb over alphabets prefers alphabets with higher evidence than the planted one at 153 letters.
-- **Plateaus.** First-improvement stops at the first local optimum; steepest ascent stops at the same optimum a little later. Neither samples alternatives; iterated local search does, but only within the kick radius.
+- **Path dependence and plateaus.** First-improvement and steepest ascent can follow different paths and reach different local optima. Neither samples alternatives once stationary; iterated local search explores only the basins reached by its frozen kick distribution and budget.
 '''
 
 [[blocks]]

@@ -7,8 +7,8 @@ status_note = "One full search checked all 2,344,345 length-24 windows in a fixe
 family = "Enumeration strategies"
 tags = ["proposal bank", "corpus", "pattern filter", "exact oracle", "scoped closure"]
 related = ["exact-chain-oracle", "dictionary-attack", "word-prefix-csp", "all-different-enumeration", "isomorph-analysis", "segment-chain-analysis", "shared-cycle-attack", "target-absent-controls", "planted-controls", "g-certificate"]
-summary = "A corpus bank screen treats every fixed-length text window as a possible plaintext opening. Fast rules that do not need the alphabet or key reject impossible windows in batches. For example, equal ciphertext pairs can force equal plaintext letters. Duplicate survivors are removed. An exact solver then rejects each remaining window or returns every compatible key. If none work, only that text bank is ruled out, not the whole cipher family."
-updated = "2026-09-04"
+summary = "A corpus bank screen treats every fixed-length corpus window as a candidate plaintext segment. Proved alphabet-free necessary conditions can reject impossible windows before an exact key solver runs. Duplicate text windows may share one semantic solve while retaining their offsets as provenance. A complete zero result excludes only the pinned corpus windows, model conventions, and exact solver scope actually enumerated; it does not exclude newly written text or the wider cipher family."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -90,7 +90,7 @@ function CORPUS_SCREEN(corpus, L, mask):
 [[blocks]]
 kind = "complexity"
 body = '''
-The vector filter is $O(N \cdot |\text{mask}|)$ over the corpus. The oracle cost is dominated by survivors with large GF(13) nullity (each exact decision costs $2^{d_2} + 13^{d_{13}}$ combinations). With 39,528 unique prefixes and four sign pairs the whole screen ran to completion in one recorded session.
+The direct vector filter is $O(N\,|\text{mask}|)$ over the corpus. For a modular oracle, a factor-signature join can enumerate the two null spaces in $O(2^{d_2}+13^{d_{13}}+N_{\rm match})$ work plus polynomial bookkeeping, where $N_{\rm match}$ is the number of compatible factor pairs emitted. A literal Cartesian join can instead cost $O(2^{d_2}13^{d_{13}})$. The cited full screen completed with the specific factorized implementation and caps recorded in provenance.
 '''
 
 [[blocks]]

@@ -3,12 +3,12 @@ section = "cryptanalysis"
 title = "Phrase-keyed alphabet attack"
 subtitle = "Build alphabets from known phrases and check each one under a repeating substitution"
 status = "CLOSED"
-status_note = "The search built 202,504 distinct alphabets from every 4- to 60-letter substring of known series texts in six styles, then tested each under a period-7 substitution. The planted control read at 100%; the two targets stayed at noise scores of -6.54 and -6.35. Larger zone searches also ruled out 2.06M dictionary and columnar alphabets, 100k nearby alphabets, and 1.56M numeric-grid alphabets in their stated scopes (logs/07, 24, 38, 41)."
+status_note = "The search built 202,504 distinct alphabets from every allowed 4- to 60-letter source substring in six styles and screened each under a period-7 substitution. One planted control recovered exactly; the two research texts remained at the recorded noise level. Larger screens reported analogous nonhits for 2.06M dictionary and columnar alphabets, about 100k nearby alphabets, and 1.56M numeric-grid alphabets. Because their row-key fitting and polishing are heuristic, these are bounded, control-qualified misses within the stated banks—not exhaustive exclusion of every key for each alphabet (logs/07, 24, 38, 41)."
 family = "Known-plaintext methods"
 tags = ["keyed alphabet", "phrase", "dictionary", "family sweep", "screen"]
 related = ["keyword-mixed-alphabet", "quagmire-i", "quagmire-ii", "quagmire-iii", "quagmire-iv", "dictionary-attack", "corpus-bank-screen", "coset-shift-recovery", "crib-driven-alphabet-recovery", "family-wise-null", "finite-language-key-signature-join", "g-family-sweep"]
-summary = "All 26! mixed alphabets are far too many to search from short text. Phrase-keyed alphabets form a much smaller list. Build alphabets from substrings of declared sources, or deterministically from a separately recovered related text, in every frozen serialization and completion style. Fit the remaining key, decrypt, and score. A negative rules out only that finite source-and-style table."
-updated = "2026-09-06"
+summary = "All 26! mixed alphabets are too many for a direct short-text search. Phrase-keyed alphabets form a much smaller finite list. Build them from declared source substrings, or deterministically from a separately recovered related text, using frozen serialization and completion styles. Then fit the remaining periodic key, decrypt, and score. If the key fit is heuristic, a negative is a bounded nonhit even inside the finite alphabet table; only an exhaustive downstream key search can exclude every listed cell."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -55,7 +55,7 @@ body = '''
 1. Build the alphabet table from every 4- to 60-letter substring of each source text in six styles, then remove duplicates. This gives 202,504 alphabets from the known texts. A larger table of 2.06 million also adds dictionary words in six styles plus columnar-keyed and multi-keyed alphabets.
 2. Plant a control: a known text under a keyed substitution whose alphabet is in the table. It must read at 100% and rank first.
 3. Screen every alphabet and variant; polish the top dozen; print the top rates against the noise level (about $-6.3$ per letter at 153 letters).
-4. Report the family as excluded for the enumerated sources and styles only.
+4. Report a bounded nonhit for the enumerated sources, styles, variants, and optimisation budget. Claim exhaustive exclusion only where every downstream key was enumerated and the acceptance criterion was complete.
 
 For a related-text construction, freeze the serialization routes and completion orders before opening the upstream result. Derive every literal alphabet with its origin, collapse duplicate computation only after preserving those origins, and include upstream endpoint selection in the family-wise accounting.
 '''
@@ -104,7 +104,8 @@ function PHRASE_KEYED_ATTACK(c, m, sources, styles, variants, E):
         stop
     ranked = SCREEN(c, m, table, variants, E)
     noise = the top rate of the same screen on shuffled segments
-    // excluded only for the enumerated sources and styles
+    // bounded nonhit for the enumerated sources, styles and optimiser unless
+    // every downstream key was exhaustively scored
     return (ranked top rates against noise)
 ```
 '''
@@ -118,7 +119,7 @@ $O(|\mathcal{A}| \cdot m \cdot 26 \cdot n)$ for the chi-square screen: 202,504 a
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Scope.** The sweep excludes only enumerated structures. The corpus concluded that either the alphabet's structure is of a kind not enumerated or the alphabet is random and was transmitted by other means. Family sweeps beyond that point were judged "buying lottery tickets".
+- **Scope.** The sweep visits only enumerated alphabet structures, and its heuristic key fit may miss even a visited alphabet. The recorded runs established no qualifying candidate in those banks and budgets; they do not imply that an unknown alphabet is random or explain how it was transmitted.
 - **Zoning.** Whole-text screens on a text with a differently keyed prefix score every alphabet at noise. The zone screens had to be repeated.
 - **Top-of-null inflation.** The best of $10^6$ alphabets on a 63-letter zone sits near $-5.2$ to $-5.5$, the shuffled-segment maximum. Only a rate near the language level with a readable decrypt counts.
 - **Upstream error propagation.** One wrong recovered letter can change the first-occurrence order of many later letters. A downstream exact maximum is conditional on the supplied upstream endpoint, not proof that endpoint was correct.
@@ -198,6 +199,6 @@ note = "Independent exhaustive reconstruction of the derived alphabets, key spac
 ref = "LOG680"
 
 [[references]]
-title = "Elementary Cryptanalysis"
+title = "Cryptanalysis: A Study of Ciphers and Their Solution"
 author = "Helen Fouché Gaines"
 year = 1939

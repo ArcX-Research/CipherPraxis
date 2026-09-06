@@ -8,7 +8,7 @@ family = "Null distributions and calibration"
 tags = ["multiple comparisons", "selection", "null distribution", "max statistic", "familywise"]
 related = ["shuffled-null-z-score", "selection-overfit-diagnostic", "permutation-test", "within-coset-null", "bayesian-evidence-model-selection", "joint-statistic-release-gates", "evidence-scope-ladder", "coincidence-lag-profile", "kasiski-examination", "g-null-distribution", "g-empirical-p-value"]
 summary = "A cipher search tries many periods, offsets, widths, relations, alphabets, and keys, then reports the best. Chance alone makes that winner better than one fixed trial. A family-wise null repeats the whole search on each shuffled text and saves each run's best score. Comparing best with best prevents a large search from looking significant only because it had many chances. Results from scans are therefore judged against family-wise nulls."
-updated = "2026-09-06"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -38,10 +38,26 @@ Therefore the shortcut's exceedance count cannot be larger than the correct full
 '''
 
 [[blocks]]
+kind = "equations"
+title = "Exact selection over equality graphs"
+body = '''
+Some small families can be calibrated algebraically instead of by simulation. Suppose cell $h$ requires equal symbols along edges of a graph, and positions are independent with one specified symbol law $p_a$. Write $S_j=\sum_a p_a^j$. In an intersection of cells, a connected component of $j$ positions must carry one common symbol, so it contributes $S_j$. Disjoint components are independent. If that intersection has $c_j$ components of size $j$, its probability is
+
+$$\prod_{j\ge2} S_j^{c_j}.$$
+
+Inclusion-exclusion over the entire cell family gives the exact probability that any cell passes. Merge graph components before evaluating: four required equality edges around a four-cycle contribute $S_4$, not $S_2^4$. A larger edge requirement is a smaller event, so it may be absorbed by an event with a subset of its edges without changing selection.
+
+For uniform IID symbols on an alphabet of size $q$, equality-edge indicators on a forest are independent Bernoulli($1/q$). This follows by rooting each tree and revealing one new uniform symbol along each edge. The result generally fails for cycles or nonuniform symbols. Under a biased law, two equality edges sharing one vertex have joint probability $S_3$, not $S_2^2$.
+
+These calculations use the declared IID law. They are not automatically valid for correlated prose, a fitted symbol law, or a [fixed-histogram permutation null](/statistics/permutation-test). A probability for a necessary structural screen also does not equal the probability that a complete cipher method fits.
+'''
+
+[[blocks]]
 kind = "assumptions"
 body = '''
 - The family used in the null is the family actually searched, including any post-hoc choices: a second window added after seeing the first is an uncharged trial unless the null maximises over both windows.
-- Hypotheses may be correlated. The family-wise null handles that automatically because it maximises over the same correlated statistics on each shuffle. A Bonferroni correction would be conservative and is not needed.
+- The observation and transformed inputs are exchangeable under the declared null. Repeating the same maximisation controls selection only after that randomisation assumption is justified.
+- Hypotheses may be correlated. A valid family-wise randomisation null retains that dependence because it maximises over the same statistics on each transformed input. This removes the need for a separate Bonferroni correction only for the exact predeclared family and valid null being simulated.
 - The shuffle preserves everything the family does not claim. Otherwise a subgroup shuffle (within coset, within segment) is required.
 - The complete selector is one frozen function of an input. Search seeds, stopping rules, candidate caps, tie expansion, polishing, reranking, and forward checks use the same policy for the observation and every null.
 - Output serialisation may retain fewer rows for a null only after every score-bearing stage has finished and a proof shows that the reported maximum is unchanged. Record that difference explicitly; it is not permission to shorten the null search.
@@ -53,8 +69,23 @@ title = "How to attack it"
 body = '''
 1. Define the family before the scan (periods, widths, offsets, relations, alphabet orders, cribs, keys) and write the maximiser as one function.
 2. Evaluate that complete function from scratch on the target and on $N$ shuffles; report the target's rank. Never carry the target's winning key, schedule, map, shortlist, or chosen scoring branch into the nulls.
-3. Look at *where* the maximum falls: a best that sits at the largest period or offset scanned, in every text, is the signature of selection over a family whose size grows with the parameter; treat it as null.
+3. Look at *where* the maximum falls. Repeated edge maxima are a diagnostic of selection or a misspecified scan, not a rejection rule by themselves; the matched rank still determines the decision.
 4. Reserve the family-wise reading for gates; per-trial readings are diagnostics only.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Exploit an interval of passing boundaries"
+body = '''
+An ordered boundary family sometimes has increasing left-side requirements $L_i$ and decreasing right-side requirements $R_i$. A cell requires every equality in $L_i\cup R_i$. If cells $i<k$ pass, every intermediate cell passes: its left requirements are covered by $L_k$ and its right requirements by $R_i$. The passing indices therefore form one interval, possibly empty.
+
+For event indicators $I_i$, this gives the pointwise identity
+
+$$1[\text{any cell passes}]=\sum_i I_i-\sum_i I_i I_{i+1}.$$
+
+A nonempty interval of length $r$ contributes $r-(r-1)=1$. Thus the exact selected probability needs only individual and adjacent-intersection probabilities, not every subset. An ordered subsequence obtained by valid event absorption keeps this property. For two such families, combine the two union indicators with $U+V-UV$; do not assume they are independent unless the null and graph prove it.
+
+Validate a shortcut against full subset inclusion-exclusion and exhaustive tiny strings, including biased symbol laws, duplicate events, empty requirements and cycles. This argument applies to the stated monotone raw requirements, not automatically to a later nonlinear feasibility or language selector.
 '''
 
 [[blocks]]
@@ -82,7 +113,7 @@ function FAMILY_WISE_NULL(c, H, N):
 function GATE(c, H, N, margin):
     T_star, h_star, z_fw, p_hat, null_max = FAMILY_WISE_NULL(c, H, N)
     if h_star sits at the edge of the scanned range:
-        treat the result as selection, not signal
+        record EDGE_MAXIMUM_DIAGNOSTIC
     return T_star >= null_max + margin
 ```
 '''
@@ -108,9 +139,16 @@ body = '''
 [[blocks]]
 kind = "controls"
 body = '''
-Affine-lag filters (2 alphabet orders, all lags and multipliers): the best per-trial $z$ was $+4.2$, the family-wise maximum log-likelihood ratio $5.0$ against a shuffled maximum $5.1 \pm 0.6$, $z = -0.1$. Order-free substitution scan: a planted period-7 key found at $z = +15.28$ family-wise. A planted composite key of period $\operatorname{lcm}(5, 9) = 45$, outside the scanned range, at $+0.91$ (expected weak). Bank search with nine complete-pipeline nulls: observed $-4.869$ against null $-4.836 \pm 0.024$, maximum $-4.795$, $\hat p \le 0.90$.
+Affine-lag filters (2 alphabet orders, all lags and multipliers): the best per-trial $z$ was $+4.2$, the family-wise maximum log-likelihood ratio $5.0$ against a shuffled maximum $5.1 \pm 0.6$, $z = -0.1$. Order-free substitution scan: a planted period-7 key found at $z = +15.28$ family-wise. A planted composite key of period $\operatorname{lcm}(5, 9) = 45$, outside the scanned range, at $+0.91$ (expected weak). Bank search with nine complete-pipeline nulls: observed $-4.869$ against null $-4.836 \pm 0.024$, maximum $-4.795$, $\hat p = 0.90$ by the plus-one rule.
 
 An exact target-absent construction selected one of six detectors on each observation. Keeping the observed detector fixed on the nulls falsely rejected 150 of 216 cases at a nominal one-third threshold. Repeating the six-way selection inside every null rejected 0 of 216. This is a direct finite counterexample to endpoint-only null scoring.
+'''
+
+[[blocks]]
+kind = "controls"
+title = "Exact finite equality-selector checks"
+body = '''
+A public twelve-cell equality family gave identical coefficients under 4,095 subset intersections, 127 after exact absorption, and interval expansions with 143 and 47 terms. Ten exhaustive tiny IID cases and explicit cycle/overlap traps also agreed. For a four-cycle selector that accepts any equal adjacent pair, the probability was $7/8$ under uniform binary IID, $73/81$ under IID probabilities $(1/3,2/3)$, and $53/63$ after conditioning a length-nine string on counts $(5,4)$. These are different null models, deliberately kept distinct.
 '''
 
 [[blocks]]
@@ -130,6 +168,12 @@ kind = "notes"
 body = '''
 The family-wise null is the cryptanalytic form of the multiple-comparisons problem. Its discipline is procedural: write the complete selector once, call it from a clean start on the observation and every null, and make any shortcut prove equality with that function before using it.
 '''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_SYMNULL739.md"
+kind = "audit"
+note = "Source-reviewed target-free deterministic KAT passed: all-subset, absorbed, interval and independently hand-derived equality-graph polynomials agree; finite weighted-string references and twelve refusals pass. Source 59a308eacd32f98480d8d678980eb4937c9144b96672a3e0d3ddd3b9614c0843; result 5243dff23d28cfd82e23f430b65d1d2d9dfe178ab499010e522a5cca642f8677. No puzzle, bank, corpus, cipher worker, power or live inference."
+ref = "LOG739"
 
 [[provenance]]
 path = "withmath/docs/project-notes/PK10_NULLRELEASE652_PROTOCOL.md"
@@ -180,7 +224,7 @@ note = "Round 3: the same 0.0495 is z +0.8 against the family-wise null; selecti
 [[provenance]]
 path = "withmath/logs/152_crosscycle_full.log"
 kind = "log"
-note = "CONDITIONAL FAMILYWISE ENDPOINT: obs -4.869; null -4.836 +- 0.024, max -4.795; z -1.37, p <= 0.90 over nine complete-pipeline nulls."
+note = "CONDITIONAL FAMILYWISE ENDPOINT: obs -4.869; null -4.836 +- 0.024, max -4.795; z -1.37; eight of nine nulls exceed, so the plus-one p-value is 0.90."
 ref = "logs/152_crosscycle_full.log"
 
 [[provenance]]

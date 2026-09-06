@@ -8,20 +8,20 @@ family = "Language priors"
 tags = ["semi-Markov", "word model", "segmentation", "lexicon", "beam"]
 related = ["quadgram-log-likelihood", "local-language-model-prior", "beam-search", "viterbi-decoding", "word-prefix-csp", "dictionary-attack", "shared-cycle-attack", "power-analysis", "g-quadgram"]
 summary = "A semi-Markov, or segmental, language model treats text as a sequence of words with different lengths. It scores whole words instead of overlapping n-grams. This can see whether a decryption is made of real words, which quadgrams do not model directly. One version simply splits candidates for a person to inspect. Another decodes word by word and uses an exact bound for possible completions. At 63–95 letters with shared-alphabet rules, that decoder loses the planted truth too early."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
-A segmentation of $x_0 \dots x_{n-1}$ is a sequence of words $w_1 \dots w_k$ with lengths $L_1 + \dots + L_k = n$. The model assigns
+A segmentation of $x_0 \dots x_{n-1}$ is a sequence of words $w_1 \dots w_k$ with lengths $L_1 + \dots + L_k = n$. The displayed implementation assigns the best-segmentation, or Viterbi, score
 
-$$\log P(x) = \max_{w_1 \dots w_k} \sum_{j=1}^{k} \phi(w_j),$$
+$$S(x) = \max_{w_1 \dots w_k} \sum_{j=1}^{k} \phi(w_j),$$
 
 with $\phi(w) = \log P_{\text{lex}}(w)$ for lexicon words and a fragment cost for out-of-vocabulary pieces. The maximisation is a dynamic programme over end positions,
 
 $$\text{best}[i] = \max_{i - L_{\max} \le j < i} \big(\text{best}[j] + \phi(x_{j:i})\big),$$
 
-$O(n L_{\max})$ for a lexicon lookup per span. The display segmenter uses $\phi(w) = -(1 - 0.15\,|w|)$ for dictionary words (long words preferred) and a cost of $3$ per unmatched letter, $L_{\max} = 16$. The frozen lattice used in the neural-control audits uses a top-100,000 word list with fragment score $-3 - 1.55L$ for fragments of length $L \le 8$.
+$O(n L_{\max})$ for a lexicon lookup per span. This maximum is not a normalized string probability unless $\phi$ comes from a normalized segment model and alternative parses are summed rather than maximized. The display segmenter uses $\phi(w)=-(1-0.15|w|)$ for dictionary words (long words preferred) and a score of $-3$ per unmatched letter, with $L_{\max}=16$. The frozen lattice used in the neural-control audits uses a top-100,000 word list with fragment score $-3-1.55L$ for fragments of length $L\le8$.
 '''
 
 [[blocks]]

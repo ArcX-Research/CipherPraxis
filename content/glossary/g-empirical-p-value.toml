@@ -2,9 +2,9 @@ id = "g-empirical-p-value"
 section = "glossary"
 title = "Empirical p-value"
 status = "VERIFIED"
-status_note = "Standard term; the strict rank-1-of-100 rule is its one-shot form."
+status_note = "Standard resampling term. The stated plus-one formula is tied to an explicit valid without-replacement transformation design."
 family = "Statistics"
 tags = ["rank", "permutation", "resolution"]
 related = ["permutation-test", "shuffled-null-z-score", "within-coset-null", "g-null-distribution"]
-summary = "An empirical p-value is the share of null results at least as extreme as the observed result: p = (1 + number of nulls >= observed)/(N + 1). The observed result counts as one draw. With 99 nulls, the smallest possible p is 0.01; with nine, it is 0.10. Ties count against the observation. In audited runs, a candidate passes only when it ranks first against 99 matched nulls that each went through the full selection process."
-updated = "2026-09-04"
+summary = "For a finite transformation group under an invariant null, one valid Monte Carlo design evaluates the identity and N transformations drawn uniformly without replacement from the nonidentity elements. Its upper-tail value is p = (1 + number of transformed statistics at least as large as the observation)/(N + 1), with ties included; the minimum is 1/(N + 1). Other sampling schemes require their own validity argument. Every transformed dataset must repeat any key, period, or model selection used for the reported statistic."
+updated = "2026-09-07"

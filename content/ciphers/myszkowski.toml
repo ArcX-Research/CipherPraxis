@@ -8,7 +8,7 @@ family = "Transposition"
 tags = ["transposition", "columnar", "repeated key letters"]
 related = ["columnar-transposition", "route-transposition", "rail-fence", "dictionary-attack", "transposition-width-recovery", "g-transposition-grid"]
 summary = "A Myszkowski transposition uses a keyword with repeated letters. Columns under unique letters are read like normal columnar transposition. Columns tied by the same letter are read together, one row at a time from left to right. This tie rule creates different permutations, so a plain columnar solver does not cover them. The search used its own list of dictionary words with repeated letters."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -40,7 +40,7 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - Letter identities are preserved; histogram and index of coincidence unchanged.
-- Invariant: the tie pattern of the key is what matters. Two words with the same letter-repeat pattern give the same permutation, so the effective key space is the set of tie patterns times the ordering of distinct letters.
+- Invariant: the ranked tie pattern of the key is what matters: columns must have both the same equality groups and the same alphabetical order among distinct groups. A first-occurrence repeat pattern alone is insufficient. The effective key space is the set of ordered set partitions induced by the keys.
 '''
 
 [[blocks]]
@@ -49,7 +49,7 @@ title = "How to attack it"
 body = '''
 1. Enumerate candidate key words with repeated letters (the program used its whole dictionary, lengths 4 to 16, with at least one repeated letter) and precompute the ciphertext-to-plaintext permutation for each, in both directions.
 2. For each permutation, undo the transposition, fit any periodic layer on top (both orders, both relations, a prefix drift for a key change) and score by quadgrams; polish the best.
-3. Compare the best rate with the sweep distribution. A solution reads as English at once.
+3. Compare the selected maximum with a matched sweep or null distribution. A readable full decrypt is evidence only after a Myszkowski-specific control has established power at the same geometry.
 '''
 
 [[blocks]]

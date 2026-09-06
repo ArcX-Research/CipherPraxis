@@ -6,5 +6,5 @@ status_note = "Standard term."
 family = "Language modelling"
 tags = ["n-gram", "language model"]
 related = ["quadgram-log-likelihood", "english-gate-calibration", "g-nats-per-letter", "semi-markov-word-model"]
-summary = "A quadgram is a run of four letters. A quadgram language model stores the log-probability of each of the 26^4 = 456,976 possible runs. Small smoothing gives unseen runs a nonzero probability. A text's score sums its n - 3 overlapping quadgrams. Dividing by n - 3 gives a rate of about -4.3 log10 per letter for English and about -7 for random text. Because quadgrams depend on letter order, use them only after removing every transposition."
-updated = "2026-09-04"
+summary = "A quadgram is a sequence of four consecutive symbols. A dense 26-letter table has 26^4 possible entries; smoothing assigns nonzero mass to unseen training events. A length-n text contains n - 3 overlapping quadgrams when n is at least four. Score magnitudes depend on the corpus, smoothing, logarithm base, and denominator. Because quadgrams depend on order, they are not invariant under transposition, though they can be used to rank fully ordered candidate decryptions during a transposition search."
+updated = "2026-09-07"

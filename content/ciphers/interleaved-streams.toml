@@ -3,24 +3,24 @@ section = "ciphers"
 title = "Interleaved streams"
 subtitle = "Merge several separately encrypted texts one letter at a time"
 status = "VERIFIED"
-status_note = "Splitting two streams, each with its own period-7 keyed cipher, recovered both planted plaintexts at 100%. With three streams in 153 letters, each stream had only 51 letters and recovery fell to 16%, 4%, and 4%. Three-way interleaving is therefore power-limited at that length. A nine-stream shared-key deal across three texts passed both controls and was ruled out."
+status_note = "Splitting two streams, each with its own period-7 keyed cipher, recovered both planted plaintexts at 100%. With three streams in 153 letters, each stream had only 51 letters and recovery fell to 16%, 4%, and 4%, demonstrating inadequate power there. A finite nine-stream shared-key deal passed both controls; its tested live cell failed the preregistered structural and language gates."
 family = "Composite constructions"
 tags = ["composite", "interleaving", "de-interleave", "streams"]
 related = ["vigenere", "quagmire-iii", "columnar-transposition", "compound-periodic-key", "coincidence-lag-profile", "exact-period-alignment", "g-coset", "g-period"]
-summary = "If k plaintexts are encrypted separately and merged letter by letter, each coset mixes k substitutions. That can look like a flat inner text. Split the ciphertext back into streams instead: stream r contains positions congruent to r modulo k. Then solve each stream on its own. Tests covered two- and three-way mixes under period-7 keyed ciphers and a nine-column deal shared by three texts."
-updated = "2026-09-04"
+summary = "If k plaintexts are encrypted separately and merged letter by letter, cosets taken at either stream period can mix streams and phases. Split the ciphertext back into streams instead: stream r contains positions congruent to r modulo k. Then solve each stream on its own. Tests covered two- and three-way mixes under period-7 keyed ciphers and a nine-column deal shared by three texts."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
-Given streams $s^{(0)}, \dots, s^{(k-1)}$, the merged ciphertext is $c_i = s^{(i \bmod k)}_{\lfloor i/k \rfloor}$. If stream $r$ is a period-$m$ cipher with key $u^{(r)}$ in alphabet $A_r$, then position $i$ of the merged text uses key element $u^{(i \bmod k)}_{\lfloor i/k \rfloor \bmod m}$: the merged text has period $km$ only if all streams share an alphabet, and no single-alphabet period at all otherwise.
+Given streams $s^{(0)},\dots,s^{(k-1)}$, the merged ciphertext is $c_i=s^{(i\bmod k)}_{\lfloor i/k\rfloor}$. If stream $r$ is a period-$m$ cipher with key $u^{(r)}$ in alphabet $A_r$, then position $i$ uses $u^{(i\bmod k)}_{\lfloor i/k\rfloor\bmod m}$. The sequence of per-position substitutions repeats after $km$ positions (and may have a smaller minimal period). It is one additive period-$km$ key only when the stream maps can be expressed in a common alphabet coordinate; different alphabets still give a periodic sequence of maps, not a common additive key.
 '''
 
 [[blocks]]
 kind = "equations"
 title = "Why cosets look mixed"
 body = '''
-For $k = 2$ and $m = 7$ the merged period is 14, but a period-14 solver in one alphabet fails when the two streams use different alphabets, because coset $b$ of the merged text contains letters from both streams' cosets. De-interleaving restores two ordinary period-7 texts of $n/2$ letters each, and the lag profile of each stream shows the period-$m$ coincidence peak that the merged text hides. A nine-way "deal" is the same operation with $k = 9$. When three texts share the additive layer, the nine streams of each text cancel pairwise against the others' under a common key.
+For $k=2$ and $m=7$, a coset modulo 14 belongs to one fixed stream and one fixed within-stream phase. A coset modulo 7, by contrast, visits both streams because 2 and 7 are coprime and can therefore mix their maps. A common-alphabet period-14 solver can represent the former; with different alphabets it cannot. De-interleaving restores two ordinary period-7 texts of about $n/2$ letters each. Their lag profiles may then show the expected period-$m$ coincidence signal, subject to sample and plaintext variation. A nine-way "deal" is the same operation with $k=9$. When three texts share an additive layer in one coordinate system, corresponding streams can be cancelled pairwise under their common key.
 '''
 
 [[blocks]]
@@ -116,7 +116,7 @@ A: I T R E V D  + K E Y K E Y  = S X P O Z B
 B: N E L A E    + A X E A X    = N B P A B
 ```
 
-Re-interleaving A and B gives `SNXBPPOAZBB`. The merged text has no period-3 structure in either key; de-interleaving restores two period-3 Vigenères of 6 and 5 letters.
+Re-interleaving A and B gives `SNXBPPOAZBB`. The merged substitution schedule has period 6 rather than period 3; de-interleaving restores two period-3 Vigenères of 6 and 5 letters.
 '''
 
 [[blocks]]

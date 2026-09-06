@@ -6,5 +6,5 @@ status_note = "Standard term."
 family = "Constraint programming"
 tags = ["CSP", "backtracking"]
 related = ["constraint-satisfaction-forward-checking", "word-prefix-csp", "all-different-enumeration"]
-summary = "Forward checking is a step in backtracking search. After assigning one variable, it removes values that can no longer work from nearby unassigned variables. If a variable has no values left, the solver backs up at once instead of exploring a dead branch. Choosing the variable with the fewest options next makes this even faster. One planted nine-row word puzzle needed only 244 search nodes."
-updated = "2026-09-04"
+summary = "Forward checking is a form of constraint propagation used during backtracking. After assigning a variable, it removes inconsistent values from the domains of unassigned variables connected by a constraint. If any domain becomes empty, the branch fails immediately. Selecting a smallest remaining domain is a separate variable-ordering heuristic; it often reduces search but does not change the solution set."
+updated = "2026-09-07"

@@ -8,7 +8,7 @@ family = "Polyalphabetic substitution"
 tags = ["periodic", "keyed alphabet", "polyalphabetic", "quagmire"]
 related = ["vigenere", "quagmire-i", "quagmire-iii", "quagmire-iv", "keyword-mixed-alphabet", "crib-driven-alphabet-recovery", "exact-period-alignment", "quagmire-lab", "g-keyed-alphabet"]
 summary = "Quagmire II uses a straight plaintext alphabet and a mixed ciphertext alphabet. This hides the usual Vigenère period pattern when ciphertext letters use normal indices. Each coset is still a simple substitution, and a crib can still fix the shifts. However, changing the alphabet moves ciphertext letters rather than plaintext letters, so crib search is harder than for Quagmire I."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -24,7 +24,7 @@ Decryption reads the ciphertext letter's index in $C$, subtracts the coset shift
 kind = "equations"
 title = "Alignment signature"
 body = '''
-In the index space of the *true* $C$, the cosets align by additive shifts exactly as in Vigenère. In any other index space the rotations become unrelated permutations, so an alignment statistic computed in a guessed order shows nothing. This asymmetry is diagnostic: a text whose cosets align in a known order is consistent with Quagmire I in that order and inconsistent with Quagmire II in it. Reversing $C$ converts the Beaufort relation into the Vigenère one, so only one relation needs to be searched.
+In the index space of the *true* $C$, the cosets align by additive shifts exactly as in Vigenère. A generic wrong order turns those rotations into non-rotational permutations and usually weakens the alignment, although affine-related orders and finite-sample chance can retain signal. Strong alignment in a fixed known order therefore favors a model whose ciphertext coordinate is that order; it does not logically exclude Quagmire II with another alphabet. Reversing $C$ converts the Beaufort relation into the Vigenère one, so only one relation needs to be searched when both orientations of $C$ are represented.
 '''
 
 [[blocks]]

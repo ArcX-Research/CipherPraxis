@@ -7,13 +7,13 @@ status_note = "These are standard sources for the statistical tests and validati
 family = "Literature"
 tags = ["bibliography", "statistics", "cryptanalysis"]
 related = ["index-of-coincidence", "kasiski-examination", "chi-squared-fit", "quadgram-log-likelihood", "bayesian-evidence-model-selection", "mahalanobis-family-distance", "family-wise-null", "permutation-test", "power-analysis", "selection-overfit-check", "literature-classical-ciphers"]
-summary = "Friedman introduced the index of coincidence, Kullback developed statistical cryptanalysis, and Shannon supplied ideas such as redundancy and unicity distance. Jaynes, MacKay, Kass, and Raftery cover marginal likelihood and model comparison. Fisher, Westfall, and Young support permutation and family-wide null tests. Mahalanobis provides the distance used for family comparison, and Cohen explains why a negative without enough power is not useful."
-updated = "2026-09-04"
+summary = "Friedman introduced the index of coincidence, Kullback developed statistical cryptanalysis, and Shannon analyzed secrecy, redundancy, and unicity distance. Jaynes, MacKay, Kass, and Raftery discuss Bayesian inference and model comparison, including the prior sensitivity of marginal likelihoods. Fisher and later resampling texts cover randomization or permutation tests; Westfall and Young cover multiplicity adjustment. Mahalanobis introduced the eponymous distance, while Cohen discusses statistical power."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "notes"
 body = '''
-This site applies standard resampling and multiple-testing methods to keys, placements, and cipher families. Its matched null tests repeat the full selection step, family-wise tests compare maximum scores, and planted cases measure power. For the theory behind a specific test, open the source named on that test's page.
+This site adapts resampling and multiple-testing methods to keys, placements, and cipher families. A valid randomization test still requires a null hypothesis under which the chosen transformations are exchangeable. A matched null must repeat all data-dependent selection being calibrated; a maximum-statistic test addresses the specified family; planted cases estimate power only for their generating distribution and recovery criterion.
 '''
 
 [[references]]

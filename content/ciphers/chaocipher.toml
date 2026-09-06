@@ -2,13 +2,13 @@ id = "chaocipher"
 section = "ciphers"
 title = "Chaocipher"
 subtitle = "Two alphabets change after every letter, but ciphertext fixes one wheel's path"
-status = "CLOSED"
-status_note = "Controls passed for a bank of 156,816 ordered keyed-wheel pairs and for a reduced search with 104 left-wheel states and any right wheel. Both forms were ruled out on the 504-letter text. The case where both starting wheels are arbitrary has not been tested."
+status = "INCONCLUSIVE"
+status_note = "Controls passed for a bank of 156,816 ordered keyed-wheel pairs and for a reduced search with 104 left-wheel states and a heuristically fitted right wheel. The finite keyed-wheel bank produced no candidate on the 504-letter text; the reduced one-wheel result was explicitly ambiguous. The case where both starting wheels are arbitrary has not been tested."
 family = "Stream and machine ciphers"
 tags = ["machine", "wheels", "state mutation", "dihedral", "monoalphabetic reduction"]
 related = ["alberti-progressive", "keyword-mixed-alphabet", "dihedral-group", "permutation-cycles", "simulated-annealing", "known-answer-tests", "shuffled-null-z-score", "g-gauge-class"]
 summary = "Chaocipher uses two alphabet wheels that rearrange after each letter, so its substitution keeps changing. Once the left, or ciphertext, wheel's starting state is fixed, the ciphertext determines every later wheel move. The unknown right wheel then becomes one fixed substitution over a position stream that can be calculated. This reduction lets a standard substitution solver search the cipher."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -101,7 +101,7 @@ kind = "failure_modes"
 body = '''
 - **Tautological round-trip.** Every fitted state re-encrypts the ciphertext exactly.
 - **Bank limitation.** A negative over keyed wheels excludes only those wheels. The live bank winner scored $-7.59$ with visibly random output.
-- **Random-level ambiguity.** On the live text all four one-wheel-free classes scored $-15.23$ to $-15.31$ (the random-negative level) with a class gap of 0.02, so the decision was AMBIGUOUS, which the audit reads as rejection of the family, not as a lead.
+- **Random-level ambiguity.** On the live text all four one-wheel-free classes scored $-15.23$ to $-15.31$ (the recorded random-negative level) with a class gap of 0.02. That is an ambiguous non-candidate under the frozen selector, not an exhaustive rejection of arbitrary right wheels.
 - **Both wheels free** is a genuinely open problem for which readability plus round-trip cannot be evidence.
 '''
 
@@ -123,7 +123,7 @@ First letter: `W` is at position 21 of the right wheel and position 21 of the le
 [[blocks]]
 kind = "notes"
 body = '''
-The one-wheel reduction is what makes the classic Chaocipher tractable: the cipher's state mutation is deterministic given the ciphertext and one wheel, so the "chaos" is entirely in one unknown substitution. The corpus closes the dihedral-left-wheel family on one 504-letter text and explicitly leaves the two-free-wheel family open.
+The one-wheel reduction makes the tested Chaocipher problem smaller: the state mutation is deterministic given the ciphertext and one wheel, leaving one unknown substitution. The recorded run found no candidate in the finite keyed-wheel bank, returned an ambiguous result for the dihedral-left-wheel reduction, and leaves the two-free-wheel family open.
 '''
 
 [[provenance]]

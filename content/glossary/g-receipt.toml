@@ -6,5 +6,5 @@ status_note = "Term as used throughout this atlas's provenance panels."
 family = "Validation vocabulary"
 tags = ["provenance", "hashes"]
 related = ["reproducibility-receipts", "g-manifest"]
-summary = "A receipt records the minimum needed for someone else to reproduce a claimed number. It gives hashes for the source, runner, parser, corpus, and model tables; the seeds and command; and the exact transcript hash and line. A number without this record is removed from public text rather than guessed or rounded."
-updated = "2026-09-04"
+summary = "A receipt binds a claim to enough immutable input, code, configuration, environment, and output information for an independent check. Depending on the claim, this may include hashes of sources, runners, parsers, corpora, and model tables; seeds and commands; and the exact output field or transcript location. A hash proves byte identity, not semantic correctness, so replay or an independent calculation is still needed where the claim depends on program logic."
+updated = "2026-09-07"

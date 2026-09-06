@@ -7,8 +7,8 @@ status_note = "The alternating fit recovered both planted controls at 100%: a sa
 family = "Composite constructions"
 tags = ["periodic", "composite", "lcm", "two alphabets", "polyalphabetic"]
 related = ["vigenere", "quagmire-iii", "additive-stream-wheels", "sandwich-construction", "lcm-of-periods", "exact-period-alignment", "coincidence-lag-profile", "expectation-maximisation", "coordinate-descent", "g-period"]
-summary = "Apply one repeating key after another. If both use the same alphabet, they combine into one key with period lcm(m, q). If they use different mixed alphabets, the result is a new layered cipher. Even a short text may show both periods as separate match peaks. The solver alternates exact single-letter fits for the 7 + q shifts, starts from many points, then checks the result with quadgrams and shuffled null data."
-updated = "2026-09-04"
+summary = "Apply one repeating key after another. If both use the same alphabet, they combine into one key whose period divides lcm(m, q). If they use different mixed alphabets, the result is a new layered cipher. Finite texts may show evidence at one or both component periods. The solver alternates exact one-coordinate fits for the 7 + q shifts from many starts, then checks the heuristic result with quadgrams and shuffled null data."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -17,20 +17,20 @@ With an inner key $v$ of period $q$ in alphabet $A_1$ and an outer key $u$ of pe
 
 $$y_i = A_1\big[\operatorname{pos}_{A_1}(p_i) + v_{i \bmod q}\big], \qquad c_i = A_2\big[\operatorname{pos}_{A_2}(y_i) + u_{i \bmod m}\big].$$
 
-If $A_1 = A_2$ the composite is one additive key of period $\operatorname{lcm}(m, q)$ with elements $u_{i \bmod m} + v_{i \bmod q}$. If the alphabets differ, each position belongs to a class $(b, j) = (i \bmod m, i \bmod q)$ whose substitution is $A_2 \circ \rho_{u_b} \circ A_2^{-1} \circ A_1 \circ \rho_{v_j} \circ A_1^{-1}$, which is not a rotation in either alphabet.
+If $A_1=A_2$, the composite is one additive key with elements $u_{i\bmod m}+v_{i\bmod q}$. Its period divides $\operatorname{lcm}(m,q)$ and can be smaller when the component keys have aliases or their sum repeats early. If the alphabets differ, each reachable phase pair $(b,j)=(i\bmod m,i\bmod q)$ has substitution $A_2\circ\rho_{u_b}\circ A_2^{-1}\circ A_1\circ\rho_{v_j}\circ A_1^{-1}$, which need not be a rotation in either alphabet.
 '''
 
 [[blocks]]
 kind = "equations"
 title = "Class fit and null"
 body = '''
-Every letter sits in one of $mq$ classes with plaintext index $\operatorname{pos}_{A_1}\big(A_2[\operatorname{pos}_{A_2}(c_i) - u_b]\big) - v_j$. The $m + q$ shifts are found by alternating exact monogram maximisation: fix $v$, maximise each $u_b$ over 26 values; fix $u$, maximise each $v_j$; repeat from many random starts, because the coset alignment used for single-layer ciphers is useless here (the inner layer flattens each coset). The best few starts are polished by quadgram coordinate descent, and the same fit on shuffled ciphertexts gives the null. A "period-7 key plus one constant per block of $m$" is the special case $q$ = block length with $v$ constant within blocks.
+Every position uses one reachable phase pair $(b,j)$. There are $\operatorname{lcm}(m,q)$ such pairs, not generally $mq$: they are exactly those satisfying $b\equiv j\pmod{\gcd(m,q)}$. The plaintext index is $\operatorname{pos}_{A_1}\big(A_2[\operatorname{pos}_{A_2}(c_i)-u_b]\big)-v_j$. The $m+q$ shifts are found by alternating exact one-coordinate monogram maximisation: fix $v$, maximise each $u_b$ over 26 values; fix $u$, maximise each $v_j$; repeat from many random starts. The inner layer often weakens single-layer coset alignment, but does not necessarily flatten it. The best starts are polished by quadgram coordinate descent, and the same fit on shuffled ciphertexts gives the null. A key that is constant within successive blocks is a separate block-indexed model; it is not, in general, a second position-periodic key.
 '''
 
 [[blocks]]
 kind = "variants"
 body = '''
-- **Same alphabet**: a single key of period $\operatorname{lcm}(m, q)$; already covered by a periodic solver up to that period.
+- **Same alphabet**: a single key whose period divides $\operatorname{lcm}(m,q)$; covered by a periodic solver that includes the resulting minimal period.
 - **Two alphabets**: the new family. The program used the straight order and one keyword-mixed order in all four pairings.
 - **Block drift**: an outer period-7 key plus one constant per block ($m = 2, 3, 4$ blocks).
 - **Sandwich**: a transposition between the two layers; see [Sandwich construction](/ciphers/sandwich-construction).
@@ -42,7 +42,7 @@ title = "Assumptions and invariants"
 body = '''
 - Both layers strictly periodic; alphabets from a small fixed set.
 - Invariant: the same-alphabet case leaves a residual periodicity at $q$ after the period-$m$ layer is removed. A residual period-10 signal after alignment was exactly what motivated the lane.
-- Invariant: in the two-alphabet case the $mq$ class substitutions are all different, so class-level statistics rather than coset statistics carry the information.
+- In the two-alphabet case there are $\operatorname{lcm}(m,q)$ reachable phase pairs. Their substitutions may coincide through key or alphabet aliases, so class-level statistics are useful diagnostics rather than a guarantee of distinct classes.
 '''
 
 [[blocks]]

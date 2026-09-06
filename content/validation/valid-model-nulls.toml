@@ -3,17 +3,17 @@ section = "validation"
 title = "Valid-model nulls"
 subtitle = "Use negative cases that obey the cipher rules but remove the signal being tested"
 status = "VERIFIED"
-status_note = "Sealed control sets pair positives with two kinds of negatives: independent letters with the right single-letter counts, and cases that break the cipher model. The independent-letter negative caught an English gate that would otherwise have passed on algebra alone."
+status_note = "Sealed control sets pair positives with two kinds of negatives: independent letters drawn from the declared single-letter distribution, and cases that break the cipher model. The independent-letter negative caught an English gate that would otherwise have passed on algebra alone."
 family = "Power and calibration"
 tags = ["nulls", "negatives", "controls", "calibration"]
 related = ["tautological-gate-rule", "planted-controls", "selection-overfit-check", "family-wise-null", "within-coset-null", "shuffled-null-z-score", "permutation-test", "english-gate-calibration", "homophonic-substitution"]
-summary = "A negative that breaks the cipher rules may be easy to reject for the wrong reason. A valid-model null keeps the correct construction, a legal key, and English single-letter frequencies, but draws letters independently. Only a gate that uses adjacency, order, or language can reject it. This tests whether the pipeline really detects plaintext when the cipher's algebra is present but the language signal is not."
-updated = "2026-09-05"
+summary = "A negative that breaks the cipher rules may be easy to reject for the wrong reason. A valid-model null keeps the correct construction and a legal key, but draws letters independently from the English single-letter distribution. A gate intended to reject these cases reliably must use information beyond that preserved distribution. This tests whether the pipeline detects the declared language signal when the cipher's algebra is present but language adjacency is absent."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
-Fix a cipher model $\mathcal{M}$ with key space $K$ and a selector that outputs a candidate plaintext and a decision. A **valid-model null** is a fixture $(p^\ast, k, c)$ with $k \in K$ legal, $c = \operatorname{Enc}_{\mathcal{M}}(p^\ast, k)$ computed by the real forward, and $p^\ast$ drawn so that every *marginal* the model exploits is preserved while the *signal* the gate claims to detect is absent. The program's standard choice is independent letters from the English monogram distribution: correct unigram statistics, no adjacency.
+Fix a cipher model $\mathcal{M}$ with key space $K$ and a selector that outputs a candidate plaintext and a decision. A **valid-model null** is a fixture $(p^\ast,k,c)$ with legal $k\in K$ and $c=\operatorname{Enc}_{\mathcal M}(p^\ast,k)$ computed by the real forward. Its source distribution preserves the declared nuisance structure while removing the signal the gate claims to detect. The program's standard choice draws letters independently from the English monogram distribution: it matches the unigram law in expectation but has no language adjacency. If exact histograms must be preserved, sample uniformly from permutations of a fixed multiset instead.
 
 The required outcome is a **negative terminal** (`NON_ENGLISH` or "no candidate"). A valid-model null that reaches the candidate terminal is a gate failure of the whole pipeline, regardless of how many positives pass.
 
@@ -28,13 +28,14 @@ The same idea applied to a *target* rather than a fixture gives the program's ca
 
 $$p = \frac{1 + \#\{b : S_1(\text{null}_b) \ge S_1(\text{obs})\}}{B + 1}, \qquad \text{equality loses}.$$
 
-With $B = 99$ the finest attainable value is $p = 0.01$, and certification requires zero exceedances. The selection over classes is inside every replicate, so the multiplicity of the search is charged to the null automatically.
+With $B=99$ the smallest attainable value is $p=0.01$, and the recorded strict-rank gate requires zero exceedances. The selection over classes is inside every replicate, so the multiplicity of that declared search is included in its null. Under group invariance, valid protocols include independent uniform group draws with replacement, or distinct uniform draws from the non-identity transformations with the identity appended. Retain repeated transformed data and score ties in either design; see [Permutation test](/statistics/permutation-test).
 '''
 
 [[blocks]]
 kind = "assumptions"
 body = '''
 - The null preserves exactly the invariants the selector is allowed to use (histogram, coset multisets, class census) and destroys exactly the structure it claims to detect. A within-coset shuffle preserves each coset's histogram, so a periodic-substitution selector sees identical coset statistics and can differ only through order.
+- For a randomisation $p$-value, the observed and transformed inputs are exchangeable under the stated null. Structural resemblance alone is not enough.
 - The null is generated before any score exists (a precommitted permutation bank with a digest), and no null is filtered by the observation's gates.
 '''
 
@@ -70,7 +71,7 @@ function CHECK_NEGATIVES(fixtures):
 
 function CONDITIONAL_NULL_CERTIFICATE(c_obs, B):
     // histogram and class structure preserved; digest recorded first
-    bank = PRECOMMITTED_PERMUTATIONS(c_obs, B)
+    bank = PRECOMMITTED_UNIFORM_TRANSFORMS_WITH_REPLACEMENT(c_obs, B)
     // selection over classes happens inside every replicate
     s_obs = SELECT(c_obs).score
     exceed = 0

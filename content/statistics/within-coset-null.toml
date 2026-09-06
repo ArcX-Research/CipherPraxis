@@ -8,7 +8,7 @@ family = "Null distributions and calibration"
 tags = ["null distribution", "permutation", "coset", "valid-model null", "matched null"]
 related = ["permutation-test", "shuffled-null-z-score", "family-wise-null", "selection-overfit-diagnostic", "valid-model-nulls", "vigenere", "quagmire-iii", "exact-period-alignment", "g-coset", "g-null-distribution"]
 summary = "For a period-p substitution over language-like plaintext, shuffling the whole text destroys patterns the model itself predicts. A within-coset null shuffles positions only inside each class i mod p. This keeps every coset histogram, coset IC, total letter count, and the single-letter counts after removing any tested progressive slope. It destroys language order within and across cosets. Each key still decrypts to the same letters in another order, so any extra score in the original comes from order alone."
-updated = "2026-09-06"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -48,16 +48,16 @@ This tests whether the observed pairing contributes information beyond the struc
 [[blocks]]
 kind = "assumptions"
 body = '''
-- The alternative hypothesis is exchangeable within residue classes under the null: a language-like plaintext has no order structure that the periodic key model claims, so if the observed score is only the coset histograms' doing, the null reproduces it.
+- Under the null hypothesis, position order is exchangeable within each residue class conditional on the preserved coset histograms. The language alternative is *not* exchangeable: its order dependence is the signal being tested.
 - The period is fixed before the null is drawn. If the period is itself selected, the family-wise version must re-select it on every null.
-- Transformations are sampled without replacement and never accepted or rejected on the basis of their score.
+- The recorded distinct-transform design uses a uniformly random anchor and relative transformations so the observation and null inputs are exchangeable. A with-replacement group sample is also valid when declared, but the two protocols must not be mixed.
 '''
 
 [[blocks]]
 kind = "attack"
 title = "Use in an attack pipeline"
 body = '''
-1. Fix $p$ and draw $N$ distinct non-identity elements of $G$ (the toolkit draws 100 and stores $h_i = g_0^{-1} g_i$ so that $h_0$ is the identity).
+1. Fix $p$. Before scoring, draw $N$ distinct transformations uniformly from $G\setminus\{e\}$ and append the identity. Equivalently, draw $N+1$ distinct uniform group elements and express them relative to one random anchor. Under group invariance both constructions give the same valid without-replacement rank; see [Permutation test](/statistics/permutation-test).
 2. Re-run the *entire* selection on each null: cycle enumeration, sign partition, key fit, language polish, forward check. Never reuse the observed cycle, sign or key.
 3. Admit a candidate only at strict rank 1 of $N + 1$ (ties reject); with $N = 99$ this is $\hat p = 0.01$.
 4. Use 9 nulls for a controls-only power gate, 99 for a live one-shot decision; nine nulls cannot certify below $\hat p = 0.10$.
@@ -86,11 +86,13 @@ function APPLY(c[0..n-1], g):
 // selected on c is reused on a null.
 function WITHIN_COSET_TEST(c[0..n-1], p, N, seed, SELECT):
     rng = RNG(seed)
-    observed = SELECT(c)
+    // Distinct uniform group elements, drawn before any score. Relative
+    // transforms make h[0] the identity without fixing the sampling anchor.
+    g[0..N] = DRAW_DISTINCT_UNIFORM_GROUP_ELEMENTS(G, rng)
+    for i in 0..N: h[i] = INVERSE(g[0]) COMPOSE g[i]
+    observed = SELECT(APPLY(c, h[0]))
     for i in 1..N:
-        // distinct, non-identity, drawn before scoring
-        g_i = DRAW_WITHIN_COSET(n, p, rng)
-        null[i] = SELECT(APPLY(c, g_i))
+        null[i] = SELECT(APPLY(c, h[i]))
     // a tie counts against the candidate
     rank = 1 + #{ i : null[i] >= observed }
     p_hat = rank / (N + 1)
@@ -112,13 +114,13 @@ body = '''
 - **Wrong period.** A within-coset null at the wrong $p$ neither preserves the true cosets nor randomises them fully. The resulting $\hat p$ is uninterpretable.
 - **Exchangeability across a union of hypotheses.** If the hypothesis family includes a re-indexing of the text (dihedral or affine re-orderings), one shuffle group is exchangeable for one indexing only. The null must either be proved exchangeable for the whole union or be run as separate matched tests with the worst-case $p$.
 - **Shuffling both sources in a cross-text test.** This destroys each source's own order as well as their pairing, so a one-source language signal can masquerade as cross-text evidence. Use two one-source-fixed strata.
-- **Too few nulls.** One null gives $\hat p \le 1/2$ and proves nothing about a 1% rate; nine give $\hat p \ge 0.10$.
+- **Too few nulls.** One null has a smallest attainable $\hat p=1/2$ and cannot test a 1% rule; nine have a smallest attainable $\hat p=0.10$.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Seven fixtures (four held-out English plaintexts under a shared-cycle period-7 model with different sign patterns, three independently seeded uniform-random plaintexts under the same model) times 100 replicates = 700 full selections. Every replicate's exact core reported COMPLETE with a unique optimum and its own forward check, and an independent forward reproduced all three ciphertext rows. Positives: observed scores $-4{,}401{,}911$ to $-3{,}858{,}973$ (scaled integer log-likelihoods) against null maxima of $-5{,}093{,}946$ to $-5{,}475{,}940$, rank 1 of 100 each. Negatives: ranks 84, 55 and 6 of 100; rank 6 is recorded as the boundary case that the strict rank-1 rule still rejects. In a separate bank search the target's best $-4.869$ was beaten by 8 of 9 complete-pipeline within-coset nulls (mean $-4.836$, maximum $-4.795$), $\hat p \le 0.90$; in a derived-alphabet lane the live best $-5.9546$ ranked 100 of 100 against 99 nulls whose maximum was $-5.5630$.
+Seven fixtures (four held-out English plaintexts under a shared-cycle period-7 model with different sign patterns, three independently seeded uniform-random plaintexts under the same model) times 100 replicates = 700 full selections. Every replicate's exact core reported COMPLETE with a unique optimum and its own forward check, and an independent forward reproduced all three ciphertext rows. Positives: observed scores $-4{,}401{,}911$ to $-3{,}858{,}973$ (scaled integer log-likelihoods) against null maxima of $-5{,}093{,}946$ to $-5{,}475{,}940$, rank 1 of 100 each. Negatives: ranks 84, 55 and 6 of 100; rank 6 is recorded as the boundary case that the strict rank-1 rule still rejects. In a separate bank search the target's best $-4.869$ was beaten by 8 of 9 complete-pipeline within-coset nulls (mean $-4.836$, maximum $-4.795$), $\hat p=0.90$; in a derived-alphabet lane the live best $-5.9546$ ranked 100 of 100 against 99 nulls whose maximum was $-5.5630$.
 '''
 
 [[blocks]]
@@ -155,7 +157,7 @@ note = "99 matched within-residue transformations, invariance proofs (histograms
 [[provenance]]
 path = "withmath/logs/152_crosscycle_full.log"
 kind = "log"
-note = "Nine complete-pipeline within-coset nulls; 8 of 9 beat the target's -4.869 (null mean -4.836, max -4.795), p <= 0.90."
+note = "Nine complete-pipeline within-coset nulls; 8 of 9 beat the observation's -4.869 (null mean -4.836, max -4.795), so the plus-one p-value is 0.90."
 ref = "logs/152_crosscycle_full.log"
 
 [[provenance]]

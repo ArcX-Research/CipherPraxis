@@ -6,5 +6,5 @@ status_note = "Standard term from sequential statistics, applied to key or regim
 family = "Cryptanalysis technique"
 tags = ["segmentation", "zone"]
 related = ["change-point-zone-detection", "segment-chain-analysis", "g-zone", "within-coset-null"]
-summary = "A change point is where a ciphertext starts behaving differently. The key, alphabet, period, or kind of plaintext may differ on the two sides. For a periodic substitution, an exact dynamic program finds these points from matches within each coset and compares them with shuffled cosets. A change point shows that a boundary exists, but not why. A change in plaintext, a transposition boundary, and a new substitution can all leave the same pattern."
-updated = "2026-09-04"
+summary = "A change point is a position at which the parameters or distribution of a specified sequence model change. In ciphertext, the cause might be a new key, alphabet, period, plaintext regime, or preprocessing rule. A dynamic program can exactly optimize a declared additive segmentation objective, but it does not thereby prove that a physical boundary exists. Significance and location uncertainty require calibration that repeats the boundary search; even a supported boundary does not identify its cause."
+updated = "2026-09-07"

@@ -3,12 +3,12 @@ section = "exact"
 title = "Cost-projected all-different bounds"
 subtitle = "Join mini-bucket estimates and exact matching rules without losing a safe search bound"
 status = "VERIFIED"
-status_note = "Two independent test series proved the projected bounds admissible and no looser than the base mini-bucket bound. A row-only version tightened 2,414 of 8,965 small-case prefixes. A later row-and-column version tightened 379 of 32,062 prefixes and caught two conflicts designed for it. At 26 symbols, however, the later version improved one fresh root by only 5 score units and did not complete either capped search."
+status_note = "The cost-cancellation argument proves admissibility; two independent test series checked that argument's implementations against exact optima. A row-only version tightened 2,414 of 8,965 small-case prefixes. A later row-and-column version tightened 379 of 32,062 prefixes and caught two conflicts designed for it. At 26 symbols, the later version improved one fresh root by 5 score units and did not complete either capped search."
 family = "Lagrangian upper bounds"
 tags = ["all-different", "Lagrangian relaxation", "mini-bucket elimination", "assignment problem", "branch and bound", "dual bounds", "forbidden edges"]
 related = ["admissible-bound-selectivity", "mini-bucket-elimination", "all-different-constraints", "maximum-weight-bipartite-assignment", "partial-permutation-completion-bounds", "bound-benchmarks-and-certificates", "exact-optimization-admission"]
 summary = "A mini-bucket bound can ignore links between repeated cipher variables. Split those links into exact matching problems: values may need to differ within each row, differ across rows for the same input symbol, or avoid forbidden row-to-symbol pairs. Add integer costs to the mini-bucket factors and subtract the same costs in the matching factors. They cancel for every legal completion, so the combined result is still a safe upper bound. This can expose conflicts that the mini-buckets miss, but a mathematically stronger bound may still save too little work at a full alphabet size."
-updated = "2026-09-06"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -64,6 +64,7 @@ body = '''
 - **Node-adaptive dual costs:** update costs from disagreement between the relaxed local solution and the exact row and column matchings, under a fixed iteration rule.
 - **Subgradient or bundle method:** optimize the dual upper bound for a fixed number of iterations; every intermediate value remains admissible.
 - **Separator-conditioned projection:** retain a small shared separator exactly before applying the assignment projection.
+- **Certified word-bundle cuts:** prove that several whole sets of word arcs cannot all be selected, then penalize their selection without enlarging the lexical state space. This is a reviewed mathematical construction; its first implementation test did not reach the mathematical checks.
 '''
 
 [[blocks]]
@@ -86,7 +87,23 @@ title = "Build and test the bound"
 body = '''
 Construct the same repeated-variable factor graph used by the exact objective. Build one rectangular weight matrix for each row group and one for each same-symbol column group. A matrix row represents a still-free physical variable and a matrix column represents an available value. Remove only edges that the equations prove impossible. Solve every maximum injective assignment exactly, for example with a rectangular Hungarian algorithm or exact min-cost flow.
 
-Add the chosen $\alpha+\beta$ costs to the local factors before mini-bucket elimination. At each search node, evaluate the old bound and all declared projected bounds, then take their minimum. First enumerate every legal descendant on small alphabets and require exact optimum $\le B^*\le B_4$ at every reachable prefix. Also include crafted cases that isolate row collisions, column collisions, forbidden edges, and a legal saturated optimum. Only after that proof should larger controls measure strict-tightening frequency, bound gap, nodes, re-expansions, wall time, memory, witness rank, and completion.
+Add the chosen $\alpha+\beta$ costs to the local factors before mini-bucket elimination. At each search node, evaluate the old bound and all declared projected bounds, then take their minimum. First enumerate every legal descendant on small alphabets and require exact optimum $\le B^*\le B_4$ at every reachable prefix. Also include crafted cases that isolate row collisions, column collisions, forbidden edges, and a legal saturated optimum. After these implementation checks, larger controls measure strict-tightening frequency, bound gap, nodes, re-expansions, wall time, memory, witness rank, and completion.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function CERTIFIED_BUNDLE_PENALTY(bundles, scope, mu):
+    require mu >= 0
+    require each bundle has one fixed positive span in one acyclic text DAG
+    relations = PROJECT_EVERY_MEMBER_OF_EVERY_BUNDLE(bundles, scope)
+    certificate = COMPLETE_DOMAIN_JOIN(relations, same_map_all_different)
+    if certificate is capped or certificate has a compatible assignment:
+        return NO_CUT
+    subtract mu from each member arc for each bundle containing it
+    add mu * (number_of_bundles - 1) to the upper bound
+```
 '''
 
 [[blocks]]
@@ -96,7 +113,8 @@ body = '''
 function PROJECTED_BOUND(partial, alpha, beta):
     language_upper = MINI_BUCKET_MAX(
         local_factors + ADD_COSTS(alpha + beta), partial, i_bound=4)
-    correction = 0
+    correction = -SUM(alpha[v][partial[v]] + beta[v][partial[v]]
+                      for v already assigned in partial)
     for row in row_groups:
         matrix = [-alpha[v][value]
                   for v still free in row
@@ -130,7 +148,7 @@ Evaluating several cost schedules multiplies bound time. This is worthwhile only
 kind = "failure_modes"
 body = '''
 - **Cost sign mismatch:** the language and matching terms reinforce rather than cancel.
-- **One occurrence charged twice:** a repeated physical variable receives several unmatched cost copies.
+- **One occurrence charged twice:** a repeated physical variable receives several unmatched cost copies. Arc penalties also need globally unique identities or explicit `(text, arc)` keys; a text-prefix naming rule alone can collide when text names are nested.
 - **Greedy matching:** an approximate assignment score is used where an upper maximum is required.
 - **Wrong assigned columns:** the matching still uses a value already fixed elsewhere, or removes the wrong value.
 - **Unsafe forbidden edge:** a plausible-looking diagonal or row-to-value pair is removed without proving that every legal completion excludes it.
@@ -160,6 +178,10 @@ body = '''
 This construction is a Lagrangian or dual-decomposition view of exact matching rules. It is useful when the mini-bucket solution, row matchings, and same-symbol column matchings prefer incompatible values: the costs expose that disagreement. Forbidden edges add useful information only when they remove values that the base relaxation would otherwise favor. If all relaxed parts can absorb the costs without disagreement, the projected bound equals the base bound.
 
 A correct inequality and a useful search method are different achievements. Even a strict five-point root improvement can leave almost the same search tree. A credible successor must expose more of the missing dependency, improve bounds near the pruning boundary, or reduce its own evaluation cost. Its cost rule should be fixed before the larger holdout, and its benefit must be measured at the full alphabet size.
+
+For a word-bundle cut, each bundle has one fixed positive span, so a path selects at most one of its members. Let that indicator be $z_i$. Project every member onto a small shared variable set, respecting literal variable identities and all-different groups. If the complete projected join is empty, every legal solution satisfies $\sum_i z_i\le m-1$. Subtracting $\mu$ from member arcs and adding $\mu(m-1)$ changes a legal score by $\mu(m-1-\sum_i z_i)\ge0$. Maximizing the relaxed lexical and map parts therefore remains an upper bound. Include $\mu=0$ when taking the best bound.
+
+A conflict between only the current winning words is insufficient: another member of either bundle may be compatible. A capped join is UNKNOWN, not a cut. Bind a certificate to the exact model, domains, entire member sets and projection; a hash alone does not prove emptiness, so independent replay must reconstruct the join. This proof does not establish an effective non-oracle bundle-selection rule or useful full-size pruning.
 '''
 
 [[provenance]]
@@ -215,3 +237,9 @@ path = "withmath/logs/695_rookdual_controls_20260906T082536Z_79200_1788683136019
 kind = "data"
 note = "Frozen small-alphabet proof, crafted conflict controls, degree-26 regressions, and fresh full-degree power measurements."
 ref = "LOG695"
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/PK89_WORDCUTS743.md"
+kind = "design"
+note = "Independent source/math review established the whole-bundle inequality and found a cross-text arc-ID collision, repaired before execution. The sole implementation attempt then refused during startup environment validation, before any mathematical KAT; it remains INCOMPLETE with no retry, no numerical PASS and no full-size pruning evidence."
+ref = "LOG743"

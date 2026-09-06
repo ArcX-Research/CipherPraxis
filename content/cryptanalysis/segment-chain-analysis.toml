@@ -8,7 +8,7 @@ family = "Relations between ciphertexts"
 tags = ["segmented key", "breakpoint", "chain", "running key", "controls-only", "incomplete search"]
 related = ["key-cancellation", "change-point-zone-detection", "running-key-relation-test", "periodic-substitution-dp", "exact-dynamic-programming", "held-out-gates", "seal-and-audit-protocol", "valid-model-nulls", "target-absent-controls", "reproducibility-receipts", "g-change-point", "g-key-cancellation", "g-zone", "g-successor-review"]
 summary = "This model joins two clues: a key boundary inside one text and a running-key link to another. Before the boundary, the first text uses a constant key. After it, the key has period 7. The first plaintext then repeats as the second text's running key. Cancelling that shared plaintext leaves the second text under known key groups. The selector passed hidden controls and an audit, but it searches only a shortlist. A miss cannot rule out the full family."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -32,7 +32,7 @@ so the derived stream has 8 key groups with counts $[62, 13, 13, 13, 13, 13, 13,
 kind = "equations"
 title = "Selector and null"
 body = '''
-The search has 16 cells: two index orders for each text and two signs for each order. For the 91-letter periodic segment, it scores all 26 monogram shifts for each residue and keeps the best 8. It then finds the exact maximum of the order-3 cyclic quadgram factor graph over all $8^7 = 2{,}097{,}152$ combinations, keeping every tie, and polishes the result in a fixed way. Next it tries all 26 values of $c$. Same-order cells also try the 26 gauge states $h' = h + \delta$, $c' = c + \delta$, which form a physical orbit rather than a representation artefact. This gives $8 \times 676 + 8 \times 26 = 5{,}616$ final states. The score is the highest integer quadgram score for the full 153-letter $Q$ across this union; the search does not use $P$'s language. Two gates apply: an English threshold of $-4.8324$ per letter, calibrated on a separate corpus range, and a distinct-pair gap of $30{,}592{,}997{,}516$ integer units, the largest identity gap among allowed negatives. The smallest positive gap was $159{,}924{,}989{,}002$. For the null test, the method independently shuffles both sources inside each (zone $\times$ absolute residue) group, repeats the full selection 99 times, and requires strict rank one ($p = 1/100$).
+The search has 16 cells: two index orders for each text and two signs for each order. For the 91-letter periodic segment, it scores all 26 monogram shifts for each residue and keeps the best 8. The recorded implementation then forms the complete $8^7=2{,}097{,}152$ shortlist tensor, adds the seven order-3 cyclic quadgram factors, and keeps every exact maximum tie before a fixed polish. Next it tries all 26 values of $c$. Same-order cells also try the 26 gauge states $h'=h+\delta$, $c'=c+\delta$, which form a physical orbit rather than a representation artefact. This gives $8\times676+8\times26=5{,}616$ final states. The score is the highest integer quadgram score for the full 153-letter $Q$ across this union; the search does not use $P$'s language. Two gates apply: an English threshold of $-4.8324$ per letter, calibrated on a separate corpus range, and a distinct-pair gap of $30{,}592{,}997{,}516$ integer units, the largest identity gap among allowed negatives. The smallest positive gap was $159{,}924{,}989{,}002$. For the null test, the method independently shuffles both sources inside each (zone $\times$ absolute residue) group, repeats the full selection 99 times, and requires strict rank one ($p=1/100$).
 '''
 
 [[blocks]]
@@ -40,7 +40,7 @@ kind = "assumptions"
 body = '''
 - Same index order for the running-key conversion in both texts (no affine map exists between the two candidate orders, so mixed cells test a numeric latent, not a literal plaintext key).
 - Breakpoint $t$, offset 0 and forward cycling are substantive premises fixed from the independently measured change point and from the precedent in the solved part of the series; sweeping them multiplies the family and needs its own nulls.
-- The family must be consistent with the texts' invariants before a hidden bank is spent (see failure modes).
+- Before a hidden bank is spent, compare the proposed generator with the texts' recorded statistics. Such a consistency screen is model-dependent evidence, not an invariant-based theorem excluding every chain (see failure modes).
 '''
 
 [[blocks]]
@@ -77,11 +77,13 @@ function SELECTOR(x, y, phi, t, cell):
     for residue j in 0..6:
         shortlist[j] = the best 8 of the 26 monogram shifts on the positions
                 with g[i] == 1 + j
-    // all 8^7 combinations; every tie kept; fixed polish
-    (h, ties) = EXACT_CYCLIC_QUADGRAM_DP(d, shortlist)
+    // complete 8^7 shortlist tensor; every maximum tie kept; fixed polish
+    (h, ties) = EXACT_CYCLIC_QUADGRAM_TENSOR(d, shortlist)
     // h' = h + s, c' = c + s
     for c in 0..25, gauge s in (0..25 if the cell is same-order else {0}):
-        Q = RECONSTRUCT(d, g, c', h', e_A, e_B)
+        c_prime = (c + s) mod 26
+        h_prime = (h + s) mod 26
+        Q = RECONSTRUCT(d, g, c_prime, h_prime, e_A, e_B)
         // Q only; P's language is not used
         score = INTEGER_QUADGRAM_SCORE(Q)
     return (max score over the finish states, its state)
@@ -107,7 +109,7 @@ function SEGMENT_CHAIN(x, y, phi, t):
 [[blocks]]
 kind = "complexity"
 body = '''
-Per cell about $7 \times 8^7 \approx 1.5 \times 10^7$ max-add operations; per fixture with 99 nulls 1,600 cell solves and 561,600 full-candidate evaluations. The 20-fixture suite 32,000 cell solves, budgeted at 12 CPU-hours, 3 wall-hours, 1.5 GiB per worker.
+The recorded tensor implementation uses $O(7\cdot8^7)$ factor additions and $O(8^7)$ score storage per cell—about $1.5\times10^7$ additions—followed by the 5,616-state finish. An open order-3 chain would admit $O(7\cdot8^4)$ dynamic programming, but this seven-phase model is cyclic: its wraparound factors couple the closing choices back to the first three. Treating it as open without conditioning those closure states would optimise the wrong objective. With 99 nulls, the recorded suite used 1,600 cell solves and 561,600 full-candidate evaluations per fixture; the 20-fixture budget was 12 CPU-hours, 3 wall-hours, and 1.5 GiB per worker.
 '''
 
 [[blocks]]
@@ -116,7 +118,7 @@ body = '''
 - **Variable-length bias.** Maximising a raw sum over streams of different length made an earlier design's score grow deterministically with $t$; fixing $t$ makes every cell's periodic segment 91 letters and removes the bias.
 - **Incomplete search read as absence.** The $8^7$ product is exact only inside the monogram shortlist. The full $26^7$ family is not enumerated (8,031,810,176 states per cell), so a miss terminates as incomplete, never as a structural zero.
 - **Degenerate nulls.** Shuffles within the derived cosets leave histogram statistics unchanged. The stratified source-level permutation destroys adjacency and the cross-text pairing while preserving every stratum histogram.
-- **Inconsistent premise.** Simulated chains predict for text A a period-7 alignment of $z \approx +0.1$ and a zone coset IC of $0.040$; measured $+4.2$ and $0.066$ (coupling note, section 5). A hidden pass validates the test, not the family's presence.
+- **Generator mismatch.** Chains simulated with the recorded independent source distributions produced period-7 alignment near $z\approx+0.1$ and zone coset IC $0.040$, unlike measured $+4.2$ and $0.066$ (coupling note, section 5). This disfavours that generator, not every possible dependent chain. A hidden pass validates the test only for its generator.
 - **Leakage.** Language tables trained on ranges that contain later control windows invalidate the controls. The design fixes disjoint ranges and a dead gap.
 '''
 
@@ -165,7 +167,7 @@ note = "Breakpoint and wrap geometry, group counts at t = 45/53/60, the 288-alig
 [[provenance]]
 path = "withmath/docs/pk8-pk9/PK89_SHARED_STREAM_COUPLING375_DESIGN.md"
 kind = "design"
-note = "Family-consistency invariant: chain models predict no periodic alignment for text A; two-regime chain recovered 10/10."
+note = "Family-consistency simulation: the tested chain generator predicts weak periodic alignment for text A; a separate two-regime chain recovered 10/10 controls."
 
 [[provenance]]
 path = "withmath/scripts/wm_segments.py"

@@ -8,7 +8,7 @@ family = "Permutation-invariant statistics"
 tags = ["periodic substitution", "collision score", "unknown cycle", "finite-sample bias", "selector validation"]
 related = ["label-free-collision-geometry", "index-of-coincidence", "shared-cycle-attack", "family-wise-null", "score-gap-ambiguity-bands", "parameter-versus-plaintext-recovery", "blind-controls", "maximum-weight-bipartite-assignment", "arbitrary-substitution-equality-classes"]
 summary = "Periodic-map hypotheses can be screened by comparing symbol histograms across residues or related texts before full language decoding. One variant applies candidate powers of a shared cycle; another asks whether two texts use the same arbitrary literal map in corresponding residue classes. Their population objectives are informative, but a large selected family can overfit short samples, so controls must measure the complete selector."
-updated = "2026-09-06"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -36,7 +36,7 @@ Assume every residue of text $t$ is sampled independently from one marginal $p_t
 $$\langle p_{t,r},p_{t,s}\rangle
 =\lVert p_t\rVert^2-\frac{1}{2}\lVert p_{t,r}-p_{t,s}\rVert^2.$$
 
-Thus truth maximises $\mathbb E[J]$. But the observed count is noisy. Maximising it over many alphabet cycles and shift schedules selects an extreme fluctuation. The theorem compares fixed candidates in expectation; it does not say that the empirical maximum identifies truth.
+Thus truth attains the upper bound for $\mathbb E[J]$. It need not be the unique maximiser: symmetries, equal-probability letters, or other candidates that align the same marginals can tie it. The observed count is also noisy. Maximising it over many alphabet cycles and shift schedules selects an extreme fluctuation. The theorem compares fixed candidates in expectation; it does not say that the empirical maximum identifies truth.
 
 A second literal-map statistic profiles one shared plaintext-frequency permutation. With frozen integer log weights $w$ and histogram $h$, define
 

@@ -8,7 +8,7 @@ family = "Equivalence and identifiability"
 tags = ["latent labels", "equality pattern", "permutation symmetry", "restricted growth string"]
 related = ["parameter-versus-plaintext-recovery", "feedback-state-gauges-and-cells", "isomorph-analysis", "relabeling-permutation-distance", "contextual-rare-symbol-relabeling", "all-different-constraints", "all-different-enumeration", "conjugacy-and-gauge"]
 summary = "A latent stream can reveal exactly which positions share a symbol while leaving the symbols' plaintext names unknown. Canonical equality patterns expose what the structure identifies; language evidence or side information assigns labels, and unused coordinates remain free unless permutation constraints force the final completion."
-updated = "2026-09-06"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -106,7 +106,7 @@ Use synthetic streams with known permutations and deliberately vary alphabet cov
 kind = "example"
 title = "Pattern first, names second"
 body = '''
-The latent stream $4,1,1,19$ has restricted-growth string $0,1,1,2$. A map could label it `MEET`, but another bijection could label the same equality structure `NOON`; the dynamics alone distinguishes neither naming. If other constraints fix $4\mapsto M$, $1\mapsto E$, and $19\mapsto T$, the observed text becomes exact even though every coordinate absent from the four positions may still be freely permuted.
+The latent stream $4,1,1,19$ has restricted-growth string $0,1,1,2$. One bijection could label it `MEET`, while another could label it `SEEN`; both words have the pattern first/different/same/new. `NOON` would not fit because its first and fourth letters are equal. If other constraints fix $4\mapsto M$, $1\mapsto E$, and $19\mapsto T$, the observed text becomes exact even though, absent additional constraints, coordinates not exercised in these positions may still be permuted among unused labels.
 '''
 
 [[blocks]]

@@ -7,8 +7,8 @@ status_note = "Three split methods are checked. Fixed rank ranges recovered 5/5 
 family = "Enumeration strategies"
 tags = ["sharding", "partition", "resumable", "exact merge", "ties", "coverage"]
 related = ["k-best-lists", "exhaustive-enumeration", "bound-benchmarks-and-certificates", "compiled-hot-cores", "drainability-and-throughput", "reproducibility-receipts", "throughput-fail", "g-shard", "g-drainability", "g-certificate"]
-summary = "Rank sharding divides an exact search into separate, neighboring ranges declared in advance. Each range runs to completion on its own. A final step merges every range winner and near tie exactly. This makes long searches resumable and easy to audit. A time limit becomes a stated coverage fraction instead of a hidden cutoff. An unfinished shard supports no conclusion, and under a fixed order the chance of recovery before the cap equals the fraction covered."
-updated = "2026-09-04"
+summary = "Rank sharding partitions a declared finite order into disjoint half-open ranges. Exact completion of every range plus a correct row-level reducer reproduces the monolithic result, while completed subsets provide explicitly scoped coverage. A time-limited prefix is not statistical power by itself: its coverage fraction equals recovery probability only under a stated model in which the truth's rank is uniformly distributed and independent of the frozen order."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -99,7 +99,7 @@ body = '''
 - **Incomplete shard.** A killed or capped shard proves nothing about its interval. The reducer refuses it.
 - **Naive tie aggregation.** On a synthetic tie trap, exhaustive enumeration and the row-level reducer both report 3 ties while per-shard aggregation reports 7.
 - **Schedule too shallow.** A truth at rank 790 is missed by a top-512 schedule (by design of the sentinel). The remedy is a new sealed schedule, never widening after the fact.
-- **Undrainable frontier.** When throughput is limited, coverage at the cap is the power: a family whose frontier would need 40 thread-days per relation was declared not drainable with that core, and every capped non-hit is recorded as scoped-inconclusive, not negative.
+- **Undrainable frontier.** When throughput is limited, coverage at the cap is a deterministic fraction of the enumerated order, not automatically power. Under a separately justified uniform-rank model it can equal recovery probability. The recorded long frontier was declared not drainable with that core, and every capped non-hit is scoped-inconclusive rather than negative.
 - **Serialization defects.** A validation attempt completed its full 512-rank pass and was then rejected at replay because a tuple-of-tuples emitted through JSON compared unequal to the in-memory record. The empty failed transcript is retained and the corrected wrapper re-ran the whole pass.
 '''
 

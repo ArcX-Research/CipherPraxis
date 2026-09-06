@@ -8,7 +8,7 @@ family = "Polyalphabetic substitution"
 tags = ["periodic", "keyed alphabet", "polyalphabetic", "quagmire", "power limit"]
 related = ["vigenere", "quagmire-i", "quagmire-ii", "quagmire-iv", "keyword-mixed-alphabet", "parallel-tempering", "simulated-annealing", "polish-basin-measurement", "power-measurement", "crib-driven-alphabet-recovery", "quagmire-lab", "g-mixed-alphabet"]
 summary = "Quagmire III uses one mixed alphabet for both plaintext and ciphertext, with a repeating shift between them. The alphabet acts on both sides. One swap in a trial alphabet changes about four of the 26 mappings in every coset. At 63 to 153 letters, this makes the quadgram score too rough for annealing, even with a crib. Search works when a word or phrase narrows the alphabet to a list."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -49,7 +49,7 @@ body = '''
 kind = "attack"
 title = "How to attack it"
 body = '''
-1. Fix the period from coincidences and read the equal-shift classes from within-coset equalities.
+1. Estimate the period from coincidences. Equality and count statistics can suggest repeated coset behavior, but they do not identify equal numeric shifts without a coordinate alphabet or additional cross-coset constraints.
 2. **Bank**: decrypt under every structured alphabet. The true one reads at once.
 3. **Blind**: a shift-marginalised monogram-evidence climb over the alphabet, then quadgram annealing over (alphabet, shifts) with periodic shift refits; or batched parallel tempering with 8 temperature levels.
 4. **Crib**: derive the shifts from the crib and anneal the alphabet; also an exact linear system when the shifts are tied to a key word, which pins the alphabet only for cribs of roughly 17 to 20 letters.
@@ -84,9 +84,9 @@ function BLIND_SEARCH(c, m, restarts, steps):
         for step in 1..steps:
             // corrupts about four entries of every coset map
             A' = A with two letters swapped
-            refit k for A' at intervals
-            accept A' by the annealing rule on QUADGRAM_RATE(DECRYPT(c, A',
-                    k))
+            k' = REFIT_SHIFTS(c, A')
+            accept or reject the pair (A', k') by the annealing rule on
+                    QUADGRAM_RATE(DECRYPT(c, A', k'))
         keep the best (A, k)
     // unqualified unless a matched planted control was recovered at the same
     // length

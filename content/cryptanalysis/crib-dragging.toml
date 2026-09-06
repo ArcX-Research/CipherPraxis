@@ -8,7 +8,7 @@ family = "Known-plaintext methods"
 tags = ["crib", "known plaintext", "placement", "implied key", "null level"]
 related = ["vigenere", "quagmire-i", "quagmire-ii", "quagmire-iii", "crib-driven-alphabet-recovery", "coset-shift-recovery", "quadgram-log-likelihood", "selection-overfit-diagnostic", "word-prefix-csp", "constraint-satisfaction-forward-checking", "g-crib", "g-selection-freedom"]
 summary = "A crib is a piece of plaintext that may appear in the message. Try it at every position and calculate the key each position would require. In a repeating additive cipher, each crib letter reveals one key value. A crib longer than the period must agree with itself when the key repeats. A word-like key or readable full decryption supports the position. To avoid false hits on short text, compare the best position with the scores from known-wrong positions."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -17,7 +17,7 @@ Let the cipher act as $\operatorname{idx}_C(c_i) = \operatorname{idx}_P(p_i) + k
 
 $$\hat k_{(o+j) \bmod m} = \operatorname{idx}_C(c_{o+j}) - \operatorname{idx}_P(p_j), \qquad j = 0, \dots, L-1.$$
 
-For $L > m$ the same residue is implied more than once. A wrong placement under known alphabets survives that check with probability $26^{-(L-m)}$. Surplus letters in a residue vote for its element; dissenting votes are penalised. What the crib leaves unknown (residues it does not reach, or an unknown alphabet) is completed and the whole decrypt is scored against a language model.
+For $L>m$ the same residue is implied more than once. If the $L$ implied values at a wrong placement are independent and uniform on 26 symbols, the first value in each of the $m$ covered residues is free and the remaining $L-m$ equalities hold with probability $26^{-(L-m)}$. Real text, overlapping placements, nonuniform symbols, and crib structure violate that null, so measured wrong-placement rates are preferable. Surplus letters in a residue vote for its element; dissenting votes are penalised. What the crib leaves unknown (residues it does not reach, or an unknown alphabet) is completed and the whole decrypt is scored against a language model.
 '''
 
 [[blocks]]
@@ -28,7 +28,7 @@ With the shifts $\hat k$ derived from the votes and $\nu$ the number of crib let
 
 $$S = \sum_{i} \log_{10} Q_4(p_i p_{i+1} p_{i+2} p_{i+3}) - \mu\,\nu,$$
 
-the quadgram log-probability of the full decrypt minus a penalty $\mu$ (4 in $\log_{10}$ units) per violated crib letter. The rate $S/(n-3)$ is compared with the language level (about $-4.3$) and with the empirical distribution of wrong placements.
+the quadgram log-probability of the full decrypt minus a penalty $\mu$ (4 in $\log_{10}$ units in the recorded implementation) per violated crib letter. The rate $S/(n-3)$ is compared with matched language samples and the empirical distribution of wrong placements. A value near $-4.3$ describes this project's particular quadgram table and normalisation, not a universal language threshold.
 '''
 
 [[blocks]]
@@ -46,7 +46,7 @@ body = '''
 1. For every crib, offset, alphabet convention and relation, derive the implied key elements; discard placements whose repeated residues disagree.
 2. Rank the survivors by the word-likeness of the implied key fragment (a setter who uses word keys leaves a readable fragment) and by the decrypt of the covered positions.
 3. Complete the residues the crib did not touch (chi-square shift fit, then a joint climb) and score the full decrypt.
-4. Compute the null: the same pipeline on every wrong placement, reported as median, 95th percentile and maximum. Only placements above the maximum, that read as language end to end, are candidates; refine the top placements with more restarts.
+4. Compute a placement null with the same pipeline on known-wrong placements, reporting its median, upper tail, and maximum. The recorded screen required a candidate to beat that finite maximum and pass its language gate, but this is a conservative sample rule rather than proof that the placement is correct. Refine the top placements with more restarts.
 5. Where an exact solver exists (crib plus key-word rule as a linear system over alphabet positions), enumerate consistent assignments per placement; wrong placements die within tens to hundreds of search nodes.
 '''
 
@@ -71,7 +71,8 @@ function IMPLIED_KEY(c, crib[0..L-1], o, m):
 function CRIB_DRAG(c, cribs, m, mu):
     for each crib, offset o, alphabet convention and relation:
         (k, nu) = IMPLIED_KEY(c, crib, o, m)
-        // a wrong placement survives with probability 26^-(L-m)
+        // under the independent-uniform implied-value null and L > m, a wrong
+        // placement survives with probability 26^-(L-m)
         if repeated residues disagree: discard the placement
         rank survivors by WORD_LIKENESS(the implied key fragment) and by the
                 decrypt of the covered positions
@@ -95,7 +96,7 @@ function CRIB_DRAG(c, cribs, m, mu):
 [[blocks]]
 kind = "complexity"
 body = '''
-Known alphabets: $O(\text{cribs} \times n \times m)$ implied-key computations, trivial. One unknown alphabet: every (crib, offset, relation, restart) is one annealing chain; 6,701 placements per family with 16 restarts and 40,000 steps, plus a refine of the top 40 with 64 restarts, took about 6 h on 12 cores for two texts and four families (logs/23). Exact crib CSP: a few thousand consistent assignments per true placement at 13 to 17 letters, wrong placements rejected in about 50 to 700 nodes in most cases (logs/42).
+For known alphabets, checking key consistency for a crib of length $L$ at all offsets is $O((n-L+1)L)$. A straightforward implementation that completes a key, decrypts all $n$ symbols, and scores every surviving placement adds $O((n-L+1)n)$; early rejection and incremental scoring can reduce this. With one unknown alphabet, every (crib, offset, relation, restart) is one annealing chain; the recorded 6,701 placements per family with 16 restarts and 40,000 steps, plus refinement of the top 40 with 64 restarts, took about 6 h on 12 cores for two texts and four families (logs/23). In the recorded exact crib CSP, true placements left a few thousand assignments at crib lengths 13 to 17, while most wrong placements were rejected in about 50 to 700 nodes (logs/42); these are empirical search counts, not asymptotic bounds.
 '''
 
 [[blocks]]

@@ -8,12 +8,12 @@ family = "Compute and throughput"
 tags = ["throughput", "budget", "coverage", "exhaustive search"]
 related = ["drainability-and-throughput", "power-measurement", "control-first-policy", "held-out-gates", "exhaustive-enumeration", "compiled-hot-cores"]
 summary = "An exact search can be correct but too slow to reach the planted answer. That is a throughput failure, not a failed cipher model. Measure tasks per second, nodes per task, total work, and the answer's place in the schedule. Do not treat a capped live run as negative. In one case, the live text created 500 times more search nodes per task than any random control. That difference described the model's fit, not computer speed."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
-For a search over a deterministically ordered frontier of $F$ tasks, a **throughput fail** is the control terminal reached when the planted truth's task index $t^\ast$ satisfies $t^\ast > \rho T$, where $\rho$ is the measured task rate and $T$ the declared cap, so the truth was never scheduled. It is reported with $(\rho, F, t^\ast, T)$ and the terminal `CONTROL_GATE FAIL (throughput); TARGET_REFUSED`.
+For a search over a deterministically ordered frontier of $F$ tasks, let $D$ be the exact number of tasks completed before the declared cap. A **throughput fail** is the control terminal reached when the planted truth's zero-based task index satisfies $t^\ast\ge D$, so the truth was never scheduled. Report $(D,F,t^\ast,T)$ and the measured rate $\rho=D/T_{\rm elapsed}$ with `CONTROL_GATE FAIL (throughput); TARGET_REFUSED`. The task count, not a rate extrapolation, determines whether truth was reached.
 
 It is distinguished from a **power fail** (the truth was scheduled and pruned away) by the segment test: search the ten tasks around $t^\ast$ and check that the truth is recovered there.
 '''
@@ -59,7 +59,7 @@ function THROUGHPUT_CONTROL(search, F, T, t_star):
     rho = done / ELAPSED()
     if search.found_truth: return PASS
     // the truth was never scheduled
-    if t_star > rho * T:
+    if t_star >= done:
         // segment test: search the tasks around t_star to separate speed from
         // pruning
         if search.RUN_TASKS(SEGMENT_AROUND(t_star)) finds the truth:

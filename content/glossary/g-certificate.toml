@@ -6,5 +6,5 @@ status_note = "Usage as recorded in the corpus's sealed audits."
 family = "Exactness guarantees"
 tags = ["exactness", "reproducibility"]
 related = ["bound-benchmarks-and-certificates", "known-answer-tests", "rank-sharding", "reproducibility-receipts"]
-summary = "A certificate records enough detail to check an exact search without running it again. It includes fixed input hashes, the search space and its size, the winning state, a separately recomputed score, the number of near ties, a separate forward encryption, and the final outcome token (complete, incomplete, structural zero, or tied best). A transcript with no final line, or one that fails replay, proves nothing and stays marked as a failed attempt."
-updated = "2026-09-04"
+summary = "A certificate is auxiliary information that lets a checker verify a precisely stated claim, often more cheaply than repeating the original computation. In this project's exact-search protocol it includes fixed inputs, declared search scope, completion counters, candidates and ties relevant to the decision, and independently checkable score and forward-transform data. Certificate validity depends on the checker and claim; a truncated transcript or failed replay does not support the advertised completeness result."
+updated = "2026-09-07"

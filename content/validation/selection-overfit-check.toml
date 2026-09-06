@@ -8,7 +8,7 @@ family = "Power and calibration"
 tags = ["selection", "overfitting", "multiplicity", "nulls"]
 related = ["selection-overfit-diagnostic", "family-wise-null", "within-coset-null", "shuffled-null-z-score", "valid-model-nulls", "tautological-gate-rule", "quadgram-log-likelihood", "bayesian-evidence-model-selection"]
 summary = "Every attack chooses a winner: the best key, crib position, or width. The best of many noisy scores is naturally higher than one score. Compare the target winner with winners from the same search on data known to contain no signal. Each null run must repeat every stage after the first screen. Several strong-looking target scores disappeared inside this fair null range."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -17,7 +17,7 @@ Let a pipeline produce $S^\ast(c) = \max_{\theta \in \Theta} S(c, \theta)$ over 
 
 $$p = \frac{1 + \#\{b : S^\ast(c_b) \ge S^\ast(c_{\text{obs}})\}}{B+1}$$
 
-is the only admissible measure of surprise. A per-candidate null ("how often does one random key score this well") understates the surprise by a factor that grows with $|\Theta|$.
+is the matched plus-one rank. It is a valid Monte Carlo $p$-value when the observed and null inputs are exchangeable under the declared null generator; otherwise it remains a descriptive calibration rank. A per-candidate null ("how often does one random key score this well") usually produces a p-value that is too small after selection, thereby overstating surprise by an amount that grows with the effective search size.
 '''
 
 [[blocks]]
@@ -39,9 +39,9 @@ kind = "attack"
 body = '''
 Three recorded applications:
 
-- **Ciphertext-derived cycle bank.** 66,628 mechanically derived cycles were screened. The target's best at depth top-128 was $-4.869$ per letter. Nine complete-pipeline within-coset nulls were run through the same screen, depth and refinement; eight of nine null maxima beat the target (mean $-4.836$, empirical upper tail $p = 0.90$). Rejected as selection overfit, and the bank at that depth was closed.
+- **Ciphertext-derived cycle bank.** 66,628 mechanically derived cycles were screened. The observation's best at depth top-128 was $-4.869$ per letter. Nine complete-pipeline within-coset nulls were run through the same screen, depth and refinement; eight of nine null maxima beat it (mean $-4.836$, plus-one upper-tail $p=0.90$). The candidate failed the matched-rank rule; the bank at that depth was retired under the protocol's stated power and null assumptions.
 - **Cross-text relations.** The best coincidence rate over all index-space pairs and offsets was $0.0495$; against a per-trial null it looked like $+5.7\sigma$, against the family-wise null over the 1,296 trials it was $+0.8\sigma$.
-- **Frozen 100-cycle bank on a live text.** Best rate $-6.70$, rank 16 of 20 in each of two independently declared null families ($p = 0.8$). A clean negative for the bank only.
+- **Frozen 100-cycle bank on a live text.** Best rate $-6.70$, rank 16 of 20 in each of two independently declared null families ($p = 0.8$). The observation was ordinary under both matched searches; any bank-level negative remains conditional on the protocol's measured power.
 '''
 
 [[blocks]]
@@ -112,7 +112,7 @@ SELECTION  bank=66,628 cycles  screen=top-128  refine=quadgram polish  (identica
   observed best        -4.869 per letter
   null maxima (B = 9)  <one value per complete-pipeline null; recorded mean -4.836>
   exceedances          8/9  ->  p = (1 + 8)/(9 + 1) = 0.90
-VERDICT selection overfit; bank/depth closed; no candidate
+VERDICT matched-rank fail; bank/depth retired under declared scope; no candidate
 ```
 '''
 

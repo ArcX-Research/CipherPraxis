@@ -8,7 +8,7 @@ family = "Exactness guarantees"
 tags = ["equivalence certificate", "pruning", "callbacks", "caps", "determinism"]
 related = ["closed-footprint-bound-cache", "bound-benchmarks-and-certificates", "exact-optimization-admission", "exhaustive-enumeration", "known-answer-tests", "candidate-bank-lineage-and-cap-accounting", "reproducibility-receipts"]
 summary = "There are two different exactness claims. A new pruning rule must return the same complete accepted set as an unpruned reference. A cache or refactor that claims to preserve traversal must also keep callback contents and order, dynamic thresholds, counters, and the precise cap terminal. A capped comparison can prove bounded behavioural equivalence, but it cannot prove that the uncapped search is complete."
-updated = "2026-09-06"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -24,9 +24,9 @@ These certificates answer different questions. Legitimate pruning normally chang
 kind = "equations"
 title = "Set equality and safe threshold pruning"
 body = '''
-Let $K$ be the finite search space, $F(x)$ the exact score, $U(x)$ an admissible upper bound, and $\tau$ the current retained-list threshold. Admissibility means
+Let $K$ be the finite leaf space, $F(x)$ the exact leaf score, $s$ a partial state, $K(s)$ its legal descendant leaves, $U(s)$ an admissible upper bound, and $\tau$ the current retained-list threshold. Admissibility means
 
-$$F(x)\le U(x)\quad\text{for every }x\in K.$$
+$$U(s)\ge\max_{x\in K(s)}F(x)\quad\text{for every reachable }s.$$
 
 To preserve ties, prune only when
 
@@ -36,7 +36,7 @@ not when $U(x)=\tau$. For an uncapped reference, the central semantic certificat
 
 $$W_{\rm pruned}=W_{\rm full},$$
 
-where each $W$ contains complete physical witnesses, not only deduplicated plaintexts or scores.
+where each $W$ is the same frozen accepted or retained set after applying the declared score threshold or top-$k$ rule, and contains complete physical witnesses rather than only deduplicated plaintexts or scores. A top-$k$ traversal is not required to return every lower-scoring feasible leaf.
 
 For a traversal-preserving change, let $T$ contain ordered callback payloads, alias lists, threshold values, counters, and the terminal. Require $T_{\rm new}=T_{\rm reference}$ byte-for-byte after canonical serialization, apart from separately declared timing fields.
 '''

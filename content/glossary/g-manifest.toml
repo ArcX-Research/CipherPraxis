@@ -6,5 +6,5 @@ status_note = "Term as used in the engineering and governance entries."
 family = "Engineering vocabulary"
 tags = ["provenance", "release"]
 related = ["seal-and-audit-protocol", "g-receipt"]
-summary = "A build manifest is a separate, standard one-line JSON record. It is written after the code is frozen and before the audit. It lists every input by path and SHA-256 hash, every fixed value the run uses, and every path the run may create. It cannot include hashes of later outputs. After the audits, a release record links the manifest, audit records, and approval token."
-updated = "2026-09-04"
+summary = "A build manifest records the inputs and fixed configuration of a run before outputs exist. In this project it is a canonical one-line JSON record listing input paths and SHA-256 hashes, fixed parameters, and permitted output paths. It cannot precommit the unknown hashes of later outputs; a separate release record can bind those outputs to the manifest and audit records. Other reproducibility systems may use different serializations with the same role."
+updated = "2026-09-07"

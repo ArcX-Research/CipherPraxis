@@ -8,7 +8,7 @@ family = "Null design and interpretation"
 tags = ["joint gate", "multiple statistics", "permutation rank", "conjunction", "release"]
 related = ["permutation-test", "family-wise-null", "score-gap-ambiguity-bands", "valid-model-nulls", "endpoint-specific-control-contracts", "exact-integer-separation-gates", "evidence-scope-ladder", "candidate-bank-lineage-and-cap-accounting"]
 summary = "A solver may need several different signs of quality, such as a lexical score and a context score. Freeze each statistic and its threshold before evaluation, compute every statistic on the observation and the same complete null runs, and release only when all gates pass. A conjunction cannot be replaced by a fitted weighted sum, a best-of-statistics choice, or an informal review of whichever score looks strongest."
-updated = "2026-09-06"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -55,6 +55,7 @@ kind = "assumptions"
 title = "Assumptions and tie rules"
 body = '''
 - The statistics, directions, thresholds, candidate set, and Boolean rule are frozen together.
+- Each component rank is a valid test under the same declared null, including exchangeability of the observation and transformed inputs. Without that condition, the intersection bound does not follow.
 - Every null repeats the full search, fitting, shortlist, polish, reranking, and ambiguity decision.
 - A null score equal to the observed score counts in $R_j$; equality loses under a strict gate.
 - A tie between distinct semantic candidates is an ambiguous result even if a secondary sort gives one row first.

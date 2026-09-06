@@ -8,14 +8,14 @@ family = "Transposition"
 tags = ["transposition", "route", "spiral", "boustrophedon", "affine route"]
 related = ["columnar-transposition", "rail-fence", "myszkowski", "transposition-width-recovery", "units-mod-26", "selection-overfit-diagnostic", "exhaustive-enumeration", "g-transposition-grid"]
 summary = "A route transposition writes a message into a grid or other shape along one path, then reads it along another. Paths may follow rows, spirals, diagonals, or alternating directions. The shape and two paths form the key. Because a chosen shape has a limited list of natural paths, the solver can check them all. Tests also covered every affine position route j = ui + d for each valid unit u and offset d."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
-A route is a permutation $q$ of the positions $0 \dots n-1$ induced by a write path $\pi_w$ and a read path $\pi_r$ over the same set of cells: $q = \pi_r^{-1} \circ \pi_w$ and
+A route is a permutation $q$ of the positions $0\dots n-1$ induced by a write path $\pi_w$ and a read path $\pi_r$ over the same cells. If each path maps its sequence index to a cell, then
 
-$$c_j = p_{q[j]}.$$
+$$q=\pi_w^{-1}\circ\pi_r,\qquad c_j=p_{q[j]}.$$
 
 The affine position route is the special family $X_i = C_{(u i + d) \bmod n}$ with $\gcd(u, n) = 1$, which is a complete cyclic re-reading of the text by a fixed stride.
 '''

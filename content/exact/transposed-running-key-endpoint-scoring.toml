@@ -8,7 +8,7 @@ family = "Exact combinatorial optimisation"
 tags = ["running key", "block transposition", "Held-Karp dynamic programming", "assignment problem", "partial scoring", "forward replay"]
 related = ["running-key", "columnar-transposition", "exact-dynamic-programming", "maximum-weight-bipartite-assignment", "n-gram-language-scoring", "endpoint-specific-control-contracts", "planted-controls", "candidate-bank-lineage-and-cap-accounting", "reproducibility-receipts"]
 summary = "Suppose one candidate text becomes a running key only after its grid columns are reordered. For a complete candidate, an n-gram score splits into block scores, neighbouring-block scores, and a tail score. A Held-Karp-style subset dynamic program can therefore find the exact best column permutation for every signed affine cipher case without trying every route directly. While the candidate is incomplete, its known letters give a matrix of source-column-to-output-slot scores; an exact maximum-weight assignment turns that partial evidence into an early ranking proxy. The proxy can protect a good proposal from a beam cut, but only if linked and unlinked controls pass and the proposal generator can produce the endpoint in the first place."
-updated = "2026-09-06"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -65,6 +65,7 @@ kind = "assumptions"
 title = "Conditions for exactness"
 body = '''
 - Every n-gram appears exactly once: inside a block, across one adjacent block boundary, or in the final boundary and tail.
+- The block height satisfies $r\ge d-1$ for an order-$d$ score, so no n-gram crosses more than one block boundary. If this fails, the dynamic-programming state must carry enough additional columns to score multi-boundary windows.
 - The score has no interaction between non-neighbouring routed blocks after the first column is fixed. Any such interaction must enter the state.
 - The source-to-slot convention is fixed. The partial assignment naturally returns the inverse of a route written as slot-to-source.
 - The tail source formula follows the actual cycling rule and is checked at every position under different first-column choices.
@@ -126,8 +127,13 @@ function PARTIAL_ROUTE_PROXY(cipher, known_candidate, depth, affine_cell):
 function CUT_WITH_RECEIPT(proposals, depth, keep):
     scored = SORT_BY_SCORE_THEN_FIXED_ID(
         [(PARTIAL_ROUTE_PROXY(p, depth), p) for p in proposals])
+    if SIZE(scored) <= keep:
+        cutoff = none; retained = scored
+    else:
+        cutoff = score at one-based nominal rank keep
+        retained = every proposal with score >= cutoff  // preserve boundary ties
     record input count, planted rank, cutoff score, ties and retained IDs
-    return first keep proposals
+    return retained
 ```
 '''
 

@@ -8,18 +8,18 @@ family = "Modular arithmetic"
 tags = ["recurrence", "LCG", "lagged Fibonacci", "progressive key", "meet-in-the-middle"]
 related = ["affine-maps-mod-26", "modular-inverse-and-crt", "difference-operators", "lcm-of-periods", "gromark", "alberti-progressive", "running-key", "meet-in-the-middle", "family-wise-null", "g-linear-congruential-generator"]
 summary = "A linear recurrence can make a key stream look complex even though it needs only a short primer and a rule. That rule leaves a clear mathematical pattern. An affine-lag filter removes an affine recurrence. A lagged-Fibonacci digit chain is linear in its primer, so meet-in-the-middle search can recover it. A polynomial schedule has a constant second difference. The project built and tested a separate detector for each pattern."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
-A **linear recurrence** of order $d$ over $\mathbb{Z}_M$ is $k_i = \sum_{j=1}^{d} a_j k_{i-j} + b \pmod M$. Order one with lag $L$ is the **affine** (LCG-type) recurrence $k_i = a\,k_{i-L} + b$; with $a = 1$ it is a progressive key, with $b = 0$ a geometric one. The **lagged-Fibonacci** digit recurrence used by Gromark-type ciphers is $d_i = d_{i-P} + d_{i-P+1} \pmod{10}$ from a $P$-digit primer. A **polynomial schedule** $a_i = \beta i + \alpha\, i(i-1)/2 \pmod{26}$ has constant second difference $\alpha$ (constant acceleration).
+A **linear recurrence** of order $d$ over $\mathbb{Z}_M$ is $k_i=\sum_{j=1}^{d}a_jk_{i-j}+b\pmod M$. The sparse-lag affine rule $k_i=a k_{i-L}+b$ has maximum lag $L$ as a scalar recurrence, but decomposes into $L$ independent first-order subsequences, one for each index modulo $L$. With $a=1$ it is progressive within each subsequence; with $b=0$ it is geometric. The **lagged-Fibonacci** digit recurrence used by Gromark-type ciphers is $d_i=d_{i-P}+d_{i-P+1}\pmod{10}$ from a $P$-digit primer.
 '''
 
 [[blocks]]
 kind = "equations"
 body = '''
-- Affine-lag filter: if $k_i = a\,k_{i-L} + b$ then $c_i - a\,c_{i-L} = (p_i - a\,p_{i-L}) + b$. The filtered text has the distribution $R_a(d) = \sum_{x,y : x - ay \equiv d} E(x)E(y)$, the $a$-scaled self-convolution of the language, shifted by $b$.
+- Affine-lag filter: if $k_i=a\,k_{i-L}+b$ then $c_i-a\,c_{i-L}=(p_i-a\,p_{i-L})+b$ exactly. Under an independent-letter reference with marginal frequencies $E$, the modeled distribution is $R_a(d)=\sum_{x,y:x-ay\equiv d}E(x)E(y)$, shifted by $b$. Real language can retain lag dependence, so the shuffled family-wise null calibrates the resulting statistic.
 - Lagged Fibonacci is linear in the primer: $d_i = \sum_j A_{i,j} r_j \pmod{10}$ with $A_{i,j} = A_{i-P,j} + A_{i-P+1,j}$; under $\mathbb{Z}_{10} \cong \mathbb{Z}_2 \times \mathbb{Z}_5$ the primer splits into halves whose contribution vectors are met by addition.
 - Substitution-invariant selector: with $C_i = \sigma[(P_i + d_i) \bmod 26]$, equal ciphertext letters give $P_j - P_i \equiv d_i - d_j \pmod{26}$ regardless of the unknown alphabet $\sigma$; consecutive occurrences of every letter form a spanning forest of $n - (\text{observed letters})$ edges.
 - Polynomial schedule: $a_{i+1} - 2a_i + a_{i-1} \equiv \alpha$.
@@ -29,7 +29,7 @@ body = '''
 kind = "assumptions"
 body = '''
 - The recurrence, its lag and its coefficients are the same over the whole text. A change point breaks every identity above.
-- For the filter the plaintext is natural language, so that $R_a$ is distinguishable from uniform.
+- For the filter, $R_a$ is a declared marginal-independent scoring reference rather than the exact lag-$L$ law of natural language; interpret the score through the matched shuffled null.
 - For lagged-Fibonacci recovery the period $P$ is enumerated. The alphabet may be an arbitrary permutation.
 '''
 
@@ -69,7 +69,7 @@ function SCHEDULE(alpha, beta, n):
 // p_{i-L}) + b.
 function LAG_FILTER(c[0..n-1], a, L):
     for i in L..n-1: f[i-L] = (c[i] - a*c[i-L]) mod 26
-    // distributed as R_a shifted by b
+    // scored against the marginal-independent reference R_a shifted by b
     return f
 
 // Screen: for every unit a and lag L, score LAG_FILTER(c, a, L) against R_a
@@ -87,7 +87,7 @@ body = '''
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- A maximum over 480 correlated filters reaches $z \approx +4$ per cell by chance. Only the family-wise null (observed maximum LLR against the shuffled maximum) is interpretable, and it was flat: $z$ between $-0.7$ and $+0.3$ over the six text-and-order cells.
+- A maximum over 480 correlated filters reached standardized scores near $+4$ within individual text-and-order scans by chance. Only the family-wise null for the maximum is interpretable; its recorded standardized values ranged from $-0.7$ to $+0.3$ over the six scans.
 - The invariant rank of a true primer can be as low as 72,008 of $10^7$. A shortlist narrower than that (an earlier lane retained far fewer) silently loses the truth. Raising an exhaustive loop bound without a new constraint repeats the old method.
 - Any invertible guess round-trips; readability, controls and family-wise nulls are separate mandatory gates.
 '''
@@ -114,7 +114,7 @@ Polynomial schedule with $\beta = 2$, $\alpha = 3$: $a_0, a_1, a_2, a_3 = 0, 2, 
 [[blocks]]
 kind = "notes"
 body = '''
-Recurrence keys are a "lot of entropy, small structure" family: the LCG has $26 \cdot 12 \cdot 26$ states of $(k_0, a, b)$, a 7-digit primer $10^7$. Compound periodic keys, whose period is an lcm rather than a recurrence, are treated under [lcm of periods](/algebra/lcm-of-periods).
+The lag-one unit-multiplier affine subclass has $26\cdot12\cdot26$ parameter triples $(k_0,a,b)$. A lag-$L$ rule instead needs $L$ seed values before any quotienting, and a seven-digit decimal primer has $10^7$ literal values. These counts describe the stated parameterizations, not information-theoretic entropy. Compound periodic keys are treated under [lcm of periods](/algebra/lcm-of-periods).
 '''
 
 [[provenance]]

@@ -7,8 +7,8 @@ status_note = "Coordinate descent finishes results from the periodic dynamic pro
 family = "Deterministic heuristics"
 tags = ["coordinate ascent", "polish", "shift refit", "monogram MAP", "deterministic shortlist", "adjacent pair", "restarts"]
 related = ["hill-climbing", "viterbi-decoding", "periodic-substitution-dp", "expectation-maximisation", "simulated-annealing", "compound-periodic-key", "running-key-relation-test", "vigenere", "quadgram-log-likelihood", "family-wise-null", "permutation-test", "shuffled-null-z-score", "selection-overfit-diagnostic"]
-summary = "Coordinate descent improves one part of a key at a time. For each coset, it tries all 26 shifts while keeping the others fixed, then repeats until no shift improves the score. A useful deterministic cascade first builds a balanced shortlist with independent monogram-MAP fits, ranks the resulting plaintexts by quadgrams, and coordinate-polishes only the frozen finalists. Each update is exact for one coordinate, but shortlist and sweep caps make the overall search heuristic."
-updated = "2026-09-06"
+summary = "Coordinate optimization updates one part of a key at a time. Because this page maximizes a score, the operation is technically coordinate ascent, although 'coordinate descent' is often used for the general method. Each update can be exact over one declared coordinate while the joint result remains only coordinate-wise optimal. Shortlists, initial states, pair neighborhoods, sweep caps, and matched-null selection are all part of the heuristic claim boundary."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -38,7 +38,7 @@ Single-coordinate update: $k_b \leftarrow \arg\max_{s \in \mathbb{Z}_{26}} F(k_0
 
 Pair update: $(k_b, k_{b+1}) \leftarrow \arg\max_{(s,t) \in \mathbb{Z}_{26}^2} F(\dots, s, t, \dots)$.
 
-For a period-$p$ additive key the decrypt at coset $b$ is $P_i = A[(a(C_i) - k_b) \bmod 26]$; changing $k_b$ alters $n/p$ letters and therefore at most $4n/p$ quadgrams, so incremental scoring is possible although the corpus rescores the full text for simplicity.
+For a period-$p$ additive key the decrypt at coset $b$ is $P_i = A[(a(C_i) - k_b) \bmod 26]$; changing $k_b$ alters at most $\lceil n/p\rceil$ letters and therefore at most $4\lceil n/p\rceil$ quadgram occurrences, so incremental scoring is possible although the corpus rescores the full text for simplicity.
 
 For a known source stream removed from ciphertext coordinates, let $y_i=a_A(C_i)-\beta a_A(X_{o+di})$. A deterministic monogram seed for residual coset $b$ is
 
@@ -67,7 +67,7 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - The start is within the coordinate-wise basin: the DP or anneal has already placed most shifts correctly, or the exact period alignment supplies relative shifts and only 26 absolute offsets remain.
-- Coordinates are weakly coupled through the objective (each quadgram couples at most four cosets), so coordinate-wise optima are usually global; pair sweeps cover the commonest exception.
+- Each quadgram couples up to four key coordinates. Coordinate-wise or adjacent-pair stationarity does not imply global optimality, and no general claim that such optima are usually global is made; planted controls measure how often the chosen starts and moves recover truth.
 - Free coordinates overfit short texts: a key with $7m$ sub-coset shifts on 153 letters gains score on shuffled text too, so the polished rate is read against a shuffled null.
 - Per-cell keep, global keep, polish keep, output keep, sweep count, and tie order are part of the algorithm. If any keep limit fills, an unretained start may be better than every reported endpoint.
 - Reaching stationarity proves only that no tested coordinate move improves the current endpoint. It does not prove global optimality or complete coverage of the cipher family.
@@ -124,7 +124,7 @@ kind = "failure_modes"
 body = '''
 - **Coordinate-wise traps.** Two coupled shifts can each be individually optimal while the pair is not. The adjacent-pair sweep handles neighbours only.
 - **Overfit with many free coordinates.** Free sub-coset shifts on 153 letters lift shuffled-text nulls to $-5.8$ to $-5.9$ (four copies) and $-5.41$ to $-5.47$ (five copies); on a 95-letter zone to $-4.68$ to $-4.99$ and $-4.59$ to $-4.76$. A polished target rate that matches its null is noise.
-- **Wrong model still converges.** The descent reports a confident optimum for a key that does not exist. Only the null and the readability verdict distinguish it.
+- **Wrong model still converges.** The ascent can report a stationary endpoint under a misspecified cipher or language model. Stationarity carries no confidence interpretation; matched nulls, held-out controls, and model checks determine what the score supports.
 - **Partial recovery at small changes.** The logged four-copy control (period 28) polished to $-4.948$ with 71% of the plaintext right, the wrong-$m$ control to 79%, while the three-copy control reached 100%: the descent lands near the truth but not always on it.
 - **Balanced cells, incomplete offsets.** A per-cell shortlist prevents high-cardinality cells from dominating the bank, but it can still discard the true offset inside its own cell.
 - **Cap saturation called a negative.** Filling a shortlist or ending at the sweep cap means only that the frozen heuristic returned these endpoints. Matched nulls calibrate their scores; they do not make the search exhaustive.

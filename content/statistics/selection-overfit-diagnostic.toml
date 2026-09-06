@@ -8,7 +8,7 @@ family = "Null distributions and calibration"
 tags = ["overfitting", "selection", "multiple comparisons", "search", "diagnostic"]
 related = ["family-wise-null", "within-coset-null", "quadgram-log-likelihood", "bayesian-evidence-model-selection", "selection-overfit-check", "corpus-bank-screen", "simulated-annealing", "polish-basin-measurement", "g-null-distribution"]
 summary = "Every search over keys, alphabets, cribs, offsets, or bank entries returns a winner. On short text, that winner often looks partly like English even when the model is wrong because free settings fit noise. Repeat the same search on matched null data and compare winners. Warning signs include a result at the edge of the scanned range, a score inside the band of null winners, gains from settings chosen after seeing the data, or readable fragments in every run, including nulls."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -17,7 +17,7 @@ Let a search return $\hat h = \operatorname{argmax}_{h \in H} T_h(c)$ with score
 
 $$\hat p = \frac{1 + \#\{j : T^*(c'_j) \ge T^*(c)\}}{N+1},$$
 
-with the nulls chosen to preserve the histograms the hypothesis predicts ([within-coset](/statistics/within-coset-null)) or the whole multiset ([shuffle](/statistics/shuffled-null-z-score)).
+with the nulls chosen to preserve the invariants conditioned on by the hypothesis ([within-coset](/statistics/within-coset-null)) or the whole multiset ([shuffle](/statistics/shuffled-null-z-score)). This plus-one quantity is a valid Monte Carlo $p$-value only when the observation and null inputs are exchangeable under the declared transformation protocol; otherwise it is a descriptive rank.
 
 A second diagnostic is the **selection freedom** of a fit: the average gain of the profiled likelihood $\max_\theta L(c \mid \theta)$ over the marginal $\int L(c \mid \theta)\,d\theta$ on null texts; at 153 letters with seven free shifts it is about $0.15$ nats per letter.
 '''
@@ -46,7 +46,7 @@ body = '''
 1. Before reading the target, decide the family $H$, the null group, $N$ and the admission rule.
 2. Run the search; note where in $H$ the winner sits and by how much it beats the runner-up.
 3. Run the identical search on $N$ nulls; compare $T^*$ with the null maxima, not with the English band.
-4. If the winner is within the null band, close the *bank* or *depth* that was searched, not the underlying family: the evidence corpus records "close this bank/depth. It does not close an arbitrary unknown cycle".
+4. If the winner is within the null band, report that the frozen search found no unusual candidate. A powered, completed protocol may close the tested bank or depth operationally, but a diagnostic flag alone does not exclude the underlying family.
 5. Never promote a readable-looking string unless the full selected-family null is lower.
 '''
 
@@ -74,7 +74,8 @@ function SELECTION_OVERFIT(c, SEARCH, NULL_DRAW, N):
     if any parameter was refitted after seeing c: add POST_HOC
     if every run, nulls included, yields readable fragments:
         add UNIVERSAL_READABILITY
-    // any flag closes this bank or depth, not the family
+    // Flags prompt review. A predeclared matched decision, not the presence
+    // of any one flag, determines the bank-level verdict.
     return p_hat, z, flags
 
 // Selection freedom of a fit with free parameters theta, measured on null
@@ -116,7 +117,7 @@ Nine null runs of a full pipeline give endpoint scores
 
 $$-4.876,\ -4.842,\ -4.838,\ -4.836,\ -4.831,\ -4.829,\ -4.822,\ -4.812,\ -4.795$$
 
-(mean $-4.831$, standard deviation about $0.021$) and the target run gives $-4.869$. Eight of the nine nulls exceed the target, so $\hat p = (1 + 8)/10 = 0.90$ and $z = (-4.869 + 4.831)/0.021 = -1.8$: the target's best is *worse* than what the pipeline typically finds on order-free copies of its own histograms. The verdict "English" attached to $-4.869$ by a fixed threshold is irrelevant. The candidate is rejected as selection overfit and the bank is closed at that depth.
+(mean $-4.831$, standard deviation about $0.021$) and the observed run gives $-4.869$. Eight of the nine nulls exceed it, so $\hat p = (1 + 8)/10 = 0.90$ and $z = (-4.869 + 4.831)/0.021 = -1.8$: the observed winner is no better than what the pipeline typically finds on order-free copies of the same histograms. The verdict "English" attached to $-4.869$ by a fixed threshold is therefore not evidence. The candidate fails the matched-rank rule; any operational closure of the bank at that depth remains conditional on the protocol's power and exchangeability assumptions.
 
 The same logic in the other direction: a candidate at $-4.60$ against the same nulls would be $0.195$ above the null maximum, about $9$ null standard deviations, and $\hat p = 0.10$ with nine nulls, the best resolution nine nulls can give.
 '''
@@ -130,7 +131,7 @@ The diagnostic is the statistical form of the ledger rule "no promotion of a qua
 [[provenance]]
 path = "withmath/logs/152_crosscycle_full.log"
 kind = "log"
-note = "Top-128 bank search: best -4.869 rated ENGLISH; conditional familywise endpoint null -4.836 +- 0.024, max -4.795, z -1.37, p <= 0.90 over nine complete-pipeline nulls."
+note = "Top-128 bank search: best -4.869 rated ENGLISH; conditional family-wise endpoint null -4.836 +- 0.024, max -4.795, z -1.37; eight of nine nulls exceed, so the plus-one p-value is 0.90."
 ref = "logs/152_crosscycle_full.log"
 
 [[provenance]]

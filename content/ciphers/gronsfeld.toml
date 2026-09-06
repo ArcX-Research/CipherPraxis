@@ -7,13 +7,13 @@ status_note = "The construction is documented by the American Cryptogram Associa
 family = "Polyalphabetic ciphers"
 tags = ["numeric key", "periodic key", "restricted shifts", "vigenere"]
 related = ["vigenere", "gromark", "exact-period-alignment", "coset-shift-recovery", "exhaustive-enumeration"]
-summary = "Gronsfeld is Vigenere with a decimal key. Each repeated key digit shifts one plaintext letter by zero through nine positions. The smaller shift alphabet makes short periods easier to enumerate, but the cipher keeps the same residue-class structure as any periodic additive cipher."
-updated = "2026-09-05"
+summary = "Gronsfeld is Vigenère with a decimal key. Each repeated key digit shifts one plaintext letter by zero through nine positions. The smaller shift alphabet makes short periods easier to enumerate, but the cipher keeps the same residue-class structure as any periodic additive cipher."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
-Choose a sequence of decimal digits $d_0,\ldots,d_{m-1}$ and repeat it across the plaintext. With letters numbered from 0 to 25, add the current digit modulo 26. Decryption subtracts it. Unlike ordinary Vigenere, each key position is restricted to the ten shifts 0 through 9.
+Choose a sequence of decimal digits $d_0,\ldots,d_{m-1}$ and repeat it across the plaintext. With letters numbered from 0 to 25, add the current digit modulo 26. Decryption subtracts it. Unlike ordinary Vigenère, each key position is restricted to the ten shifts 0 through 9.
 '''
 
 [[blocks]]
@@ -81,7 +81,7 @@ function DECRYPT(cipher, digits):
 [[blocks]]
 kind = "complexity"
 body = '''
-A known-key transform is linear in the message length. Exhaustive search for a period-$m$ numeric key costs $10^m$, compared with $26^m$ for unrestricted Vigenere shifts. Independent coset scoring costs only $O(10mn)$ before whole-text reranking.
+A known-key transform is linear in the message length. Exhaustive search for a period-$m$ numeric key costs $10^m$, compared with $26^m$ for unrestricted Vigenère shifts. Directly scoring all ten shifts over all coset letters costs $O(10n)$; with precomputed 26-bin histograms it costs $O(n+10\cdot26\,m)$ before whole-text reranking.
 '''
 
 [[blocks]]

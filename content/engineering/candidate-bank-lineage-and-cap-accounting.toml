@@ -7,8 +7,8 @@ status_note = "Target-absent interface checks matched capped output to naive all
 family = "Solver data integrity"
 tags = ["candidate banks", "deduplication", "lineage", "caps", "witnesses"]
 related = ["unique-proposal-voting", "k-best-lists", "conjugacy-and-gauge", "group-actions-on-alphabets", "exhaustive-enumeration", "bound-benchmarks-and-certificates", "lexical-band-contextual-reranking", "reproducibility-receipts", "endpoint-specific-control-contracts"]
-summary = "A solver can reach the same plaintext or key class through many physical states. Group those aliases by their complete semantic result before applying an output limit, count the limit in distinct results, and retain every physical witness in a bound sidecar. This prevents aliases from crowding out other answers or becoming accidental extra votes."
-updated = "2026-09-06"
+summary = "A solver can reach the same plaintext or key class through many physical states. Group aliases by the complete semantic object consumed downstream before applying an output limit, and retain the physical witnesses for each kept object in a hash-bound sidecar. Report cap saturation separately from actual truncation: exactly K observed objects fill a K-slot bank without dropping one, while more than K cause truncation. Aliases are provenance, not independent votes."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -35,7 +35,7 @@ With $N_{\rm phys}=|W|$ and $N_{\rm sem}=|\pi(W)|$,
 $$N_{\rm keep}=\min(K,N_{\rm sem}),\qquad
 N_{\rm drop}=N_{\rm sem}-N_{\rm keep}.$$
 
-These counts mean what they say only if the upstream enumeration completed. Record search completion, every internal cap, $N_{\rm phys}$, $N_{\rm sem}$, $N_{\rm keep}$, and whether $N_{\rm keep}=K$ separately. Reaching a cap means the bank may be truncated; finishing a heuristic budget does not make the search exhaustive.
+For positive $K$, the bank is **saturated** when $N_{\rm sem}\ge K$ and **truncated** only when $N_{\rm sem}>K$. These observed-bank counts mean what they say even for a heuristic producer, but they describe the complete intended search space only if upstream enumeration also completed. Record upstream completion, every internal cap, $N_{\rm phys}$, $N_{\rm sem}$, $N_{\rm keep}$, saturation, and truncation separately.
 '''
 
 [[blocks]]
@@ -76,6 +76,7 @@ kind = "pseudocode"
 body = '''
 ```text
 function BUILD_BANK(physical_rows, semantic_cap):
+    require semantic_cap > 0
     buckets = empty map from canonical semantic bytes to bucket
     counts = INITIAL_CAP_CENSUS()
     for row in physical_rows:
@@ -95,7 +96,8 @@ function BUILD_BANK(physical_rows, semantic_cap):
     retained = FIRST(ordered, semantic_cap)
     counts.semantic_rows = LENGTH(ordered)
     counts.retained_rows = LENGTH(retained)
-    counts.semantic_cap_reached = LENGTH(retained) == semantic_cap
+    counts.semantic_cap_saturated = LENGTH(ordered) >= semantic_cap
+    counts.semantic_rows_truncated = LENGTH(ordered) > semantic_cap
     sidecar = HASH_BOUND_WITNESS_SIDECAR(retained)
     return retained, sidecar, counts and all upstream completion flags
 ```

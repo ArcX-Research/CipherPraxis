@@ -1,23 +1,28 @@
 id = "mixture-inference-under-transposition"
 section = "cryptanalysis"
 title = "Mixture inference under transposition"
-subtitle = "Read a short repeating inner layer through an unknown transposition and outer layer"
+subtitle = "Test a short repeating inner layer through a candidate transposition and outer layer"
 status = "VERIFIED"
-status_note = "The Bayesian fit averages over outer shifts and solved four planted layered ciphers from a cold start. It ranked the true width first at z 4 to 13 and matched 100%. Fractionated, plain, and double-columnar negative controls showed the expected patterns. The same pipeline found no mixture or width in either unsolved project text under any alphabet-order pair (logs/05)."
+status_note = "The likelihood fit averages over outer shifts and solved four planted layered controls from a cold start, ranking their true tested widths first at recorded z-scores from 4 to 13 and recovering every plaintext letter. Specified fractionated, plain, and double-columnar controls gave different signatures. On the two research texts it found no width passing its threshold in the scanned order and geometry combinations; this is not a result for arbitrary transpositions (logs/05)."
 family = "Layered-construction inference"
-tags = ["mixture", "Bayesian evidence", "sandwich", "transposition-invariant", "class posterior", "EM"]
+tags = ["mixture", "Bayesian evidence", "sandwich", "histogram model", "class posterior", "EM"]
 related = ["sandwich-construction", "vigenere", "quagmire-iii", "columnar-transposition", "bayesian-evidence-model-selection", "expectation-maximisation", "order-free-width-statistic", "transposition-width-recovery", "exact-period-alignment", "family-identification", "g-inner-and-outer-layer", "g-selection-freedom", "g-coset"]
-summary = "Consider a short-period substitution, followed by a transposition, then a longer-period additive layer. The transposition changes letter order but not inner letter counts. Each outer coset is therefore a shifted mixture of language distributions. A solver can estimate that mixture from coset counts while averaging over the outer shifts. The resulting class probabilities reveal block patterns at the correct transposition width. This attack needs no key search and passed planted layered controls."
-updated = "2026-09-04"
+summary = "Consider a short-period substitution, followed by a transposition, then a longer-period additive layer. The transposition preserves the inner stream's global multiset, but its allocation to later outer cosets depends on the transposition geometry. When each outer coset receives the same known or modelled mixture of inner phases, a solver can estimate that mixture while averaging over the outer shifts. Class probabilities can then expose block patterns at candidate widths. The recorded method passed four specified layered controls; it is not invariant to an arbitrary transposition."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
-Consider $C = Q_m\big(T(Q_k(P))\big)$: an inner additive substitution of period $k$ with shifts $g_0, \dots, g_{k-1}$, a transposition $T$, an outer additive layer of period $m$ with shifts $u_0, \dots, u_{m-1}$. Since $T$ only permutes positions, the multiset of inner letters $Q_k(P)$ is untouched, and for a period-$k$ inner over language with distribution $E$ that multiset is the balanced mixture
+Consider $C = Q_m\big(T(Q_k(P))\big)$: an inner additive substitution of period $k$ with shifts $g_0, \dots, g_{k-1}$, a transposition $T$, and an outer additive layer of period $m$ with shifts $u_0, \dots, u_{m-1}$. The transposition exactly preserves the **global empirical multiset** of $Q_k(P)$. Under a stationary plaintext marginal $E$, and when the inner phases occur equally often, the expected global distribution is the balanced mixture
 
 $$f(x) = \frac{1}{k} \sum_{j=0}^{k-1} E(x - g_j).$$
 
-Every outer coset $b$ then has expected histogram $f(x - u_b)$. Three inner models are compared: $M_1$, plain language (a transposed or plain substitution of language); $M_2$, a two-component mixture $wE(x-g_1) + (1-w)E(x-g_2)$; $M_3$, three components. Only the inner **spacing** $\delta = g_2 - g_1$ is identifiable at this stage (the common rotation is absorbed by the outer shifts).
+That global statement does not imply the same mixture in every outer coset. Let $w_{b,j}$ be the fraction of output positions in outer coset $b$ whose preimages under $T$ have inner phase $j$. Under the same marginal model,
+
+$$\mathbb{E}\!\left[\frac{F_b(x)}{n_b}\right]
+=\sum_{j=0}^{k-1}w_{b,j}E(x-u_b-g_j).$$
+
+The common-mixture likelihood below assumes the weights $w_{b,j}$ are equal across $b$ (or that the declared generator makes that approximation adequate). This must be checked from the candidate geometry or with matched simulations. Three restricted inner models are compared: $M_1$, one shifted language marginal; $M_2$, a common two-component mixture $wE(x-g_1)+(1-w)E(x-g_2)$; and $M_3$, three components. Within $M_2$, only the inner **spacing** $\delta=g_2-g_1$ is identified at this stage because a common rotation can be absorbed by the outer shifts.
 '''
 
 [[blocks]]
@@ -28,7 +33,7 @@ For a model $f$ and coset histograms $F_b$,
 
 $$\log Z(f) = \sum_{b=0}^{m-1} \log \frac{1}{26} \sum_{u=0}^{25} \prod_x f(x-u)^{F_b(x)}.$$
 
-A family's evidence is the mean of $Z(f)$ over its bank of members (uniform prior), which penalises bank size automatically. The $\delta$-marginal evidence groups the $M_2$ bank by spacing. Profiling $u$ instead of marginalising overfits by about $0.15$ nats per letter at $n = 153$ and lets wrong models win on shuffled texts. Under the winning model each letter gets a class posterior
+A family's evidence is the mean of $Z(f)$ over its bank members, implementing a uniform prior over that declared bank. This avoids the raw-sum preference for a larger bank, but it is not an automatic universal complexity penalty: duplicate members and different prior weights change the result. The $\delta$-marginal evidence groups the $M_2$ bank by spacing. In the recorded experiment, profiling $u$ instead of marginalising added about $0.15$ nats per letter at $n=153$ and let wrong models win on shuffled texts. Under the fitted common-mixture model each letter gets a class posterior
 
 $$P_i(\gamma) \propto w_\gamma E\big(y_i - g_\gamma\big), \qquad y_i = c_i - u_{i \bmod m},$$
 
@@ -39,9 +44,10 @@ which feeds the order-free width statistic; class-EM re-estimates each $u_b$ fro
 kind = "assumptions"
 body = '''
 - The outer layer is additive in a known order and the inner is additive in a known (possibly different) order; both orders are tried.
-- The inner period is short ($k = 2$ or $3$): the mixture of many rotated distributions is nearly flat and carries no spacing information.
+- The implemented inner bank has period $k=2$ or $3$. A mixture of many well-spread rotations often approaches uniform, but repeated or clustered shifts need not; loss of spacing information is model-dependent.
 - The inner plaintext is language with a peaked distribution. A fractionated or random inner gives $M_2$ and $M_3$ evidence at the null.
 - The text is homogeneous along its length. A zoned text mimics a mixture (see failure modes).
+- Candidate transpositions distribute inner phases across outer cosets in the way assumed by the common-mixture model. Global histogram preservation alone is insufficient.
 '''
 
 [[blocks]]
@@ -51,7 +57,7 @@ body = '''
 1. Coset histograms in the outer order; evidence of $M_1$, $M_2$, $M_3$ with shifts and banks marginalised; $z$ of each evidence against shuffled texts.
 2. Read the best spacings $\delta$ from the $\delta$-marginal. It was correct on 7 of 8 planted seeds, and the search keeps the top three values.
 3. Class posteriors, order-free width scan with class-EM refinement, nulls through the identical pipeline.
-4. For widths at $z \ge 3$: fix residue classes from the block phases, order the rest by quadgrams, polish shifts against order. A solve reads at the language rate.
+4. For widths passing the predeclared full-pipeline calibration (the recorded run used $z\ge3$ per scanned width), fix residue classes from the block phases, order the rest by quadgrams, and polish shifts against order. Correctness still requires an exact forward reconstruction and a control-qualified language gate.
 '''
 
 [[blocks]]
@@ -69,7 +75,7 @@ function MIXTURE_INFERENCE(c, m, E, N):
     for b in 0..m-1: F[b] = HISTOGRAM([c[i] for i in 0..n-1 if i mod m == b])
     // banks: E rotated; w E(x - g1) + (1 - w) E(x - g2); three components
     for M in {M1, M2, M3}:
-        // bank size penalised automatically
+        // uniform prior over the declared, deduplicated bank
         Z[M] = MEAN over members f of bank(M) of exp(LOG_EVIDENCE(F, f))
         z[M] = (log Z[M] - MEAN over shuffles) / SD over shuffles, from N
                 shuffled texts through the same fit
@@ -78,7 +84,8 @@ function MIXTURE_INFERENCE(c, m, E, N):
         Zdelta[delta] = MEAN over M2 members with g2 - g1 == delta
     top_deltas = the top three spacings by Zdelta
     (w, g, u) = read from the posterior of the winning model
-    // class posteriors, unchanged by any transposition
+    // class posteriors in ciphertext order under the fitted common-mixture
+    // model; a transposition rearranges their latent class sequence
     for i in 0..n-1:
         y[i] = (c[i] - u[i mod m]) mod 26
         P[i][gamma] proportional to w[gamma] * E[(y[i] - g[gamma]) mod 26]
@@ -122,13 +129,13 @@ Four planted sandwiches at 153 letters, all solved from cold with the true width
 kind = "example"
 title = "Worked example"
 body = '''
-Inner period 2 with spacing $\delta = 13$: the inner distribution is $f(x) = \tfrac12\big(E(x) + E(x-13)\big)$, so E and R (13 apart) both have inner frequency $\tfrac12(0.127 + 0.060) = 0.0935$, and every letter is paired with its antipode. The index of coincidence of $f$ is about $0.054$, well below the language value $0.066$ and above uniform $0.0385$. A transposition of any kind leaves that distribution untouched, and an outer period-7 layer shows it rotated in each of its seven cosets. The $\delta$-marginal evidence then peaks at $\delta = 13$ regardless of the transposition, and in plaintext order the classes read `0101...`. A columnar transposition of even width turns that into constant-class columns, of odd width into alternating ones.
+Inner period 2 with spacing $\delta = 13$: under equal phase weights, the expected global inner distribution is $f(x)=\tfrac12\big(E(x)+E(x-13)\big)$. Using the stated illustrative frequencies, E and R (13 apart) both have expected frequency $\tfrac12(0.127+0.060)=0.0935$. The quoted reference distribution has IC about $0.054$, below its language reference near $0.066$ and above $1/26$. Any transposition preserves the realised inner stream's global multiset, but an outer period-7 layer shows a rotated copy of this same mixture in every coset only when the transposition allocates the two phases comparably to those cosets. For a regular row-fill, column-read transposition, the latent plaintext-order classes `0101...` form constant-class columns at even width and alternating columns at odd width; ragged columns and other routes require their own phase map. A peak at $\delta=13$ is therefore an empirical recovery result for matched geometries, not a transposition-independent theorem.
 '''
 
 [[blocks]]
 kind = "notes"
 body = '''
-The likelihood-free family classifier places the mixed-inner families (sandwich, fractionation, unknown-alphabet substitution, several independent alphabets) in one cluster that invariant statistics cannot split at 153 letters. The mixture test is the one that decides *within* that cluster whether a single transposition of short-period language is present, and it decided negatively for the corpus texts (see [Family identification](/cryptanalysis/family-identification)).
+The likelihood-free family classifier placed the tested mixed-inner families (sandwich, fractionation, unknown-alphabet substitution, several independent alphabets) in one poorly separated cluster at 153 letters. This mixture pipeline then tested a narrower hypothesis—a single scanned transposition of short-period language under its common-mixture model—and found no qualifying width for the research texts. That scoped nonhit does not decide every construction in the broader cluster (see [Family identification](/cryptanalysis/family-identification)).
 '''
 
 [[provenance]]

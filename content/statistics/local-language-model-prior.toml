@@ -8,7 +8,7 @@ family = "Language priors"
 tags = ["neural prior", "language model", "reranking", "proposal", "contamination"]
 related = ["semi-markov-word-model", "quadgram-log-likelihood", "beam-search", "shared-cycle-attack", "exact-chain-oracle", "held-out-gates", "power-analysis", "g-held-out"]
 summary = "A local language model can help in two ways. It can suggest likely plaintext letters before an exact solver takes over, or rerank complete answers such as the 9! orders of nine recovered chunks. In both cases, the model only suggests candidates. Exact algebra and scores against null data make the decision. The model must pass separate, uncontaminated controls, provide repeatable full-sequence scores, and meet the same power standard as any other selector."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -26,7 +26,7 @@ As a reranker the required quantity is the full-sequence log-likelihood $L(x) = 
 kind = "assumptions"
 body = '''
 - **Provenance.** The model predates the texts under attack, or its training data is shown not to contain them. An adapter trained after the campaign began fails this and must be disabled (request-local scale zero) or excluded.
-- **Determinism.** Scores are exact log-probabilities of already-specified sequences, at temperature zero, without repetition penalties; forced tokens via logit bias, chat-style choices among orders, or top-$N$ lists that censor the desired token are not the declared score.
+- **Determinism.** Score already-specified sequences with teacher forcing under the pinned model's native softmax (normally temperature 1), with no token sampling or repetition penalty. "Temperature zero" describes greedy generation and does not define sequence probabilities. Forced tokens via logit bias, chat-style choices among orders, or top-$N$ lists that censor the desired token are not the declared score.
 - **Decontamination.** Controls come from a corpus range disjoint from training *and* free of duplicated boilerplate. Three of the audited controls were exact training duplicates and had to be discarded.
 '''
 
@@ -45,8 +45,8 @@ kind = "pseudocode"
 body = '''
 ```text
 // LM_LOGPROB(sequence) is an abstract call to the pinned local model
-// returning the exact full-sequence log-likelihood L(x) = sum over t of log
-// p(x_t | x_<t), at temperature zero.
+// returning a deterministic teacher-forced full-sequence log-likelihood
+// L(x) = sum over t of log p(x_t | x_<t) under the pinned native softmax.
 function PROPOSAL_PRIOR(cells (g, c), K):
     for direction in {forward, backward}:
         maps[direction] = DECODE(character model, cells, injective per-class

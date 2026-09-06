@@ -8,7 +8,7 @@ family = "Permutation metrics"
 tags = ["permutation distance", "relabeling", "transpositions", "cycle decomposition"]
 related = ["permutation-cycles", "latent-label-identifiability", "identity-plus-one-swap-neighborhood", "strict-best-improvement-swap-ascent", "bounded-permutation-shells", "contextual-rare-symbol-relabeling", "group-actions-on-alphabets", "conjugacy-and-gauge"]
 summary = "Two substitution maps may differ in several labels even when one simple relabeling connects them. Compose one map with the inverse of the other, split the result into cycles, and subtract the number of cycles from the alphabet size. The result is the exact minimum number of label swaps needed to move between the maps."
-updated = "2026-09-06"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -107,7 +107,7 @@ Inverting a map, composing two maps, and counting cycles each take $O(q)$ time a
 kind = "failure_modes"
 body = '''
 - **Endpoint count used as distance.** A swap changes two images but costs one transposition.
-- **Wrong composition side.** Input-coordinate moves are measured with the output-label convention, producing the wrong relative action.
+- **Wrong composition side.** Input-coordinate moves are described with the output-label relative permutation, producing the wrong moved-label and cycle witnesses. For complete bijections the two relative permutations are conjugate, so their unweighted cycle counts and numerical swap distances happen to agree; that does not make their interpretations interchangeable.
 - **Partial maps treated as complete.** Different completions can have different distances.
 - **Path length used instead of minimum distance.** A generator may reach the same map through redundant swaps.
 - **Alias multiplicity.** The same complete map reached from several proposals is counted several times.

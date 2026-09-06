@@ -7,13 +7,13 @@ status_note = "These are standard sources for the modern constructions tested as
 family = "Literature"
 tags = ["bibliography", "rsa", "mnemonic encoding", "one-time pad"]
 related = ["rsa-textbook", "mnemonic-wordlist-encoding", "one-time-pad", "modular-inverse-and-crt", "units-mod-26", "literature-search-and-exact-solvers"]
-summary = "A puzzle text might use a modern construction such as textbook RSA on letter blocks, a checksummed mnemonic phrase, or a truly random pad. These sources define those ideas precisely enough to build fair tests. They include the original RSA paper and an attack survey, the BIP-39 checksum and 2,048-word list, Vernam and Shannon on pads, and two standard cryptography handbooks."
-updated = "2026-09-04"
+summary = "A ciphertext may be tested against a modern construction such as textbook RSA on encoded blocks, a checksummed mnemonic phrase, or a one-time pad. These sources define particular constructions and attacks; a test must still state its encoding, padding, key-generation, and threat-model conventions. The list includes the original RSA paper and selected attacks, BIP-39's checksum and 2,048-word list, sources on additive teleprinter and perfect-secrecy systems, and standard cryptography handbooks."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "notes"
 body = '''
-When testing a modern scheme against a short, classical-looking text, build controls from the real specification. Planted cases must use its exact word list, checksum, and padding rules. Otherwise, a negative result rules out only an invented version of the scheme. Each entry states which conventions its controls used.
+When testing a modern scheme against a short text, build controls from the declared specification and implementation profile. Planted cases must use the same word list, checksum, encoding, padding, and key constraints as the tested family. Otherwise, a negative result excludes only the narrower implemented model. Each method entry should state which conventions its controls used.
 '''
 
 [[references]]

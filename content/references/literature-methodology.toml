@@ -7,13 +7,13 @@ status_note = "These sources motivate the site's validation and engineering prac
 family = "Literature"
 tags = ["bibliography", "methodology", "reproducibility", "preregistration"]
 related = ["tautological-gate-rule", "seal-and-audit-protocol", "reproducibility-receipts", "kat-harness", "correction-and-retraction", "selection-overfit-check", "internal-evidence-corpus"]
-summary = "These works explain the site's research rules. Feynman argues for reporting facts that could undermine a result. Gelman and Loken, and Simmons, Nelson, and Simonsohn, explain how flexible choices create false positives. Nosek covers preregistration. Peng and Sandve cover reproducible computation. NIST documents known-answer tests. Haber and Stornetta provide the basis for hash-chained records."
-updated = "2026-09-04"
+summary = "These works motivate parts of the site's research rules. Feynman argues for reporting facts that could undermine a result. Gelman and Loken, and Simmons, Nelson, and Simonsohn, explain how flexible choices can inflate false-positive risk. Nosek and coauthors discuss preregistration; Peng and Sandve discuss reproducible computation. NIST documents cryptographic self-tests, including known-answer tests. Haber and Stornetta describe cryptographically linked time-stamping records."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "notes"
 body = '''
-Two ideas guide the whole site. First, a check that cannot fail is not a useful check. This is the tautological-gate rule based on Popper's falsifiability. Second, preregistration becomes a seal. A different agent reviews and freezes the design, controls, nulls, gates, and end-state terms before any one-use resource is spent. The decision rules cannot then change after the data are seen.
+Two ideas guide the whole site. First, a check that cannot reject any possible implementation is not informative. The site's "tautological-gate" rule is an operational policy inspired by falsifiability, not a theorem or protocol stated by Popper. Second, the site implements preregistration through a seal: a reviewer freezes the design, controls, nulls, gates, and end-state terms before a declared one-use resource is spent. This local procedure is stricter and more specialized than preregistration in the cited literature.
 '''
 
 [[references]]

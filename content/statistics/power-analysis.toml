@@ -8,7 +8,7 @@ family = "Power and error control"
 tags = ["power", "planted controls", "false negative", "gate", "sample size"]
 related = ["power-measurement", "planted-controls", "control-first-policy", "blind-controls", "permutation-test", "english-gate-calibration", "estimator-standard-error", "throughput-fail", "held-out-gates", "g-power", "g-held-out"]
 summary = "A search miss matters only if the search usually finds an answer when one exists. Power analysis measures that chance directly. Freeze the full pipeline, run it on many planted cases made from separate real prose and random keys, and record exact recovery at each stage with a confidence interval. Simple coverage can mislead. One adaptive shortlist covered only 0.026% of the key space but had 99.8% power. Another pipeline repaired weak starting points and reached 98.9% overall power."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -17,7 +17,7 @@ For a hypothesis family $\mathcal{H}$ and a pipeline $\Pi$ that returns a candid
 
 $$\text{power}(\Pi, \mathcal{H}, n) = \Pr\big[\Pi(\text{Enc}_{h}(P)) = (h, P)\big], \qquad h \sim \mathcal{H},\ P \sim \text{held-out prose of length } n,$$
 
-estimated by $\hat\rho = k/N$ over $N$ planted trials with the binomial standard error $\sqrt{\hat\rho(1-\hat\rho)/N}$ or an exact interval. "Recovers" means the exact planted plaintext and parameters, with an independent forward re-encryption reproducing the ciphertext; partial matches are reported separately. A live miss at measured power $\rho$ excludes the family *at that power*: the probability that the truth was in the family and was missed is at most $1 - \rho$.
+estimated by $\hat\rho=k/N$ over independent planted trials, with a binomial interval. The plug-in standard error $\sqrt{\hat\rho(1-\hat\rho)/N}$ is useful away from the boundaries. "Recovers" means the exact planted plaintext and parameters, with an independent forward re-encryption reproducing the ciphertext; partial matches are reported separately. The quantity $1-\rho$ is the average miss probability under the declared fixture distribution. It is not a bound for one particular live instance and does not by itself exclude the family.
 '''
 
 [[blocks]]
@@ -116,7 +116,7 @@ Segment-chain programme, target-absent: no-transposition lane $97.5$–$99.8\%$ 
 kind = "example"
 title = "Worked example"
 body = '''
-A lane recovers $59$ of $64$ planted fixtures exactly. The point estimate is $0.922$. The binomial standard error is $\sqrt{0.922 \times 0.078/64} = 0.034$, and the exact 95% interval is about $[0.83, 0.97]$ (the lane's own report gives $[0.856, 0.988]$ with a normal approximation). Because the interval reaches below the $0.95$ gate, the live pass is refused: a miss at $0.92$ power would leave an 8% chance that the truth was simply not found, and the family would remain open anyway.
+A lane recovers $59$ of $64$ planted fixtures exactly. The point estimate is $0.922$. The plug-in standard error is $\sqrt{0.922\times0.078/64}=0.034$; the Wald interval is about $[0.856,0.988]$, while an exact binomial interval is roughly $[0.83,0.98]$. The predeclared gate uses the recovery count or point estimate and requires at least $0.95$, so this panel fails it. The observed miss rate is about 8% on this fixture distribution, with substantial uncertainty; it is not the probability that a particular live text was missed.
 
 Rule of three for perfect scores: $256/256$ recoveries bound the miss rate below about $3/256 = 1.2\%$ at 95% confidence; $20/20$ only below $15\%$.
 '''

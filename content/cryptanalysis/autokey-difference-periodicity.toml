@@ -7,17 +7,25 @@ status_note = "The lag-difference screen checks both signs and lags 1–20, alig
 family = "Period and structure recovery"
 tags = ["autokey", "difference text", "lag filter", "recurrence", "family-wise null"]
 related = ["autokey", "vigenere", "running-key", "difference-operators", "linear-recurrences-lcg", "exact-period-alignment", "family-wise-null", "running-key-relation-test", "coincidence-lag-profile", "g-selection-freedom"]
-summary = "An autokey feeds plaintext or ciphertext back into its key, so the key does not repeat. Subtracting a shifted copy of the ciphertext can cancel that feedback. For ciphertext autokey, the result is the plaintext. For plaintext autokey, it is a difference between plaintext letters. Any extra repeating layer remains visible in the difference text. An affine-lag filter can similarly remove a linearly changing key. The full lag scan uses a family-wide null, and confirmation must recover the primer, plaintext, and forward ciphertext."
-updated = "2026-09-04"
+summary = "An autokey feeds plaintext or ciphertext back into its key, so the key does not repeat. Subtracting a shifted copy of the ciphertext can cancel that feedback. For ciphertext autokey, the result is the plaintext. For plaintext autokey, it is a boundary term followed by differences between plaintext letters. A repeating additive component leaves a periodic residual in the difference text. An affine-lag filter can similarly remove a key that obeys the stated recurrence. The full lag scan uses a family-wide null, and confirmation must recover the primer, plaintext, and forward ciphertext."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
 Work in $\mathbb{Z}_{26}$ with a primer of length $m$. **Plaintext autokey**: $c_i = p_i + p_{i-m}$ for $i \ge m$ (and $c_i = p_i + r_i$ for $i < m$). **Ciphertext autokey**: $c_i = p_i + c_{i-m}$ for $i \ge m$. The lag-$m$ difference operator $\Delta_m c_i = c_i - c_{i-m}$ cancels the feedback:
 
-$$\text{ciphertext autokey:}\quad c_i - c_{i-m} = p_i, \qquad \text{plaintext autokey:}\quad c_i - c_{i-m} = p_i - p_{i-2m}.$$
+$$\text{ciphertext autokey:}\quad c_i - c_{i-m} = p_i\quad(i\ge m),$$
 
-The first difference text *is* the plaintext from position $m$ on. The second is a difference of two independent language letters, whose distribution is the self-convolution of the language distribution (peaked at $0$ with mass $\sum_x E(x)^2 \approx 0.066$). If a periodic component $k_{i \bmod q}$ is added to a ciphertext autokey, $c_i - c_{i-m} = p_i + k_{i \bmod q}$ is an ordinary periodic cipher of the plaintext. For a key with an affine recurrence $k_i = a k_{i-L} + b$ ($a$ a unit) the filter $c_i - a c_{i-L}$ gives $p_i - a p_{i-L} + b$, whose distribution is the $a$-scaled self-convolution of the language distribution plus a constant.
+$$\text{plaintext autokey:}\quad c_i-c_{i-m}=
+\begin{cases}
+p_i-r_{i-m},&m\le i<2m,\\
+p_i-p_{i-2m},&i\ge2m.
+\end{cases}$$
+
+The first difference text *is* the plaintext from position $m$ on. Under an independent, identically distributed plaintext model with letter probabilities $E$, the later plaintext-autokey differences have the circular autocorrelation distribution $R(d)=\sum_x E(x)E(x-d)$; in particular $R(0)=\sum_x E(x)^2$. Natural language has longer-range dependence, so this is a reference model rather than an exact description of every text.
+
+If the recurrence itself is $c_i=p_i+c_{i-m}+k_{i\bmod q}$, then $c_i-c_{i-m}=p_i+k_{i\bmod q}$. If instead a periodic layer is applied after an ordinary ciphertext autokey $d$, so $c_i=d_i+k_{i\bmod q}$, the residual is $p_i+k_{i\bmod q}-k_{(i-m)\bmod q}$. Both residuals are periodic, but they need not have minimal period $q$. For an additive stream $c_i=p_i+k_i$ whose key obeys $k_i=a k_{i-L}+b$ ($a$ a unit), the filter $c_i-a c_{i-L}$ gives $p_i-a p_{i-L}+b$. Its reference distribution is the corresponding $a$-scaled circular correlation of the assumed plaintext model, shifted by $b$.
 '''
 
 [[blocks]]
@@ -36,7 +44,7 @@ kind = "assumptions"
 body = '''
 - The feedback is additive in a known index order; in an unknown mixed alphabet the difference does not cancel the feedback (the two occurrences of the alphabet do not commute with subtraction).
 - The feedback lag is small enough to scan; primers of length 1 to 40 were searched by the solver.
-- For the plaintext-autokey difference the plaintext must be peaked: the difference of two language letters has an index of coincidence only slightly above uniform, so its detection is weak at 150 letters.
+- The plaintext reference used for a difference screen must match the language and dependence model. The recorded controls measure weak recovery at their tested lengths; they do not establish a universal length threshold.
 '''
 
 [[blocks]]
@@ -47,7 +55,7 @@ body = '''
 2. Affine-lag filter screen for recurrent keys (linear congruential, progressive, drifting), same null structure.
 3. If a lag shows a family-wise significant periodic structure, solve the difference text as a periodic cipher (ciphertext autokey plus periodic component) or read it directly (pure ciphertext autokey).
 4. Independently, run the direct autokey solver: for each primer length and relation, hill-climb the primer with a language score, then require exact plaintext, exact primer and an independent forward encryption on planted controls before any target is read.
-5. An additional necessary condition: under any autokey each coset is a sum of two or more language letters, so a text whose cosets are as peaked as monoalphabetic language (coset IC $0.067$ to $0.086$) cannot be an autokey of prose.
+5. As a model check for the tested straight-alphabet plaintext-autokey construction, compare coset concentration with matched simulations. Diffuse sums were expected under the corpus's prose model, so strongly peaked cosets counted against that model in those controls. This is statistical evidence, not a necessary condition for every autokey convention, plaintext source, lag, or boundary region.
 '''
 
 [[blocks]]
@@ -90,8 +98,8 @@ function DIRECT_AUTOKEY_SOLVER(c, primer_lengths, relations):
                 LANGUAGE_SCORE(DECRYPT_AUTOKEY(c, r, relation))
     gate: planted controls must give the exact plaintext, the exact primer
             and an independent forward encryption before any target is read
-    // and reject any text whose cosets are as peaked as monoalphabetic
-    // language
+    // compare coset concentration with matched simulations of the declared
+    // plaintext-autokey model; do not treat this diagnostic as a theorem
     return best (m, relation, primer, rate)
 ```
 '''

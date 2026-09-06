@@ -7,8 +7,8 @@ status_note = "Tests reduced each turning schedule to one substitution problem. 
 family = "Stream and machine ciphers"
 tags = ["disc", "progressive key", "polyalphabetic", "schedule", "monoalphabetic reduction"]
 related = ["vigenere", "keyword-mixed-alphabet", "chaocipher", "conjugacy-and-gauge", "permutation-cycles", "simulated-annealing", "shuffled-null-z-score", "g-progressive-key", "g-gauge-class"]
-summary = "An Alberti cipher places plaintext and ciphertext alphabets on two discs. The inner disc turns according to a schedule as the message continues. If that schedule is known for each position, subtracting it from the ciphertext leaves one fixed substitution. The project tested every constant-advance and constant-acceleration schedule in the stated ranges, with a fixed outer alphabet and any inner alphabet."
-updated = "2026-09-04"
+summary = "An Alberti cipher places plaintext and ciphertext alphabets on two discs. The inner disc turns according to a schedule as the message continues. If that schedule is known for each position, subtracting it from the ciphertext leaves one fixed substitution. The recorded search enumerated every schedule in its stated constant-advance and constant-acceleration ranges; fitting the otherwise arbitrary inner alphabet remained a validated heuristic."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -24,7 +24,7 @@ Constant advance: $a_i = d\,i$. Constant acceleration: $a_i = \beta i + \alpha\,
 kind = "equations"
 title = "Reduction and gauges"
 body = '''
-For a proposed $(B, a)$ define $U_i = \operatorname{pos}_B(c_i) - a_i$. Then $p_i = M(U_i)$ is one monoalphabetic substitution of the stream $U$, so the restricted-growth string of $U$ equals that of $p$: $\operatorname{RGS}(U) = \operatorname{RGS}(P)$. This is the exact test used with a finite plaintext prior and the reduction used with a heuristic substitution solver. The initial phase is a translation of $M$, never a separate parameter; reversing the outer order maps $(B, \sigma, \beta)$ to $(\operatorname{rev} B, -\sigma, -\beta)$; rotations and reflections of the inner disc are gauges. The literal cell counts are $2 \times 26 = 52$ for constant advance, $2 \times 2 \times 26 = 104$ for unit acceleration and $2 \times 26 \times 26 = 1{,}352$ for the full constant-acceleration parent.
+For a proposed $(B, a)$ define $U_i = \operatorname{pos}_B(c_i) - a_i$. Then $p_i = M(U_i)$ is one monoalphabetic substitution of the stream $U$, so the restricted-growth string of $U$ equals that of $p$: $\operatorname{RGS}(U) = \operatorname{RGS}(P)$. This is the exact test used with a finite plaintext prior and the reduction used with a heuristic substitution solver. The initial phase is a translation of $M$, never a separate parameter; reversing the outer order maps $(B, \alpha, \beta)$ to $(\operatorname{rev} B, -\alpha, -\beta)$; rotations and reflections of the inner disc are gauges. The literal cell counts are $2 \times 26 = 52$ for constant advance, $2 \times 2 \times 26 = 104$ for unit acceleration and $2 \times 26 \times 26 = 1{,}352$ for the full constant-acceleration parent.
 '''
 
 [[blocks]]

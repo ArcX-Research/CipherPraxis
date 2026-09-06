@@ -8,12 +8,12 @@ family = "Period and structure recovery"
 tags = ["change point", "segmentation", "zone", "dynamic programming", "coincidence", "alphabet-free"]
 related = ["exact-period-alignment", "segment-chain-analysis", "assumption-review-protocol", "within-coset-null", "permutation-test", "exact-dynamic-programming", "coincidence-lag-profile", "g-change-point", "g-zone", "g-coset"]
 summary = "One ciphertext can contain several zones. The key may change, a prefix may use a special key, or the kind of plaintext may switch. Zone tests find boundaries without knowing the alphabet. They compare matches at period-sized gaps, the set of letters used, and how letter counts relate across segments. In one project text, this changed the interpretation: a 63-letter period-7 zone mixed with 90 flat letters had looked like a different inner cipher."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
-Under a period-$m$ polyalphabetic substitution two letters a multiple of $m$ apart lie in the same coset and were enciphered by the same substitution. If both lie in the same key segment they coincide at the plaintext rate ($r_s \approx 0.066$ for English prose). If a key change separates them they coincide at the cross-substitution rate ($r_d \approx 0.0385$, the uniform rate). A **change point** at $t$ is a position such that same-coset pairs straddling $t$ coincide at the lower rate. The segments it delimits are **zones**. A zone may also differ in letter set (a different key selects different ciphertext letters) or in coincidence at all lags (a near-monoalphabetic segment is peaked at every lag).
+Under a period-$m$ bijective substitution, two positions a multiple of $m$ apart use the same phase while they remain in one key regime; their ciphertext equality indicator then exactly equals their plaintext equality indicator. Its expected rate depends on the plaintext source and lag. A change of shift or substitution can change the cross-boundary rate, but it is not universally $1/26$. The recorded detector uses the fixed working rates $r_s\approx0.066$ and $r_d\approx0.0385$ as a prose-versus-diffuse Bernoulli model. A candidate **change point** at $t$ is a split that improves that model's likelihood for same-coset pairs; the resulting segments are called **zones**. Such a boundary can reflect a key, substitution, transposition, or plaintext-distribution change, so the detector does not identify its cause.
 '''
 
 [[blocks]]
@@ -43,10 +43,10 @@ body = '''
 kind = "attack"
 title = "How to attack it"
 body = '''
-1. Compute the same-coset coincidence rate in sliding windows (window 42, step 7 at period 7) and note where it rises above the uniform level: the zones.
+1. Compute the same-coset coincidence rate in sliding windows (window 42, step 7 in the recorded period-7 setup) and use changes relative to matched references to propose zones.
 2. Run the exact segmentation DP for $k = 1 \dots 4$ segments; report boundaries and the gain against within-coset shuffles.
 3. Cross-check with the letter-set change (chi-square over $t$ with its max-over-$t$ null) and with per-segment alignment $z$ from the split scan.
-4. Relate the segments: the identity test decides between "same key" (histograms coincide), "key drifted by a constant in a reference order" (histograms coincide after a rotation) and "unrelated or uniform" (neither), each calibrated on planted references at the text's own geometry.
+4. Relate the segments by comparing identity and rotation statistics with planted "same key," "constant drift," and alternative references at the same geometry. Overlapping reference distributions leave the relation unresolved; histogram agreement is not by itself proof of a key relation.
 5. Re-run every earlier whole-text statistic per zone; discard whole-text verdicts that the zoning explains.
 '''
 
@@ -74,8 +74,8 @@ function SEGMENT_DP(P, n, k_max):
     return (boundaries, gain)
 
 function CHANGE_POINTS(c, m, N):
-    zones = where the same-coset coincidence rate in sliding windows rises
-            above the uniform level
+    zones = candidate changes in sliding-window same-coset coincidence,
+            calibrated against matched references
     (boundaries, gain) = SEGMENT_DP(PAIR_WEIGHTS(c, m, r_s, r_d), n, 4)
     // within-coset shuffles keep every coset histogram
     for r in 1..N:
@@ -85,9 +85,8 @@ function CHANGE_POINTS(c, m, N):
     cross-check: letter-set chi-square between prefix and suffix maximised
             over t, against its max-over-t null; per-segment alignment z from
             the split scan
-    relate the segments by the identity test: same key, key drifted by a
-            constant (coincide after a rotation), or unrelated; calibrated on
-            planted references
+    compare segment identity and rotation statistics with planted relation
+            models; retain ambiguity where their reference ranges overlap
     re-run every whole-text statistic per zone
     discard whole-text verdicts that the zoning explains
     return (boundaries, gain, z)
@@ -104,7 +103,7 @@ Weights: $O(n^2/m)$ pairs. Prefix sums $P(a,b)$: $O(n^2)$ after a cumulative pas
 kind = "failure_modes"
 body = '''
 - **A change point is not a key proof.** Same-coset collision evidence arises equally from a plaintext-distribution change, a transposition boundary or a different substitution regime; and a peaked prefix is not proof of a one-letter (Caesar) key, since a peaked plaintext also gives a peaked prefix.
-- **Same key is undetectable by identity tests.** A same-key text and its whole-text shuffle give the same identity statistic, so the test decides only where the segments *differ*; on the 153-letter text the ends differed from the middle only at $z -1.5$ / $-1.4$, consistent with uniform letters or a many-shift layer.
+- **Same key is not established by histogram identity.** A same-key text and its whole-text shuffle can give the same identity statistic, so a close score does not prove a shared key. On the 153-letter text, the ends differed from the middle only at $z-1.5$ / $-1.4$ under the recorded comparison, compatible with several reference models.
 - **Little power on short zones.** The 63-letter zone of the 153-letter text gives the coincidence DP almost no power ($z \le -0.5$ for any boundary).
 - **Selection over $t$.** A single-$t$ chi-square peak must be judged against the maximum over $t$ under shuffles. The letter-set change of the 144-letter text was $z +3.7$ on that null, at $t \approx 33$ to $52$, while the coincidence DP puts the key boundary at 53: the two statistics answer different questions.
 - **Fixed rates.** The detector hard-wires the prose rates. A plaintext with a different within-substitution coincidence rate moves the weights, and no planted positive was run for the DP itself.
@@ -127,7 +126,7 @@ body = '''
 Period 2, sixteen ciphertext positions, so each coset holds eight letters and $2 \times \binom{8}{2} = 56$ same-coset pairs. Suppose the first half is keyed by one key and the second by another, and consider the split at $t = 8$. The 32 pairs that straddle the boundary are the ones the split removes from the score:
 
 - if none of the 32 straddling pairs coincides, the two-segment gain is $-32 \cdot (-0.029) = +0.93$;
-- if four of them coincide (about the prose rate, $0.066 \times 32 \approx 2$, would be two), the gain is $-(4 \cdot 0.539 + 28 \cdot (-0.029)) = -1.34$ and the split is rejected.
+- if four coincide—about twice the rough prose expectation $0.066\times32\approx2$—the gain is $-(4\cdot0.539+28\cdot(-0.029))=-1.34$ and this fixed-rate objective rejects the split.
 
 Real detections rest on hundreds of pairs: the 144-letter text has 13 letters per coset after the boundary, and its two-segment gain of $+8.07$ exceeds the shuffle mean by three standard deviations.
 '''
@@ -135,7 +134,7 @@ Real detections rest on hundreds of pairs: the 144-letter text has 13 letters pe
 [[blocks]]
 kind = "notes"
 body = '''
-Finding the zones changed how every whole-text statistic was read. Combining a 63-letter zone with monoalphabetic cosets and 90 flat letters produces the "mixed inner" coset index of coincidence ($\approx 0.055$) and pair-coincidence deficit. Those readings had led to sandwich, fractionation, and perturbed-key sweeps. The sweeps still rule out exactly what they tested, but the pattern that prompted them was false (see [Assumption review protocol](/cryptanalysis/assumption-review-protocol)).
+Finding the zones changed how every whole-text statistic was read. In the recorded text, pooling a 63-letter zone with monoalphabetic cosets and 90 flatter letters produced the observed "mixed inner" IC near $0.055$ and pair-coincidence deficit. Those readings had prompted sandwich, fractionation, and perturbed-key sweeps. Their negative evidence retains only each sweep's stated exhaustive, statistical, or bounded-search scope; the pooled pattern was not evidence for one homogeneous inner construction (see [Assumption review protocol](/cryptanalysis/assumption-review-protocol)).
 '''
 
 [[provenance]]

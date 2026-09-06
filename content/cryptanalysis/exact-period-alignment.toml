@@ -3,19 +3,19 @@ section = "cryptanalysis"
 title = "Exact period alignment"
 subtitle = "Try every relative shift and line up the cosets of a repeating substitution"
 status = "VERIFIED"
-status_note = "The exact period-7 solver checks all 26^6 relative shift vectors with a direct pairwise score. On a planted substitution over 153 English letters, it recovered the shift vector at z +9.6 against 200 position shuffles. A planted substitution over transposed inner text reached z +4.0 (logs/01)."
+status_note = "The implementation exactly maximises the stated period-7 objective over all 26^6 relative shift vectors. In recorded 153-letter controls it recovered the planted shifts for a periodic substitution of English (z +9.6 against 200 position shuffles); a specified transposed-inner control reached z +4.0. These controls establish performance for those generators, not for arbitrary pre-transpositions or plaintext sources (logs/01)."
 family = "Period and structure recovery"
 tags = ["periodic", "coincidence", "exact", "alignment", "shift vector"]
 related = ["vigenere", "quagmire-iii", "coset-shift-recovery", "index-of-coincidence", "key-cancellation", "running-key-relation-test", "shuffled-null-z-score", "within-coset-null", "family-wise-null", "exhaustive-enumeration", "conjugacy-and-gauge", "family-identification", "g-coset", "g-inner-and-outer-layer"]
-summary = "In a repeating additive cipher, every coset is a shifted copy of the same inner letter distribution. Exact period alignment tries every relative shift and chooses the one that makes coset letter counts match most strongly. It needs no word order or literal key. The same test belongs on cross-text sum and difference streams, where a shared high-entropy stream may cancel and expose a periodic residual that raw IC misses. Its null must match the claim: a source-pairing null for cancellation, or a position shuffle for a fixed single stream."
-updated = "2026-09-06"
+summary = "In a repeating additive cipher whose plaintext cosets share a common marginal distribution, ciphertext coset histograms are noisy, shifted samples of that distribution. Exact period alignment tries every relative shift and chooses the one that makes those samples coincide most strongly. It needs no word order or literal key. The same test can be applied to cross-text sum and difference streams, where a shared stream may cancel and expose a periodic residual that raw IC misses. Its null must match the claim: a source-pairing null for cancellation, or a position shuffle for a fixed single stream."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
-Let the ciphertext $c_0 c_1 \dots c_{n-1}$ be written as indices in a chosen alphabet order and let $m$ be the period. Coset $b$ is the set of positions $i \equiv b \pmod m$ and $F_b(x)$ is its letter histogram. If the layer is additive, $F_b$ is the inner distribution rotated by the coset's key element $k_b$, so the histograms of two cosets $a, b$ agree after a relative rotation of $k_b - k_a$.
+Let the ciphertext $c_0 c_1 \dots c_{n-1}$ be written as indices in a chosen alphabet order and let $m$ be the period. Coset $b$ is the set of positions $i \equiv b \pmod m$ and $F_b(x)$ is its letter histogram. If $c_i=p_i+k_b$ in coset $b$, then $F_b$ is exactly the empirical histogram of plaintext positions in that coset, rotated by $k_b$. The different plaintext-coset histograms are generally not identical in a finite text. Treating them as samples of one distribution requires a stationarity or common-marginal model.
 
-Alignment recovers the vector of **relative** shifts $s = (0, s_1, \dots, s_{m-1})$, $s_b \equiv k_b - k_0$, that makes all $m$ histograms coincide. The absolute rotation $k_0$ is unobservable at this stage (a gauge): it is fixed later by a reference distribution, see [Coset shift recovery](/cryptanalysis/coset-shift-recovery).
+Alignment estimates the vector of **relative** shifts $s = (0, s_1, \dots, s_{m-1})$, $s_b \equiv k_b - k_0$, by making the $m$ histogram samples coincide as strongly as possible. Exhaustive enumeration makes the optimiser exact for this objective; it does not make the inferred shifts certain under finite sampling. The objective is unchanged by adding one constant to every key element, so the absolute rotation $k_0$ is not identified at this stage. It can be fitted later against a reference distribution; see [Coset shift recovery](/cryptanalysis/coset-shift-recovery).
 '''
 
 [[blocks]]
@@ -37,9 +37,9 @@ Maximising $J$ is therefore the same as maximising the coincidence rate of the w
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- The layer is additive in the tested index order, i.e. the cosets are rotations of one histogram. In an unknown mixed alphabet the alignment still exists but is measured in the wrong coordinates and weakens.
-- The inner distribution is peaked. A flat inner (fractionation, random letters, a second substitution layer with many alphabets) gives histograms with nothing to align.
-- Invariant: the statistic depends only on the coset histograms, so it is unchanged by any transposition applied *before* the periodic layer. This is what makes it usable while a transposition is still in place (see [Order-free width statistic](/cryptanalysis/order-free-width-statistic)).
+- The layer is additive in the tested index order. With an unknown mixed alphabet, rotations in the true order need not be rotations in the tested coordinates.
+- The inner cosets must have sufficiently similar, nonuniform marginals for the tested length. Fractionation, multiple substitution alphabets, or other mixing can weaken that condition, but does not make every output exactly uniform.
+- Exact invariant: the statistic depends only on the observed coset histograms, so permutations *within each tested coset* leave it unchanged. An arbitrary transposition before the periodic layer can redistribute letters among output cosets and change the statistic. Success through a particular transposition therefore needs a geometric argument or matched controls, not histogram invariance alone (see [Order-free width statistic](/cryptanalysis/order-free-width-statistic)).
 - For a cross-text stream $d_i=x_i+\sigma y_{\phi(i)}$, alignment describes $d$, not the sources separately. A high score supports rotated coset histograms in the derived stream; it does not by itself prove that a latent source stream cancelled.
 '''
 
@@ -49,9 +49,9 @@ title = "How to attack it"
 body = '''
 1. Choose a period (from a period scan or by trying each candidate) and an index order; build $F_b$ and the cross tables.
 2. Maximise $J(s)$ exactly (or, for simulations and nulls, by multi-seed greedy assignment followed by single- and pair-move polish, which agreed with the exact optimum on every corpus text).
-3. Calibrate a fixed single stream by running the identical maximisation on $N$ position-shuffles. The shuffle keeps the letter multiset and destroys the coset structure, so the $z$-score of the observed $\operatorname{IC}_{\text{union}}$ against the shuffles measures the presence of a periodic additive layer.
+3. Calibrate a fixed single stream by running the identical maximisation on $N$ position-shuffles. The shuffle keeps the global letter multiset and randomises its allocation to cosets. The resulting $z$-score is evidence against that exchangeable-position null; interpreting it as an additive layer also requires the declared common-marginal and alphabet-order assumptions.
 4. Read the near-optimal set and margins: cosets with several near-tied shifts are treated as votes, not facts, in later stages.
-5. Compare the $z$ with planted references of the same length to read *what kind* of inner sits under the layer: on 153 letters a plain periodic substitution over English gave $z +9.6$ and a periodic substitution over a transposed inner gave $z +4.0$ (logs/01).
+5. Compare the $z$ with planted references of the same length as a model check. In the recorded 153-letter controls, a plain periodic substitution over English gave $z +9.6$ and one specified transposed-inner generator gave $z +4.0$ (logs/01). This comparison does not identify all possible inner constructions from one statistic.
 6. For a derived stream, add a source-pairing test. Permute one source inside the physical period classes, keep the other source fixed, rebuild every sum/difference cell, and repeat the complete selection. This preserves the individual source coset histograms while breaking their letterwise pairing. Apply one sampled physical permutation consistently across all algebraic cells that share that geometry.
 7. Hand the aligned text to shift recovery, residual-periodicity tests (a second period surviving the alignment signals a compound key) and language scoring.
 '''

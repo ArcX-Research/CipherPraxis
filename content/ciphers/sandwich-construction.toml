@@ -3,12 +3,12 @@ section = "ciphers"
 title = "Sandwich construction"
 subtitle = "Place a transposition between a short repeating substitution and a longer one"
 status = "VERIFIED"
-status_note = "The mixture and order-free width solvers recovered four planted layered ciphers from a cold start. Widths were 8, 9, 9, and 12; inner periods were 2 and 3. The true width ranked first at z +4.3 to +12.8. An exact width-9 solver passed 23/24 development controls. Tests ruled out this reading for the two short project texts."
+status_note = "The mixture and order-free width solvers recovered four planted columnar-layered ciphers from a cold start. Widths were 8, 9, 9, and 12; inner periods were 2 and 3, and the true width ranked first at z +4.3 to +12.8. A width-9 handoff passed 23/24 development controls. Live misses apply to the tested mixture, geometry, alphabet, and handoff assumptions; they do not exclude arbitrary transpositions."
 family = "Composite constructions"
 tags = ["composite", "layered", "transposition", "mixture", "periodic"]
 related = ["vigenere", "columnar-transposition", "coordinate-columnar-fractionation", "compound-periodic-key", "mixture-inference-under-transposition", "order-free-width-statistic", "bayesian-evidence-model-selection", "expectation-maximisation", "within-coset-null", "g-period", "g-transposition-grid"]
-summary = "A sandwich has the form c = Q_m(T(Q_k(p))): first a short-period substitution, then a transposition, then a longer-period substitution. The inner layer flattens letter statistics. The transposition hides its period and letter-pair order. The outer layer creates visible cosets. Because transposition does not change the inner letter counts, a solver can estimate the inner mixture first and find the width from its class pattern before knowing the column order."
-updated = "2026-09-05"
+summary = "A sandwich has the form c = Q_m(T(Q_k(p))): first a short-period substitution, then a transposition, then a longer-period substitution. The inner layer can weaken language-frequency contrast, the transposition changes its positional pattern, and the outer layer creates periodic mappings in ciphertext order. A transposition preserves the global inner-letter multiset. Recovering a mixture separately in every outer coset additionally requires a declared geometry or mixing model, which the width stage tests."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -24,7 +24,7 @@ The corpus's solved texts stack these layers in other orders too (transposition 
 kind = "equations"
 title = "Transposition invariance and the class pattern"
 body = '''
-Under the outer layer, coset $b$ of the ciphertext is a rotation of the multiset of inner letters at the positions $T$ sends there. Because a transposition only moves letters, the multiset of all inner letters is $T$-invariant, and for $k = 2$ each coset histogram is a rotation of the balanced mixture $\tfrac12\big(E(\cdot - g_1) + E(\cdot - g_2)\big)$ of two rotated English distributions. Marginalising the $m$ outer shifts (profiling them buys about 0.15 nats per letter of spurious fit at 153 letters) gives an evidence for one, two or three inner alphabets and a posterior class for every ciphertext letter. In plaintext order the classes read $0101\dots$. A columnar of width $w$ turns that into a block pattern (constant per column for even $w$, alternating for odd $w$) that a DP over the long and short columns of the unpadded grid measures **without the column order**.
+Under the outer layer, coset $b$ is a rotation of the multiset of inner letters at the positions that $T$ sends into that output residue. The **global** inner-letter multiset is invariant under every transposition, but the multiset in an individual outer coset is not: an arbitrary $T$ may send unequal numbers of inner phases there. The baseline mixture model assumes that each relevant coset samples phase $j$ with declared weights $w_j$ and that plaintext positions share marginal distribution $E$, giving expected density $f(x)=\sum_jw_jE(x-g_j)$. Equal weights $1/k$ are exact only for a balanced design (and otherwise an approximation). Marginalising the $m$ outer shifts gives evidence for the tested one-, two-, or three-component models and posterior class probabilities. For a standard period-2 inner, plaintext positions alternate classes; a columnar of width $w$ gives constant-class columns when $w$ is even and alternating columns when $w$ is odd. The layout DP tests that specific geometry without first choosing the column order.
 '''
 
 [[blocks]]
@@ -41,8 +41,8 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - The outer layer is periodic and additive in a known order. The inner layer has a small period.
-- Invariant: inner-letter multiset independent of $T$ (the whole attack rests on it).
-- Invariant: posteriors are centred per class (a period-$k$ inner is exactly balanced), so the degenerate "everything is class 0" configuration scores zero.
+- Exact invariant: the global inner-letter multiset is independent of $T$. Equal component weights within each outer coset require the stated balance/mixing assumption and are not transposition invariants.
+- Centring posterior scores per class is a model normalization that makes the degenerate "everything is class 0" assignment score zero; it does not assert that every finite period-$k$ sample is exactly balanced.
 - Wrong models must lose: shuffled ciphertexts through the identical pipeline give the null for every width.
 '''
 
@@ -53,7 +53,7 @@ body = '''
 1. Fit the inner mixture with one, two, or three alphabets, using evidence that averages over the outer shifts. Read the inner spacing $\delta = g_2 - g_1$ from its marginal evidence. It was correct on 7 of 8 planted seeds, and the search keeps the top three $\delta$ values.
 2. Compute class posteriors for every letter and the order-free width statistic for every width; run class-EM to re-estimate each outer shift from its coset's class-conditional likelihood (this fixes the one or two cosets the evidence fit gets wrong).
 3. Hand widths with $z \ge 3$ to the column solver: residue classes fix part of the order, quadgrams fix the rest, then polish shifts and order alternately.
-4. Nulls: shuffled ciphertexts through fit, $\delta$ candidates, EM and DP, so the reported $z$ per width is honest.
+4. Nulls: pass shuffled ciphertexts through fit, $\delta$ candidates, EM and DP. This calibrates the selected statistic for that shuffle model; a $z$ value is not a theorem about untested transpositions.
 '''
 
 [[blocks]]
@@ -115,7 +115,7 @@ body = '''
 [[blocks]]
 kind = "controls"
 body = '''
-Mixture and width solver (logs/05_mix.log): four planted sandwiches, all solved 100% from cold with the true width on top (width-9 exact grid z +12.8, width-8 ragged z +11.3, width-12 mixed alphabets z +4.3, width-9 with period-3 inner z +5.1). A Bifid-7, a plain period-7 cipher and a double columnar printed alongside show the negative signatures. Older exhaustive solver (ck_sandwich_report.txt): three controls (width 8 with period-2 inner, width 12 with period-3 inner, two width-9 word keys with period-2 inner) read ENGLISH at $-4.34$ with 100% match. Cross-derived exact solver (log 237): 23/24 development controls. On the two short corpus texts the mixture evidence found no inner spacing and no width in any alphabet combination, which excludes a period-2 or -3 inner under *any* transposition for the 153-letter text.
+Mixture and width solver (logs/05_mix.log): four planted sandwiches, all solved 100% from cold with the true width on top (width-9 exact grid z +12.8, width-8 ragged z +11.3, width-12 mixed alphabets z +4.3, width-9 with period-3 inner z +5.1). A Bifid-7, a plain period-7 cipher and a double columnar printed alongside show the negative signatures. Older finite-order solver (ck_sandwich_report.txt): three controls (width 8 with period-2 inner, width 12 with period-3 inner, two width-9 word keys with period-2 inner) read ENGLISH at $-4.34$ with 100% match. Cross-derived width-9 solver (log 237): 23/24 development controls. On the two short corpus texts the mixture evidence found no inner spacing and no width in the tested alphabet and columnar-geometry combinations. That is a scoped empirical miss, not exclusion of period-2 or -3 under every possible transposition.
 '''
 
 [[blocks]]
@@ -138,7 +138,7 @@ Check the first letter: $S + 3 = V$; after transposition the first output letter
 [[blocks]]
 kind = "notes"
 body = '''
-The sandwich was the program's leading hypothesis for the two short texts because every measured fact fitted it; its exclusion by a transposition-invariant argument is the clearest example in the corpus of testing a composite without searching its transposition.
+The mixture stage uses an exact global-multiset invariant, followed by geometry-specific assumptions and a calibrated width selector. Its negative result is therefore limited to the tested columnar layouts, mixture bank, and demonstrated handoff power; arbitrary transpositions remain outside that conclusion.
 '''
 
 [[provenance]]

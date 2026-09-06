@@ -6,5 +6,5 @@ status_note = "Standard term."
 family = "Bayesian inference"
 tags = ["integration", "prior", "model comparison"]
 related = ["bayesian-evidence-model-selection", "g-evidence", "coset-shift-recovery"]
-summary = "Marginal likelihood is the likelihood of the data averaged over a parameter's prior. For a coset with counts F and unknown shift s under a uniform prior, Z = (1/26) sum over s of the product over letters of f(x - s)^F(x). Averaging over the shift instead of choosing the best one makes the score depend on the histogram's shape, not its rotation. This makes it order-free and fair across families of different sizes. A family with M members pays ln M nats for that choice."
-updated = "2026-09-04"
+summary = "Marginal likelihood is the likelihood of the data integrated or summed over a parameter's prior. For coset counts F and an unknown shift s with a uniform prior, Z = (1/26) sum over s of the product over letters of f(x - s)^F(x). This shift average is invariant to a common rotation of the observed histogram. Comparisons across families are meaningful only with explicit, defensible priors and the same observation model; the difference from a maximized likelihood is data-dependent, not invariably ln M for a family of M choices."
+updated = "2026-09-07"

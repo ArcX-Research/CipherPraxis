@@ -1,10 +1,10 @@
 id = "g-linear-congruential-generator"
 section = "glossary"
 title = "Linear congruential generator (LCG)"
-status = "CLOSED"
-status_note = "Standard term; LCG-type running keys were screened on the corpus texts with a family-wise null and showed no excess."
+status = "VERIFIED"
+status_note = "The one-step LCG definition and the stated additive-cipher cancellation are exact algebraic identities under their declared recurrence and modulus."
 family = "Algebra"
 tags = ["recurrence", "running key"]
 related = ["linear-recurrences-lcg", "affine-maps-mod-26", "difference-operators", "running-key"]
-summary = "A linear congruential generator (LCG) starts with seed k_0 and follows k_i = a k_(i-1) + b modulo M. A wider version may use lag L. When this sequence becomes a running key, it leaves a mathematical trace. Subtracting a times the ciphertext at lag L removes the key. What remains is a scaled difference of the plaintext plus a constant, which can be compared with the expected language pattern."
-updated = "2026-09-04"
+summary = "A linear congruential generator (LCG) follows k_i = a k_(i−1) + b modulo M from a seed. A recurrence using k_(i−L) for L > 1 is a related lagged affine generator, not the standard one-step LCG. If an additive cipher uses either recurrence in the same modulus, then c_i − a c_(i−L) = p_i − a p_(i−L) + b where the recurrence applies. This exact cancellation depends on the indexing, modulus, and encryption convention; recognizing the remaining plaintext expression is a separate statistical problem."
+updated = "2026-09-07"

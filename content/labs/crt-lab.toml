@@ -21,14 +21,15 @@ body = '''
 function CRT(list of (r_i, n_i)):
     x = 0; M = 1
     for each (r, n) in the list:
+        require n > 0
         r = r mod n
         g = gcd(M, n)
         // disagreement modulo the shared factor g
         if (r - x) mod g != 0: return NO_SOLUTION
         L = (M / g) * n                                  // lcm(M, n)
-        // solve x + M*t ≡ r (mod n), i.e. (M/g)*t ≡ (r - x)/g (mod n/g)
-        inv = MOD_INVERSE((M / g) mod (n / g), n / g)
-        t = (((r - x) / g) * inv) mod (n / g)
+        q = n / g
+        if q == 1: t = 0
+        else: t = ((r - x) / g) * MOD_INVERSE((M / g) mod q, q) mod q
         x = (x + M * t) mod L
         M = L
     return (x, M)
@@ -41,7 +42,6 @@ function EGCD(a, b):
 
 function MOD_INVERSE(a, m):
     (g, u, v) = EGCD(a mod m, m)
-    // a and m are not coprime
     if g != 1: return NONE
     return u mod m
 ```

@@ -1,14 +1,14 @@
 id = "family-identification"
 section = "cryptanalysis"
 title = "Family identification"
-subtitle = "Simulate possible ciphers and compare the patterns that do not depend on their keys"
+subtitle = "Simulate candidate cipher families and compare calibrated summary statistics"
 status = "POWER-LIMITED"
-status_note = "The classifier compares 19 key-independent features across 29 cipher types x 120 simulations using Mahalanobis distance, plus an alignment z-profile. It separates monoalphabetic-coset, transposed-inner, matrix-outside, and mixed-inner groups. At 153 letters it cannot reliably split the mixed-inner group: three nearby types self-classified at 8–42%, and the fourth at 82%. Negatives within that group tell us little (logs/04, 312)."
+status_note = "The recorded classifier compares 19 features across 29 simulated cipher types with 120 samples each, using a fitted Mahalanobis score plus an alignment profile. At 153 letters its plug-in self-classification was only 8–42% for three nearby mixed-inner types and 82% for the fourth; because those estimates reuse the fitted samples, they are optimistic. The experiment therefore shows inadequate discrimination within that tested group, not identification or exclusion of arbitrary families (logs/04, 312)."
 family = "Model identification"
 tags = ["approximate Bayesian computation", "Mahalanobis", "fingerprint", "invariant statistics", "simulation", "power"]
 related = ["mahalanobis-family-distance", "index-of-coincidence", "coincidence-lag-profile", "power-analysis", "exact-period-alignment", "mixture-inference-under-transposition", "frequency-analysis", "assumption-review-protocol", "sandwich-construction", "bifid", "hill-cipher", "g-family-sweep", "g-inner-and-outer-layer"]
-summary = "Before searching keys, ask which cipher types could match the text. Simulate each type many times with real language and random keys. Measure the same key- and transposition-independent patterns in those samples and the target, then compare the target with each group. The method can also reject a proposed family when its simulations never look like the measured text. At 153 letters, broad families separate well, but similar mixed-inner ciphers do not."
-updated = "2026-09-04"
+summary = "Before searching keys, ask which declared cipher families are statistically compatible with the text. Simulate each family with a stated language source and key distribution, measure the same features in those samples and the target, then compare the target with each fitted cloud. Some features are invariant to particular relabellings; others depend on period, layer order, or key distribution. A calibrated mismatch can reject the simulated model within that scope, while a close match does not identify the true construction. At 153 letters, the recorded experiment did not distinguish several similar mixed-inner families."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -17,14 +17,14 @@ For each family $\mathcal{F}$ in a declared menu, draw $N$ simulations: a random
 
 $$d^2_\mathcal{F} = (\phi_{\text{target}} - \mu_\mathcal{F})^\top \Sigma_\mathcal{F}^{-1} (\phi_{\text{target}} - \mu_\mathcal{F}), \qquad \ell_\mathcal{F} = -\tfrac12\big(d^2_\mathcal{F} + \log\det\Sigma_\mathcal{F}\big),$$
 
-with a shrunk covariance ($0.7\Sigma + 0.3\operatorname{diag}\Sigma$). Per-feature $z$ values say *which* statistic disagrees for a rejected family. The self-classification accuracy of the simulations (each simulation scored against all clouds) is the honest power number of the classifier.
+with a shrunk covariance ($0.7\Sigma + 0.3\operatorname{diag}\Sigma$). This is a fitted Gaussian discriminant score, not a posterior probability unless family priors and the simulation model are also justified. Per-feature $z$ values diagnose which statistics differ, subject to multiple comparisons. Scoring the same simulations used to fit the clouds gives a plug-in self-classification rate; it is an optimistic diagnostic, not an unbiased power estimate. Held-out simulations or cross-validation are needed for prospective error rates and a class-by-class confusion matrix is more informative than aggregate accuracy.
 '''
 
 [[blocks]]
 kind = "equations"
 title = "Fingerprint and consistency harness"
 body = '''
-A cheaper fingerprint uses one statistic across periods: the alignment-IC $z$ at $p \in \{3, 4, 7, 9, 14, 17, 21\}$ against within-text shuffles, for planted families and the target. A true period peaks at $p$ and inherits at its multiples. A transposition outside the periodic layer flattens the profile. A matrix cipher outside it flattens it too. The **family-consistency harness** inverts the logic: for a proposed family, the 99% prediction interval of each recorded statistic under 200 or more simulations must contain the target's measured value, or the family is marked inconsistent before any expensive selector is built.
+A cheaper fingerprint uses one statistic across periods: the alignment-IC $z$ at $p \in \{3, 4, 7, 9, 14, 17, 21\}$ against within-text shuffles, for planted families and the target. Under a sufficiently strong periodic common-marginal signal, peaks are expected at the period and can appear at its multiples. Particular controls with an outer transposition or matrix layer weakened the profile; that is an empirical result, not an invariant of every such layer. The **family-consistency harness** inverts the logic: for a proposed family, compare the target with predictive simulations before building an expensive selector. Separate 99% intervals are featurewise intervals; declaring a family inconsistent from any one miss needs a simultaneous calibration or a predeclared multiple-testing rule.
 '''
 
 [[blocks]]
@@ -41,9 +41,9 @@ title = "How to attack it"
 body = '''
 1. Declare the menu (in the corpus: random letters, plain language, periodic substitution, transposed language under it, sandwiches at several widths and inner periods, a double columnar, three fractionations, running key, autokey, four compound keys, two binary-perturbed keys, unknown-alphabet substitution, seven independent alphabets, two-alphabet rounds, four varied rounds, segment variants, nulls, progressive key, a $3 \times 3$ matrix under the layer).
 2. Simulate, standardise, fit clouds; score the target; print the ranked table with per-feature $z$ above 2.
-3. Print the self-classification accuracy; treat any distinction below it as unresolved.
+3. Estimate held-out or cross-validated confusion rates when possible. If only plug-in self-classification is available, label it optimistic and inspect pairwise confusions rather than treating one aggregate accuracy as a threshold.
 4. Run the fingerprint as a cross-check and the consistency harness for any family about to receive a hidden bank.
-5. Use the result to prune: families rejected at large $d^2$ with a named disagreeing feature are closed; families inside the target's cluster remain open and need construction-specific tests (see [Mixture inference under transposition](/cryptanalysis/mixture-inference-under-transposition)).
+5. Use calibrated distances and named disagreeing features to flag incompatibility with the declared simulator. Do not call a family closed from an uncalibrated large $d^2$, marginal feature threshold, or incomplete menu. Families inside the target's cluster remain open and need construction-specific tests (see [Mixture inference under transposition](/cryptanalysis/mixture-inference-under-transposition)).
 '''
 
 [[blocks]]
@@ -51,7 +51,8 @@ kind = "pseudocode"
 body = '''
 ```text
 // Target ciphertext c of length n, a declared family menu, a language corpus,
-// N simulations per family. phi in R^19, key- and transposition-independent
+// N simulations per family. phi in R^19; each feature's invariances and
+// parameter dependence must be declared
 function FEATURES(text):
     return [ raw IC, distinct-letter count; aligned union IC, within-coset
             IC, aligned digram IC and residual periodicity after the
@@ -78,18 +79,21 @@ function FAMILY_IDENTIFICATION(c, menu, N):
         ell[F] = -(1/2) * (d2[F] + log det Sigma[F])
         // which statistic disagrees
         zfeat[F][j] = (phi[j] - mu[F][j]) / SD_s(sample[F][s][j])
-    // self-classification: the honest power number
-    accuracy = fraction of samples whose own family has the highest ell
+    // Prefer fresh held-out samples or cross-validation. Reusing fitted
+    // samples gives only an optimistic plug-in diagnostic.
+    confusion = class-by-class predictions on held-out samples if available
+    plugin_accuracy = fraction of fitted samples whose own family has the
+            highest ell
     print the families ranked by ell with per-feature z above 2
-    any distinction below accuracy is unresolved
     // cross-checks: the fingerprint (alignment-IC z at p in {3, 4, 7, 9, 14,
     // 17, 21} against within-text shuffles) for planted families and c; the
     // consistency harness for a family about to receive a hidden bank: the
-    // 99% prediction interval of each recorded statistic under >= 200
-    // simulations must contain the target's measured value, or the family is
-    // marked inconsistent large d2 with a named disagreeing feature closes a
-    // family; the target's cluster stays open
-    return (ranked (F, d2, ell, zfeat), accuracy)
+    // compare with predictive simulations using a simultaneous envelope or a
+    // predeclared multiple-testing rule; a marginal interval is not a
+    // family-wise rejection gate
+    // calibrated mismatch rejects only the declared simulator; the target's
+    // close-scoring cluster stays open
+    return (ranked (F, d2, ell, zfeat), confusion, plugin_accuracy)
 ```
 '''
 
@@ -132,7 +136,7 @@ matrix (3x3) under a period-7 layer   0.0393   0.0401          0.0524
 153-letter text                       0.0395   0.0536          0.0618
 ```
 
-Coset IC separates constructions with the substitution outermost (about 0.07) from those with a transposition or matrix outside it (about 0.04). The aligned IC separates a language inner (0.071) from a mixed inner (0.058). The target's pair (0.054, 0.062) lies between the mixed-inner row and the language rows, which is what a text made of a monoalphabetic-coset zone and flat ends produces. The per-family Mahalanobis distances quantify the same picture over all 19 features.
+In these particular planted rows, coset IC is about $0.07$ with the substitution outermost and about $0.04$ with the tested transposition or matrix outside it. Their aligned IC is about $0.071$ for the language-inner controls and $0.058$ for the tested mixed-inner control. The target's pair $(0.054,0.062)$ lies between those rows and is consistent with the separately observed mixture of a monoalphabetic-coset zone and flatter ends. These few features do not prove that construction; the fitted Mahalanobis distances combine the same kind of model-dependent comparison across all 19 features.
 '''
 
 [[provenance]]

@@ -3,12 +3,12 @@ section = "search"
 title = "Parallel tempering (replica exchange)"
 subtitle = "Run searches at several temperatures and swap states between nearby levels"
 status = "POWER-LIMITED"
-status_note = "A 2,000-chain batch solver searches the alphabet and shifts across 8–12 temperatures and swaps states between levels. On planted two-sided unknown-alphabet controls of 63+96 and 96 letters, it recovered only 3–42% of the alphabet. Adding more chains did not improve the best score, so its negative results say nothing about the cipher family."
+status_note = "A recorded batch solver searches the alphabet and shifts across a fixed temperature ladder. It recovered only 3–42% of the alphabet on the cited short, two-sided controls, and the tested chain-count increase did not improve the best score monotonically. These finite failures make target misses uninformative about the cipher family."
 family = "Stochastic local search"
 tags = ["replica exchange", "temperature ladder", "batch chains", "quagmire iii", "unknown alphabet"]
 related = ["simulated-annealing", "hill-climbing", "polish-basin-measurement", "quagmire-iii", "quadgram-log-likelihood", "shuffled-null-z-score", "planted-controls", "power-measurement", "cp-sat-and-smt-solvers", "g-temperature-schedule", "g-search-basin"]
-summary = "Parallel tempering runs many Metropolis searches at different temperatures. Hot searches cross score barriers more easily, while cold searches refine strong answers. Swapping states between nearby temperatures combines those benefits. The implementation searches an unknown 26-letter alphabet plus seven shifts and then polishes the best chains. Controls show that at 63–96 letters it cannot recover an alphabet used on both sides. It stops near one-third correct no matter how many chains run."
-updated = "2026-09-04"
+summary = "Parallel tempering runs Metropolis chains at several temperatures and proposes exchanges between neighboring levels. Hotter chains can cross some score barriers more readily, while colder chains concentrate more strongly near high scores. A recorded implementation searched an unknown alphabet and periodic shifts, then polished selected chains. It failed its cited short, two-sided-alphabet controls under the tested ladders and budgets; this is an empirical power limit, not evidence that arbitrarily many chains or another tempering design must fail."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -44,7 +44,7 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - Exchange only helps if some temperature level mixes across the barriers that separate basins. The ladder ($T_{hot} = 12$, $T_{cold} = 0.4$ by default) is assumed to span that range.
-- The unknowns are determined in principle: an alphabet (about 84 bits after gauge) and 14 shifts (66 bits) against about 500 bits of redundancy in 159 letters of English. Identifiability is not the issue; reachability is.
+- Parameter-count and language-redundancy estimates do not prove identifiability. Gauge symmetries, short-sample alternatives, and model mismatch can leave several observationally equivalent or high-scoring states. Counterfactual truth scores and exact checks must assess separation on each control independently of search reachability.
 - Polishing (exact per-coset shift descent alternating with an exhaustive 925-neighbour alphabet climb) is applied to the top chains, so the reported number is a polished score.
 '''
 
@@ -52,7 +52,7 @@ body = '''
 kind = "attack"
 title = "How to attack it"
 body = '''
-Target family: a period-7 keyed substitution whose single unknown alphabet acts on both sides (Quagmire III), possibly shared by two texts with separate shift vectors, on zones of 63 and 96 letters. Moves: with probability $p_\alpha = 0.5$ an alphabet move (swap with probability 0.7, else an insertion), otherwise one shift of one text redrawn uniformly; exchange every 20 steps. Optional key-word mode derives shifts from the positions of a candidate key word in the alphabet, removing 33 bits from the state. Nulls: shuffled zones through the identical pipeline calibrate the polished score, because free shifts overfit short texts.
+Target family: a period-7 keyed substitution whose single unknown alphabet acts on both sides (Quagmire III), possibly shared by two texts with separate shift vectors, on zones of 63 and 96 letters. Moves: with probability $p_\alpha = 0.5$ an alphabet move (swap with probability 0.7, else an insertion), otherwise one shift of one text redrawn uniformly; exchange every 20 steps. An optional keyword mode derives shifts from a candidate word and therefore reduces the freely searched parameter set. Nulls run the same finite search and selection on shuffled zones, because refitted shifts can overfit short texts.
 '''
 
 [[blocks]]
@@ -100,9 +100,9 @@ Cost per step is one vectorised decrypt-and-score of all chains, $O(N_c \cdot n)
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Plateau, not tail.** On one planted 96-letter instance the polished best was $-5.045$ with 500 chains, $-4.829$ with 2,000 and $-4.916$ with 8,000 (two other search seeds at 2,000: $-4.971$, $-4.876$), i.e. 29-40% of the alphabet: best-of-$N$ does not improve with $N$. The truth reads near $-4.3$.
+- **No monotone gain in the tested scaling panel.** On one planted 96-letter instance the polished best was $-5.045$ with 500 chains, $-4.829$ with 2,000 and $-4.916$ with 8,000 (two other search seeds at 2,000: $-4.971$, $-4.876$), corresponding to 29–40% alphabet match. This small panel does not establish a scaling law or an asymptotic plateau; it shows that the tested increase did not cure the control failure.
 - **Smoothing does not rescue it.** Bigram weight 1 gave $-4.87$ (42% of the alphabet) on the 96-letter control versus $-5.07$ (19%) with weight 3. A bigram ramp with trigrams gave $-5.45$ on the joint control (27% on the 96-letter part); key-word-derived shifts were worse ($-5.57$, 16%). A longer run (2,000 chains $\times$ 100,000 steps, bigram weight 1) ended at $-4.83$ with 35% match.
-- **Why.** The alphabet acts twice, so every swap is both a cryptogram move and a re-slotting of ciphertext letters. The polish basin around the truth is at most three swaps wide while the search's best states are about ten swaps away (see [polish-basin measurement](/search/polish-basin-measurement)).
+- **Observed search geometry.** The alphabet acts twice, so every swap changes both symbol coordinates and induced substitutions. The accompanying perturbation panel observed useful recovery only near the truth, while the best global-search states were farther away (see [polish-basin measurement](/search/polish-basin-measurement)). The finite panel diagnoses a likely proposal-path problem but does not prove a hard basin radius.
 - **Consequence.** A target run of this solver cannot distinguish "not this family" from "family present but unreachable". It was therefore not used as a family negative.
 '''
 

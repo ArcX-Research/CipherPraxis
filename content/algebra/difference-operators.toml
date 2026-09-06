@@ -3,12 +3,12 @@ section = "algebra"
 title = "Difference operators"
 subtitle = "Subtract shifted or paired texts to remove a shared unknown"
 status = "VERIFIED"
-status_note = "Known-answer tests confirm the exact cancellations: 32/32 derived streams, 50/50 planted chains, and 256/256 rule-breaking mutations rejected. These differences start every attack that removes a plaintext or key. Screens of the target ciphertext differences and running keys found no lead."
+status_note = "Known-answer tests confirm the exact cancellations: 32/32 derived streams, 50/50 planted chains, and 256/256 rule-breaking mutations rejected. These differences are the starting reduction in the cited plaintext- and key-elimination attacks. Screens of the target ciphertext differences and running keys found no lead."
 family = "Modular arithmetic"
 tags = ["difference", "lag", "cancellation", "derived stream", "autokey"]
 related = ["modular-arithmetic-z26", "linear-recurrences-lcg", "residue-class-graphs", "conjugacy-and-gauge", "key-cancellation", "autokey-difference-periodicity", "running-key-relation-test", "segment-chain-analysis", "autokey", "running-key", "vigenere", "index-of-coincidence", "g-invariant"]
-summary = "Subtract a ciphertext from a shifted copy of itself, or from an aligned second ciphertext, and anything shared can cancel. This may remove a periodic key at its period, a running key shared by two texts, or one plaintext used under two keys. The remaining stream has a predictable structure. A difference can turn two unknowns into one and give tests that do not need the key."
-updated = "2026-09-04"
+summary = "Subtract a ciphertext from a shifted copy of itself, or from an aligned second ciphertext, and an additive term with the same alignment and coefficient cancels. This may remove a periodic key at its period, a running key shared by two texts, or one plaintext used under two keys. Nonlinear, differently scaled, or misaligned terms do not cancel automatically."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -35,7 +35,7 @@ the plaintext vanishes and the difference is periodic. With unequal periods $m, 
 kind = "assumptions"
 body = '''
 - Additive layers over a common coordinate system. A transposition between the layers destroys index alignment.
-- Known or enumerable index map $\psi$; offsets, reversal and cycling are family axes, not aliases.
+- Known or enumerable index map $\psi$; offsets, reversal and cycling are distinct family axes unless an explicit symmetry proves that two descriptions are aliases.
 - Signs $e \in \{\pm 1\}$; other unit multipliers require the unit-ratio form.
 '''
 
@@ -97,7 +97,7 @@ kind = "failure_modes"
 body = '''
 - A maximum over many lags and signs inflates the apparent significance. The running-key screen's own log notes that with 324 trials a maximum near $+3$ sd is expected by chance. Best running-key ICs of $0.0455$ to $0.0468$ against random pairing $0.0383 \pm 0.0017$ were therefore read as noise.
 - The difference of two independent language streams is flatter than language (coincidence $0.066$ falls toward $0.0385$), so weak signals need matched nulls.
-- **Typicality is not necessity.** A high-entropy running key usually erases periodic structure in the keyed text, but a key text that is itself periodic restores it (a repeated seven-letter key text made the keyed text an ordinary period-7 cipher with alignment $z = +6.927$). A statistic that the family does not fix cannot be a gate.
+- **Typicality is not necessity.** A high-entropy running key usually erases periodic structure in the keyed text, but a key text that is itself periodic restores it (a repeated seven-letter key text made the keyed text an ordinary period-7 cipher with standardized alignment score $+6.927$). A statistic that the family does not fix cannot be a gate.
 '''
 
 [[blocks]]

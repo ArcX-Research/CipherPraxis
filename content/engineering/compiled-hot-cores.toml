@@ -7,8 +7,8 @@ status_note = "The project has fifty single-file cores. Each launcher compiles i
 family = "Compute and throughput"
 tags = ["c++", "cores", "protocol", "threads", "integer scores"]
 related = ["numpy-instrument-pattern", "kat-harness", "seed-determinism", "drainability-and-throughput", "exhaustive-enumeration", "simulated-annealing"]
-summary = "When one loop makes a search slow and array code cannot express it well, move that loop into one C++ file. A single compiler command builds it, a self-test checks it, and a text protocol lets Python control the experiment, controls, and transcript. Fixed-scale integer scores make ties, ranks, and replays exact across machines. Reuse a validated core by keeping its exact bytes and hash, not by copying pieces into new code."
-updated = "2026-09-04"
+summary = "When a measured hot loop is awkward to express as array operations, a small compiled core can expose it through a narrow protocol while a higher-level driver owns controls and receipts. Integer accumulation makes ranks and ties deterministic only when the quantized score table, overflow bounds, candidate order, and tie rules are also fixed. Reproducibility across machines additionally requires compiler, architecture, dependencies, and binary provenance; a source hash alone is insufficient."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -25,14 +25,14 @@ The Python driver spawns the core with pipes, reads the `READY` line, sends requ
 kind = "equations"
 title = "Integer scoring"
 body = '''
-Log-scores are stored as integers, $q = \operatorname{rint}(10^{s} \cdot \log_{10} p)$ with $s = 3$ or $9$ depending on the lane, and a candidate's score is $Q = \sum_i q[w_i]$ over its windows. The displayed rate is $Q / (10^{s} \cdot \#\text{windows})$. Gates are then exact integer comparisons ($Q \ge -724{,}864{,}974{,}231$ for one frozen threshold), ties are exact, and a replay on another machine reproduces every rank.
+Log-scores are quantized as integers, $q = \operatorname{rint}(10^{s}\log_{10}p)$ with the scale fixed by the lane, and a candidate's score is $Q=\sum_iq[w_i]$. The displayed rate is $Q/(10^s\cdot\#\text{windows})$. Once the exact integer table is pinned and sums cannot overflow, gates and ties are exact integer comparisons. Rebuilding $q$ from floating-point logarithms can differ at a rounding boundary across libraries, so cross-machine replay must compare or distribute the quantized table and its checksum rather than assume source probabilities suffice.
 '''
 
 [[blocks]]
 kind = "assumptions"
 body = '''
-- One compiler line reproduces the binary's behaviour: `clang++ -std=c++17 -O3 -DNDEBUG -pthread name_core.cpp -o core` (some lanes use C++20). The compiler version and binary hash are recorded where a lane depends on them. One audit noted their absence as a residual.
-- Work units are independent so that a thread pool with an atomic counter (work-stealing over raw cells) is deterministic in its results regardless of scheduling.
+- A recorded compiler command is necessary but does not alone reproduce binary behavior. Pin the compiler and relevant libraries, target architecture, source and binary hashes, runtime inputs, and any implementation-defined assumptions; one cited audit records missing compiler and binary provenance as a residual.
+- Work units are independent. Scheduling-independent output additionally requires race-free state, per-unit random streams, exact or order-fixed reductions, and a deterministic total order for ties before serializing results.
 '''
 
 [[blocks]]
@@ -70,8 +70,8 @@ function RUN_LANE(core_source, corpus, workers, requests):
     write "QUIT" + newline to core; wait for exit with a timeout
     return transcript
 
-// Inside the core: integer scores, so ties, ranks and replays are exact
-// across machines. q[w] = rint(10^s * log10 p(w))
+// q is a pinned integer table; bounds exclude overflow and ties use a fixed
+// order. Rebuilding q from floating point is outside this exact contract.
 function SCORE(candidate, q, s):
     Q = 0
     for each window w_i of candidate: Q = Q + q[w_i]

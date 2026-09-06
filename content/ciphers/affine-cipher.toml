@@ -8,7 +8,7 @@ family = "Monoalphabetic substitution"
 tags = ["monoalphabetic", "affine", "units mod 26", "periodic"]
 related = ["caesar-shift", "vigenere", "affine-maps-mod-26", "units-mod-26", "periodic-substitution-dp", "exact-dynamic-programming", "within-coset-null", "affine-lab"]
 summary = "The affine cipher maps each letter x to ax + b modulo 26, where a has an inverse. There are 12 x 26 = 312 maps, so a single affine substitution can be checked completely. A periodic version uses one affine map per coset. It sits between simple additive keys and unrelated substitutions, and an exact dynamic program can solve it."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -100,7 +100,7 @@ function SHORTLIST(c[0..n-1], A, p):
 [[blocks]]
 kind = "complexity"
 body = '''
-Single map: 312 decrypts. Periodic: $8^p$ shortlisted states are exact in the DP with an order-three chain ($8^3$ states per step). The polish visits $312\,p$ single moves per sweep plus shortlisted pairs. Both period-7 controls completed inside the audit's standard budget (logs/205_periodic_affine.log).
+Single map: 312 decrypts. Periodic: the shortlist contains $8^p$ complete assignments, but an order-three cyclic dynamic program obtains their exact optimum in $O(p\,8^4)$ transitions with $O(8^3)$ states per layer. The subsequent unrestricted polish is heuristic; it visits $312\,p$ single moves per sweep plus shortlisted pairs. Both period-7 controls completed inside the audit's standard budget (logs/205_periodic_affine.log).
 '''
 
 [[blocks]]

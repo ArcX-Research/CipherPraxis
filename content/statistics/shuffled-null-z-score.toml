@@ -7,17 +7,17 @@ status_note = "Every analysis tool prints its result with a shuffle null. Agains
 family = "Null distributions and calibration"
 tags = ["null distribution", "z-score", "shuffle", "permutation", "calibration"]
 related = ["permutation-test", "within-coset-null", "family-wise-null", "estimator-standard-error", "index-of-coincidence", "exact-period-alignment", "g-null-distribution", "g-z-score", "g-empirical-p-value", "null-lab"]
-summary = "A shuffle null asks how large a statistic would be if the same letters appeared in random order. Compute the statistic on N shuffled copies of the ciphertext. Report z = (observed - null mean)/null sd and the empirical p-value, the share of shuffles at least as large as the observation. Shuffling keeps total letter counts, so it is a useful reference for claims about letter order, including cosets, periods, and alignment."
-updated = "2026-09-04"
+summary = "A shuffle null asks how large a statistic would be if the same letters appeared in random order. Compute the statistic on N shuffled copies, report its location relative to the null, and use the inclusive plus-one rank for a Monte Carlo p-value. Shuffling keeps total letter counts, but it is valid only for a null under which position order is exchangeable. It is a useful conditional reference for claims about order, periods, and alignment."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
 Let $T$ be a statistic of a text $c$ and $\pi_1, \dots, \pi_N$ independent uniformly random permutations of its positions. The shuffle null is the empirical distribution of $T(\pi_j c)$, and
 
-$$z = \frac{T(c) - \overline{T(\pi c)}}{\operatorname{sd}\,T(\pi c)}, \qquad \hat p = \frac{\#\{j : T(\pi_j c) \ge T(c)\}}{N}.$$
+$$z = \frac{T(c) - \overline{T(\pi c)}}{\operatorname{sd}\,T(\pi c)}, \qquad \hat p_+ = \frac{1+\#\{j : T(\pi_j c) \ge T(c)\}}{N+1}.$$
 
-With $N = 200$ the empirical $p$ resolves to $0.005$. A reported $\hat p = 0.000$ means "above every shuffle", not a probability of zero. When $T$ is itself a maximum over a search (the best shift vector, the best width, the best period) the *same* maximisation is run on each shuffle, so that the null already contains the selection.
+With $N=200$ the smallest attainable plus-one value is $1/201\approx0.00498$. Older logs report a raw exceedance fraction of `0.000`; that means "above every sampled shuffle", not a probability of zero. When $T$ is itself a maximum over a search, the same maximisation must run on each shuffle so that the null includes the selection.
 '''
 
 [[blocks]]
@@ -33,7 +33,7 @@ body = '''
 [[blocks]]
 kind = "assumptions"
 body = '''
-- The hypothesis being tested is one of *order*. A shuffle cannot test a claim about the histogram itself (for that, simulate the alternative or use the exact [standard error](/statistics/estimator-standard-error)).
+- Under the null, position order is exchangeable conditional on the observed multiset. A shuffle cannot test a claim about the histogram itself (for that, simulate a declared model or use the exact [standard error](/statistics/estimator-standard-error)).
 - The null distribution is roughly symmetric where $z$ is quoted; maxima over many candidates are right-skewed and should be reported with the empirical $p$ and the null maximum, not only $z$.
 - $N$ is large enough for the tail in question: 60 draws cannot certify a $z$ of $+3$ on a skewed maximum.
 '''
@@ -44,7 +44,7 @@ title = "Use in an attack pipeline"
 body = '''
 1. Print every test reading as `observed; null mean +- sd; null max; z; empirical p`.
 2. Put the planted references through the identical code so the reader has a scale: alignment $z$ of $+9.6$ for a plain periodic substitution, $+4.0$ for a flat inner text at 153 letters.
-3. Hand a candidate to the next stage only if it clears the null *maximum* of its own search, not merely the mean.
+3. If the predeclared rule is strict rank one, hand a candidate onward only when it clears the null maximum of its own search. Other significance levels require the corresponding inclusive rank; the null mean alone is not a decision rule.
 4. For any statistic that was maximised over a family, prefer the [family-wise null](/statistics/family-wise-null); for one-shot decisions use the strict-rank [permutation test](/statistics/permutation-test).
 '''
 
@@ -66,10 +66,10 @@ function SHUFFLED_NULL(c[0..n-1], T, N, seed):
         null[j] = T(c_shuf)
     mean = MEAN(null[1..N])
     sd = SD(null[1..N])
-    z = (observed - mean) / sd
-    // 0.000 means "above every shuffle"
-    p_hat = #{ j : null[j] >= observed } / N
-    return observed, mean, sd, max(null), z, p_hat
+    z = (observed - mean) / sd if sd > 0 else NOT_DEFINED
+    exceed = #{ j : null[j] >= observed }
+    p_plus = (1 + exceed) / (N + 1)
+    return observed, mean, sd, max(null), z, p_plus
 
 // Report line: observed; null mean +- sd; null max; z; empirical p. A
 // candidate goes forward only if observed clears max(null), not merely on a
@@ -90,12 +90,13 @@ body = '''
 - **Wrong null for the claim.** A whole-text shuffle also destroys plaintext repeats, so in a change-point scan a repeated word can look like a key change. A within-coset null keeps the repeats where the hypothesis does not concern them.
 - **Per-trial versus family-wise.** A $+5.7$ against a single-trial null became chance after accounting for the 648–1,296 trials searched (see [family-wise null](/statistics/family-wise-null)).
 - **Invariant statistics.** If the statistic is invariant under the shuffle group in use (coset IC at a width that is a multiple of the period; IC under any shuffle), the null has zero variance and the "z" is 0/0.
+- **Degenerate null scores.** When the null standard deviation is zero, $z$ is undefined. The inclusive rank remains usable if the exchangeability assumptions hold.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Reference panel at 153 letters, 200 exact-alignment shuffles: plain periodic substitution, union IC $0.0713$ against null $0.0535 \pm 0.0025$, $z = +9.6$, $\hat p = 0.000$; fractionated inner, $z = +4.0$, $\hat p = 0.000$. Target readings of $+4.2/+3.3$ (153 letters, two alphabet orders) and $+2.9/+3.4$ (144 letters) with $\hat p = 0.000$–$0.005$ were thereby placed "at the flat-inner reference level", a statement about scale that the $z$ alone cannot make.
+Reference panel at 153 letters, 200 exact-alignment shuffles: plain periodic substitution, union IC $0.0713$ against null $0.0535 \pm 0.0025$, $z = +9.6$, with raw exceedance fraction recorded as `0.000`; fractionated inner, $z = +4.0$, again with raw fraction `0.000`. Under the plus-one rule both zero-exceedance cases have $p_+=1/201$. Other recorded readings of $+4.2/+3.3$ at 153 letters and $+2.9/+3.4$ at 144 letters had raw fractions `0.000`–`0.005`; they were placed at the flat-inner reference scale, not assigned a cipher interpretation from $z$ alone.
 '''
 
 [[blocks]]
@@ -104,7 +105,7 @@ title = "Worked example"
 body = '''
 An alignment statistic reads $0.0610$ on a text. On $200$ shuffles the same maximisation gives mean $0.0520$, standard deviation $0.0025$ and maximum $0.0585$. Then
 
-$$z = \frac{0.0610 - 0.0520}{0.0025} = +3.6, \qquad \hat p = 0/200 < 0.005.$$
+$$z = \frac{0.0610 - 0.0520}{0.0025} = +3.6, \qquad \hat p_+ = 1/201 \approx 0.00498.$$
 
 The observed value also exceeds the null maximum by $0.0025$, one null standard deviation; that margin, not the $z$, is what the next stage should quote. If instead the observed value were $0.0580$, $z$ would still be $+2.4$ but the empirical $p$ would be a few in 200 and the candidate would not clear the null maximum.
 '''

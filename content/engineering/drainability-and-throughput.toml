@@ -3,17 +3,17 @@ section = "engineering"
 title = "Drainability and throughput"
 subtitle = "Measure whether a complete search can finish within its time and memory budget"
 status = "VERIFIED"
-status_note = "Complete runs print full counters, such as 248,405 of 248,405 pairs in 307.5 s with complete=1. Runs that cannot finish report measured rates and estimated thread-days. Only a naturally finished search may claim an exact zero; any capped result is inconclusive within its scope."
+status_note = "Complete runs print full counters, such as 248,405 of 248,405 pairs in 307.5 s with complete=1. Runs that cannot finish report measured rates and estimated thread-days. An exact zero additionally requires a validated gap-free enumerator and sound pruning; caps make the result inconclusive within its stated scope."
 family = "Compute and throughput"
 tags = ["throughput", "exhaustive search", "budget", "memory"]
-related = ["throughput-fail", "compiled-hot-cores", "power-measurement", "exhaustive-enumeration", "rank-sharding", "bound-benchmarks-and-certificates", "g-throughput"]
-summary = "A complete-search negative is valid only if the search really finished. A search is drainable when every task completes naturally and all counters reach their totals. Throughput is the measured work rate used to predict whether that will happen within budget. Every final record reports both. A capped run is not negative. Memory estimates also reject designs that cannot fit before they are built."
-updated = "2026-09-04"
+related = ["throughput-fail", "compiled-hot-cores", "power-measurement", "exhaustive-enumeration", "rank-sharding", "bound-benchmarks-and-certificates", "reproducibility-receipts", "transitive-process-census", "g-throughput"]
+summary = "A complete-search negative requires a validated partition and pruning rules, no active cap, natural worker termination, and counters that cover the declared family. Throughput can project completion only for a specified task mix and sufficiently stable measured rate. Sampled memory monitoring is an empirical guard, not a hard peak bound."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
-A search **drains naturally** when it reports `complete=1`, `queued=0`, `active=0`, `tasks_complete=1`, `endpoint_overcap=0` and every `done/total` counter equal, so that the terminal `EXACT_ZERO` (no solution in the family) is a statement about the whole family. Any run stopped by a wall cap, a node budget or a resource ceiling reports `SCOPED_INCONCLUSIVE` with its exact processed prefix.
+A search **drains naturally** when it reports `complete=1`, `queued=0`, `active=0`, `tasks_complete=1`, `endpoint_overcap=0` and every `done/total` counter equal. Those tokens support `EXACT_ZERO` for the declared family only after the task partition, enumerator, pruning rules, and counters have been validated. Any run stopped by a wall cap, a node budget or a resource ceiling reports `SCOPED_INCONCLUSIVE` with its recorded processed subset.
 
 **Throughput** is measured per work unit in the live task order: pairs per second, nodes per pair, and the fraction of the frontier covered at the cap.
 '''
@@ -32,57 +32,57 @@ For $f = 8, n = 61, G = 4{,}096$: 2.0 GiB at $R = 4$, 49 GiB at $R = 98$ and 17 
 [[blocks]]
 kind = "assumptions"
 body = '''
-- Rates are measured in the live cell, not in an easier sibling. A three-shift cell at about 800 pairs/s said nothing about the two-extra-shift cell at 0.5 pairs/s.
-- Memory ceilings are enforced by the launcher (`ulimit`, an RSS guard between fixtures, a hard process stop) and a ceiling hit is a resource terminal, never a null win or a rejection.
+- Rates are measured in the live cell, not in an easier sibling. A three-shift cell at about 800 pairs/s did not determine the two-extra-shift cell's measured 0.5 pairs/s.
+- A projection assumes that the measured task mix and per-task cost remain representative of the unprocessed frontier. Report stratified rates or uncertainty when they do not.
+- State what a resource mechanism actually enforces. An operating-system limit, a sampled external RSS stop and a post-exit admission check are different mechanisms. A check between fixtures cannot bound a single fixture's peak. A ceiling hit is a resource terminal, never a null win or a rejection.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Bound storage before relying on a monitor"
+body = '''
+Keep three quantities separate: a static allocation bound, the external monitor's trigger, and the measured peak used for admission. A fixed-size packed table can give an exact payload bound. A guessed number of bytes per Python dictionary state cannot: keys, values, table over-allocation, live recursion frames, cached predecessors and allocator overhead also matter. Validate dimensions before allocating factorial lists, and refuse before exceeding an explicit capacity.
+
+Use a watchdog outside the searched process for wall time and sampled RSS. Trigger below the admission limit, record its sampling interval and measured overshoot, and test it on a small bounded helper before a combinatorial search. A poller can miss a rapid peak or be delayed; it is not an instantaneous kernel-enforced ceiling. Checks in a search callback also miss time spent in other phases or blocked native calls.
+
+An interrupted run remains incomplete even if every finished case passed. Preserve all attempts and their peak measurements. A smaller or packed successor needs its own reviewed source and resource contract; it does not turn earlier over-cap runs into valid controls.
 '''
 
 [[blocks]]
 kind = "attack"
 body = '''
-Throughput measurement decided three lanes. A shared-cycle full-spelling cell drained in 307.5 s and produced a genuine exhaustive negative for exactly that cell (one of 456,976 shift vectors, one relation). Its two-extra-shift sibling measured 740,000 nodes per pair against 80, a 6.9-times larger frontier and about 40 thread-days per relation, and was run only as a declared 24-hour scoped job. A seven-free-shift cell was identifiable ($\approx 2^{-291}$ spurious rate) but had weaker prunes still, and was declared computationally non-viable, not run and not a negative. The remaining option, an inhomogeneous-row core restoring the pruning strength at an estimated 2.4 days on 12 threads, was recorded as a decision for the release authority.
+Throughput measurement decided three lanes. A shared-cycle full-spelling cell drained in 307.5 s and supported an exhaustive negative for exactly that validated cell (one of 456,976 shift vectors, one relation). Its two-extra-shift sibling measured 740,000 nodes per pair against 80, a 6.9-times larger frontier and about 40 thread-days per relation, and was run only as a declared 24-hour scoped job. Under the recorded random-map model, a seven-free-shift cell had an estimated spurious-match probability of about $2^{-291}$; this was not an identifiability proof. Its weaker pruning made it computationally non-viable, so it was not run and yielded no negative. The estimated 2.4 days on 12 threads for an inhomogeneous-row core was a planning projection, not a completed measurement.
 '''
 
 [[blocks]]
 kind = "pseudocode"
 body = '''
 ```text
-// A frontier of tasks in the live order; declared caps: wall time, node
-// budget, memory ceiling.
 function RUN_WITH_CAP(frontier, wall_cap, node_budget, rss_ceiling, threads):
     done = 0; nodes = 0; start = now()
     for each task in frontier, in the live task order, over threads:
-        if now() - start > wall_cap or nodes > node_budget:
-            return SCOPED(done, frontier)
-        // never a null win or a rejection
-        if resident memory > rss_ceiling:
-            return RESOURCE_BLOCKED(done, frontier)
+        if now() - start > wall_cap or nodes >= node_budget:
+            return SCOPED_INCONCLUSIVE(done, |frontier|)
+        if external watchdog reports sampled RSS trigger:
+            return RESOURCE_BLOCKED(done, |frontier|)
         process task; done = done + 1; nodes = nodes + nodes of this task
     join all workers
     if complete == 1 and queued == 0 and active == 0 and tasks_complete == 1
        and endpoint_overcap == 0 and every done/total counter is equal:
-        print the DRAIN counters and the wall time
-        // a statement about exactly this cell or family
+        print DRAIN counters and wall time
         return EXACT_ZERO if solutions == 0 else solutions
-    return SCOPED(done, frontier)
+    return SCOPED_INCONCLUSIVE(done, |frontier|)
 
-function SCOPED(done, frontier):
-    // the exact processed prefix, resumable
-    return SCOPED_INCONCLUSIVE with pairs = done + "/" + |frontier|
-
-// measured in the live cell, not a sibling
 function THROUGHPUT(done, nodes, elapsed, frontier):
-    // pairs per second
+    require done > 0 and elapsed > 0
     rate = done / elapsed
     nodes_per_pair = nodes / done
-    // fraction of the frontier covered at the cap
     coverage = done / |frontier|
-    // decides whether the cell is drainable in budget
-    time_to_drain = |frontier| / rate
-    return rate, nodes_per_pair, coverage, time_to_drain
+    projected_total = |frontier| / rate
+    projected_remaining = (|frontier| - done) / rate
+    return rate, nodes_per_pair, coverage, projected_total, projected_remaining
 
-// memory estimate before a beam is built
 function CAPACITY_BYTES(f, n, G, R):
-    // over the declared gate: close the design, run nothing
     return B(f, n) * G * R * 248
 ```
 '''
@@ -90,7 +90,7 @@ function CAPACITY_BYTES(f, n, G, R):
 [[blocks]]
 kind = "complexity"
 body = '''
-Time to drain is frontier size over rate. The program's frontiers ranged from 55,497 to 1,825,380 pairs across random plants at 0.17 to 16.1 pairs/s on two threads (median 1.21), so drain times spanned minutes to weeks for the same code on different inputs.
+The estimate $|F|/\hat r$ treats the observed rate $\hat r$ as representative of the remaining frontier. That assumption can fail when task costs vary. In the recorded panel, frontiers ranged from 55,497 to 1,825,380 pairs and measured rates from 0.17 to 16.1 pairs/s on two threads (median 1.21), demonstrating that a rate from one input is not automatically transferable to another.
 '''
 
 [[blocks]]
@@ -104,7 +104,7 @@ body = '''
 [[blocks]]
 kind = "controls"
 body = '''
-Blind controls must drain and find exactly the planted truth with zero false-valid candidates before a live cell is released. The recorded controls drained 149,572/149,572 and 18,346/18,346 tasks. Segment KATs prove that partial drains compose exactly.
+Blind controls must drain and find exactly the planted truth with zero false-valid candidates before a live cell is released. The recorded controls drained 149,572/149,572 and 18,346/18,346 tasks. Segment KATs check the declared partition and reducer against an unsegmented run; their coverage is limited to the tested cases.
 '''
 
 [[blocks]]
@@ -153,3 +153,9 @@ ref = "logs/failed"
 path = "withmath/docs/project-notes/LOG_AUDIT.md"
 kind = "audit"
 note = "Runs stopped after 2,000 of 489,600 and 160,000 of 1,958,400 placements are exploratory only."
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_UNION735.md"
+kind = "design"
+note = "Documents the shared-host cap hold, distinction between packed allocation bounds, sampled tree-RSS stopping and post-exit admission, and the still-unrun lifecycle repair. No guarded search success is claimed."
+ref = "LOG734/735"

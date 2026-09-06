@@ -8,7 +8,7 @@ family = "Period and structure recovery"
 tags = ["period", "repeats", "polyalphabetic", "classical"]
 related = ["vigenere", "exact-period-alignment", "coincidence-lag-profile", "index-of-coincidence", "lcm-of-periods", "coincidence-lab", "g-period"]
 summary = "If the same plaintext fragment appears at positions separated by a multiple of the key period, a repeating cipher may produce the same ciphertext fragment twice. Kasiski examination collects repeated n-grams and measures the gaps between them. Common factors of those gaps suggest the period. The method needs enough text to create repeats and can mistake chance repeats for signal, so newer methods attach statistical scores."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -19,7 +19,7 @@ The examination lists every repeated $n$-gram (typically $n \ge 3$), the distanc
 
 $$\operatorname{votes}(p) = \#\{k : p \mid d_k\}.$$
 
-The true period and its divisors receive the most votes. The largest well-supported candidate is the period, and its multiples show the same support diluted.
+If the true key period $m$ divides a repeat distance, every divisor of $m$ also divides that distance; multiples of $m$ divide only some distances. Thus votes commonly contain divisors, the period, and harmonics. Choosing the minimal key period from them is a heuristic that also depends on whether the written key itself has a shorter repeating unit.
 '''
 
 [[blocks]]
@@ -28,7 +28,7 @@ title = "Assumptions and invariants"
 body = '''
 - The key is strictly periodic and the same substitution rule applies at every position. A keyed alphabet on either side (Quagmire) leaves the argument intact because identical plaintext under identical key elements still gives identical ciphertext.
 - The plaintext repeats fragments: natural language does, from common words and affixes. A flat or random inner text does not.
-- The expected number of chance repeats of an $n$-gram in a text of length $N$ over 26 letters is about $\binom{N}{2} / 26^{n}$; below a few hundred letters trigram repeats are mostly chance, and the votes are dominated by noise.
+- Under an independent uniform 26-letter null, there are $M=N-n+1$ overlapping $n$-gram windows and the rough non-overlap calculation gives $\binom{M}{2}/26^n$ matching pairs. Overlap and nonuniform or dependent text change this expectation, so repeat significance needs a matched null; there is no universal length below which repeats are mostly chance.
 '''
 
 [[blocks]]
@@ -37,7 +37,7 @@ title = "How to attack it"
 body = '''
 1. Extract all repeated $n$-grams for $n$ from 3 up to about 6, preferring longer repeats (they are far less likely to be chance).
 2. Tabulate the distances and the factor votes for periods $2 \dots p_{\max}$.
-3. Cross-check the leading candidate against the periodic index of coincidence and the coincidence lag profile. All three should agree.
+3. Cross-check leading candidates against periodic index of coincidence and the coincidence lag profile. Finite samples, divisors, and multiples can make their rankings differ, so calibrate the combined scan rather than requiring literal agreement.
 4. Continue with coset-wise shift recovery under the chosen period.
 '''
 
@@ -61,15 +61,13 @@ function KASISKI(c[0..N-1], p_max):
     for p in 2..p_max:
         // votes(p) = #{k : p | d_k}
         votes[p] = COUNT(d in distances such that p divides d)
-    // the true period and its divisors receive the most votes; multiples show
-    // the same support diluted
-    m = the largest well-supported candidate in votes
+    // candidates can include divisors, the period, and harmonics
+    candidates = the supported factors in votes
     // cross-check: the periodic index of coincidence and the coincidence lag
-    // profile must agree with m
-    agree = PERIODIC_IC(c, m) exceeds the neighbouring periods and
-            LAG_PROFILE(c) peaks at multiples of m
-    // then continue with coset-wise shift recovery under m
-    return (m, votes, agree)
+    // profile provide additional, noisy evidence for each candidate
+    checks = [(p, PERIODIC_IC(c, p), LAG_PROFILE_SUPPORT(c, p))
+            for p in candidates]
+    return (candidates, votes, checks)
 ```
 '''
 
@@ -83,8 +81,8 @@ Collecting repeats with a hash map is $O(N \cdot n_{\max})$. The vote table is $
 kind = "failure_modes"
 body = '''
 - **Chance repeats.** On a 504-letter text the research program observed five repeated trigrams against about 7.2 expected for random text, and no repeated tetragram: the method had nothing to say, and the exact alignment objective was used instead.
-- **Short texts.** Below roughly 200 letters the vote table is dominated by divisors of a handful of distances. A period read from two distances is a guess.
-- **Non-periodic keys.** Autokey and running-key constructions produce no systematic repeats. The absence of Kasiski structure is itself a diagnostic.
+- **Sparse repeats.** With only a handful of repeat distances, their shared factors can be unstable. A period read from two distances is a hypothesis, regardless of a fixed length cutoff.
+- **Non-periodic keys.** Autokey and running-key constructions do not create the same periodic repeat mechanism. Absence of Kasiski support is compatible with them, but also with a short sample, uncommon plaintext repeats, or a weak periodic signal; it does not identify a non-periodic key.
 '''
 
 [[blocks]]
@@ -97,7 +95,7 @@ The lab implementation is checked on a planted control: a passage of English enc
 kind = "example"
 title = "Worked example"
 body = '''
-Encrypt `THE CAT SAW THE DOG AND THE CAT RAN` with the key `KEY` ($m = 3$). The word THE occurs at positions 0, 9 and 21 of the letter-only plaintext. Under period 3, positions 0, 9 and 21 all use key element 0, so the three ciphertext trigrams are identical: distances 9 and 12, common factor 3. The [coincidence lab](/labs/coincidence-lab) reproduces the table and the votes for any text you paste.
+Encrypt `THE CAT SAW THE DOG AND THE CAT RAN` with the key `KEY` ($m = 3$). The word THE occurs at positions 0, 9 and 18 of the letter-only plaintext. All three starts have phase 0 modulo 3, so the three ciphertext trigrams are identical: consecutive distances 9 and 9, both divisible by 3. Those two distances alone also vote for 9, illustrating why factor votes suggest candidates rather than prove the minimal period. The [coincidence lab](/labs/coincidence-lab) reproduces the table and the votes for any text you paste.
 '''
 
 [[provenance]]

@@ -7,8 +7,8 @@ status_note = "The test uses single-letter chi-squared/n against English and cho
 family = "Coincidence and frequency statistics"
 tags = ["chi-squared", "goodness of fit", "monogram", "transposition gate", "change point"]
 related = ["index-of-coincidence", "frequency-analysis", "quadgram-log-likelihood", "bayesian-evidence-model-selection", "family-wise-null", "change-point-zone-detection", "columnar-transposition", "coset-shift-recovery"]
-summary = "Chi-squared compares observed and expected letter counts. For each letter, it squares the difference and divides by the expected count, then adds the results. Comparing with English measures how close the text is to English single-letter frequencies; comparing with uniform counts measures flatness. Dividing by text length makes scores comparable: about 0.10 for English, 0.2–0.45 for a partly removed substitution, and at least 0.6 for a flat polyalphabetic text. A low score on unreadable text often points to a transposition."
-updated = "2026-09-04"
+summary = "Chi-squared compares observed and expected letter counts. For each letter, it squares the difference and divides by the expected count, then adds the results. Comparing with English measures compatibility with English single-letter frequencies; comparing with uniform counts measures departure from a flat histogram. Dividing by text length gives a useful effect-size scale in this project: about 0.10 for English, 0.2–0.45 for a partly removed substitution, and at least 0.6 for tested flat polyalphabetic texts. A low score on unreadable text can suggest a transposition, but it does not prove one."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -17,9 +17,9 @@ With observed counts $O_x$ and a reference distribution $p_x$ over the 26 letter
 
 $$\chi^2 = \sum_{x} \frac{(O_x - n p_x)^2}{n p_x}, \qquad \frac{\chi^2}{n} = \sum_x \frac{(f_x - p_x)^2}{p_x},$$
 
-where $f_x = O_x/n$. Under the hypothesis that the letters are independent draws from $p$, $\chi^2$ is approximately chi-squared distributed with $25$ degrees of freedom when every $n p_x$ is large enough. The normalised form $\chi^2/n$ does not depend on $n$ under the alternative, which is why it serves as a gate at any length.
+where $f_x = O_x/n$. Under the hypothesis that the letters are independent draws from $p$, $\chi^2$ is approximately chi-squared distributed with $25$ degrees of freedom when every $n p_x$ is large enough. Under a fixed alternative distribution $q$, $\chi^2/n$ converges to $\sum_x(q_x-p_x)^2/p_x$. Its finite-sample expectation and spread still depend on $n$, so length-matched calibration remains necessary.
 
-**Reference levels (English $p$).** An English letter multiset reads $\chi^2/n \approx 0.10$. A periodic substitution flattens the histogram to $0.6$–$1.0$ and more, the raw values on the seven solved reference ciphertexts being $2.4$–$3.3$. An imperfect peel (one or two cosets wrong) reads $0.2$–$0.45$.
+**Recorded reference levels (English $p$).** Held-out English multisets in this project read near $\chi^2/n\approx0.10$. The tested periodic substitutions gave $0.6$–$1.0$ or more, with raw values of $2.4$–$3.3$ on seven solved references. Tested imperfect peels with one or two wrong cosets gave $0.2$–$0.45$. These are empirical calibration ranges for those generators and lengths, not universal cipher constants.
 '''
 
 [[blocks]]
@@ -40,7 +40,7 @@ For a per-coset peel of a period-$p$ layer, each coset's shift is the $\operator
 [[blocks]]
 kind = "variants"
 body = '''
-- **Flatness test.** With $p_x = 1/26$: a 504-letter text with IC $0.0388$ gave a uniform-histogram $p$-value of $0.26$, i.e. no monoalphabetic structure at all.
+- **Flatness test.** With $p_x = 1/26$: a 504-letter text with IC $0.0388$ gave a uniform-histogram $p$-value of $0.26$. This fails to reject the uniform iid histogram model; it does not establish that no monoalphabetic structure exists.
 - **Two-sample change point.** The $\chi^2$ distance between the prefix and suffix histograms at split $t$, maximised over $t$, against a null that also maximises over $t$; on the 144-letter text the peak reached $z = +3.7$ at $t \approx 33$–$52$.
 - **Per-coset shift recovery.** The same objective as the correlation method of [coset shift recovery](/cryptanalysis/coset-shift-recovery), but with rare letters weighted up by $1/p_x$.
 '''
@@ -57,8 +57,8 @@ body = '''
 kind = "attack"
 title = "How to attack it"
 body = '''
-1. **Transposition decision.** If $\chi^2_{\min}/n$ is small while the text does not read, the letter multiset is intact: solve for order (width scans, columnar keys) before touching substitution.
-2. **Order-free peel.** When a transposition may sit *below* a periodic layer, quadgrams of the peeled text are meaningless (see [quadgram log-likelihood](/statistics/quadgram-log-likelihood)). The per-coset $\chi^2$ peel is the correct objective, and the peel is accepted only if its reassembled histogram passes the gate.
+1. **Transposition decision.** If $\chi^2_{\min}/n$ is small while the text does not read, its histogram is compatible with the calibrated language reference. In a pipeline where substitution has already been ruled out, that is a reason to try order solvers next, not proof that the multiset is plaintext or that a transposition is present.
+2. **Order-free peel.** When a transposition may sit *below* a periodic layer, quadgrams of the peeled text may be uninformative (see [quadgram log-likelihood](/statistics/quadgram-log-likelihood)). Per-coset $\chi^2$ is an order-free objective for this stage. Its thresholds still need controls matched to the proposed layer order and text length.
 3. **Composite periods.** Scan pairs $(p,q)$ with the penalised criterion; fire only if the winning peel's monograms pass the gate.
 4. **Change points.** Use the two-sample form to find where the letter set changes, then treat the segments separately.
 '''
@@ -113,7 +113,7 @@ kind = "failure_modes"
 body = '''
 - **Rare-letter dominance.** For a flat histogram the term for Z alone contributes about $(1/26 - 0.00074)^2 / 0.00074 \approx 1.9$ to $\chi^2/n$. A single unlucky rare letter in a 60-letter text moves the statistic by a large fraction of the gate.
 - **Selection inside the gate.** The minimum over 52 rotations is itself a selection. The thresholds were calibrated on the minimised statistic, so a per-rotation critical value must not be substituted.
-- **Order blindness.** Like the IC, $\chi^2$ cannot see a transposition. It only certifies that the multiset is English.
+- **Order blindness.** Like the IC, $\chi^2$ cannot see a transposition. A low value shows histogram compatibility with the chosen English reference; it does not certify that the text is English.
 - **Maximised change points.** The best split $t$ must be judged against a max-over-$t$ null. A fixed-$t$ critical value overstates significance.
 '''
 
@@ -127,17 +127,17 @@ On the seven solved reference ciphertexts pushed through the cascade solver, the
 kind = "example"
 title = "Worked example"
 body = '''
-A 26-letter text with counts E 5, T 4, A 3, O 3, eleven other letters once each, and eleven letters absent. Against the uniform reference every expected count is $n p_x = 1$:
+A 26-letter text has counts E 5, T 4, A 3, O 3, eleven other letters once each, and eleven letters absent. Against the uniform reference every expected count is $n p_x = 1$:
 
 $$\chi^2 = (5-1)^2 + (4-1)^2 + 2\,(3-1)^2 + 11\,(1-1)^2 + 11\,(0-1)^2 = 16 + 9 + 8 + 0 + 11 = 44,$$
 
-with $25$ degrees of freedom, $p \approx 0.01$: the histogram is not flat. Normalised, $\chi^2/n = 44/26 = 1.69$. Against English the same text would score far lower, because E and T are exactly the letters expected to be frequent.
+The arithmetic gives $\chi^2/n = 44/26 = 1.69$, a large departure on this scale. It is tempting to compare 44 with a chi-squared distribution on 25 degrees of freedom, but that asymptotic reference is unreliable here because every expected count is only one. An exact multinomial calculation or a Monte Carlo sample from the uniform model is needed for a calibrated $p$-value. Against English the same text may score lower because E and T are expected to be frequent, but that comparison must be calculated rather than inferred from their names alone.
 '''
 
 [[blocks]]
 kind = "notes"
 body = '''
-The chi-squared misfit and the [Bayesian evidence](/statistics/bayesian-evidence-model-selection) answer different questions: $\chi^2$ asks "is this histogram English-shaped", the evidence asks "how much better than uniform does a rotated English model explain these counts, averaged over the rotation". The evidence is the better statistic for short cosets because it never divides by a tiny expected count.
+The chi-squared misfit and the [Bayesian evidence](/statistics/bayesian-evidence-model-selection) answer different questions: $\chi^2$ asks "is this histogram compatible with the English reference", while the evidence asks "how much better than uniform does a rotated English model explain these counts, averaged over the rotation". The marginal likelihood is often numerically more stable for short cosets because it does not divide by tiny expected counts, but it remains model-dependent and needs matched calibration.
 '''
 
 [[provenance]]

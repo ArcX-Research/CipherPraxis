@@ -8,7 +8,7 @@ family = "Modular arithmetic"
 tags = ["affine", "AGL", "route", "recurrence", "gauge"]
 related = ["units-mod-26", "modular-arithmetic-z26", "linear-recurrences-lcg", "conjugacy-and-gauge", "group-actions-on-alphabets", "affine-cipher", "route-transposition", "alberti-progressive", "selection-overfit-diagnostic", "affine-lab", "g-affine-orbit"]
 summary = "An affine map multiplies by a unit and then adds a constant. The same rule appears in affine ciphers, LCG-style running keys, text routes of the form ui + d, and equivalent views of a keyed alphabet. There are 312 such maps modulo 26. Before comparing recovered settings, a solver must account for maps that describe the same result, called a gauge."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -23,9 +23,9 @@ kind = "equations"
 title = "Four appearances of the same map"
 body = '''
 - **Affine cipher**: $c = u p + b$ on letters; see [Affine cipher](/ciphers/affine-cipher).
-- **Affine recurrence keys**: $k_i = a\,k_{i-L} + b$ (LCG, progressive and drifting keys). Then $c_i - a\,c_{i-L} = (p_i - a\,p_{i-L}) + b$: the filtered ciphertext is the $a$-scaled self-difference of the plaintext plus a constant, whose distribution is the $a$-scaled self-convolution of the language.
+- **Affine recurrence keys**: $k_i = a\,k_{i-L} + b$ (LCG, progressive and drifting keys). Then $c_i-a\,c_{i-L}=(p_i-a\,p_{i-L})+b$ exactly. Under the detector's independent-letter reference model with marginal frequencies $E$, that self-difference has the $a$-scaled convolution $R_a(d)=\sum_{x-ay=d}E(x)E(y)$. Because real language can retain dependence at lag $L$, the statistic is interpreted against its matched shuffled null rather than treating $R_a$ as the true joint law.
 - **Affine position routes**: $X_i = C_{(u i + d) \bmod n}$ with $\gcd(u, n) = 1$. When every admitted period $p$ divides $n$ the cut is a gauge: $P'_i = P_{i+s}$, $k'_b = k_{b+s}$, $d' = d + u s$ give the same ciphertext.
-- **Affine gauge on cycles**: $z' = \alpha z + \beta$ leaves a keyed additive cipher equivalent, with keys $k' = \alpha k + (1 - a_t)\beta$ (Vigenère-type, row multiplier $a_t$) or $k' = \alpha k + 2\beta$ (Beaufort-type).
+- **Affine gauge on cycles**: for a row written $z(C_t)=a_tz(P_t)+k_t$, where $a_t$ is its declared unit multiplier, $z' = \alpha z + \beta$ gives the equivalent key $k_t'=\alpha k_t+(1-a_t)\beta$. A reflection written $z(C_t)=-z(P_t)+k_t$ is the special case $a_t=-1$, giving $k_t'=\alpha k_t+2\beta$.
 
 A second-order relative is the polynomial key schedule $a_i = \beta i + \alpha\, i(i-1)/2$, whose second difference is the constant $\alpha$; over both alphabet orders and all $\alpha, \beta$ it has 1,352 raw descriptions falling into 1,351 equality classes.
 '''

@@ -8,21 +8,23 @@ family = "Enumeration strategies"
 tags = ["brute force", "census", "completeness", "scoped closure", "compiled core"]
 related = ["dictionary-attack", "rank-sharding", "all-different-enumeration", "known-answer-tests", "bound-benchmarks-and-certificates", "exact-period-alignment", "multiple-rounds-analysis", "alberti-progressive", "compiled-hot-cores", "seed-determinism", "g-certificate", "g-shard"]
 summary = "Exhaustive enumeration decrypts and scores every key in a stated finite set. It trades speed for certainty. A planted key inside the set must be found, and a miss rules out exactly that set. Before a run, count the space and check that count separately. Finish every member and do not stop after a promising hit. If a complete outer loop uses a heuristic finishing step, report that limit clearly."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
 ```
 space <- explicit product of declared choices; print |space| and a structural identity it must satisfy
-control <- plant a key from the space on real text; require rank 1 before any target
+control <- plant a key from the space; require it in the complete best-score tie set
+           and require uniqueness only when predeclared
 for every element e of space (no early exit):
     p <- decrypt(c, e); s <- score(p); keep the top list and tie counts
 census: number of elements visited == |space|; provenance rows == identity; digests recorded
-verdict: ENGLISH only if the unique top reads and passes nulls; else NON-ENGLISH / STRUCTURAL ZERO / INCOMPLETE
+verdict: retain all best ties, then apply the predeclared empirical language and null rule;
+         enumeration alone supplies no language label
 ```
 
-Aliases: two descriptions that produce identical decrypts (a zero-width pulse equals a constant slope for every quarter) are counted as one observable class. The corpus records both the raw description count and the class count.
+A proved alias is an identity between transforms for every admissible input, such as a zero-width pulse equalling a constant slope for every quarter. Such descriptions form one formal model class. Two settings that merely decrypt one ciphertext identically form a sample collision, not a proved alias. Record raw-description, formal-class, and any data-dependent sample counts separately.
 '''
 
 [[blocks]]
@@ -68,7 +70,8 @@ function EXHAUST(c, space, score, control):
     // first
     (top, _) = EXHAUST_CORE(ENCRYPT(control.plaintext, control.key), space,
             score)
-    require top[0].key == control.key
+    require control.key is in the complete best-score tie set
+    require uniqueness only when it was a predeclared control property
     return EXHAUST_CORE(c, space, score)
 
 function EXHAUST_CORE(c, space, score):
@@ -80,7 +83,8 @@ function EXHAUST_CORE(c, space, score):
         insert (s, e) into top
     // census, else INCOMPLETE
     require visited == |space|
-    // verdict: ENGLISH only if the unique top reads and passes nulls
+    // Any language label is an empirical, predeclared decision layered on the
+    // exhaustive census; it is not a consequence of enumeration alone.
     return (top, ties)
 
 // Gauge fixing: fix one shift, s[0] = 0, and enumerate the remaining m - 1
@@ -89,9 +93,13 @@ function SHIFT_VECTORS(m):
     for each (s[1], ..., s[m-1]) in {0..25}^(m-1):
         yield (0, s[1], ..., s[m-1])
 
-// Aliases: descriptions with identical decrypts form one observable class.
-function CLASS_COUNT(c, space):
-    // report raw and class counts
+// Formal aliases require a proved, input-independent canonical transform.
+function FORMAL_CLASS_COUNT(space):
+    return number of distinct PROVED_CANONICAL_TRANSFORM(e) over e in space
+
+// Equality on one ciphertext is reported separately and cannot merge formal
+// model cells without an algebraic proof.
+function SAMPLE_COLLISION_COUNT(c, space):
     return number of distinct DECRYPT(c, e) over e in space
 ```
 '''

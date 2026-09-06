@@ -7,40 +7,32 @@ status_note = "The code matches published checks for Vigenère ATTACKATDAWN/LEMO
 family = "Substitution labs"
 tags = ["periodic", "polyalphabetic", "coset", "histogram"]
 related = ["vigenere", "beaufort", "variant-beaufort", "porta", "coset-shift-recovery", "coincidence-lab"]
-summary = "A repeating additive cipher splits ciphertext into one coset per key letter. Each coset is a Caesar shift of the plaintext letters in those positions. This lab encrypts your text, shows the letter counts and index of coincidence for every coset, and uses χ² fitting to recover the key when each coset contains enough language."
-updated = "2026-09-04"
+summary = "Vigenère, Beaufort, and Variant Beaufort split text into one coset per repeated key position and apply related modular substitutions; Porta instead selects one of 13 reciprocal half-alphabet tables. The lab shows each coset's counts and index of coincidence. Its χ² Vigenère key suggestion is a model-dependent heuristic, especially unreliable for short or nonrepresentative cosets."
+updated = "2026-09-07"
 lab = "vigenere"
 
 [[blocks]]
 kind = "pseudocode"
 body = '''
 ```text
-// Letters are indices 0..25 (A = 0); non-letters are dropped; the key k has
-// length m.
+// Letters use indices 0..25 (A = 0).
 function ENCIPHER_LETTER(p, k, rule):
     if rule == Vigenère:         return (p + k) mod 26
     if rule == Beaufort:         return (k - p) mod 26
     if rule == VariantBeaufort:  return (p - k) mod 26
-    // key pair AB, CD, ... selects a table
     if rule == Porta:
         r = k div 2
         if p < 13: return 13 + (p + r) mod 13
         else:      return (p - 13 - r) mod 13
-
 function DECIPHER_LETTER(c, k, rule):
     if rule == Vigenère:         return (c - k) mod 26
-    // reciprocal: same as enciphering
     if rule == Beaufort:         return (k - c) mod 26
     if rule == VariantBeaufort:  return (c + k) mod 26
-    // reciprocal
     if rule == Porta:            return ENCIPHER_LETTER(c, k, Porta)
-
 function ENCRYPT(p[0..n-1], k[0..m-1], rule):
     for i in 0..n-1: c[i] = ENCIPHER_LETTER(p[i], k[i mod m], rule)
     return c
-
-// Coset panel and blind key recovery (Vigenère rule, enough letters in every
-// coset).
+// Vigenère-only heuristic key suggestion under the ENGLISH model.
 function COSET_PANEL(c[0..n-1], m):
     for b in 0..m-1:
         coset = [c[i] for i in 0..n-1 if i mod m == b]
@@ -57,6 +49,6 @@ title = "What to try"
 body = '''
 - Shorten the plaintext until blind recovery gets a key letter wrong. This is the "short coset" failure mode. The letter counts for that coset show why it failed.
 - Switch to **Beaufort** and encrypt the ciphertext again with the same key. Beaufort is reciprocal, so this returns the plaintext.
-- Use a key with repeated letters, such as `PAPAYA`. Cosets 0, 2, and 4 use the same shift, so their letter counts line up.
+- Use a key with repeated letters, such as `PAPAYA`. Cosets 0, 2, and 4 use the same shift, but their finite-sample counts need not be equal because they contain different plaintext positions.
 - Switch to **Porta**. Each key letter selects one of 13 reciprocal half-alphabet tables, so the letter counts are no longer simple rotations of English.
 '''

@@ -3,12 +3,12 @@ section = "exact"
 title = "Constraint satisfaction with forward checking"
 subtitle = "Assign one value at a time, remove impossible choices early, and backtrack when none remain"
 status = "VERIFIED"
-status_note = "The method assigns word rows under fixed column substitutions, solving a planted control in 244 nodes. It also solves crib-plus-keyword equations over alphabet positions, recovering planted answers at 100% from 13- to 20-letter cribs with scores -4.12 to -4.27. A third form tiles finite word lists. Every tool prints its control before target results."
+status_note = "The method assigns word rows under fixed column substitutions, solving a planted control in 244 nodes. It also solves crib-plus-keyword equations over alphabet positions, recovering planted answers at 100% from 13- to 20-letter cribs with scores -4.12 to -4.27. A third form tiles finite word lists. Each cited tool prints its control before target results."
 family = "Constraint programming"
 tags = ["CSP", "forward checking", "backtracking", "MRV", "node budget", "all-different"]
 related = ["word-prefix-csp", "all-different-enumeration", "cp-sat-and-smt-solvers", "exhaustive-enumeration", "all-different-constraints", "maximum-weight-bipartite-assignment", "finite-field-linear-algebra", "modular-inverse-and-crt", "crib-driven-alphabet-recovery", "crib-dragging", "quagmire-iii", "dictionary-attack", "planted-controls", "g-forward-checking"]
 summary = "A constraint satisfaction problem gives each variable one value from a fixed set while obeying every rule. For a multipartite search, precompute which values from different parts can coexist, choose the part with the fewest remaining values, and update only its neighbours. Rollback modular state and Hall-style all-different checks add global pruning. Safe memoization keys the entire future state and records failure only after that subtree is fully searched."
-updated = "2026-09-06"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -20,7 +20,8 @@ solve(assignment, domains):
     if all assigned: record solution; return
     pick unassigned X with the smallest |D_X|               # minimum remaining values
     for v in D_X:
-        nodes += 1; if nodes > budget: return                 # honest cap: "none within budget"
+        nodes += 1
+        if nodes > budget: raise INCOMPLETE_SEARCH            # propagate globally
         assignment[X] <- v
         for each unassigned Y sharing a constraint with X:    # forward checking
             D'_Y <- { u in D_Y : C_XY(v, u) holds }
@@ -78,8 +79,8 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - The constraints are exact consequences of the cipher model. A solution is a proof of consistency, not of correctness, and is finished (completion of free letters) and read.
-- A node budget converts an open search into an honest "none within budget". Only an exhausted search supports a negative.
-- Spurious solutions scale with the bank: a 704-word bank has an expected spurious count near $10^{-28}$ for nine rows, while an unconstrained dictionary bank finds spurious assignments within a few nodes and is uninformative by design.
+- A node budget converts an open search into `INCOMPLETE`; it does not establish "none" even within the budget. Only an exhausted declared search supports a negative.
+- Spurious solutions scale with the bank. Under the cited random-independent-mapping approximation, one 704-word, nine-row control has expected count near $10^{-28}$. That calculation is a null-model estimate, not a theorem for natural-language dictionaries; the broader dictionary fixtures empirically produced early spurious assignments.
 - Every precomputed pair bit means the exact pair predicate passed. Pair compatibility is necessary but may not be sufficient when modular or all-different state spans three or more parts.
 - A memo key contains everything that can change future feasibility: assigned parts, remaining-domain bit sets, canonical modular state, all-different state, and any objective or enumeration mode. Search history is omitted only after proving it has no future effect.
 - The memo table belongs to one frozen problem instance. Clear it between instances or include a digest of the fixed domains, compatibility tables, and equations in the key.

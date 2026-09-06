@@ -3,19 +3,19 @@ section = "algebra"
 title = "Group actions on alphabets and keys"
 subtitle = "Group equivalent cipher settings and keep one standard representative"
 status = "VERIFIED"
-status_note = "Exact enumeration reduces 15,600 ordered shift triples to 1,300 affine classes and then 100 unit classes. Every cycle solution set split into complete 312-member affine orbits. Checks covered all 1,728 unit cells in the dihedral controls and 300 matched-null selections."
+status_note = "Exact enumeration reduces 15,600 ordered shift triples to 1,300 unit-orbit classes, or to 100 classes under units plus the 13 even translations in the stated Beaufort-type action. In the cited dihedral controls, every solution set split into complete 312-member affine orbits. Checks covered all 1,728 unit cells and 300 matched-null selections."
 family = "Group theory"
 tags = ["group action", "orbit", "stabiliser", "canonical form", "symmetry"]
 related = ["conjugacy-and-gauge", "units-mod-26", "affine-maps-mod-26", "dihedral-group", "permutation-cycles", "keyword-mixed-alphabet", "quagmire-iii", "corpus-bank-screen", "g-affine-orbit", "g-gauge-freedom", "g-unit-group"]
 summary = "Several groups can change a keyed cipher's settings. One relabels letters, another changes cycle coordinates, another rescales shifts, and a dihedral group rereads positions. If such a change leaves the ciphertext unchanged, all settings in that orbit are equivalent. A solver should search one representative from each orbit, use a score that does not depend on the gauge, and compare answers by orbit. Counting orbits also shows how large the search is."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
 A group $G$ **acts** on a set $X$ when each $g \in G$ is a bijection of $X$ compatible with composition. The **orbit** of $x$ is $Gx = \{gx : g \in G\}$, the **stabiliser** $G_x = \{g : gx = x\}$, and $|Gx| \cdot |G_x| = |G|$ (orbit-stabiliser). The action is **free** when every stabiliser is trivial, so every orbit has $|G|$ elements. A **canonical representative** is a distinguished member of each orbit, typically the lexicographic minimum.
 
-Actions relevant to keyed ciphers: $S_{26}$ on letters (substitution); $\mathrm{AGL}(1, \mathbb{Z}_{26})$ on the coordinates of a cycle; $U(\mathbb{Z}_{26})$ on shift vectors; $D_n$ on block positions; and relabellings $h$ of a latent stream, which act on position maps by $g_t \mapsto h^{-1} g_t$.
+Actions relevant to keyed ciphers: $S_{26}$ on letters (substitution); $\mathrm{AGL}(1, \mathbb{Z}_{26})$ on the coordinates of a cycle; $U(\mathbb{Z}_{26})$ on shift vectors; and $D_n$ on block positions. For the convention $C_t[g_t(j)]$ and the latent reindexing $L'(j)=L(h(j))$, position maps transform by right composition, $g_t\mapsto g_t\circ h$.
 '''
 
 [[blocks]]
@@ -23,8 +23,8 @@ kind = "equations"
 body = '''
 - **Affine action on cycle solutions.** $z' = \alpha z + \beta$, $\alpha \in U(\mathbb{Z}_{26})$, $\beta \in \mathbb{Z}_{26}$, with keys $k' = \alpha k + (1 - a_t)\beta$. The action on bijective cycles is free, orbits have $12 \cdot 26 = 312$ members.
 - **Units on shift triples.** Ordered triples of distinct shifts number $26 \cdot 25 \cdot 24 = 15{,}600$. Under $k \mapsto uk$ (Vigenère-type: $z \to uz$ gives $k \to uk$) the action is free, so there are $15{,}600 / 12 = 1{,}300$ canonical cells (1,157 with a unit shift, 143 with all shifts even). Under units combined with the 13 even translations (Beaufort-type: $k \to uk + 2\beta$) the group has order $12 \cdot 13 = 156$ and there are $15{,}600 / 156 = 100$ cells (78 mixed parity, 11 all even, 11 all odd).
-- **Larger equivalence in degenerate regimes.** When the class maps do not generate the full rotation group, the equivalence group of the cycle has order 4,056 rather than 312.
-- **Dihedral relabelling.** Requiring $g_0 = \mathrm{id}$ forces $h = \mathrm{id}$, so the $96^2 = 9{,}216$ ordered pairs are a set of orbit representatives with no residual quotient.
+- **Larger equivalence in one degenerate regime.** In the cited all-even or all-odd distinct-shift regime, the generated translation subgroup has order 13 and its normalizer has order 4,056 rather than 312. Other proper subgroups can have different normalizers and stabilizers; failure to generate the full rotation group alone does not determine the number 4,056.
+- **Dihedral relabelling.** Choosing $h=g_0^{-1}$ first sets $g_0=\mathrm{id}$. Any later reindexing that preserves $g_0=\mathrm{id}$ has $h=\mathrm{id}$, so the $96^2=9{,}216$ ordered pairs are representatives with no residual quotient.
 '''
 
 [[blocks]]
@@ -74,8 +74,8 @@ function ORBIT_REPRESENTATIVES(X, G):
 // a cycle:        ACT((alpha, beta), z) = alpha*z + beta, keys k' = alpha*k +
 // (1 - a_t)*beta units on shift vectors:   ACT(u, k) = u*k (Vigenère-type)
 // units and even shifts:    ACT((u, beta), k) = u*k + 2*beta (Beaufort-type)
-// latent relabelling h:     ACT(h, g_t) = h^{-1} g_t               (position
-// maps)
+// With C_t[g_t(j)] and L'(j)=L(h(j)), latent reindexing acts by right
+// composition: ACT(h, g_t) = g_t o h. Choose h=g_0^{-1} to set g_0=id.
 ```
 '''
 
@@ -138,7 +138,7 @@ note = "Blocked draft: orbit_partition grouped by canonical key without proving 
 [[provenance]]
 path = "withmath/docs/pk9/PK9_POSDIHEDRAL_D48_INDEPENDENT_REVIEW_CLAUDE.md"
 kind = "audit"
-note = "Relabelling L -> L o h sends g_t -> h^-1 g_t; g_0 = id lossless; 9,216 pairs not an overcount."
+note = "Reviews lossless normalization to g_0 = id and the 9,216 relative pairs. With the observation convention used here, the equivalent action is written by right composition."
 
 [[provenance]]
 path = "withmath/docs/pk8-pk9/PK89_SHARED_CYCLE_BANK380_AUDIT.md"

@@ -7,22 +7,22 @@ status_note = "The lcm, gcd, and coprime-residue rules are exact. Compound-key c
 family = "Number theory"
 tags = ["period", "lcm", "gcd", "decimation", "compound key", "coprime"]
 related = ["residue-class-graphs", "linear-recurrences-lcg", "matrix-invertibility-mod-26", "modular-inverse-and-crt", "compound-periodic-key", "additive-stream-wheels", "vigenere", "exact-period-alignment", "kasiski-examination", "coincidence-lag-profile", "g-residue-class", "g-coset"]
-summary = "Add two repeating keys and the result repeats after the least common multiple of their periods. Read every n-th value from a periodic stream and its new period is the old period divided by a gcd. If two periods are coprime, one full cycle visits every pair of remainders exactly once. A period-7 key and a period-9 key therefore cover all pairs in 63 positions. These rules set search sizes and define graphs for exact solvers."
-updated = "2026-09-04"
+summary = "Add two repeating keys and the result repeats after the least common multiple of their admitted periods. Read every n-th value from a period-p stream and the subsequence has period p/gcd(p,n). Either sequence may have a smaller minimal period because of accidental symmetry. If two periods are coprime, one full residue cycle visits every pair of remainders exactly once."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
-A sequence has period $m$ if $k_{i+m} = k_i$ for all $i$. If $k$ has period $m$ and $k'$ has period $q$, then $k + k'$ has period dividing $\operatorname{lcm}(m, q) = mq/\gcd(m, q)$. **Decimation**: the subsequence $k_{nj}$ of a period-$p$ sequence has period $p/\gcd(p, n)$. **Coprime residues**: for $\gcd(m, q) = 1$ the map $i \mapsto (i \bmod m, i \bmod q)$ is a bijection from $\{0, \dots, mq - 1\}$ onto $\mathbb{Z}_m \times \mathbb{Z}_q$ (the CRT on positions).
+A sequence has period $m$ if $k_{i+m}=k_i$ for all $i$; this need not be its least positive period. If $k$ has period $m$ and $k'$ has period $q$, then $k+k'$ has period $\operatorname{lcm}(m,q)=mq/\gcd(m,q)$, so its minimal period divides that value. **Decimation**: the subsequence $k_{nj}$ has period $p/\gcd(p,n)$ when $p$ is a period of $k$; again, its minimal period may be a divisor. **Coprime residues**: for $\gcd(m,q)=1$ the map $i\mapsto(i\bmod m,i\bmod q)$ is a bijection from $\{0,\dots,mq-1\}$ onto $\mathbb{Z}_m\times\mathbb{Z}_q$.
 '''
 
 [[blocks]]
 kind = "equations"
 body = '''
-- **Compound periodic key.** An outer period-7 layer over an inner period-$q$ layer (one or two alphabets) is one key of period $\operatorname{lcm}(7, q)$; for $q = 10$ that is 70. A short text may show both periods as separate coincidence peaks.
-- **Rank-two modulation.** $u[i \bmod 7] + v[(i + \phi) \bmod 9]$ has period 63 and 16 parameters for 63 values; on positions $i \equiv j \pmod 9$ the shared part cancels between two texts.
+- **Compound periodic key.** An outer period-7 layer over an inner period-$q$ layer (one or two alphabets) has admitted period $\operatorname{lcm}(7,q)$; for $q=10$ that is 70. Its minimal period can be smaller for special key values.
+- **Rank-two modulation.** $u[i\bmod7]+v[(i+\phi)\bmod9]$ has period dividing 63 and uses 16 stored entries. The gauge $u_r\mapsto u_r+t$, $v_s\mapsto v_s-t$ leaves the stream unchanged, so at most 15 additive degrees of freedom are identifiable. In a two-text model that shares the same $v$ table and phase, an aligned difference at equal modulo-9 residues cancels that term; without those assumptions it does not.
 - **Coprime bijection.** For period-7 and period-9 keys aligned over 63 positions, $i \mapsto (i \bmod 7, (\phi + \tau i) \bmod 9)$ is a bijection for every phase $\phi$ and both orientations $\tau = \pm 1$. The residue graph is the complete bipartite $K_{7,9}$ with 63 edges. For periods 26 and 7 the graph on $26 + 7 = 33$ vertices is connected for every $n \ge 63$ and has cycle rank $n - 32$.
-- **Decimation in block ciphers.** Row streams of an $n \times n$ Hill matrix over an inner additive layer of period $p$ have period $p / \gcd(p, n)$.
+- **Decimation in block ciphers.** Row streams of an $n\times n$ Hill matrix over an inner additive layer with admitted period $p$ have period $p/\gcd(p,n)$, possibly nonminimal.
 - **Divisors of text lengths.** Widths that tile a text exactly: 153: 3, 9, 17; 144: 2, 3, 4, 6, 8, 9, 12, 16, 18, 24; 504: 2, 3, 4, 6, 7, 8, 9, 12, 14, 18, 21, 24, 28 (widths 2 to 29).
 '''
 
@@ -82,7 +82,7 @@ function RESIDUE_PAIR(i, m, q):
 [[blocks]]
 kind = "complexity"
 body = '''
-Parameters versus values: a compound $7 \times q$ key has $7 + q$ shifts but $\operatorname{lcm}(7, q)$ distinct key values. A period-63 modulation has 16 parameters. The compound search covers $q = 2..13$ in four alphabet pairings. A heuristic information count for the shared-modulation coupling of two texts gave about 25 bits of evidence over 2,448 cross pairs against 61 bits of free shifts. It was later marked heuristic, not a theorem, with the supported statement being the empirical 0/6 recovery of the potentials.
+Parameters versus values: a compound $7\times q$ key has $7+q$ stored shifts but one additive gauge when only their sum is observed; it produces $\operatorname{lcm}(7,q)$ indexed key values, not necessarily that many distinct residues. The period-63 modulation likewise has 16 stored entries and 15 identifiable additive degrees of freedom. The compound search covers $q=2..13$ in four alphabet pairings. A heuristic information count for the shared-modulation coupling of two texts gave about 25 bits of evidence over 2,448 cross pairs against 61 bits of free shifts. It was later marked heuristic, not a theorem, with the supported statement being the empirical 0/6 recovery of the potentials.
 '''
 
 [[blocks]]

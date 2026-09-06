@@ -7,8 +7,8 @@ status_note = "Recorded checks include self-tests, static fixed answers, parser 
 family = "Tooling"
 tags = ["kat", "testing", "self-test", "mutation"]
 related = ["compiled-hot-cores", "control-first-policy", "tautological-gate-rule", "gauge-defect-invalidation", "known-answer-tests", "g-kat"]
-summary = "A known-answer test requires a fixed result from a fixed input. Several layers use them. The core checks its algebra and fast score updates. The Python wrapper compares results with published examples and rejects damaged transcripts. File-write tests interrupt every failure point and require a safe closed state. Control filters must keep planted truths. No mode runs until all these checks pass."
-updated = "2026-09-04"
+summary = "A known-answer test compares a fixed input with a predetermined result. Separate layers test algebra, incremental scores, parsing, durable writes, implementation agreement, segmentation, and control filters. Under the recorded protocol, a mode is admitted only after every applicable layer passes; passing these tests does not establish correctness outside their coverage."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -18,7 +18,7 @@ KAT layers observed in the corpus, each with a required exit status and a printe
 - **Self-KAT (core).** Incremental scoring deltas equal full rescores for all 325 letter-pair swaps; forward followed by inverse of the state schedule reproduces the input over every cell; alias identities (a zero-width variant equals the constant-slope schedule) hold for all parameters.
 - **Static KAT (wrapper).** With a synthetic language and no corpus, the real pipeline runs on two fixtures and must reach its control terminal. The derivation primitives reproduce published seed vectors. The isolation scan rejects planted loader fragments.
 - **Parser KAT.** A clean transcript parses; hundreds of structural and semantic mutations (duplicate key, NaN, non-canonical JSON, bool-for-int, reordered records, wrong count, forged score, dropped tie) are each rejected. A no-op guard checks that every mutation actually changed bytes.
-- **Transaction KAT.** Injected failures at every stage of the durable write (before marker, after marker, after placeholder, after write, after fsync, at readback, at publication) must leave the canonical path absent or poisoned and the marker durable; hard link, wrong mode, symlink and parent replacement must be rejected.
+- **Transaction KAT.** Injected failures at every stage of the durable write (before marker, after marker, after placeholder, after write, after fsync, at readback, at publication) must match a predeclared closed-state table. Before marker creation the canonical path remains absent; after a durable marker exists it remains durable, and any canonical placeholder is absent or explicitly poisoned. Hard links, wrong modes, symlinks, and parent replacement must be rejected.
 - **Differential KAT.** An instrumented core must match the un-instrumented core on every deterministic counter for a deliberately broken plant.
 - **Segment KAT.** The union of segment runs must equal the full run in nodes and outcome.
 - **Control-filter KAT.** Every predicate applied to candidates must accept the planted truth of every control before any search runs, and must still reject a genuine non-member.
@@ -32,7 +32,7 @@ For a state $k$, a move $m$ and an incremental scorer $\Delta$,
 
 $$\operatorname{full}(m(k)) - \operatorname{full}(k) = \Delta(k, m)$$
 
-must hold exactly (integers) for every move in a deterministic sweep. The base core checks it for all $\binom{26}{2} = 325$ swaps on a random stream and random table.
+must hold exactly for integer scores and every move in a deterministic sweep. The base core checks it for all $\binom{26}{2} = 325$ swaps on a stream and table generated from a recorded seed.
 '''
 
 [[blocks]]
@@ -52,48 +52,32 @@ Two defects in the corpus were of the kind a control-filter KAT catches. A rotat
 kind = "pseudocode"
 body = '''
 ```text
-// Run before any mode, including production; every layer must exit 0 and
-// print a count.
 procedure KAT_HARNESS():
-    // Self-KAT (core): delta consistency, schedule roundtrips, alias
-    // identities
-    for each of the 325 letter-pair swaps m of a state k, on a random stream
-            and a random table:
-        // exact integers
+    for each of 325 swaps m of state k from a recorded fixture seed:
         require full(m(k)) - full(k) == Delta(k, m)
     require inverse(forward(state)) == state over every cell
     require the alias identities for all parameters
     print "SELF_KAT PASS checks=" + count
-    // Static KAT (wrapper): the real pipeline on synthetic fixtures; no
-    // corpus, no hidden or live text
+
     require pipeline(fixtures) reaches its control terminal and the
             derivation primitives reproduce the published vectors
-    // Parser KAT: the clean transcript accepted, every mutation rejected,
-    // every mutation changed bytes
     require parse(clean) accepts; rejected = 0
-    // duplicate key, NaN, non-canonical JSON, bool-for-int, reorder, count,
-    // score, tie
     for each mutation in panel:
-        // no-op guard
         bytes' = mutate(clean); require bytes' != clean
         if parse(bytes') rejects: rejected = rejected + 1
     require rejected == |panel|
     print "PARSER_KAT mutations_rejected=" + rejected + "/" + |panel|
-    // Transaction KAT: fail once at each stage of the durable write
-    for each failpoint (before marker, after marker, after placeholder, after
-            write, after fsync, readback, publication):
+
+    for each declared durable-write failpoint:
         inject the failure
-        require the canonical path absent or poisoned and the marker durable
+        require filesystem state == declared closed state for that failpoint
     require hard link, wrong mode, symlink and parent replacement are each
             rejected
-    // Differential, segment and control-filter KATs
     require the instrumented core == the un-instrumented core on every
             deterministic counter of a broken plant
     require the union of segment runs == the full run in nodes and outcome
     for each control: require filter(planted true maps) == True
-    // a KAT that cannot fail is not a KAT
     require filter(a genuine non-member) == False
-    // only now may a mode run
     exit 0
 ```
 '''
@@ -101,7 +85,7 @@ procedure KAT_HARNESS():
 [[blocks]]
 kind = "complexity"
 body = '''
-Static KATs in the program run in 7 to 51 s; parser KATs with 420 mutations in about 46 s; transaction KATs in about 2 s. A differential KAT is two single-thread runs of a small fixture. They are cheap relative to any solve and are run at the start of every mode, including production.
+Recorded static KATs ran in 7 to 51 s; one 420-mutation parser panel took about 46 s, and one transaction panel about 2 s. These are empirical timings for the recorded environment, not portable bounds. A differential KAT requires two runs of its fixture. The protocol runs applicable tests before each mode, including production.
 '''
 
 [[blocks]]
@@ -116,6 +100,10 @@ body = '''
 kind = "controls"
 body = '''
 Refusal panels complement KATs: every production mode without its token, every tamper on a copy, and every forbidden flag must exit 2 without creating a file, and the counts are recorded (13 of 13 in one audit).
+
+Make each intended refusal branch reachable. If an earlier key-count cap always fires first, observing an empty result does not test the later output-count cap. Construct a fixture with a proved number of ties between the two limits, require the exact later refusal reason and confirm that no witness expansion occurred. Keep the earlier cap test separately. A hand-proved fixture is a test design, not evidence that the implementation has run it.
+
+Likewise, mutate every claimed transcript field class. Replaying emitted witnesses does not independently validate proposal ranks, cutoff-tie counts or operation ceilings. If the auditor checks only that counters are nonnegative or that a trace has the expected length, describe those fields as producer-reported until stronger checks exist.
 '''
 
 [[blocks]]
@@ -175,3 +163,9 @@ ref = "LOG385"
 path = "withmath/scripts/wm_pk9_bip39_checkpoint470_kat.py"
 kind = "script"
 note = "Differential KAT of an instrumented core against its predecessor."
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "audit"
+note = "LOG741 source review identified a result-tie branch shadowed by an earlier key-tie refusal, and weak rank/counter validation. A source-free construction proves 2,048 optimal conditional keys, below key cap 4,096 and above result cap 1; it was proposed, not executed."
+ref = "LOG741"

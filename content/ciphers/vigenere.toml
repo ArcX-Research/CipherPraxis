@@ -3,12 +3,12 @@ section = "ciphers"
 title = "Vigenère cipher"
 subtitle = "Add a repeating key to the plaintext modulo 26"
 status = "VERIFIED"
-status_note = "The cipher, exact period alignment, and planted-control generators are implemented and pass matched checks. With at least about 150 letters of English, the tests routinely recover the period and shifts."
+status_note = "The transform, exact fixed-period alignment objective, and planted-control generators are implemented and pass recorded checks. Recovery was demonstrated for the stated control lengths, periods, language source, and selector; no fixed message length guarantees recovery across periods or plaintext models."
 family = "Polyalphabetic substitution"
 tags = ["periodic", "additive", "polyalphabetic", "tabula recta"]
 related = ["beaufort", "variant-beaufort", "quagmire-iii", "gronsfeld", "permutation-keystream", "index-of-coincidence", "exact-period-alignment", "vigenere-lab"]
 summary = "Vigenère adds a repeating key to the plaintext one letter at a time modulo 26. A key of length m splits the ciphertext into m cosets. Each coset is a Caesar shift of the plaintext letters at those positions. Attacks use this repeated structure to find the period and shifts. Vigenère is also the baseline for keyed-alphabet and layered versions."
-updated = "2026-09-05"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -25,14 +25,14 @@ Decryption subtracts the same key. Positions with the same residue $i \bmod m$ f
 kind = "equations"
 title = "Coset structure"
 body = '''
-Write $C_b = \{c_i : i \equiv b \pmod m\}$ for coset $b$. If $E$ is the plaintext letter distribution, the expected histogram of $C_b$ is $E$ rotated by $k_b$:
+Write $C_b=\{c_i:i\equiv b\pmod m\}$ for coset $b$. If plaintext positions in every coset share a stationary marginal distribution $E$, the expected histogram of $C_b$ is $E$ rotated by $k_b$:
 
 $$\Pr[c = x \mid i \in C_b] = E(x - k_b).$$
 
 Two consequences drive the attacks:
 
-- **Period signature.** Coincidences $c_i = c_{i+t}$ occur at the plaintext rate ($\approx 0.066$ for English) when $t \equiv 0 \pmod m$ and near the uniform rate ($1/26 \approx 0.038$) otherwise.
-- **Shift recovery.** For a known $E$, each $k_b$ is read off by maximising the correlation $\sum_x E(x - k)\,\hat{h}_b(x)$ between the rotated reference and the observed coset histogram $\hat h_b$.
+- **Period signature.** If $t\equiv0\pmod m$, the key cancels and $c_i=c_{i+t}$ exactly when $p_i=p_{i+t}$; the rate is the plaintext lag-$t$ coincidence rate, not a universal constant. If $t\not\equiv0\pmod m$, equality requires a particular plaintext difference set by $k_i-k_{i+t}$. Under an iid marginal $E$ its probability is the corresponding cyclic autocorrelation of $E$, which is not generally $1/26$. The uniform value arises only under an appropriate null or after averaging over independent uniform key differences.
+- **Shift recovery.** For a known $E$, a correlation estimate of $k_b$ maximises $\sum_x E(x-k)\hat h_b(x)$ between the rotated reference and observed coset histogram. This is a noisy estimator, not exact recovery. Under an independent multinomial model, the maximum-likelihood estimate instead maximises $\sum_x F_b(x)\log E(x-k)$; correlation and likelihood need not rank shifts identically.
 '''
 
 [[blocks]]
@@ -42,7 +42,7 @@ body = '''
 - **Variant Beaufort**: $c_i = p_i - k_{i \bmod m}$, i.e. Vigenère decryption used as encryption.
 - **Keyed alphabets**: replacing the straight alphabet on the plaintext side, ciphertext side, or both gives the Quagmire I–IV family. The coset structure is unchanged, only the reference histogram becomes an unknown permutation of $E$.
 - **Autokey and running key**: the key stream is the plaintext itself or a long text, which removes the period.
-- **Compound keys**: two periodic keys of lengths $m$ and $q$ compose to one key of period $\operatorname{lcm}(m,q)$. A short text may show both periods as separate coincidence peaks.
+- **Compound keys**: two periodic keys of lengths $m$ and $q$ compose to one key whose minimal period divides $\operatorname{lcm}(m,q)$. Finite samples may show evidence at one or both component periods.
 '''
 
 [[blocks]]
@@ -50,8 +50,8 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - The key is strictly periodic and the same alphabet is used at every position.
-- The plaintext has a non-flat letter distribution (natural language). A flat inner text (random letters or a well-mixed fractionation) makes every coset uniform and the shift unrecoverable.
-- Invariant: the **multiset** of letters in each coset does not depend on any transposition applied *before* the periodic layer, only on which positions land in which coset. This is what lets a mixture analysis test "substitution over an unknown transposition" without knowing the transposition.
+- The plaintext cosets have enough nonuniform marginal contrast at the observed length. Under a uniform source model the expected coset histogram is uniform, but finite cosets fluctuate; random letters and mixing constructions do not make every realised coset exactly uniform.
+- Exact invariant: a transposition preserves the **global** multiset of letters. An arbitrary transposition before the periodic layer changes which source letters land in each output coset and therefore can change every per-coset multiset. Per-coset preservation requires a residue-preserving map; common-mixture claims require an explicit balance or random-mixing assumption.
 '''
 
 [[blocks]]
@@ -59,7 +59,7 @@ kind = "attack"
 title = "How to attack it"
 body = '''
 1. **Find the period.** Kasiski repeats, the periodic index of coincidence, or an exact alignment objective over all shift vectors (see [Exact period alignment](/cryptanalysis/exact-period-alignment)).
-2. **Recover shifts per coset.** Correlate each coset histogram with the reference distribution; with $n/m \ge 20$ letters per coset this is reliable for English.
+2. **Recover shifts per coset.** Correlate each coset histogram with the reference distribution. Report likelihood gaps or posterior uncertainty and calibrate at the actual coset sizes; reliability depends on period, language, and the full set of tried models.
 3. **Polish.** Score the full decrypt with a language model (quadgram log-likelihood) and adjust individual shifts.
 
 With a crib (known plaintext), a crib letter at position $i$ determines $k_{i \bmod m}$ directly. A contiguous crib of length $\ge m$ determines the whole key.
@@ -87,6 +87,7 @@ function RECOVER_KEY(c[0..n-1], m, E):
         coset = [c[i] for i in 0..n-1 if i mod m == b]
         h = HISTOGRAM(coset)                       // 26 counts
         k[b] = argmax over s in 0..25 of CORRELATION(ROTATE(E, s), h)
+        // an estimate; likelihood scoring may rank the shifts differently
     return k
 ```
 '''
@@ -94,21 +95,21 @@ function RECOVER_KEY(c[0..n-1], m, E):
 [[blocks]]
 kind = "complexity"
 body = '''
-Period test: $O(n \cdot t_{\max})$. Shift recovery: $O(26\, m)$ correlations. Exhaustive shift-vector enumeration for the exact alignment objective is $O(26^{m-1})$ after fixing one shift by gauge; $26^6 \approx 3.1\times10^8$ for $m = 7$ is feasible in a compiled core in seconds.
+A direct lag scan costs $O(n\,t_{\max})$. Building coset histograms costs $O(n)$; testing 26 shifts against 26 bins costs $O(26^2m)$ (fixed-alphabet constants are often suppressed). Exhaustive relative-shift alignment examines $26^{m-1}$ vectors after fixing one gauge shift, with polynomial factors in $m$ depending on the objective implementation. The recorded compiled implementation handles $m=7$; that benchmark is not an asymptotic guarantee.
 '''
 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Flat cosets.** If the material under the periodic layer is not natural language (fractionated, transposed then substituted with a second layer, or random), the histogram correlation has nothing to align. The period may still be visible through coincidence counts while shifts are unrecoverable.
-- **Short cosets.** Below roughly 12 letters per coset the argmax shift is often wrong; treat single-coset readings as votes, not facts.
-- **Selection freedom.** Freely fitting $m$ shifts on a short text buys about $0.15$ nats per letter of spurious fit. A model comparison that profiles the shifts will prefer wrong models unless the shifts are marginalised or the gain is calibrated on shuffled nulls.
+- **Flat cosets.** A random, deliberately balanced, or sufficiently mixing inner layer can leave little histogram contrast. A transposition alone does not flatten the global histogram, although it can redistribute letters unevenly among cosets. Period evidence and shift recovery can therefore fail separately.
+- **Short cosets.** Small samples can leave several shifts nearly tied. Treat single-coset readings as uncertain estimates and report their matched-control error rather than a universal cutoff.
+- **Selection freedom.** In the cited $n=153$ model-comparison setup, profiling the free shifts added about $0.15$ nats per letter relative to the recorded baseline. That is an empirical value for that period, source, score, and selector—not a constant for arbitrary $m$ or $n$. Profiling can favour more flexible models, so compare it with a full-selection null or integrate shifts under a declared prior.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Every solver run prints planted controls first: real English of the same length, random keys of the same period, the same pipeline. A control that does not decrypt to readable English (quadgram rate near $-4.3$ per letter, 100% key match) means the test is broken and the target rows below it carry no information.
+Each recorded solver run places matched controls before target output: plaintext from the declared language source, the same length and period range, hidden random keys, and the same selector. The gate must state its endpoint separately (period, key modulo aliases, and/or exact plaintext). A failed matched control invalidates the corresponding target inference; a passing control demonstrates recovery only for the tested distribution and budget. Language-score thresholds are model-specific and are not fixed mathematical constants.
 '''
 
 [[blocks]]

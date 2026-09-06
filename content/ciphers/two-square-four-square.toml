@@ -3,12 +3,12 @@ section = "ciphers"
 title = "Two-square and four-square"
 subtitle = "Encrypt letter pairs across two or four Polybius squares"
 status = "INCONCLUSIVE"
-status_note = "Arbitrary two-square recovered a 504-letter control at 100% with 1,000,000 iterations x 8 restarts, then was ruled out on the 504-letter target at that budget. Four-square reached 503/504 and 97.8% on its controls, while seriated forms reached 8.1%. Those tests remain blocked by controls. At 144–153 letters, annealing cannot identify any of these square families."
+status_note = "Arbitrary two-square recovered a 504-letter control at 100% with 1,000,000 iterations x 8 restarts, then produced no candidate on the 504-letter target at that budget. Four-square reached 503/504 and 97.8% on its controls, while seriated forms reached 8.1%; those tests remain blocked. At 144–153 letters, the tested annealer did not identify these square families."
 family = "Polygraphic substitution"
 tags = ["polygraphic", "digraphic", "polybius square", "two squares", "four squares"]
 related = ["playfair", "bifid", "polybius-square", "simulated-annealing", "selection-overfit-diagnostic", "known-answer-tests", "g-polygraphic"]
 summary = "Two-square and four-square extend Playfair by finding the two letters of a pair in different squares and exchanging their coordinates. Four-square uses two plain plaintext squares and two keyed ciphertext squares. Two-square uses two keyed squares placed side by side or one above the other. Annealing can recover an arbitrary two-square at 504 letters, but not four-square or any of these forms near 150 letters."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -17,7 +17,7 @@ body = '''
 
 $$(a, b) \mapsto \big(S_2[r_1, c_2],\ S_1[r_2, c_1]\big);$$
 
-the vertical variant returns $\big(S_1[r_1, c_2],\ S_2[r_2, c_1]\big)$. A same-row digraph is left unchanged in the horizontal form (a known transparency). **Four-square.** With plaintext squares in the straight order at upper-left and lower-right, and keyed squares $U$ (upper-right) and $L$ (lower-left), $a = (r_1, c_1)$ in the upper-left square and $b = (r_2, c_2)$ in the lower-right,
+the vertical variant returns $\big(S_1[r_1,c_2],\ S_2[r_2,c_1]\big)$. Under this horizontal convention, a same-row digraph encrypts to the same two letters in reversed order; some implementations instead declare a transparent same-row exception, which is a different transform and must be tested separately. **Four-square.** With plaintext squares in the straight order at upper-left and lower-right, and keyed squares $U$ (upper-right) and $L$ (lower-left), $a=(r_1,c_1)$ in the upper-left square and $b=(r_2,c_2)$ in the lower-right,
 
 $$(a, b) \mapsto \big(U[r_1, c_2],\ L[r_2, c_1]\big).$$
 '''
@@ -26,7 +26,7 @@ $$(a, b) \mapsto \big(U[r_1, c_2],\ L[r_2, c_1]\big).$$
 kind = "equations"
 title = "Configurations and gauges"
 body = '''
-Beyond the squares, a setter chooses horizontal or vertical layout, which square receives the first letter, a digraph offset (0 or 1) and possibly a reversed reading. The program's full selector enumerated 16 such configurations for two-square. Row and column rotations that preserve every rule are gauges of each square. Four-square with straight plaintext squares has only two unknown squares, but the coordinate exchange couples them tightly enough that a single wrong cell produced a fluent one-letter error on a control.
+Beyond the squares, a setter chooses horizontal or vertical layout, which square receives the first letter, a digraph offset (0 or 1), and possibly a reversed reading. The program's full selector enumerated 16 such configurations for two-square. Arbitrary row or column rotations of one square generally change the transform and are not gauges. A simultaneous transpose can relate horizontal and vertical descriptions only together with the corresponding square/output convention; implementations should verify such aliases by comparing their complete input-output maps. Four-square with straight plaintext squares has only two unknown squares, but the coordinate exchange couples them tightly enough that a single wrong cell produced a fluent one-letter error on a control.
 '''
 
 [[blocks]]
@@ -127,7 +127,7 @@ S1: EXAMP / LBCDF / GHIKN / OQRST / UVWYZ
 S2: KEYWO / RDABC / FGHIL / MNPQS / TUVXZ
 ```
 
-Plaintext `HELPME`: `HE` has H at (2,1) in $S_1$ and E at (0,1) in $S_2$, giving $(S_2[2,1], S_1[0,1]) = (G, X)$; `LP` gives $(S_2[1,2], S_1[3,0]) = (A, O)$; `ME` has both letters in row 0, so it is transparent: `EM`. Ciphertext `GXAOEM`.
+Plaintext `HELPME`: `HE` has H at (2,1) in $S_1$ and E at (0,1) in $S_2$, giving $(S_2[2,1],S_1[0,1])=(G,X)$; `LP` gives $(S_2[1,2],S_1[3,0])=(A,O)$; `ME` has both letters in row 0, so the formula reverses it to `EM`. Ciphertext `GXAOEM`.
 '''
 
 [[blocks]]

@@ -7,8 +7,8 @@ status_note = "The implementation covers inner models with one, two, or three ro
 family = "Bayesian evidence and model selection"
 tags = ["evidence", "marginal likelihood", "model comparison", "Bayes factor", "shift marginalisation"]
 related = ["quadgram-log-likelihood", "index-of-coincidence", "family-wise-null", "selection-overfit-diagnostic", "mixture-inference-under-transposition", "order-free-width-statistic", "expectation-maximisation", "exact-period-alignment", "g-evidence", "g-marginal-likelihood", "g-nats-per-letter"]
-summary = "A repeating key with seven positions gives seven shifts to choose. Reporting only the best likelihood rewards that freedom. On a 153-letter text, choosing the best shifts adds about 0.15 nats per letter even for wrong models. Bayesian evidence instead averages over every shift under a uniform prior. It also averages across members of a model family, which automatically penalizes larger families. One-, two-, and three-rotation models can then be compared fairly and checked against shuffled texts."
-updated = "2026-09-04"
+summary = "A repeating key with seven positions gives seven shifts to choose. Reporting only the best likelihood rewards that freedom. On a 153-letter text, choosing the best shifts adds about 0.15 nats per letter even for wrong models. Bayesian evidence instead averages over every shift under a declared prior. It also averages across each model bank, so extra poorly fitting members dilute that bank's evidence under the stated uniform prior. One-, two-, and three-rotation banks can then be compared under those priors and checked against shuffled texts."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -21,7 +21,7 @@ The **gain** is the evidence per letter over the uniform model, $g(f) = \big(\lo
 
 $$\log Z_{\text{fam}} = \log \frac{1}{M}\sum_{m=1}^{M} Z(f_m),$$
 
-so that a bank with more members is charged $\ln M$ nats for the choice it is allowed to make.
+When one member dominates the sum, averaging rather than maximising reduces its contribution by about $\ln M$ nats. This is not a universal penalty based only on bank size: duplicating members, changing the weights, or changing the bank changes the prior and therefore the evidence.
 '''
 
 [[blocks]]
@@ -42,7 +42,7 @@ For M2 the **delta-marginal** evidence groups members by the inner spacing $\del
 [[blocks]]
 kind = "assumptions"
 body = '''
-- Letters inside a coset are exchangeable draws from one rotated distribution. The model is therefore valid under *any* transposition below the periodic layer, since a transposition only decides which positions land in which coset.
+- Letters inside a coset are modelled as exchangeable draws from one rotated distribution. Under that iid-monogram model, a transposition below the periodic layer changes order but not the likelihood. Real prose is not iid, so this invariance belongs to this order-free model rather than to every language model.
 - The outer layer is additive in a known alphabet order (or in each of a small set of orders tried separately).
 - A uniform prior over shifts and over bank members. The evidence differences quoted are sensitive to the bank definition, so families are compared against nulls computed with the identical banks.
 '''
@@ -125,7 +125,7 @@ On the plain periodic-substitution control the family evidences per letter were 
 
 $$153 \times (0.2849 - 0.2050) = 12.2 \text{ nats}, \qquad B_{12} = e^{12.2} \approx 2 \times 10^{5}$$
 
-in favour of "rotated English", even though M2 contains M1 as a limiting case: the bank charge does the work. The size of that charge is easy to see: if one member of a bank of $M$ fits far better than the rest, $\log Z_{\text{fam}} \approx \log Z_{\text{best}} - \ln M$; for M2 at $w = 1/2$, $\ln 325 = 5.78$ nats, i.e. $0.038$ nats per letter at $n = 153$, and for M3 $\ln 2{,}600 = 7.86$ nats, $0.051$ per letter.
+in favour of the declared rotated-English bank over the declared equal-weight two-rotation bank. The reported M2 bank fixes $w=1/2$ and distinct rotations, so it does **not** contain M1 as a limiting case. The averaging effect is easy to see: if one member of a bank of $M$ fits far better than the rest, $\log Z_{\text{fam}} \approx \log Z_{\text{best}} - \ln M$; for M2, $\ln 325 = 5.78$ nats, i.e. $0.038$ nats per letter at $n = 153$, and for M3 $\ln 2{,}600 = 7.86$ nats, $0.051$ per letter. Those comparisons are conditional on the uniform bank priors.
 
 A shift-marginalised coset evidence in miniature: a coset of three identical letters under the English model has $Z_b = \frac{1}{26}\sum_s E(x - s)^3 = \frac{1}{26}\sum_y p_y^3 = 0.00535/26 = 2.1 \times 10^{-4}$, whatever the letter is, against the uniform $(1/26)^3 = 5.7 \times 10^{-5}$: a gain of $\ln(3.6)/3 \approx 0.43$ nats per letter. The evidence depends only on the shape of the coset histogram (three equal letters), never on which letter, which is exactly the invariance that makes it order-free and free of the rotation gauge.
 '''

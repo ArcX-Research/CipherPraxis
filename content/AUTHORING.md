@@ -15,13 +15,17 @@ corpus. Read `../ARCHITECTURE.md` §1 and §4 first, then the exemplar `ciphers/
 2. Never reproduce a live ciphertext, plaintext, hint, story vocabulary, or crib list from the
    corpus. Examples are generic and reproducible: state your own plaintext and key, derive the
    ciphertext by hand or by the definition, and show the check.
-3. Every number quoted in public text (pass rates, z-scores, power, throughput, counts) must come
+3. Every empirical number quoted in public text (pass rates, z-scores, power, throughput, measured counts) must come
    from a file named in `[[provenance]]` with `path` (repository-relative) and, when it is a log
    or ledger entry, `ref` (for example `LOG403` or `logs/152_crosscycle_full.log`). Numbers not
-   backed by a receipt are removed, not rounded.
+   backed by a receipt are removed, not rounded. Mathematical constants, identities, and
+   synthetic example values instead need a derivation or an appropriate mathematical source.
 4. Status vocabulary: `VERIFIED`, `PROMISING`, `CLOSED`, `POWER-LIMITED`, `INCONCLUSIVE`,
    `UNTESTED`. The `status_note` says in one or two sentences what the status rests on, in
-   general terms ("planted controls 10/10 at 153 letters; blind unknown alphabet fails 0/24").
+   general terms. Identify whether the support is a derivation, an exact finite check, or an
+   experiment. For experiments, give the tested conditions and relevant limits; control success
+   is not a guarantee of recovery on another input. A status applies to the stated claim, not
+   every method or application mentioned on the page.
 5. `related` lists ids of other entries. Use the canonical ids below for cross-domain links; the
    build warns on ids that do not exist, so prefer canonical ids and the ids you create.
 6. One TOML file per entry at `content/<section>/<id>.toml`; the file name equals the id.

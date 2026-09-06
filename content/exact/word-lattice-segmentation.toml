@@ -6,9 +6,9 @@ status = "VERIFIED"
 status_note = "The max-score path is an exact dynamic program for a fixed acyclic lattice. It has been checked against scalar enumeration in the project and is supported by established word-lattice and Viterbi literature."
 family = "Exact language decoding"
 tags = ["word lattice", "segmentation", "Viterbi", "unspaced text"]
-related = ["semi-markov-word-model", "viterbi-decoding", "exact-dynamic-programming", "word-prefix-csp", "combined-character-word-models", "lexical-reranking-and-oov-bias"]
+related = ["semi-markov-word-model", "viterbi-decoding", "exact-dynamic-programming", "word-prefix-csp", "combined-character-word-models", "lexical-reranking-and-oov-bias", "running-key-relation-test", "parameter-versus-plaintext-recovery"]
 summary = "Represent every admitted word or fallback fragment as an edge from its start to end position in an unspaced string. The best segmentation is the maximum-weight path through this directed acyclic graph. Viterbi dynamic programming finds that path exactly relative to the frozen lexicon and penalties."
-updated = "2026-09-05"
+updated = "2026-09-06"
 
 [[blocks]]
 kind = "definition"
@@ -27,6 +27,44 @@ Let $V(j)$ be the best score of any path ending at position $j$. Then
 $$V(0)=0,\qquad V(j)=\max_{(i,j,w)\in E}\{V(i)+\ell(i,j,w)\}.$$
 
 Store the maximising predecessor to reconstruct the words. Retain every predecessor tied under the declared numerical rule when all optimum segmentations matter. If edge scores depend on the previous word, extend the state to $(j,w_{\rm prev})$; the same recurrence remains exact on the enlarged graph.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Two coupled word tries need not form a Cartesian square"
+body = '''
+Suppose two hidden strings obey a known letterwise bijection at each position, as in an additive cipher with fixed alphabet coordinates. At a fixed text layer, a pair of current trie nodes contains all future-relevant history for unigram token scores. Include explicit boundary-mode flags when the first token may be a fragment. This state is not sufficient for an unknown shared alphabet or word-history scores.
+
+If the token depths are $a\ge b$, the longer first-string prefix determines its final $b$ letters. The ciphertext equation then determines the entire second-string prefix. There is at most one matching trie node. If $N_d$ counts ordinary prefix nodes at depth $d$, the number of possible ordinary state pairs is therefore at most
+
+$$\sum_{d=1}^{L}(2d-1)N_d,$$
+
+not the square of the trie size. Equal depths are counted once. This is an upper bound, not an observed reachable-state count or a timing result.
+
+A first token still open after $i$ letters has depth exactly $i$. If $F_i$ is its allowed prefix set, including the declared leading fragments, then for $i\le L$ a corresponding bound is
+
+$$\sum_{d<i}(2d-1)N_d+(2i-1)|F_i|.$$
+
+After $L$ letters that first token cannot remain open. The ordinary-state bound assumes that prefixes productive only in leading-fragment mode are removed from ordinary traversal. Leaving such dead prefixes wastes states; permitting their fragment closure internally changes the language. Trie allocation, reachable states and retained traceback edges still need separate caps; even this reduced bound can be millions of states.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Aggregate word resets without dropping ties"
+body = '''
+Let $D(u,v)$ be a two-trie layer's best scores, with boundary flags included. Before consuming another letter, aggregate legal closing choices as
+
+$$H_P(v)=\max_u[D(u,v)+c_P(u)],\qquad H_K(u)=\max_v[D(u,v)+c_K(v)],$$
+
+and
+
+$$H_B=\max_{u,v}[D(u,v)+c_P(u)+c_K(v)].$$
+
+The double reset uses the same original state pair, not independently maximized marginals. A reset closes that side's first-token mode; the other side's flag is preserved. Nonterminal nodes have no closing choice.
+
+When both destination token depths exceed one, their trie parents are the sole structural predecessor. If only the first depth is one, use $H_P$ at the second parent; use $H_K$ symmetrically. If both depths are one, use $H_B$. Handle the initial root consumption separately and check the ciphertext letter equation in every case. This is an exact maximum calculation, not a beam.
+
+Shared argmax nodes can retain all tied reset parents without copying each parent list into every destination. Simultaneously closing both words is one boundary-pair parse, not two parses for the two possible epsilon-transition orders. Preserve tied ordinary/fragment labels as parse multiplicities. The unique-parent argument assumes a trie; a minimized word graph needs different predecessor handling.
 '''
 
 [[blocks]]
@@ -98,6 +136,8 @@ body = '''
 - **Silent pruning.** A token cap or beam turns an exact lattice calculation into a heuristic one.
 - **Boundary leakage.** Fragments are allowed everywhere although only the ends of a chunk can cut words.
 - **Tie loss.** One optimum segmentation is displayed as unique because equal predecessors were overwritten.
+- **Parse ties called text ties.** Different optimal segmentations can produce the same unspaced physical string or coupled string pair. Deduplicate physical outputs before claiming recovery or uniqueness; a compact tie graph alone does not certify that every physical output has been enumerated.
+- **Cheap states, expensive traces.** Two score layers may fit while cumulative predecessor edges, exact parse counts or exponentially many tied physical outputs exceed their caps. Report incomplete output, not a unique winner.
 '''
 
 [[blocks]]
@@ -128,6 +168,12 @@ note = "Trie-backed lexical lattice with complete-word, leading-fragment, and tr
 path = "withmath/docs/cipher-methods/CYCLEWORD_SEMIMARKOV_AUDIT.md"
 kind = "audit"
 note = "Independent audit of the semi-Markov word objective, boundary fragments, and fixed generic lexicon."
+
+[[provenance]]
+path = "withmath/docs/cipher-methods/RUNKEY_TRIE_OVERLAP752.md"
+kind = "design"
+note = "Source-free, independently hand-checked overlap state bound, first-token depth correction, exact shared reset maxima and parse-versus-physical tie distinction. These are mathematical implementation bounds, not a new execution KAT, measured speedup or recovery result."
+ref = "LOG752"
 
 [[references]]
 title = "Word Lattice Reranking for Chinese Word Segmentation and Part-of-Speech Tagging"

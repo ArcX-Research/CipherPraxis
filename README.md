@@ -49,13 +49,25 @@ CipherPraxis/
 ## Adding content
 
 1. Copy an existing entry in `content/<section>/`, keep the file name equal to the `id`.
-2. Follow `content/AUTHORING.md`: general cryptography only, generic examples, every number
-   backed by a `[[provenance]]` receipt, status from the fixed vocabulary.
+2. Follow `content/AUTHORING.md`: general cryptography only, generic examples, empirical numbers
+   backed by a `[[provenance]]` receipt, and status from the fixed vocabulary.
 3. Run `./scripts/check.sh` (or just `./scripts/dev.sh`, which rebuilds and shows lint errors in
    the terminal and in the page overlay).
 
 The build fails on forbidden tokens, duplicate ids, missing status notes, unknown lab keys or
 bad provenance; dangling `related` links are warnings.
+
+## Reading the evidence
+
+An entry's status applies to the claim described in its status note. Mathematical derivations,
+exact finite checks, and experiments provide different kinds of support. A solver passing known
+test cases establishes behavior on those cases; recovery on new inputs depends on the model,
+data, and search budget. An unsuccessful search excludes a family only when completeness or
+the stated statistical argument supports that conclusion.
+
+The Evidence panel links each claim to its recorded source. Checking that a cited file exists
+does not verify its contents or repeat the experiment. Historical measurements remain evidence
+from their recorded conditions unless an independent replay is documented.
 
 ## Evidence requests
 

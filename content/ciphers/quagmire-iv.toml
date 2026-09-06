@@ -8,7 +8,7 @@ family = "Polyalphabetic substitution"
 tags = ["periodic", "keyed alphabet", "polyalphabetic", "quagmire", "power limit"]
 related = ["quagmire-i", "quagmire-ii", "quagmire-iii", "keyword-mixed-alphabet", "dictionary-attack", "simulated-annealing", "exact-period-alignment", "two-dial-translation-factorization", "conjugacy-and-gauge", "quagmire-lab"]
 summary = "Quagmire IV uses one mixed alphabet for plaintext and another for ciphertext, with a repeating shift between their index positions. It is the broadest periodic additive form; Vigenère and the other Quagmires are special cases. Two arbitrary alphabets are too hard to search from short text. If each alphabet comes from a known bank, an exact search can check every pair. If the period-class substitutions are already complete, quotient factorization gives an exact algebraic test."
-updated = "2026-09-06"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -24,7 +24,7 @@ Quagmire I is $C$ straight, Quagmire II is $P$ straight, Quagmire III is $P = C$
 kind = "equations"
 title = "Gauge and equivalent descriptions"
 body = '''
-Rotating $C$ by $r$ and adding $r$ to every shift leaves the cipher unchanged, as does rotating $P$ and subtracting; reversing both alphabets swaps the Vigenère and Beaufort relations. The identifiable object is therefore the pair $(P, C)$ up to a common rotation and reflection together with the shift vector modulo that gauge, and a solver must compare recovered and planted keys modulo this class rather than literally (see [Conjugacy and gauge](/algebra/conjugacy-and-gauge)). Seen from the ciphertext, coset $b$ applies the substitution $C \circ \rho_{k_b} \circ P^{-1}$. If the $k_b$ are unrelated these are seven unrelated substitutions, which is why "seven independent alphabets" and Quagmire IV are indistinguishable by alphabet-free statistics.
+The written coordinates have independent rotation gauges. If the arrays are re-indexed by $P'[j]=P[j+r_P]$ and $C'[j]=C[j+r_C]$, the same cipher is obtained with $k'_b=k_b+r_P-r_C$. Simultaneously reversing both axes preserves the Vigenère form with sign-reversed shifts; reflecting only one axis changes the additive/reflection convention. A solver that includes those conventions must compare keys modulo the resulting gauge, not literally (see [Conjugacy and gauge](/algebra/conjugacy-and-gauge)). Seen from the ciphertext, coset $b$ applies $C\circ\rho_{k_b}\circ P^{-1}$. Equality-only or histogram diagnostics can make these maps look like independent substitutions, but complete maps obey a shared two-dial factorization and can be distinguished algebraically.
 '''
 
 [[blocks]]
@@ -41,7 +41,7 @@ title = "Assumptions and invariants"
 body = '''
 - Periodic shifts; both alphabets constant over the text.
 - Invariant: the within-coset equality pattern is alphabet-free and shared with every other Quagmire.
-- The relation and the two alphabets are jointly identifiable only up to the gauge above.
+- The relation and the two alphabets are jointly identifiable only up to the explicitly included rotation/reflection gauges above.
 '''
 
 [[blocks]]
@@ -88,7 +88,7 @@ function ATTACK(c, m, candidate_orders):
     anneal P and refit k jointly under quadgrams, restarting from every
             near-tie coset shift;
     or try every keyword alphabet P, 26 offsets and both relations
-    // compared with planted keys modulo the common rotation gauge
+    // compared with planted keys modulo the independent coordinate gauges
     return P, C, k
 ```
 '''

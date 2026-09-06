@@ -2,9 +2,9 @@ id = "g-nats-per-letter"
 section = "glossary"
 title = "Nats per letter"
 status = "VERIFIED"
-status_note = "Standard unit; used for all evidence readings in the toolkit."
+status_note = "Standard information unit. Comparability additionally depends on the score definition, conditioning, and denominator."
 family = "Information theory"
 tags = ["unit", "evidence", "log-likelihood"]
 related = ["bayesian-evidence-model-selection", "quadgram-log-likelihood", "g-evidence", "g-quadgram"]
-summary = "Nats per letter measure log-likelihood or evidence with natural logarithms, divided by the number of letters. One nat is ln(e) = 1, one log10 unit is 2.303 nats, and one bit is 0.693 nats. Tests report gains over the uniform model, whose entropy is ln 26 = 3.258 nats per letter. English single-letter frequencies carry about 2.89, so their largest gain is about 0.36. Quadgram rates use log10 per letter and must be converted before comparison."
-updated = "2026-09-04"
+summary = "Nats per letter are natural-log scores divided by a declared letter count. One base-10 logarithm unit equals ln(10) nats, and one bit equals ln(2) nats. A uniform distribution on 26 symbols has entropy ln(26) nats per symbol. Before comparing scores, check the logarithm base, denominator, smoothing, conditioning context, and whether the quantity is a likelihood, likelihood ratio, or marginal likelihood; equal units alone do not make different models comparable."
+updated = "2026-09-07"

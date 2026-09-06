@@ -8,15 +8,15 @@ family = "Power and calibration"
 tags = ["gates", "roundtrip", "nulls", "self-deception"]
 related = ["valid-model-nulls", "planted-controls", "power-measurement", "selection-overfit-check", "kat-harness", "shuffled-null-z-score", "english-gate-calibration"]
 summary = "A check that every candidate passes tells us nothing. Before citing a gate, show both sides: valid input passes, and input that should fail does fail at a measured rate. A common empty check is forward round-trip. If a key was fitted by reversing the ciphertext, it will re-encrypt that fitted plaintext by construction. False keys pass too, so the round trip alone does not prove correctness."
-updated = "2026-09-06"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
-A **gate** is a predicate $G(x)$ applied to a candidate solution $x$ (a recovered key, plaintext or construction). $G$ is **tautological** on a family $\mathcal{F}$ when $\Pr[G(x)] = 1$ for every $x \in \mathcal{F}$, including wrong ones. The rule: a gate may be cited as evidence only after a transcript shows
+A **gate** is a predicate $G(x)$ applied to a candidate solution $x$ (a recovered key, plaintext or construction). $G$ is **tautological** on a family $\mathcal F$ when $G(x)$ is true for every $x\in\mathcal F$, including wrong ones. Before citing a nontrivial gate, a transcript should measure both:
 
-1. **necessity**: $G$ passes on planted truths (else it is broken), and
-2. **power**: $G$ fails on a stated fraction of inputs that are not solutions, drawn from the relevant alternative (random letters, a valid-model negative, a wrong placement).
+1. **empirical sensitivity**: $G$ passes on conforming planted truths from the declared fixture distribution, and
+2. **empirical rejection**: $G$ fails on a stated fraction of relevant non-solutions, such as random letters, valid-model negatives, or wrong placements.
 
 The rule extends to nulls: a null distribution that the observed statistic cannot fall inside is not a null.
 '''
@@ -29,14 +29,14 @@ If a decryption map $D_k$ is invertible and $k$ was obtained by fitting $D_k(c) 
 
 $$\Pr[\text{roundtrip passes} \mid k \text{ fitted from } c] = 1$$
 
-for every $k$ in the family, and the program records `forward_consistency` as a field that is logged but *excluded from evidence, tautological by construction*. A roundtrip becomes informative only when the construction is re-encrypted with parameters that were **not** all fitted from the same ciphertext (a key word from a dictionary, a boundary chosen independently), or when two independently implemented forwards are compared.
+for every $k$ in the family, and the program records `forward_consistency` as a field that is logged but *excluded from candidate evidence, tautological by construction*. A roundtrip can test a constraint supplied independently of the fit, such as a predeclared dictionary key or boundary. Agreement between two independent implementations is evidence of software consistency, not evidence that a fitted plaintext is true.
 '''
 
 [[blocks]]
 kind = "assumptions"
 body = '''
 - The failing inputs must be plausible alternatives. A gate that rejects white noise but accepts every fluent overfit has power only against white noise.
-- Necessity and power are measured on the *full decision*, including selection over cells and the language threshold, not on a preliminary statistic.
+- Both empirical rates are measured on the *full decision*, including selection over cells and the language threshold, not on a preliminary statistic.
 '''
 
 [[blocks]]
@@ -61,12 +61,11 @@ body = '''
 // (random letters, a valid-model negative, a wrong placement). Output: a
 // two-row certificate, or the gate is excluded from the evidence fields.
 function CERTIFY_GATE(G, plants, alternatives):
-    // row 1, necessity: G must pass on every planted truth, else it is broken
+    // Empirical sensitivity on the declared planted panel.
     a = COUNT(x in plants where G(x))
     if a < |plants|: return BROKEN
-    // row 2, power: G must fail on a stated fraction of non-solutions,
-    // measured on the full decision, selection and language threshold
-    // included
+    // Empirical rejection on each declared class of non-solutions, measured
+    // on the full decision with selection and the language threshold included.
     rows = []
     for class in alternatives:
         b = COUNT(x in class where not G(x))
@@ -96,13 +95,13 @@ Negligible in compute (a few hundred random or valid-model inputs) and large in 
 kind = "failure_modes"
 body = '''
 - A parity-style block test was presented with its necessity row (400 conforming plants, 0 violations) **and** its power row (random-letter zones violate with fraction 0.81 and 0.98; known prose windows 1 to 6 violations), so its exact refutation of two forms could be cited.
-- A language gate whose threshold was placed by a prose-tail order statistic rejected genuine held-out English windows. The tautology in reverse (a necessity failure) was caught by running known-real text through it, and the gate was re-anchored to an independent-letter ceiling.
+- A language gate whose threshold was placed by a prose-tail order statistic rejected genuine held-out English windows. The sensitivity failure was caught by running held-out real text through it, and the gate was re-anchored to a finite independent-letter reference maximum.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
-Every gate in this atlas carries a two-row certificate: `necessity: conforming plants pass a/a` and `power: alternative inputs fail b/c`. Where a check is retained for diagnostics only, it is labelled as such and excluded from the evidence fields.
+Every gate in this atlas carries two empirical rows. Existing receipts label them `necessity: conforming plants pass a/a` and `power: alternative inputs fail b/c`; scientifically, they estimate sensitivity and rejection only for the stated fixture distributions. Where a check is retained for diagnostics only, it is labelled as such and excluded from the evidence fields.
 '''
 
 [[blocks]]

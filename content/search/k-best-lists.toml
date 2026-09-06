@@ -3,12 +3,12 @@ section = "search"
 title = "K-best lists and rank schedules"
 subtitle = "Keep the top K cheap candidates and finish each one with the exact method"
 status = "VERIFIED"
-status_note = "The periodic dynamic program passes its eight best shifts per residue to an exact finish. A rank-sharded selector recovered five positives whose true ranks were 40, 47, 91, 155, and 443 within ranks 1–512. It missed a sentinel at rank 790 as predicted. Several exact k-best splits also match brute force."
+status_note = "The periodic dynamic program optimizes exactly within the product of its eight retained shifts per residue, followed by heuristic polish. A rank-sharded selector recovered five positives whose true ranks were 40, 47, 91, 155, and 443 within ranks 1–512. It missed a sentinel at rank 790 as predicted. Several exact k-best splits also match brute force."
 family = "Enumeration strategies"
 tags = ["shortlist", "rank", "top-k", "two-stage", "calibration"]
 related = ["rank-sharding", "beam-search", "viterbi-decoding", "periodic-substitution-dp", "exact-dynamic-programming", "all-different-enumeration", "exhaustive-enumeration", "selection-overfit-diagnostic", "planted-controls", "power-measurement", "g-shard"]
-summary = "A k-best list keeps the K highest candidates from a cheap first score instead of only its winner. An exact or expensive stage then finishes each one. The method works only if the true key ranks inside K, so planted controls measure that rank. Fixed cumulative rank ranges turn the list into a search that can pause and resume without changing its stopping rule."
-updated = "2026-09-04"
+summary = "A k-best list keeps the K highest candidates from a cheap first score instead of only its winner. An exact or expensive stage then finishes each retained item. Planted controls estimate how often the truth ranks within K for a declared control distribution; they do not bound its rank on arbitrary inputs. Fixed cumulative rank ranges make the finite schedule resumable without changing its stopping rule."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -22,7 +22,7 @@ for rank r in 1 .. K:                      # or in cumulative shards 1-32, 33-64
 report the best finished endpoint, its rank, ties, and the score gap at rank K
 ```
 
-Calibration: plant instances with a known key, record the truth's rank $r^\ast$ under $g$, and choose $K \ge r^\ast$ with margin. A sentinel plant with $r^\ast > K$ must be missed, proving the schedule is not tautological.
+Calibration: on planted instances drawn from a declared control distribution, record the truth's rank $r^\ast$ under $g$ and the fraction with $r^\ast\le K$. That estimates recall for that distribution and fixed $K$; it does not bound arbitrary future ranks. A sentinel plant with $r^\ast>K$ checks that the implementation honors the cutoff.
 
 **Exact k-best over a product.** When $g(k) = \sum_b g_b(k_b)$ is a sum of independent per-residue terms, the top $K$ of the product space is obtained by best-first merging: a prefix that falls below rank $K$ among prefixes is dominated under every suffix, so the search never enumerates $26^p$ keys.
 '''
@@ -41,7 +41,7 @@ Changing the hidden key or the Vigenère/Beaufort relation only relabels the 26 
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- The cheap score must be monotone enough that the truth's rank is bounded. A monogram score of a 63-letter zone ranks planted keys anywhere from 40 to 790, a relaxed bigram score of a cycle bank ranks planted cycles 16th and 2nd where the monogram score ranked them 7,559th and 7,598th.
+- The cheap score needs measured recall at the chosen $K$. A monogram score of a 63-letter zone ranked the recorded planted keys from 40 to 790, while a relaxed bigram score ranked two recorded planted cycles 16th and 2nd where the monogram score ranked them 7,559th and 7,598th. These ranks describe those controls, not a deterministic bound on future inputs.
 - The schedule is fixed before the target is seen; ties at the boundary (a sort key that omits a flag) are processed as a whole straddling group so the schedule is a superset of the declared slice.
 - Every retained item is finished. The list is not pruned by a language verdict on the way.
 '''
@@ -50,7 +50,7 @@ body = '''
 kind = "attack"
 title = "How to attack it"
 body = '''
-- **Periodic DP.** For each residue keep the eight best shifts by monogram likelihood. The exact cyclic quadgram DP runs inside the $8^p$ product and an unrestricted coordinate pass lets an omitted shift re-enter. Three blind controls (63 and 95 letters at period 7, 126 at period 26) recover 100% of their plaintext.
+- **Periodic DP.** For each residue keep the eight best shifts by monogram likelihood. The cyclic quadgram DP is exact inside the $8^p$ product; a later unrestricted coordinate pass can let an omitted shift re-enter but remains a local heuristic. Three blind controls (63 and 95 letters at period 7, 126 at period 26) recovered 100% of their plaintext; this is finite control evidence, not guaranteed recall.
 - **Rank-sharded selector.** Stage one exhausts an exact family; stage two finishes monogram-ranked method classes in cumulative shards 1-32, 33-64, 65-128, 129-256, 257-512, every rank finished once, no early stop. Validation: five unseen positives at truth ranks 40, 47, 91, 155 and 443 recovered exactly (rates $-4.37$, $-4.30$, $-3.92$, $-4.19$, $-3.91$). The sentinel at rank 790 missed as declared. A sealed successor extends the schedule to rank 2,048 in seven shards with the rank-790 construction promoted to a required positive.
 - **Exact top-16 keys.** In a two-transposition sandwich selector one development control's true key sat at exact additive-profile rank 10 while the argmax key missed two coordinates. The successor enumerates the exact top 16 keys for every retained phase and completion, restoring the truth to final rank 1.
 - **Cycle banks.** 66,628 mechanically derived cycles are shortlisted by an independent-edge bigram relaxation (planted cycles at ranks 16 and 2) and the top 32 or 128 per relation are finished by the exact cyclic DP; both controls recover 100% at rates $-4.217$ and $-4.135$.
@@ -64,18 +64,14 @@ body = '''
 // Cheap score g, exact finisher F, list size K fixed before the target is
 // seen.
 function KBEST_FINISH(items, g, F, K):
-    // a tie group straddling rank K is finished whole
     candidates = items sorted by g descending
     finished = []
-    // or in cumulative shards 1-32, 33-64, ...
-    for r in 1..K:
+    cutoff = score at rank MIN(K, LENGTH(candidates))
+    selected = every candidate above or tied with cutoff
+    for candidate in selected:
         // every rank finished; never stop early on a hit
-        finished = finished + [F(candidates[r])]
-    return the best finished endpoint, its rank, ties, and the score gap at
-            rank K
-
-// Calibration: plant known keys, record the truth's rank r* under g and
-// choose K >= r* with margin; a sentinel plant with r* > K must be missed.
+        finished = finished + [F(candidate)]
+    return the best finished endpoint, its source rank, ties, and cutoff gap
 
 // Exact top-K of an additive score g(k) = sum over b of g_b(k_b) over a
 // product space, by best-first merging: a prefix below rank K among prefixes
@@ -98,7 +94,7 @@ function KBEST_PRODUCT(g_b for each residue b, K):
 [[blocks]]
 kind = "complexity"
 body = '''
-Cost is $K$ times the finisher. Recorded: 512 method classes each finished by a width-8 cyclic DP and four polish rounds in 265.004 s (first pass), peak resident set 577,585,152 bytes. The eight-best-shift product at period 7 is $8^7 = 2{,}097{,}152$ keys, searched exactly by the DP in $O(p \cdot 8^4)$ table operations rather than by enumeration.
+Cost is $K$ times the finisher. Recorded: 512 method classes each finished by a width-8 cyclic DP and four polish rounds in 265.004 s (first pass), peak resident set 577,585,152 bytes. The eight-best-shift product at period 7 contains $8^7 = 2{,}097{,}152$ keys. For the direct cyclic algorithm described in the Viterbi entry, emission construction costs $O(pW^4)$ and conditioning on all three starting values gives a worst-case $O(pW^7)$ maximization bound at width $W=8$; it still avoids literal enumeration of $W^p$ keys when $p$ is larger.
 '''
 
 [[blocks]]

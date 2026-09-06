@@ -6,5 +6,5 @@ status_note = "Corpus term; the rule and its demonstration are in the order-free
 family = "Cryptanalysis technique"
 tags = ["transposition", "invariance"]
 related = ["order-free-width-statistic", "transposition-width-recovery", "mixture-inference-under-transposition", "exact-period-alignment", "g-residue-pattern", "g-inner-and-outer-layer"]
-summary = "An order-free statistic uses which letters fall into each coset, but ignores their order. A transposition below the layer being tested cannot change it. Coset histograms, exact-alignment scores, shift-averaged single-letter evidence, and class patterns are order-free; quadgram rates are not. While a transposition remains, the project uses only order-free scores. Quadgrams become useful after every transposition has been undone."
-updated = "2026-09-04"
+summary = "An order-free statistic is invariant under a declared set of reorderings. A coset histogram, for example, is unchanged by permutations within that coset, but an arbitrary transposition may move symbols between cosets and change it. Single-letter histogram scores and their shift averages ignore within-group order; n-gram scores do not. Every use must name the groups and transformations under which invariance is proved. Ordered scores can still be used to search candidate transpositions, but not as invariants of an unresolved arbitrary transposition."
+updated = "2026-09-07"

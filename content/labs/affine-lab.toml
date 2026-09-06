@@ -8,7 +8,7 @@ family = "Algebra labs"
 tags = ["affine", "modular arithmetic", "unit group"]
 related = ["affine-cipher", "caesar-shift", "units-mod-26", "modular-inverse-and-crt", "crt-lab"]
 summary = "An affine substitution multiplies each letter number by a, then adds b modulo 26. Decryption needs an inverse for a. Only the twelve values that share no factor with 26 have one. This lab lists those values and their inverses and shows why the other choices cannot decrypt."
-updated = "2026-09-04"
+updated = "2026-09-07"
 lab = "affine"
 
 [[blocks]]
@@ -26,6 +26,7 @@ function ENCRYPT(p[0..n-1], a, b):
     return c
 
 function DECRYPT(c[0..n-1], a, b):
+    if not IS_UNIT(a): report "a has no inverse modulo 26" and stop
     // extended Euclid; exists only when gcd(a, 26) = 1
     a_inv = MOD_INVERSE(a, 26)
     for i in 0..n-1: p[i] = (a_inv * (c[i] - b)) mod 26

@@ -5,10 +5,10 @@ subtitle = "Add a truly random key that is as long as the message and never reus
 status = "UNTESTED"
 status_note = "The project includes an encryption tool for a 153-letter pad from fixed key text, with plain or keyed tables and a decryption check. It has no attack for a truly random, single-use key because none is possible. This entry explains the model and why it marks the secure limit of running-key ciphers."
 family = "Stream and machine ciphers"
-tags = ["additive", "random key", "perfect secrecy", "unbreakable"]
+tags = ["additive", "random key", "perfect secrecy", "information theory"]
 related = ["vigenere", "running-key", "book-cipher", "autokey", "index-of-coincidence", "g-tabula-recta"]
 summary = "A one-time pad adds one key letter to each plaintext letter. The key must be truly random, as long as the message, and never reused. Then every plaintext of that length fits the ciphertext equally well, so no statistic can choose the real one. Running-key and book ciphers look similar but use structured key text. That structure is what makes them attackable."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -40,14 +40,14 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - Uniform, independent key letters; single use; key length at least the message length.
-- Invariant: the ciphertext index of coincidence is at the uniform level $1/26 \approx 0.038$ and no lag shows a coincidence peak. A ciphertext with a period signature is not a one-time pad.
+- Under the ideal model, ciphertext letters are independent and uniform. Thus the expected IC is $1/26$, and no lag has an elevated expected coincidence rate. A finite sample can deviate or show a chance peak; rejection requires a predeclared statistic and calibrated null, not equality to the expectation.
 '''
 
 [[blocks]]
 kind = "attack"
 title = "How to attack it"
 body = '''
-There is none against a correctly used pad. What can be tested is whether a ciphertext *is* one: a flat histogram, uniform-level index of coincidence and an empty lag profile are consistent with a pad (and with any strong cipher), and any departure from them is evidence of structure. Between two ciphertexts, the difference test above detects a reused key.
+There is no ciphertext-only attack on a correctly used pad. Flat histograms and an unremarkable lag profile are compatible with the model but also with many other ciphers. A statistically significant departure under a specified null is evidence against that ideal iid-uniform model, not proof of a particular alternative; ordinary finite-sample variation must be included. Between two ciphertexts, a difference test can reveal structure from key reuse when the two plaintexts provide enough signal.
 '''
 
 [[blocks]]
@@ -83,7 +83,7 @@ function DECRYPT(c[0..n-1], k[0..n-1]):
 [[blocks]]
 kind = "complexity"
 body = '''
-Encryption and decryption are $O(n)$. The information-theoretic cost of an attack is infinite: all $26^n$ keys are equally likely.
+Encryption and decryption are $O(n)$. The key space is finite, with $26^n$ members, but exhaustive enumeration does not identify the intended plaintext: every length-$n$ candidate has exactly one compatible key, and the ciphertext leaves their prior odds unchanged.
 '''
 
 [[blocks]]
@@ -97,7 +97,7 @@ body = '''
 [[blocks]]
 kind = "controls"
 body = '''
-No planted-control receipt exists for this entry. The corpus utility only verifies that its own panel decrypts back to the message. The uniform-level statistics that a pad would produce (index of coincidence 0.037-0.051 and 21-22 distinct letters per 26-letter window in the random-looking segments of the corpus texts) are reported by the measurement lanes but were not attributed to a pad.
+No planted-control receipt establishes random-key generation for this entry. The utility verifies only a known-key round trip, which checks implementation mechanics but not independence, uniformity, single use, or perfect secrecy. The theorem above supplies the exact result under its assumptions; empirical ciphertext statistics cannot certify that those assumptions held.
 '''
 
 [[blocks]]
@@ -113,7 +113,7 @@ sum     30 16 13 21 25
 cipher  E  Q  N  V  Z
 ```
 
-Check: $H + X = 7 + 23 = 30 \equiv 4 = E$. With key `TQURI` instead, `EQNVZ` would decrypt to `LATER`; both keys are equally likely a priori.
+Check: $H+X=7+23=30\equiv4=E$. With key `TQURI` instead, `EQNVZ` would decrypt to `LATER`. Uniform pads assign the two compatible keys equal probability; the ciphertext itself leaves whatever prior odds were assigned to `HELLO` and `LATER` unchanged.
 '''
 
 [[blocks]]

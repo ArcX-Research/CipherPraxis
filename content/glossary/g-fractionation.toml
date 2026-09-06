@@ -6,5 +6,5 @@ status_note = "Standard term."
 family = "Cipher structure"
 tags = ["polybius", "coordinates"]
 related = ["bifid", "trifid", "compressocrat", "polybius-square", "g-polygraphic"]
-summary = "Fractionation replaces each letter with two or three coordinates, rearranges those coordinates, and groups them back into letters. One ciphertext letter then contains parts of several plaintext letters. This flattens single-letter frequencies and hides letter-pair patterns within a block, though the block edges may remain visible. Bifid, Trifid, and Compressocrat use fractionation."
-updated = "2026-09-04"
+summary = "Fractionation represents letters by coordinate symbols, rearranges the coordinate stream, and regroups it into output letters. One ciphertext letter can therefore depend on coordinates from several plaintext letters. For natural-language inputs, this often reduces simple single-letter and adjacent-letter signals, but the amount depends on the square or cube, block length, and plaintext; it is not guaranteed to flatten every sample. Bifid, Trifid, and Compressocrat use fractionation."
+updated = "2026-09-07"

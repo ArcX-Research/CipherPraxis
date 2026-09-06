@@ -6,5 +6,5 @@ status_note = "Standard term."
 family = "Statistics"
 tags = ["standardised statistic", "calibration"]
 related = ["shuffled-null-z-score", "estimator-standard-error", "family-wise-null", "g-null-distribution"]
-summary = "A z-score is the observed statistic minus the null mean, divided by the null standard deviation: z = (T - mean)/sd. A value of +2 is two null standard deviations above the shuffled or simulated results. It is useful only when the null is roughly symmetric and uses the same full calculation. Searching many cases raises the best score by chance, so a best-of-many z-score must be reported with its empirical rank."
-updated = "2026-09-04"
+summary = "A z-score standardizes a statistic as z = (T - null mean)/(null standard deviation), provided the null standard deviation is positive. It measures displacement in standard-deviation units; converting it to a normal-theory tail probability additionally requires an appropriate distributional approximation. Skewed, discrete, or selected maxima are better accompanied by their empirical null rank. When many cases are searched, the null calculation must repeat that same maximization."
+updated = "2026-09-07"

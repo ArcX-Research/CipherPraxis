@@ -6,5 +6,5 @@ status_note = "Standard term."
 family = "Cipher structure"
 tags = ["periodic", "additive"]
 related = ["vigenere", "beaufort", "variant-beaufort", "porta", "g-reciprocal-cipher"]
-summary = "A tabula recta is a 26 x 26 table whose row k is the alphabet shifted by k. Row k at column p gives p + k for Vigenère. Reading backwards gives k - p for Beaufort, while p - k gives Variant Beaufort. Every additive periodic cipher moves through this table one row per coset. A keyed version replaces the straight alphabet on both axes."
-updated = "2026-09-04"
+summary = "A tabula recta is a square tableau whose rows are cyclic shifts of an alphabet. With A = 0 on a 26-letter straight alphabet, row k and column p give p + k modulo 26 for Vigenère; related reading conventions give Beaufort and Variant Beaufort. A periodic additive cipher selects a row by its key schedule. Keyed-alphabet variants may replace the plaintext axis, ciphertext rows, or both, and their alignment convention must be stated explicitly."
+updated = "2026-09-07"

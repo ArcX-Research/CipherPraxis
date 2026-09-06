@@ -6,9 +6,9 @@ status = "PROMISING"
 status_note = "A cache optimization was exact on its symbols-only test matrix and ran 1.565 times as fast in aggregate, but won only 44 of 60 cases and regressed on both zero-weight workload classes. It remains a candidate rather than an automatic production change."
 family = "Solver performance engineering"
 tags = ["benchmarking", "regression", "hot path", "exact search", "release gate"]
-related = ["closed-footprint-bound-cache", "pruned-traversal-equivalence-certificates", "bound-benchmarks-and-certificates", "compiled-hot-cores", "drainability-and-throughput", "kat-harness", "fresh-holdout-after-selector-change"]
+related = ["closed-footprint-bound-cache", "pruned-traversal-equivalence-certificates", "bound-benchmarks-and-certificates", "compiled-hot-cores", "drainability-and-throughput", "kat-harness", "fresh-holdout-after-selector-change", "finite-field-linear-algebra"]
 summary = "An algebraically exact shortcut is not automatically a useful optimization. First prove that it preserves the required search behaviour. Then time reference and candidate in interleaved order across complete, capped, pruning-heavy, cache-poor, and inactive-bound workloads. A good average cannot hide a critical regression, and a microbenchmark cannot authorize a production change by itself."
-updated = "2026-09-06"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -78,6 +78,8 @@ function ADMIT_OPTIMIZATION(reference, candidate, matrix, policy):
 kind = "complexity"
 body = '''
 The benchmark multiplies fixture count by the number of correctness paths and timed repetitions. This deliberate cost is small compared with deploying a regression into a long exact search. Keep the matrix bounded, deterministic, and rich in boundary cases rather than making it resemble a full production run.
+
+Separate the work at each stage: setup, generator prefixes, emitted candidates, cheap feasibility checks, expensive solver calls, physical-key expansion, replay and publication. A necessary algebraic filter may greatly reduce generator output while leaving the expensive solver-call count unchanged, because the old cheap filter already rejected the same impossible candidates. The new filter can still improve an enumeration bound, but neither that bound nor the ratio of candidate counts is an end-to-end speedup measurement. Time the paired implementations separately before making a performance claim; the elapsed time of a correctness suite that runs both does not supply that comparison.
 '''
 
 [[blocks]]
@@ -90,7 +92,19 @@ body = '''
 - **Fixed order bias.** The candidate always runs second with warmer code and data.
 - **Callback drift.** Different callbacks do different downstream work, making kernel times incomparable.
 - **Microbenchmark promotion.** A small same-process result is described as sustained end-to-end throughput.
+- **Candidate-count speedup.** A smaller enumerated set is reported as a runtime gain without measuring setup, final checking, alias expansion or output costs.
 - **Frozen-method mutation.** The faster core is inserted into an already validated release without new capability controls.
+'''
+
+[[blocks]]
+kind = "controls"
+title = "Use a separate counting proof without changing the worker"
+body = '''
+A test oracle may use a stronger identity than the proposed optimization. Derive and freeze that identity before running the test, use it to establish the complete expected answer, and keep it out of the worker being evaluated. This is especially useful for a fixture on which the worker's necessary conditions vanish identically: the complete answer must still be checked, not merely the presence of one planted solution.
+
+For example, over the field with thirteen elements, let f(x) have zero constant term and degree at most four. If f permutes the field, its third power sum must vanish. The only positive exponent divisible by twelve in f(x)^3 is its degree-twelve term, so the degree-four coefficient must be zero. Applying the fourth and sixth power sums in turn removes the degree-three and degree-two coefficients. Exactly the twelve nonzero linear polynomials remain. A worker using only first and second power sums does not obtain this reduction: those sums vanish throughout the original four-dimensional coefficient space. The stronger proof can certify its test result without being inserted into its search.
+
+This establishes an exact expected count, not representative recovery power or a measured speedup. If the stronger identity is later used to prune the worker, treat that as a new implementation requiring its own complete-set and resource checks. The related finite-field entry explains the moment constraints and their characteristic-dependent limits.
 '''
 
 [[blocks]]
@@ -127,3 +141,15 @@ path = "withmath/docs/project-notes/PK9_MATCHING579_COST.md"
 kind = "audit"
 note = "Independent example in which a mathematically tighter exact bound had modest pruning potential and was deferred pending a hot-loop cost benefit."
 ref = "LOG579"
+
+[[provenance]]
+path = "withmath/logs/748_kat.result.json"
+kind = "log"
+note = "Source-bound public-symbol producer KAT and subsequent separate-code receipt replay completed with actual external exit 0. Across 18 main cells, 15,462 legacy directions and 180 moment-root outputs led to the same 54 capacity-valid finisher calls and exact physical sets. The 14.197-second suite includes both algorithms and does not measure their speed ratio. Producer result SHA256 a2bff59b60bd36c8d2be78ae97e224d59c9c51c361d120a3f1eb49d1a6765d20; independent replay e64fb1a5fce36a21c968040fa5468477e3f5e1ebe4ee7a32e42b998f5054457e. No target or language-power claim."
+ref = "LOG748"
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/DIAL_PARITY_CALLER756.md"
+kind = "audit"
+note = "Independently reviewed degree-four permutation-polynomial counting proof, fixed before execution and kept evaluator-only; the worker uses first and second half moments. The subsequent sole KAT and separate original-coefficient replay both passed with recorded external exit zero. Across the complete principal catalog they matched 112 unit groups, 624 physical maps and 1,248 source origins; four cap cases remain unknown. Producer result SHA256 3bd3bea0147b46098b3c65474be4abcf047be2b0892c1fbac7dfeca617862c77; audit result 92287f5740861002a92596a9b7041a74d6c5be28ef258199bca67154163be3df. These are implementation checks, not a paired speed benchmark, live result or fresh recovery-power study."
+ref = "LOG756"

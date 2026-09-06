@@ -6,5 +6,5 @@ status_note = "Standard linear-algebra term."
 family = "Algebra"
 tags = ["linear algebra", "GF(13)"]
 related = ["finite-field-linear-algebra", "modular-inverse-and-crt", "all-different-constraints", "g-all-different"]
-summary = "Nullity is the size, by dimension, of a homogeneous linear system's null space. It equals the number of unknowns minus the rank. For alphabet recovery over Z26, the solver reports d2 over GF(2) and d13 over GF(13). The system then has 2^d2 times 13^d13 linear solutions. Such a system is always consistent after adding a gauge row, so nullity shows how strongly a crib limits the alphabet. Exact enumeration is practical when d13 is about seven or less."
-updated = "2026-09-04"
+summary = "Nullity is the dimension of a linear map's kernel; for a homogeneous system with a fixed number of variables it equals the number of variables minus the rank. For equations modulo 26, reduction over GF(2) and GF(13) yields nullities d2 and d13, and the homogeneous system has 2^d2 times 13^d13 CRT-lifted linear solutions. Extra affine or gauge constraints must be checked for consistency, and AllDifferent may reject every linear solution. Enumeration feasibility depends on the algorithm, output count, caps, and hardware, not on nullity alone."
+updated = "2026-09-07"

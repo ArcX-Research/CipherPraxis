@@ -7,8 +7,8 @@ status_note = "The lab matches HELP → HIAT with key (3 3 / 2 5) and ACT → PO
 family = "Algebra labs"
 tags = ["hill", "polygraphic", "linear algebra", "matrix"]
 related = ["hill-cipher", "matrix-invertibility-mod-26", "finite-field-linear-algebra", "affine-lab"]
-summary = "The Hill cipher turns each n-letter block into numbers and multiplies them by an n×n key matrix modulo 26. The key works only when its determinant has an inverse modulo 26. With n² known plaintext letters, linear equations can recover it. This lab calculates the determinant and inverse, then encrypts and decrypts."
-updated = "2026-09-04"
+summary = "The Hill cipher turns each n-letter block into numbers and multiplies them by an n×n key matrix modulo 26. The key decrypts uniquely only when its determinant is a unit modulo 26. A set of n known plaintext blocks determines the matrix only when their n×n plaintext matrix is invertible modulo 26; merely having n² letters is not sufficient."
+updated = "2026-09-07"
 lab = "hill"
 
 [[blocks]]
@@ -53,5 +53,5 @@ title = "What to try"
 body = '''
 - Enter the key `2 4 1 2`. Its determinant is 0, so it has no inverse. Encryption still runs, but the result cannot be decrypted uniquely.
 - Enter `1 1 0 1`. This upper-triangular key has determinant 1 and leaves the second letter of each block unchanged. A known-plaintext attack can spot that pattern at once.
-- Switch to 3×3. The lab still finds the inverse with cofactors. For a larger matrix, a solver would use elimination over Z26 and choose only invertible, or unit, pivots.
+- Switch to 3×3. The lab still finds the inverse with cofactors. For larger matrices, one robust method solves separately over the fields $\mathbb F_2$ and $\mathbb F_{13}$ and recombines entries with the Chinese remainder theorem; ordinary field elimination applied directly modulo 26 is not valid without extra care.
 '''

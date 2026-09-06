@@ -8,12 +8,12 @@ family = "Exactness guarantees"
 tags = ["branch and bound", "admissible bound", "majorant", "benchmark", "certificate", "replay"]
 related = ["rank-sharding", "exhaustive-enumeration", "known-answer-tests", "exact-dynamic-programming", "cp-sat-and-smt-solvers", "reproducibility-receipts", "seal-and-audit-protocol", "throughput-fail", "correction-and-retraction", "g-certificate", "g-drainability"]
 summary = "A large exact search needs three safeguards. A pruning bound must never skip a possible winner and must actually remove work. A benchmark must show that the full run fits its stated time and memory budget using the right measurements. A certificate must let someone replay the result from fixed inputs. Failed attempts stay recorded. An always-zero bound, wall time mistaken for CPU time, and a memory setting that was not a true limit each made a run invalid."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
-**Admissible bound.** $U(i) \ge F(i)$ for every state $i$. A state with $U(i) < \text{incumbent} - \text{TOL}$ cannot be optimal or tied and is skipped. Branch and bound explores partial keys depth-first, bounding each subtree by the best completion its remaining coordinates could add.
+**Admissible bound.** For a partial state $s$, $U(s)\ge\max_{x\succeq s}F(x)$ over every legal completion $x$. A state with $U(s)<\text{incumbent}-\text{TOL}$ cannot contain an optimum or a score within the declared tolerance and may be skipped. The tolerance defines the reported tie relation; exact integer objectives should use strict comparison without a floating tolerance.
 
 ```
 best <- -inf; ties <- 0; nodes <- 0

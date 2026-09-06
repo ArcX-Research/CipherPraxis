@@ -8,7 +8,7 @@ family = "Constraint programming"
 tags = ["CP-SAT", "SMT", "Z3", "SAT", "automaton", "all-different", "table constraint", "timeout"]
 related = ["constraint-satisfaction-forward-checking", "all-different-enumeration", "exact-chain-oracle", "known-answer-tests", "bound-benchmarks-and-certificates", "beam-search", "all-different-constraints", "units-mod-26", "quagmire-iii", "throughput-fail", "reproducibility-receipts", "g-certificate"]
 summary = "CP-SAT and SMT solvers can ask whether one unknown alphabet, several key shifts, and plaintext from a fixed language explain a ciphertext together. The alphabet becomes 26 different positions. Modular equations become tables with 676 rows or Boolean carry rules. A small automaton represents the language. The solver may prove SAT, prove UNSAT, or return UNKNOWN. In tests, unforced 95-letter cases with 1,024 possible words reached the 300-second limit in every solver."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -16,7 +16,7 @@ body = '''
 Variables: $\text{pos}[L] \in 0..25$ for every letter $L$ (AllDifferent), shifts $k_m \in 0..25$, plaintext letters $U_i, V_i \in 0..25$, automaton states $E_i$, and per-position ranks $RU_i = \text{pos}[U_i]$ via Element constraints. Constraints:
 
 ```
-AllDifferent(pos[A..Z]);  gauge: pos[A] in {0, 1, 2, 13}          # one representative per unit class
+AllDifferent(pos[A..Z]);  pos[A] in {0, 1, 2, 13}  # safe partial unit symmetry break
 Element(U_i, pos, RU_i);  Element(V_i, pos, RV_i)                 # rank channels
 Table_676(pos[C9_i], RU_i, k[m_i])   with rows (x, y, k): x = y + k mod 26     # QIII relation
 Table_676(pos[C8_i], RU_i, RV_i)     with rows x = y + s*z mod 26              # chain relation, s = +/-1
@@ -35,7 +35,9 @@ Bounded-integer form with Boolean carries (Z3):
 
 $$\text{pos}[C_i] = RU_i + k_{m_i} - 26\,t_i, \qquad t_i \in \{0, 1\},$$
 
-exact over ranks $0..25$. Unit gauge: multiplying every position and shift by a unit of $\mathbb{Z}_{26}$ preserves all equations, so $\text{pos}[A] \in \{0, 1, 2, 13\}$ keeps one representative of the twelve unit images (the $\gcd$ classes after rotation). A regular language $\text{suffix}(t) \cdot t^\ast \cdot \text{prefix}(t)$ over a token bank is compiled to a DFA (element symbols: 26 states / 432 edges; 1,024 words: 345 states / 6,232 edges) and enforced as $E_{i+1} = \delta[26 E_i + U_i]$ with a reject state out of range.
+exact over ranks $0..25$. Multiplying every position and shift by a unit of $\mathbb{Z}_{26}$ preserves the equations. Restricting $\text{pos}[A]$ to $\{0,1,2,13\}$ keeps one representative value from each unit orbit of that single coordinate, so it is a safe partial symmetry break. It is not necessarily one representative of each full-coordinate orbit: the values 0 and 13 have nontrivial stabilizers. Exact orbit counts require canonicalizing the full coordinate vector or adding a separately proved gauge.
+
+A regular language $\text{suffix}(t) \cdot t^\ast \cdot \text{prefix}(t)$ over a token bank is compiled to a DFA (element symbols: 26 states / 432 edges; 1,024 words: 345 states / 6,232 edges) and enforced as $E_{i+1} = \delta[26 E_i + U_i]$, with out-of-range transitions sent to a reject state.
 
 Cardinality argument: a residue map is injective, so if one map sees 15 distinct ciphertext letters and the allowed plaintext alphabet of a bank has only 7, 5 or 13 letters, the instance is UNSAT before any search.
 '''
@@ -70,7 +72,7 @@ body = '''
 function BUILD_MODEL(ciphertext C, residue map m_i, automata):
     M = new model
     for each letter L: pos[L] = M.int_var(0, 25)
-    // unit gauge
+    // safe partial unit-domain symmetry break; not a full orbit count
     M.add(AllDifferent(pos[A..Z]));  M.add(pos[A] in {0, 1, 2, 13})
     for each residue r: k[r] = M.int_var(0, 25)
     for each position i:

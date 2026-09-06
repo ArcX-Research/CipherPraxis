@@ -6,5 +6,5 @@ status_note = "Term as used throughout the validation section."
 family = "Validation vocabulary"
 tags = ["controls"]
 related = ["planted-controls", "blind-controls", "power-measurement"]
-summary = "A planted control is a test ciphertext made with a known plaintext and key. It uses the exact cipher being tested and matches the target's length. The same pipeline must solve the control before it sees the target. The check passes only when it recovers the plaintext and key, allowing for stated gauge equivalents, and re-encrypts to the same ciphertext. If it fails, the test is not strong enough to rule out the target."
-updated = "2026-09-04"
+summary = "A planted control is a test ciphertext generated from a disclosed plaintext and key under the exact declared cipher conventions. Its length and other difficulty-relevant features should match the intended evaluation population. Under this project's preregistered gate, the frozen pipeline must recover the required plaintext and key equivalence class and pass an independent forward check before target evaluation. Success estimates performance only for the plant distribution; failure blocks the intended negative claim but does not show the cipher is unsolvable in general."
+updated = "2026-09-07"

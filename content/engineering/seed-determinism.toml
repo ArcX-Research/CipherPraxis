@@ -7,24 +7,24 @@ status_note = "Sealed designs derive all random values from labeled SHA-256 stre
 family = "Reproducibility"
 tags = ["seeds", "determinism", "randomness", "replay"]
 related = ["blind-controls", "reproducibility-receipts", "valid-model-nulls", "compiled-hot-cores"]
-summary = "A randomized experiment is repeatable only when its random values are repeatable. Start from one fixed root value. Derive every case, shuffle, and search seed from a labeled hash stream with its own counter. Do not reroll or switch streams. Use the same selector seed for the observation and each null so a heuristic search becomes a fixed function of its input. Language, scores, timing, and hidden random-generator state never affect the seed."
-updated = "2026-09-04"
+summary = "A randomized computation is exactly replayable only when its random draws, algorithm, inputs, concurrency semantics, and relevant numeric behavior are fixed compatibly; recording the environment diagnoses differences but does not by itself force equality. One robust convention derives case, shuffle, and search seeds from domain-separated hash streams with explicit counters. Fixed selector randomness makes a finite heuristic a deterministic statistic of its input, while randomization-test validity still requires the declared exchangeability model and the same complete procedure for every replicate."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
 Given a root reveal $r$ (32 bytes) and a label $L$ (an ASCII string such as `SEED/CONSTRUCTION/HP01_M20_BETA0`), the stream is
 
-$$W(L, c) = \operatorname{SHA256}(r \,\|\, \operatorname{EL}(L) \,\|\, \operatorname{uint64be}(c)), \qquad c = 0, 1, 2, \dots$$
+$$W(L, c) = \operatorname{uint64be}(\operatorname{first8}(\operatorname{SHA256}(r \,\|\, \operatorname{EL}(L) \,\|\, \operatorname{uint64be}(c)))), \qquad c = 0, 1, 2, \dots$$
 
-with $\operatorname{EL}$ a length-prefixed encoding. Unsigned 64-bit words are consumed in order. A uniform draw in $[0, n)$ takes the next word $x$ and **rejects** it when $x \ge \lfloor 2^{64}/n \rfloor \cdot n$, otherwise returns $x \bmod n$. A seed is $1 + \operatorname{draw}(L, 2^{63}-1)$. If it duplicates an accepted seed, consumption continues on the **same** label's stream at its next unused counter. Construction and selector seeds use distinct label prefixes and are processed in fixed case order.
+with $\operatorname{EL}$ a length-prefixed encoding and `[0:8]` denoting the first eight digest bytes. Unsigned 64-bit words are consumed in order. Under the intended pseudorandom-word model, a draw in $[0,n)$ rejects $x \ge \lfloor 2^{64}/n \rfloor n$ and otherwise returns $x \bmod n$, removing simple modulo bias. A seed is $1 + \operatorname{draw}(L,2^{63}-1)$. If it duplicates an accepted seed, consumption continues on the same label's stream at its next unused counter. Construction and selector seeds use distinct label prefixes and fixed case order.
 '''
 
 [[blocks]]
 kind = "equations"
-title = "Unbiased permutations"
+title = "Modulo-bias-free index sampling"
 body = '''
-A null permutation of $n$ positions is a descending Fisher-Yates shuffle: for $i = n-1, \dots, 1$ draw $j$ uniformly in $[0, i]$ by the rejection rule above and swap $i, j$. The proposal key for permutation $k$ is $\operatorname{SHA256}$ of a literal domain string with $k$ formatted as `%04d`, and blocks are $\operatorname{SHA256}(\text{key} \,\|\, \operatorname{uint64be}(\text{counter}))$. The first 99 *eligible* proposals in index order form the bank; eligibility may depend only on identity and invariants (histogram, class census), never on a score.
+Conditional on uniform independent index draws, descending Fisher-Yates gives a uniform permutation: for $i=n-1,\dots,1$, draw $j$ in $[0,i]$ by the rejection rule and swap $i,j$. SHA-256 streams are used as a deterministic pseudorandom construction, not as a mathematical proof that a particular fixed reveal samples uniformly. The proposal key for permutation $k$ is $\operatorname{SHA256}$ of a literal domain string with $k$ formatted as `%04d`, and blocks are $\operatorname{SHA256}(\text{key} \,\|\, \operatorname{uint64be}(\text{counter}))$. The first 99 eligible proposals in index order form the bank; eligibility may depend only on identity and declared invariants, never on a score.
 '''
 
 [[blocks]]
@@ -32,55 +32,43 @@ kind = "assumptions"
 body = '''
 - Labels are exact bytes. The auditor checked that lowercase kinds, a NUL suffix, doubled slashes or a shared counter all diverge at the first seed (four negative spellings, each giving a different integer).
 - More than $2^{32}$ consumed words for one seed is a derivation failure that retires the reveal; there is no fallback stream.
-- Compiled cores derive per-work-unit seeds from the request seed by mixing in the unit's coordinates, so results do not depend on thread scheduling.
+- Compiled cores derive per-work-unit seeds from an injective, domain-separated encoding of the unit coordinates. Scheduling independence additionally requires race-free state, order-independent or fixed-order reductions, and deterministic tie handling.
 '''
 
 [[blocks]]
 kind = "attack"
 body = '''
-Determinism is what makes the null valid and the audit possible. With the same selector seed in the observation and in every replicate, the finite annealer is a fixed function and the randomisation test compares like with like; with a candidate-specific seed the observation could be searched harder than its nulls. The auditor's replay of the public bank (68 seeds, 34 maps and map hashes, 19 full 504-index permutations, every plaintext and ciphertext hash) from the design text, without importing the implementation, is the strongest form of the check: two independent implementations agree on every field.
+Determinism makes exact replay and independent audit possible. Reusing the same selector stream for the observation and every replicate makes a finite annealer a fixed function of its input; under the stated exchangeability assumptions, that function can be used as the randomization statistic. Distinct preregistered streams can also be valid if assigned symmetrically, but choosing or extending randomness after seeing scores creates unequal search effort. The cited independent replay reconstructed the recorded seed and permutation bank from the design text and matched every audited field.
 '''
 
 [[blocks]]
 kind = "pseudocode"
 body = '''
 ```text
-// Root reveal r (32 bytes); label L (exact ASCII bytes); one private counter
-// per label. EL = length-prefixed encoding
+// Root r, exact label bytes L, and one counter per label; EL is length-prefixed.
 function WORD(r, L, c):
-    return the first 8 bytes of SHA256(r || EL(L) || uint64be(c)) as an
-            unsigned 64-bit integer
+    return UINT64BE(first 8 bytes of SHA256(r || EL(L) || uint64be(c)))
 
-// uniform in [0, n) by rejection
 function DRAW(r, L, n, counters):
+    require 0 < n < 2^64
     loop:
         x = WORD(r, L, counters[L]); counters[L] = counters[L] + 1
-        // otherwise reject and take the next word
         if x < floor(2^64 / n) * n: return x mod n
-    // more than 2^32 words for one seed is a derivation failure: retire the
-    // reveal, no fallback
 
 function SEED(r, L, counters, accepted):
     loop:
         s = 1 + DRAW(r, L, 2^63 - 1, counters)
-        // duplicate: same stream, next counter
         if s not in accepted: accepted = accepted + {s}; return s
 
-// fixed case order; never rerolled
 function DERIVE_SEEDS(r, cases):
     for each case in cases in fixed order:
-        construction_seed[case] = SEED(r, "SEED/CONSTRUCTION/" + case,
-                counters, accepted)
-        selector_seed[case]     = SEED(r, "SEED/SELECTOR/" + case, counters,
-                accepted)
-    // same selector seed for the observation and each null
+        construction_seed[case] = SEED(r, "SEED/CONSTRUCTION/" + case, counters, accepted)
+        selector_seed[case] = SEED(r, "SEED/SELECTOR/" + case, counters, accepted)
     return construction_seed, selector_seed
 
-// descending Fisher-Yates, unbiased
 function SHUFFLE(r, L, n, counters):
     perm = [0, 1, ..., n-1]
     for i in n-1 down to 1:
-        // uniform in [0, i]
         j = DRAW(r, L, i + 1, counters)
         swap perm[i] and perm[j]
     return perm
@@ -90,7 +78,7 @@ function SHUFFLE(r, L, n, counters):
 [[blocks]]
 kind = "complexity"
 body = '''
-Hash-based derivation is negligible in cost. Rejection sampling wastes at most a fraction $n / 2^{64}$ of words. The cost is in writing the contract precisely enough that a second implementer reproduces it. One design was blocked for an ambiguous seed-label clause and its successor spelled out the exact bytes.
+Hash derivation is normally small relative to the search, but its cost should still be measured if draws dominate a tiny kernel. Under a uniform 64-bit-word model and $0<n<2^{64}$, the rejection probability is $(2^{64}\bmod n)/2^{64}<n/2^{64}$. The main reproducibility burden is specifying byte encodings, counters, duplicate handling, and failure terminals precisely enough for a second implementation to agree.
 '''
 
 [[blocks]]

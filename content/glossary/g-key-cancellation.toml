@@ -6,5 +6,5 @@ status_note = "Standard term; the corpus's usage and its conditions are document
 family = "Cryptanalysis technique"
 tags = ["two ciphertexts", "difference"]
 related = ["key-cancellation", "segment-chain-analysis", "running-key-relation-test", "difference-operators", "conjugacy-and-gauge"]
-summary = "Key cancellation subtracts one ciphertext from another, or from a shifted copy of itself, so a shared stream disappears. Two texts using one running key leave the difference between their plaintexts. A ciphertext autokey can leave the plaintext. The cancellation is exact only when both texts use the same index system; a straight and a keyword-mixed alphabet do not. The result still has 26 equivalent shifts, and the exposed cipher must still be solved and checked against null data."
-updated = "2026-09-04"
+summary = "Key cancellation combines ciphertext coordinates so that a shared additive or otherwise invertible key term disappears. For two additive encryptions aligned under the same coordinate system and key stream, subtraction exposes the plaintext-coordinate difference. Certain ciphertext-autokey recurrences similarly cancel at their feedback lag. The operation is exact only under the stated algebra, alignment, and alphabet coordinates. Any residual global ambiguity depends on that model; the derived text still requires its own solution and null calibration."
+updated = "2026-09-07"

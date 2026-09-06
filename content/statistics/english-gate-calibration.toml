@@ -3,12 +3,12 @@ section = "statistics"
 title = "English gate calibration"
 subtitle = "Set a safe language-score cutoff with separate real prose"
 status = "VERIFIED"
-status_note = "An audit found that a quadgram cutoff of mean - 0.7 rejected 11 of 1,545 genuine 153-letter English windows, or 0.71%. A cutoff set above the random-letter ceiling rejected none. Updated gates also rejected 0 of 14,277 genuine 63-letter windows and are now used."
+status_note = "An audit found that a quadgram cutoff of mean - 0.7 rejected 11 of 1,545 genuine 153-letter English windows, or 0.71%. A cutoff anchored above the largest sampled random-letter score rejected none in that prose sample. Updated gates also rejected 0 of 14,277 genuine 63-letter windows and are now used."
 family = "Language-model scoring"
 tags = ["gate", "threshold", "calibration", "false negative", "held-out"]
 related = ["quadgram-log-likelihood", "power-analysis", "permutation-test", "tautological-gate-rule", "held-out-gates", "valid-model-nulls", "estimator-standard-error", "g-held-out"]
-summary = "A language gate is a score cutoff, usually based on quadgrams, that decides whether a trial decryption looks like English. A cutoff that is too strict can reject correct but unusual prose. Set it with many separate English samples of the same length and the same scoring table. Measure their mean, spread, minimum, and rejection rate. Place the cutoff safely above the best random-letter score, not just below the average prose score."
-updated = "2026-09-04"
+summary = "A language gate is a score cutoff, usually based on quadgrams, that decides whether a trial decryption resembles a reference sample of English. A cutoff that is too strict can reject correct but unusual prose. Set it with separate English and non-language samples of the same length and scoring table. Report both error rates with uncertainty. A largest sampled random-letter score is a calibration anchor, not a universal ceiling."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -17,11 +17,15 @@ Let $r(x)$ be the quadgram rate of a candidate. A gate declares the candidate no
 
 $$\hat\mu = \operatorname{mean}\, r(w_j), \qquad \hat\sigma = \operatorname{sd}\, r(w_j), \qquad r_{\min} = \min_j r(w_j), \qquad \widehat{\mathrm{FN}}(\theta) = \frac{1}{W}\#\{j : r(w_j) < \theta\},$$
 
-the last being the gate's false-negative rate on real English. The **anchored** gate is
+the last being the gate's false-negative rate on the prose sample. On a separate non-language validation sample $v_1,\ldots,v_R$, report
+
+$$\widehat{\mathrm{FP}}(\theta)=\frac1R\#\{i:r(v_i)\ge\theta\}.$$
+
+The **anchored** gate is
 
 $$\theta_E = r_{\text{IID}}(n) + \Delta,$$
 
-where $r_{\text{IID}}(n)$ is the ceiling reached by the best of many independent random-letter texts of length $n$ under the same table (the "garbage level") and $\Delta$ a declared margin.
+where $r_{\text{IID}}(n)$ is the largest score in a declared finite design sample of independent random-letter texts of length $n$ under the same table, and $\Delta$ is a declared margin. This is a sampled reference maximum, not the upper endpoint of the random-text score distribution. Because the same design sample sets the threshold, its zero false-positive count is tautological; estimate false positives on a separate frozen sample.
 '''
 
 [[blocks]]
@@ -43,15 +47,16 @@ body = '''
 - The calibration windows are prose of the same kind as the expected plaintext; orthographically atypical plaintext (deliberate misspellings, archaic text) sits further into the tail than the corpus suggests.
 - The calibration range, the model's training range and the planted-control range are three disjoint corpus regions. A gate calibrated on windows that overlap the table's training data is optimistic.
 - Length matters: a threshold tuned on 504-letter spans rejected a correctly recovered 152-letter prose fixture, so each admitted length gets its own calibration.
+- A uniform iid-letter reference estimates performance only against that source. Structured non-language can score much higher, so negative controls should include relevant lists, repetitions, and adversarial overfits.
 '''
 
 [[blocks]]
 kind = "attack"
 title = "Use in an attack pipeline"
 body = '''
-1. Before a live pass, publish $\hat\mu$, $\hat\sigma$, $r_{\min}$, the chosen $\theta$ and $\widehat{\mathrm{FN}}(\theta)$ for the exact table and length in use.
+1. Before a live pass, publish $\hat\mu$, $\hat\sigma$, $r_{\min}$, the chosen $\theta$, and held-out estimates of $\widehat{\mathrm{FN}}(\theta)$ and $\widehat{\mathrm{FP}}(\theta)$ for the exact table, source generators, and length in use.
 2. Prefer a sub-threshold *disposition* to a terminal verdict: a candidate below $\theta$ proceeds to the [permutation nulls](/statistics/permutation-test) with a typed low-rate label instead of terminating the transaction.
-3. Let the null rank carry the decision. In the audited lanes a candidate is admitted only at strict rank 1 among 99 matched nulls. The English gate is a guard against fluent nonsense, not the evidence.
+3. Let the null rank carry the decision. In the audited lanes a candidate is admitted only at strict rank 1 among 99 matched nulls. The English gate filters candidates that score like the declared non-language reference; passing it is not evidence of fluency or correctness.
 4. Never re-tune the gate after seeing a live score ("gate shopping"). A lane that failed its control power must refuse its live pass rather than loosen the gate.
 '''
 
@@ -71,18 +76,19 @@ function FALSE_NEGATIVE_RATE(rate[1..W], theta):
     // counted directly, never from a normal tail
     return #{ j : rate[j] < theta } / W
 
-// Anchored gate: the random-letter ceiling at this length plus a declared
-// margin Delta.
-function ANCHORED_GATE(n, R, Delta, r, rng):
-    r_IID = max over i in 1..R of r(RANDOM_LETTERS(rng, n))
-    return r_IID + Delta
+// Anchored gate: the largest score in a finite random-letter design sample
+// at this length, plus a declared margin Delta.
+function ANCHORED_GATE(random_design, Delta, r):
+    return MAX(r(v) for v in random_design) + Delta
 
-function PUBLISH_GATE(w, n, R, Delta, r, rng):
+function PUBLISH_GATE(w, random_design, random_validation, Delta, r):
     mu_hat, sigma_hat, r_min, rate = CALIBRATE(w, r)
-    theta_E = ANCHORED_GATE(n, R, Delta, r, rng)
+    theta_E = ANCHORED_GATE(random_design, Delta, r)
     FN = FALSE_NEGATIVE_RATE(rate, theta_E)
+    FP = #{v in random_validation : r(v) >= theta_E} /
+            LENGTH(random_validation)
     // before any live score is seen
-    print mu_hat, sigma_hat, r_min, theta_E, FN
+    print mu_hat, sigma_hat, r_min, theta_E, FN, FP, sample sizes
     // never re-tuned after a live score
     return theta_E
 
@@ -105,7 +111,7 @@ kind = "failure_modes"
 body = '''
 - **Gaussian intuition.** $0.7$ below the mean is $5.9\hat\sigma$. A normal tail would predict about one false rejection in $10^9$, the measured rate is $7$ in $1{,}000$. The prose tail is heavy because short windows land on names, numbers and rare words.
 - **One-shot cost.** In a design where a live attempt is unique, a false negative is not a wrong conclusion about the cipher family (the terminal was correctly scoped "not a family rejection") but it destroys the only attempt.
-- **Wrong length.** Thresholds do not transplant across lengths. The random-letter ceiling rises as $n$ falls.
+- **Wrong length.** Thresholds do not transplant across lengths. The upper tail of sampled random-letter scores changes with $n$ and with the number of reference draws.
 - **Gate as evidence.** A candidate that passes the gate is not thereby correct: at $-4.87$ a bank search produced a passing candidate that eight of nine complete-pipeline nulls beat.
 '''
 
@@ -122,9 +128,9 @@ body = '''
 Suppose $W = 2{,}000$ held-out windows give $\hat\mu = -4.13$ and $\hat\sigma = 0.12$, and the best of $1{,}000$ random-letter texts of the same length scores $-6.32$.
 
 - A gate at $\hat\mu - 0.7 = -4.83$ sits at $0.7/0.12 = 5.8$ standard deviations; count the windows below it directly rather than trusting the normal tail. If $14$ of $2{,}000$ fall below, $\widehat{\mathrm{FN}} = 0.7\%$.
-- The anchored gate $-6.32 + 0.5 = -5.82$ is $1.7$ above the garbage level and, if no window falls below it, has an estimated false-negative rate below $1/2{,}000$ (rule of three: at most about $3/2{,}000 = 0.15\%$ at 95% confidence).
+- The anchored gate $-6.32 + 0.5 = -5.82$ is $1.7$ above the largest sampled random-letter score. If no prose window falls below it, the empirical point estimate of the false-negative rate is zero; the rule of three gives an approximate 95% upper bound of $3/2{,}000 = 0.15\%$, under independent, representative sampling.
 
-The second gate is looser on prose and still separates real English from the best random text by a declared margin; that is the design goal.
+The second gate is looser on prose and separates these sampled English and random-text references by a declared margin. New plaintext populations and larger random searches still require fresh calibration.
 '''
 
 [[blocks]]

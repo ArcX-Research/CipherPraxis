@@ -6,5 +6,5 @@ status_note = "Standard term; the corpus distinguishes invariants proved for a w
 family = "Algebra"
 tags = ["necessary condition", "structural test"]
 related = ["residue-class-graphs", "difference-operators", "dihedral-group", "tautological-gate-rule", "valid-model-nulls"]
-summary = "An invariant is a rule that every member of a cipher family must obey, whatever its key, alphabet, or plaintext. Examples include matching equality patterns within a key class and cycle sums of zero on a residue graph. If an invariant fails, the family is impossible. If it holds, the family is only still possible; that alone is not supporting evidence. A pattern that has legal exceptions is a useful clue, not an invariant."
-updated = "2026-09-04"
+summary = "An invariant is a quantity or relation unchanged by a specified transformation, or a necessary condition implied by a precisely stated model. Its assumptions include the allowed keys, data representation, and any treatment of plaintext variables. Failure of a proved necessary condition excludes that model instance; satisfaction establishes only compatibility, not positive evidence or sufficiency. A pattern with model-valid exceptions is a heuristic clue, not an invariant."
+updated = "2026-09-07"

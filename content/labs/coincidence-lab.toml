@@ -3,38 +3,29 @@ section = "labs"
 title = "Coincidence & Kasiski lab"
 subtitle = "Use IC, matching-letter gaps, and Kasiski repeats to look for a key period"
 status = "VERIFIED"
-status_note = "On a Vigenère test with a five-letter key, periodic IC, the gap profile, and Kasiski factor votes all identify period 5."
+status_note = "On the recorded Vigenère fixture with a five-letter key, periodic IC, the gap profile, and Kasiski factor votes all rank period 5 prominently. This fixture does not establish their error rates on other texts."
 family = "Analysis labs"
 tags = ["index of coincidence", "kasiski", "period", "statistics"]
 related = ["index-of-coincidence", "coincidence-lag-profile", "kasiski-examination", "estimator-standard-error", "null-lab"]
-summary = "This lab puts three classic period tests together. Whole-text index of coincidence shows whether letter counts look language-like or flat. The periodic scan finds a key length whose cosets look monoalphabetic. The gap profile and Kasiski table look for the same period in matching letters and repeated fragments."
-updated = "2026-09-04"
+summary = "This lab puts three classic period diagnostics together. Whole-text index of coincidence summarizes letter concentration. A periodic scan can highlight lengths whose cosets have concentrated counts, while lag matches and Kasiski repeats can highlight recurring spacings. Peaks are heuristic candidates: multiples, divisors, chance repeats, and short samples can all mislead."
+updated = "2026-09-07"
 lab = "coincidence"
 
 [[blocks]]
 kind = "pseudocode"
 body = '''
 ```text
-// Letters only, indices 0..25. IC and IC_SD are as in the
-// index-of-coincidence entry.
 function COINCIDENCE_LAB(text, m_max, t_max, len_min, len_max):
     c = LETTERS_ONLY(text); n = length(c)
-    // read against the English and uniform references
+    require n >= 4, 2 <= m_max <= n / 2, and 1 <= t_max < n
     ic_whole = IC(c)
-    // exact standard deviation at this length
     sd_english = IC_SD(ENGLISH, n)
-
-    // Periodic scan: the mean coset IC for each trial period.
     for m in 1..m_max:
         scan[m] = mean over b in 0..m-1 of IC([c[i] for i in 0..n-1 if i mod
                 m == b])
     best_period = argmax over m in 2..m_max of scan[m]
-
-    // Gap profile: the share of positions i with c[i] == c[i+t].
     for t in 1..t_max:
         gap[t] = #{ i in 0..n-t-1 : c[i] == c[i+t] } / (n - t)
-
-    // Kasiski: repeated groups and the distances between their occurrences.
     repeats = []
     for len in len_max down to len_min:
         for every group g of len letters occurring at positions pos[1..r]
@@ -44,7 +35,6 @@ function COINCIDENCE_LAB(text, m_max, t_max, len_min, len_max):
                 repeats += (g, pos, distances pos[i+1] - pos[i])
     for q in 2..m_max:
         votes[q] = #{ distance d over all repeats : d mod q == 0 }
-
     return ic_whole, sd_english, scan, best_period, gap, repeats, votes
 ```
 '''
@@ -53,8 +43,8 @@ function COINCIDENCE_LAB(text, m_max, t_max, len_min, len_max):
 kind = "notes"
 title = "What to try"
 body = '''
-- Paste plain English. Its whole-text IC should be near the English reference, while the period scan stays flat because there is no repeating key.
-- Encrypt text with a seven-letter key in the [Vigenère lab](/labs/vigenere-lab), then paste the result here. Periods 7 and 14 should stand out.
-- Paste random letters. The IC should move toward the uniform reference, 0.0385, and the tests should find no clear pattern.
-- Check the standard deviation beside the English reference. At 150 letters, an IC difference of 0.005 is within one standard deviation.
+- Paste natural-language text and compare its whole-text IC with the displayed language model. Finite samples need not sit close to the reference, and a period scan can have chance peaks without a repeating key.
+- Encrypt text with a seven-letter key in the [Vigenère lab](/labs/vigenere-lab), then paste the result here. Periods 7 and some multiples may stand out; whether they do depends on length and plaintext statistics.
+- Paste letters sampled uniformly and independently. The expected IC is $1/26 \approx 0.03846$, but a finite sample can show apparent peaks.
+- Treat the displayed standard deviation as model-conditional. It quantifies sampling variation under the named letter model; it is not a universal cutoff or a family-wise significance correction.
 '''

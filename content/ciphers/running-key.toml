@@ -8,7 +8,7 @@ family = "Stream and machine ciphers"
 tags = ["running key", "aperiodic", "book key", "two-language-stream"]
 related = ["vigenere", "book-cipher", "autokey", "one-time-pad", "running-key-relation-test", "key-cancellation", "beam-search", "viterbi-decoding", "constraint-satisfaction-forward-checking", "word-prefix-csp", "transposed-running-key-endpoint-scoring"]
 summary = "A running-key cipher adds a long meaningful text to the plaintext one letter at a time. The key does not repeat, so there is no period to find. If the key passage is in a known bank, a solver can search for it. If it is unknown, both key and plaintext are language, and many wrong pairs can sound convincing. Tests solved the known-bank case but showed that the unknown-key decoder lacks power."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -24,7 +24,7 @@ $$a(c_i) \equiv a(p_i) + a(t_i) \pmod{26}$$
 kind = "equations"
 title = "Known bank versus unknown key"
 body = '''
-**Known text, unknown alphabet and shifts.** If the key is a window $T[o : o+n]$ of a known text and a period-$m$ word shift $w$ is added, every position gives one linear equation in the alphabet positions, $x(c_i) - x(T_{o+i}) - k_{i \bmod m} \equiv 0$, with all $x$ distinct; $n = 63$ or $95$ equations make a wrong window inconsistent within a few search nodes and the right one yield a consistent alphabet. **Unknown English key.** The pair $(p, t)$ must be inferred jointly from $c$ alone. The symmetry $p \leftrightarrow t$ under Vigenère is intrinsic, and language models admit many fluent decompositions. Between two ciphertexts, a shared running key cancels: $c^{(1)}_i - c^{(2)}_i = p^{(1)}_i - p^{(2)}_i$, which is the relation test the program ran on its two short texts in every index-space pairing.
+**Known long operand, periodic other operand.** If one additive operand is a window $T[o:o+n]$ of a known text and the other is restricted to a period-$m$ numeric sequence, every position gives $x(c_i)-x(T_{o+i})-k_{i\bmod m}\equiv0$, with all letter coordinates $x$ distinct. This is the exact window test used in the recorded controls; it does not cover an arbitrary unknown plaintext paired with the known key text. On its 63- and 95-letter instances, wrong windows often became inconsistent within a few nodes and the planted window admitted a consistent alphabet. **Unknown English key.** The pair $(p,t)$ must be inferred jointly from $c$ alone. The symmetry $p\leftrightarrow t$ under Vigenère is intrinsic, and language models admit many fluent decompositions. Between two ciphertexts, a shared running key cancels: $c^{(1)}_i-c^{(2)}_i=p^{(1)}_i-p^{(2)}_i$ in a common coordinate order.
 '''
 
 [[blocks]]
@@ -40,7 +40,7 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - Both streams are natural language. The cipher is additive in a known or guessed order.
-- Invariant: no lag has an elevated coincidence rate, so period-finding statistics are silent.
+- A nonperiodic key has no deterministic key period. Under independent stationary plaintext/key language models, ordinary period tests are not expected to show a stable key-lag peak, but finite texts can show chance or linguistic autocorrelation peaks.
 - Invariant: two messages under the same key text differ by the difference of their plaintexts, regardless of the key.
 '''
 
@@ -49,7 +49,7 @@ kind = "attack"
 title = "How to attack it"
 body = '''
 1. **Bank sweep.** Slide every candidate key text past the ciphertext at every offset in every order and relation; score offsets by monogram likelihood (vectorised), re-score the top ones by index of coincidence and quadgrams, and compare with the same sweep on shuffled ciphertext.
-2. **Exact window test.** With a candidate text, solve the alphabet-position CSP for every window; keep windows that admit a consistent alphabet.
+2. **Exact window test.** With a candidate long operand and a declared periodic other operand, solve the alphabet-position CSP for every window; keep windows that admit a consistent alphabet.
 3. **Unknown key.** Exact Viterbi over the last three key letters ($26^3$ states) scoring quadgrams of both streams, or a recurrent language model run jointly on both streams inside a beam; in either case require matched planted controls first.
 '''
 
@@ -125,7 +125,7 @@ Check position 3: $D + Q = 3 + 16 = 19 = T$; position 4: $H + U = 7 + 20 = 27 \e
 [[blocks]]
 kind = "notes"
 body = '''
-The program's practical conclusion: a running key is attackable exactly when the key text can be enumerated, and any claimed reading with an unknown key needs an independent constraint (a second message under the same key, or a crib) rather than more search.
+Enumerating a plausible key-text bank can make a running-key attack practical, but it is not the only possible source of information: cribs, key reuse, and related messages can also constrain the pair. For an otherwise unknown key, a fluent decomposition still needs independent evidence because the tested joint decoder did not recover its controls reliably.
 '''
 
 [[provenance]]

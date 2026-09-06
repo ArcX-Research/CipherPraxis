@@ -7,8 +7,8 @@ status_note = "Two independent reviews used the same brief and resolved differen
 family = "Method governance"
 tags = ["governance", "assumptions", "review", "selection bias", "successor review", "ciphertext-only"]
 related = ["control-first-policy", "tautological-gate-rule", "valid-model-nulls", "seal-and-audit-protocol", "correction-and-retraction", "selection-overfit-check", "change-point-zone-detection", "family-identification", "segment-chain-analysis", "g-successor-review", "g-family-sweep", "g-selection-freedom", "g-zone"]
-summary = "Many negative results may all depend on the same weak assumption. An assumption review pauses the search and lists every measured fact with its null test. It names each assumption, says how to test it, and marks it keep, drop, or undecidable. It then ranks the cipher families that still fit and records any corrections. A second reviewer repeats the work, and data settle disagreements. Before a new family is built, a shorter successor review checks overlap, algebra, equivalent cases, cost, controls, and the stop rule."
-updated = "2026-09-04"
+summary = "Many negative results may all depend on the same weak assumption. An assumption review pauses the search and lists every measured fact with its null test. It names each assumption, says how to test it, and marks it keep, drop, or undecidable. It then ranks the cipher families that still fit and records any corrections. A second reviewer repeats the work, and new measurements can resolve disagreements or leave them open. Before a new family is built, a shorter successor review checks overlap, algebra, equivalent cases, cost, controls, and the stop rule."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -17,7 +17,7 @@ The protocol is a fixed sequence of documents and measurements:
 
 1. **Facts** $F_1 \dots F_k$: what is measured, model-free where possible, each with its null (shuffle type, replicate count) and $z$.
 2. **Assumptions** $A_1 \dots A_j$: list what every negative result has quietly assumed, such as prose plaintext, an additive layer, noise in flat sections, an unstructured alphabet, or a literal reading of outside information.
-3. **Verdicts**: KEEP, DROP or UNDECIDABLE for each assumption, with the statistic that decides it and, for UNDECIDABLE, the proof that no alphabet-free statistic can.
+3. **Verdicts**: KEEP, DROP or UNDECIDABLE for each assumption, with the statistic that decides it. UNDECIDABLE requires either an identifiability argument under the declared observations and model class or a clear statement that the available evidence does not decide it; it does not assert that no conceivable statistic could work.
 4. **Constructions** consistent with all kept facts, ranked, each with the test that would distinguish it and what each outcome buys.
 5. **Decisive tests** chosen by cost times decisiveness, then **corrections**: verdicts withdrawn, negatives reclassified, and why.
 
@@ -35,7 +35,7 @@ A statistic $T$ computed with parameters $\hat\theta$ fitted on the whole text, 
 kind = "assumptions"
 body = '''
 - Every claimed fact carries a receipt (log, replicate count, null type); facts without receipts are downgraded to conjectures.
-- Two reviewers work independently on the same brief before comparing; disagreements are settled by a new measurement, not by argument.
+- Two reviewers work independently on the same brief before comparing. A new measurement may resolve a disagreement; otherwise the disagreement remains recorded rather than being forced into a verdict.
 - A negative binds only within the scope of its assumptions, its text length and its control power. The protocol makes that scope explicit.
 '''
 
@@ -67,8 +67,9 @@ function ASSUMPTION_REVIEW(ciphertext, prior_results, negatives):
     for each assumption A behind the negatives (prose plaintext, additive
             layer, noise in flat parts, unstructured alphabet, ...):
         dependents[A] = { negatives that rely on A }
-        verdict[A] = KEEP or DROP by the statistic that decides it, or
-                UNDECIDABLE with the proof that no alphabet-free statistic can
+        verdict[A] = KEEP or DROP when a declared statistic decides it, or
+                UNDECIDABLE with an identifiability argument for the declared
+                observations and model class, or with the evidence gap stated
         for each negative in dependents[A]:
             classify it as still binding, void, or reinterpreted
     run the cheap decisive tests first (segment identity, windowed lag map,
@@ -81,7 +82,7 @@ function ASSUMPTION_REVIEW(ciphertext, prior_results, negatives):
     corrections = verdicts withdrawn, negatives reclassified, and why
     recorded in the document that made the original claims
     a second reviewer fills the same sheet blind
-    disagreements are settled by a new measurement, not by argument
+    disagreements are tested by a new measurement and otherwise remain open
     return (facts, verdicts, constructions, tests, corrections)
 
 function SUCCESSOR_REVIEW(new_family, earlier_lanes):
@@ -107,7 +108,7 @@ kind = "failure_modes"
 body = '''
 - **Compounding.** Twenty-one whole-text key searches assumed facts estimated by heuristics at 153 letters: a period-7 outer layer, non-monoalphabetic cosets, no digram structure, and a mixed inner layer. Once the text was found to contain separate zones, the "mixed inner" pattern proved false. Every family chosen because of that pattern had been aimed at the wrong target.
 - **Wrong plaintext model.** Crib attacks, key-word sweeps and annealers aimed at prose on a 144-letter zone whose plaintext is a peaked small-vocabulary text produced negatives that carry no weight.
-- **Undecidable assumptions treated as decided.** Whether a periodic layer is additive (rotations of one alphabet) or seven unrelated substitutions is invisible to every same-coset statistic. The protocol records it as UNDECIDABLE with the reason, instead of assuming.
+- **Undecidable assumptions treated as decided.** Equality and count statistics computed separately within each coset cannot distinguish rotations of one alphabet from unrelated per-coset substitutions: both merely relabel each coset. The protocol records additivity as UNDECIDABLE from those observables, rather than extending that limited non-identifiability claim to every possible statistic.
 - **Reading a change point as a key proof, or a peaked prefix as a Caesar proof.**
 - **Family sweeps as lottery tickets.** After the enumerable structured families are exhausted, further sweeps cost machine time and buy nothing. The protocol's recommendation was to stop them and look for the missing key material outside the ciphertexts.
 - **Unbacked rows.** A design note's table claimed a cross-text periodic-difference result for which no implementation or transcript existed. A later audit found it and it is not cited as evidence anywhere in this atlas.

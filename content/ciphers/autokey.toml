@@ -8,7 +8,7 @@ family = "Stream and machine ciphers"
 tags = ["autokey", "feedback", "primer", "aperiodic"]
 related = ["vigenere", "beaufort", "porta", "running-key", "condi", "autokey-difference-periodicity", "key-cancellation", "beam-search", "g-autokey-primer"]
 summary = "An autokey starts with a short primer, then continues the key with the message itself. In the plaintext form, each primer letter starts a chain of positions spaced by the primer length. A wrong primer letter changes that whole chain. In the ciphertext form, a lagged ciphertext difference reveals the plaintext and removes the primer. Both forms were tested with controls at the target lengths and separate forward implementations."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -41,8 +41,8 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - One alphabet order and one relation for the whole text.
-- Invariant: plaintext autokey has no period, but the chains of spacing $m$ have the coincidence statistics of a shifted text, so $m$ is visible as a lag.
-- Invariant: ciphertext autokey makes the lag-$m$ difference text periodic-free plaintext. A difference-text periodicity scan finds $m$ without any key (see [Autokey difference periodicity](/cryptanalysis/autokey-difference-periodicity)).
+- Plaintext autokey is not periodic. Under a stationary language model, chains spaced by the primer length can retain lag-dependent language correlations; a peak near $m$ is therefore a heuristic clue, not an invariant or guaranteed period recovery.
+- For ciphertext autokey, the exact recurrence makes the lag-$m$ difference equal to plaintext on the suffix. Scanning candidate lags can identify $m$ when that suffix scores distinctly as language, but finite samples and competing lags can remain ambiguous (see [Autokey difference periodicity](/cryptanalysis/autokey-difference-periodicity)).
 - Any fitted primer round-trips. Only control recovery counts.
 '''
 

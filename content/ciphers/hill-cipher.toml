@@ -8,7 +8,7 @@ family = "Polygraphic substitution"
 tags = ["polygraphic", "linear", "matrix", "block"]
 related = ["affine-cipher", "playfair", "matrix-invertibility-mod-26", "finite-field-linear-algebra", "units-mod-26", "periodic-substitution-dp", "meet-in-the-middle", "family-wise-null", "hill-lab", "g-polygraphic"]
 summary = "The Hill cipher treats each d-letter block as numbers and multiplies it by a reversible d x d matrix modulo 26. During decryption, each row of the inverse matrix produces every d-th plaintext letter. A solver can score those sampled streams one row at a time, then join rows only if the full matrix is reversible. Tests covered arbitrary matrices of sizes 2, 3, and 4, both alone and over a repeating additive layer."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -45,7 +45,7 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - Block boundaries are aligned with the start of the text. The matrix is constant.
-- Invariant: whole-block permutation of the ciphertext preserves every within-block linear combination, which is the null the program used for the periodic variants.
+- Invariant: permuting whole ciphertext blocks applies the same permutation to the values of every fixed within-block linear combination. It preserves each such stream's multiset, not its original order; this is the null used for the periodic variants.
 - Invariant: a Hill layer destroys single-letter frequencies but not the periodicity of a layer beneath it, seen through the decimated period $q$.
 '''
 
@@ -135,7 +135,7 @@ Ciphertext `HIAT`. The inverse is $D = 3 \begin{pmatrix} 5 & -3 \\ -2 & 3 \end{p
 [[blocks]]
 kind = "notes"
 body = '''
-Row separability is what turns a $26^{d^2}$ key space into $26^d$ independent row scores plus a cheap join. It is exact for direct Hill and remains exact for Hill over a periodic layer because the periodic structure survives decimation.
+The algebraic row decomposition is exact: each inverse row can be scored through its own decimated stream, and a layer beneath it has period $p/\gcd(p,d)$. The implemented attack is nevertheless heuristic when it retains only top-scoring rows or matrix joins; exactness of the final periodic DP is conditional on the planted rows and key values surviving those handoffs.
 '''
 
 [[provenance]]

@@ -7,8 +7,8 @@ status_note = "A compiled solver now re-runs its exact structural optimiser afte
 family = "Deterministic heuristics"
 tags = ["alternating optimisation", "coordinate stationarity", "start bank", "fixed point", "completion"]
 related = ["coordinate-descent", "hill-climbing", "expectation-maximisation", "piecewise-running-shift-dp", "candidate-bank-lineage-and-cap-accounting", "exhaustive-enumeration", "bound-benchmarks-and-certificates", "drainability-and-throughput", "seed-determinism"]
-summary = "Alternating optimisation switches between two parameter blocks, such as a shift schedule and a substitution map. Recheck every block and finish every declared start before selecting the best endpoint. Even then, a heuristic optimiser is a proposal generator: its endpoints may enter an exact replay or statistical gate, but a miss does not prove that no better key exists."
-updated = "2026-09-06"
+summary = "Alternating optimization switches between parameter blocks, such as a shift schedule and a substitution map. Recheck every block and finish every declared start before selecting an endpoint; define tie handling so equal-score updates cannot cycle. When one block fit is heuristic, completion means only that the declared multi-start procedure reached its stated stationarity checks. Its endpoints may enter exact replay or statistical evaluation, but a miss is not a completeness result."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -36,7 +36,7 @@ If both block updates never lower the same exact score, then
 $$F(\theta_t,M_t)\le F(\theta_t,M_{t+1})
 \le F(\theta_{t+1},M_{t+1}).$$
 
-In a finite state space, strict improvements eventually stop. The implementation must still test the endpoint explicitly. If the last operation fitted $M$, the required check is $T_\theta(M)=\theta$; otherwise the result may already contain a profitable structural update that was never applied.
+In a finite state space, strict improvements eventually stop. Equal-score state changes can still cycle, so the implementation must retain the current state on ties or use a well-founded deterministic secondary order. It must also test the endpoint explicitly. If the last operation fitted $M$, the required check is $T_\theta(M)=\theta$; otherwise the result may already contain a profitable structural update that was never applied.
 
 When $T_M$ is stochastic or approximate, stationarity under $T_\theta$ certifies only the exact block. It is a completion condition, not a proof that $(\theta,M)$ is globally optimal.
 '''
@@ -57,6 +57,7 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - Every block update is scored by the same objective and tie rule.
+- Equal-score updates cannot cycle: either the current state wins every tie or a fixed secondary order decreases strictly on each tied change.
 - The exact block optimiser is checked independently on small cases.
 - The actual start bank, including tie expansion and fallback seeds, is emitted rather than inferred from a requested count.
 - No start is silently dropped because it converges slowly or scores poorly.

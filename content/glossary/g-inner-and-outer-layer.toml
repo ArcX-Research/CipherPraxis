@@ -6,5 +6,5 @@ status_note = "Standard terms for layered constructions; the invariance statemen
 family = "Cipher structure"
 tags = ["layered", "sandwich", "composition"]
 related = ["sandwich-construction", "mixture-inference-under-transposition", "transposition-width-recovery", "order-free-width-statistic", "exact-period-alignment", "multiple-rounds-analysis"]
-summary = "A layered cipher applies two or more operations. The outer layer is applied last during encryption and removed first during analysis. The inner layer sits beneath it. Layer order changes which patterns survive. A periodic substitution after a transposition keeps its cosets, while a later transposition scrambles them. Any transposition keeps the same letter counts. That lets analysts fit an outer periodic layer before they know the transposition."
-updated = "2026-09-04"
+summary = "A layered cipher composes two or more transforms. The outer layer is applied last during encryption and normally inverted first; the inner layer is applied earlier. Layer order controls which statistics remain usable. A transposition preserves the global multiset of symbols but generally changes adjacency and may change membership in position classes. An outer periodic substitution still has cosets in its own output-position coordinates, so order-free statistics on those declared cosets can sometimes be fitted before the inner transposition is recovered."
+updated = "2026-09-07"

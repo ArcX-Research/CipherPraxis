@@ -6,9 +6,9 @@ status = "VERIFIED"
 status_note = "The shared-cycle symmetries are proved and tested: 48/48 unit checks, 16/16 translation checks, and 312 equivalent descriptions reduced to one class. One control run recovered in one gauge but scored in another. That run was marked invalid and replaced."
 family = "Group theory"
 tags = ["gauge", "symmetry", "canonicalisation", "identifiability", "conjugacy"]
-related = ["permutation-cycles", "group-actions-on-alphabets", "units-mod-26", "affine-maps-mod-26", "modular-arithmetic-z26", "gauge-defect-invalidation", "planted-controls", "shared-cycle-attack", "segment-chain-analysis", "key-cancellation", "quagmire-iii", "g-gauge-freedom", "g-affine-orbit", "g-conjugate-permutation"]
+related = ["permutation-cycles", "group-actions-on-alphabets", "units-mod-26", "affine-maps-mod-26", "modular-arithmetic-z26", "gauge-defect-invalidation", "planted-controls", "shared-cycle-attack", "segment-chain-analysis", "key-cancellation", "quagmire-iii", "latent-label-identifiability", "g-gauge-freedom", "g-affine-orbit", "g-conjugate-permutation"]
 summary = "Gauge freedom means that different parameter values can produce exactly the same visible result. For keyed additive ciphers, you may shift the alphabet coordinates along with the key or multiply them by a unit. A solver must treat these versions as equivalent. If it fixes the gauge incorrectly, or recovers in one gauge and scores in another, it can reject a correct answer. One recorded run failed for this reason."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -27,11 +27,30 @@ $$z(P^A_i) - e_A\, z(C^A_i) + e_A e_B\, z(C^B_j) - e_A e_B\, \kappa_j \equiv 0 \
 Gauges of this system:
 - **(G1) translation** $z \to z + b$, together with $z(P^{B\prime}) = z(P^B) - e_A b$ and $\kappa \to \kappa + b\,(1 + e_A e_B - e_B)$: both ciphertexts and $P^A$ unchanged, 26-fold.
 - **(G2) unit multiplication** $(z, \kappa) \to (u z, u \kappa)$: literally identical ciphertexts, 12-fold.
-- **(G3) unobserved letters** of $z$ are free until they occur.
+- **(G3) unobserved letters** can be permuted among unused coordinates when they occur in none of the model's constraints. The completed dial must still be bijective.
 
-Valid fix: one linear row $z(X_0) = 0$ for any single letter $X_0$, with $\kappa$ left free (it absorbs the shift). Fixing $\kappa$ instead (for example $c = 0$) is invalid because $\kappa$ is a genuine unknown. Unit multiplication cannot be fixed by a linear row such as $z(X_1) = 1$, since the true position may be even, $0$ or $13$. It is removed after enumeration by canonicalising, $\min_u u\,(z - z(A))$, one representative per orbit $\{u z + b\}$ of size $312$.
+One valid translation fix is $z(X_0)=0$ for a single letter $X_0$, leaving $\kappa$ free to absorb the shift. In this displayed model, fixing one key intercept to zero is an alternative: the translation coefficient $1+e_Ae_B-e_B$ is always a unit modulo 26. Imposing both fixes generally removes valid solutions. A unit gauge cannot generally be fixed by requiring a particular $z(X_1)=1$, because its true difference from the zero anchor may be a nonunit. After enumeration, canonicalise with $\min_u u\,(z-z(A))$, one representative per complete-dial orbit $\{uz+b\}$ of size $312$.
 
 In a same-alphabet chain cell the additive gauge $(c + d, k + d)$ on the segmented key is a symmetry; in mixed-order cells it is not.
+'''
+
+[[blocks]]
+kind = "variants"
+title = "A free substitution absorbs a preceding relabeling"
+body = '''
+Suppose a latent stream is $r_i=\phi(P_j)$, where $\phi$ is a bijection, and a second text obeys
+
+$$b(C_j)=\sigma a(P_j)+h_{g(j)}\pmod q,$$
+
+with an unrestricted plaintext dial $a$ and $\sigma\in\{+1,-1\}$. Define
+
+$$a_r(u)=\sigma a(\phi^{-1}(u)).$$
+
+Then $b(C_j)=a_r(r_i)+h_{g(j)}$. Conversely every residual witness lifts to the original coordinates using $P_j=\phi^{-1}(r_i)$ and $a(x)=\sigma a_r(\phi(x))$. Both directions preserve injectivity, unused-letter completions, position reindexings and exact copies of positions.
+
+Consequently a structural search can operate on $r$ once, independently of the chosen $\phi$. In particular, the $2q$ sign/offset labels $\phi(x)=s z(x)+k$ need not multiply that search. This removes redundant descriptions; it does not prove a speedup for a particular implementation or improve a heuristic's candidate coverage.
+
+Restore the aliases before applying evidence that depends on physical plaintext letters. A language score must use one global $\phi$ for the whole text, not a separate best alias for each row or column. Fixed plaintext, non-invariant word domains and tied dials can break the reduction. A restricted dial family retains it only when that family is closed under the displayed composition. Keep parameter provenance even when several aliases decode to the same observed string.
 '''
 
 [[blocks]]
@@ -45,8 +64,8 @@ body = '''
 [[blocks]]
 kind = "attack"
 body = '''
-- Count effective unknowns: the cycle modulo (G1)/(G2) has $26!/(26 \cdot 12) \approx 2^{80}$ classes; with seven key differences (about 33 bits) the chain has roughly $2^{113}$ effective states, against about 460 bits of English redundancy in 153 letters — identifiability is not the obstacle, search is.
-- Deduplicate candidate banks by orbit before scoring (312 descriptions of one alphabet collapse to 1 class) and score once per orbit.
+- A complete dial has $26!/(26\cdot12)$ affine classes. If seven residue shifts are independently free after fixing that gauge, the parameter count is $26!\,26^7/(26\cdot12)$. Counting parameters does not prove identifiability: uniqueness depends on the observed constraints and on the allowed plaintexts.
+- Deduplicate candidate banks by orbit for an invariant structural calculation. Before scoring physical plaintext, restore every alias on which the score depends; in the displayed chain this includes all 26 translation readings of text B.
 - In controls, compare the recovered cycle on observed letters modulo the orbit, compare the second text modulo its induced coordinate rotation, and report the recovered shift; require exact recovery of the first text and both scalar forwards.
 '''
 
@@ -69,8 +88,8 @@ function UNIT_SCALE(z, kappa, u):                     // (G2): u a unit of Z26
     return (z', kappa')
 
 // Gauge fixing: one linear row z(X0) = 0 with kappa left free removes (G1).
-// (G2) cannot be fixed by a linear row; remove it after enumeration by
-// canonicalising. representative of the orbit {u z + b}
+// A chosen letter need not have a unit coordinate, so do not assume z(X1)=1.
+// Remove (G2) by canonicalising the orbit {u z + b} after enumeration.
 function CANONICAL(z):
     // translation fixed by z(A) = 0
     for each letter x: t[x] = z[x] - z[A]
@@ -90,7 +109,7 @@ function SAME_ORBIT(z_recovered, z_planted):
 [[blocks]]
 kind = "complexity"
 body = '''
-Orbit size $12 \cdot 26 = 312$ (free action). The translation gauge reduces the shift-vector search of a period-$m$ layer from $26^m$ to $26^{m-1}$. Effective chain states $\approx 2^{113}$ as above.
+The affine action on a complete dial is free, so each orbit has $12\cdot26=312$ members. A common shift reduces a period-$m$ shift-vector enumeration from $26^m$ to $26^{m-1}$ only when the objective is invariant under that shift. A physical-language score generally requires restoring the omitted shifts. These counts alone give neither a runtime bound nor a uniqueness proof.
 '''
 
 [[blocks]]
@@ -99,13 +118,15 @@ title = "The translation-gauge defect"
 body = '''
 A word-pair solver fixed the gauge $z(C^A_0) = 0$, decrypted text B's prefix in that gauge and, in its controls, demanded the planted prefix exactly. Under $z' = u z + b$ the class decrypt of text A is invariant, but $z(P^{B\prime}) = z(P^B) - u^{-1} b\, e_A$ and $c' = u c + b(1 + e_A e_B - e_B)$: the fixed-gauge decrypt of text B is a coordinate-space Caesar rotation of the physical text, so the true cycle misses "exact prefix" in about 25 of 26 plants and its combined score is depressed. A plant proof showed, for all four sign cells, text A match $1.0$ and text B match $0.0$, with single translations $[19, 5, 10, 16]$ recovering text B uniquely. An independent confirmation found shifts 4 and 18 on another plant. The run was killed, its header-only transcript kept under the failed-runs directory, never used as a gate, and the successor maximises the prefix rate over the 26 translation gauges and compares text B modulo the orbit.
 
-Other defects: fixing $\kappa$ instead of a letter; applying the same-order additive gauge in a mixed-order cell (KAT: symmetry in 8/8 same-order cells, not a symmetry in 8/8 mixed cells); quotienting aliases that are not symmetries (a repeated 24-letter half of a latent stream makes two position maps indistinguishable — an alias to retain, not a gauge to remove).
+Other defects include fixing both a letter coordinate and an independent key intercept with only one translation freedom; applying the same-order additive gauge in a mixed-order cell (KAT: symmetry in 8/8 same-order cells, not a symmetry in 8/8 mixed cells); and treating an observed coincidence as a global model symmetry (a repeated 24-letter half of a latent stream makes two position maps indistinguishable on that input, so both parameter origins must be retained).
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
 Static known-answer tests: unit gauge produces identical ciphertexts 48/48 (12 units times 4 sign cells); translation gauge reproduces both ciphertexts with text A unchanged and the predicted key shift 16/16; orbit canonicalisation 312 to 1; in a later successor the exact translation gauge was tested 20/20. Chain plants: a bank member that is a rotation of the true cycle recovers text A exactly and text B up to the predicted shift. Rotation $b = 5$ gives shift 5; $b = 9$ with $e_A = -1$ gives shift 17; a unit alias gives exact recovery. The truth gate follows this rule.
+
+The free-dial absorption variant above has an independent algebraic proof, not a new recovery experiment. Before using it in a search implementation, exhaustively compare original and residual witness sets on a small alphabet, including sparse support, repeated positions, and a label-dependent score that requires restoring a single global alias.
 '''
 
 [[blocks]]
@@ -174,6 +195,12 @@ note = "Route gauge: cyclic cut unidentifiable when the period divides n; contro
 path = "withmath/docs/pk9/PK9_POSDIHEDRAL_D48_INDEPENDENT_REVIEW_CLAUDE.md"
 kind = "audit"
 note = "P3: a repeated 24-letter latent half makes g and rot24 o g indistinguishable; an alias to retain, not to quotient."
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "audit"
+note = "2026-09-06 lead plus independent source-free LOG734 gauge correction: residual-coordinate free-dial witness bijection removes52 redundant sign/offset labels, including partial completions and copied tail. Later physical-language scoring must restore one global alias. Established symmetry, not a new implementation or recovery experiment; frozen734 remains held."
+ref = "LOG734 gauge correction"
 
 [[references]]
 title = "Abstract Algebra"

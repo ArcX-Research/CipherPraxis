@@ -7,8 +7,8 @@ status_note = "Target-absent software checks verify unique fusion, exact variabl
 family = "Candidate fusion"
 tags = ["proposal fusion", "voting", "deduplication", "exact ratios", "ranked banks"]
 related = ["candidate-bank-lineage-and-cap-accounting", "k-best-lists", "beam-search", "bound-benchmarks-and-certificates", "selection-overfit-diagnostic", "endpoint-specific-control-contracts", "held-out-gates", "reproducibility-receipts"]
-summary = "Several selectors can propose useful candidates, but repeated aliases are not new evidence. Form one stable union of distinct semantic proposals, mark a predeclared subset as voters, and let every voter contribute one unit. Other proposals may expand search support without changing the vote. Store the exact numerator and denominator so jobs with different voter counts can be compared correctly."
-updated = "2026-09-05"
+summary = "Several selectors can propose candidates, but repeated aliases are not independent evidence. Form a stable union of distinct semantic proposals, mark a nonempty predeclared subset as voters, and let each voter contribute the declared mass. Other proposals may expand search support without changing the vote. Store exact numerators and denominators when comparing jobs with different voter counts. Agreement remains a heuristic score unless a control distribution calibrates it."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -83,7 +83,7 @@ function FUSE_AND_VOTE(primary_rows, support_rankings, voter_limit):
     primary = STABLE_UNIQUE_BY_SEMANTIC_OBJECT(primary_rows)
     require every primary object is valid and distinct
     voter_count = MIN(voter_limit, LENGTH(primary))
-    require voter_count is permitted by the frozen contract
+    require voter_count > 0 and is permitted by the frozen contract
     voters = FIRST(primary, voter_count)
     proposals = COPY(voters)
     for ranking in support_rankings:

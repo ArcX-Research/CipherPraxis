@@ -8,7 +8,7 @@ family = "Dynamic programming"
 tags = ["piecewise shift", "running state", "boundary terms", "n-gram score", "dynamic programming"]
 related = ["exact-dynamic-programming", "n-gram-language-scoring", "alberti-progressive", "coordinate-descent", "stationary-alternating-optimization", "known-answer-tests"]
 summary = "A running shift may keep one velocity inside each segment while carrying its state continuously across segment boundaries. For a fixed substitution, the best segment velocities can be found exactly by dynamic programming. The important detail is to score both the n-grams inside each segment and the n-grams that cross every boundary."
-updated = "2026-09-06"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -42,7 +42,7 @@ with out-of-range starts omitted. These are exactly the n-grams that cross the b
 $$D_{q+1}(c')=I(c')+\max_{c:\,\phi'=\phi+L_qd}
 \big(D_q(c)+B(c,c')\big).$$
 
-Internal and boundary terms partition the whole-text objective, so traceback returns the exact best declared schedule for the fixed map $M$.
+If every interior segment has length at least $r-1$, no $r$-gram crosses more than one boundary, and the internal and adjacent-boundary terms partition the whole-text objective. If shorter segments are allowed, the state or factors must explicitly score windows spanning multiple boundaries; the displayed pairwise recurrence alone is then insufficient.
 '''
 
 [[blocks]]
@@ -61,7 +61,7 @@ title = "Assumptions and invariants"
 body = '''
 - Segment boundaries and the continuous-state rule are fixed before scoring.
 - The substitution $M$ remains the same across all segments during one schedule optimisation.
-- Every candidate segment is long enough for the stated internal and boundary formulas, or the empty sums are handled explicitly.
+- Every interior segment has length at least $r-1$, so an $r$-gram cannot span two boundaries. A more general segmentation needs additional history in the state; merely treating an internal sum as empty is not enough.
 - Exactness applies to the finite schedule bank for a fixed $M$. It does not make a heuristic substitution fit globally exact.
 - Ties are retained or resolved by one declared deterministic order.
 '''
@@ -150,4 +150,3 @@ ref = "LOG640"
 title = "Dynamic Programming"
 author = "Richard Bellman"
 year = 1957
-

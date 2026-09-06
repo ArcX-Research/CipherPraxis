@@ -15,41 +15,29 @@ lab = "dihedral"
 kind = "pseudocode"
 body = '''
 ```text
-// An element of D_n acts on the ring positions x in 0..n-1 by x ↦ ±x + k:
-// sign + for a rotation, sign − for a reflection. It is stored as (reflect,
-// k) with 0 <= k < n.
+// (reflect, k) acts as x -> -x+k or x -> x+k modulo n.
 function APPLY(e, x):
     if e.reflect: return (-x + e.k) mod n
     return (x + e.k) mod n
-
 // a ∘ b: apply b first, then a
 function COMPOSE(a, b):
     reflect = a.reflect xor b.reflect
-    // a reverses the direction of b's shift
     if a.reflect: k = (a.k - b.k) mod n
     else:         k = (a.k + b.k) mod n
     return (reflect, k)
-
 function INVERSE(e):
-    // every reflection is its own inverse
     if e.reflect: return e
     return (false, (-e.k) mod n)
-
 function ORDER(e):
     if e.reflect: return 2
     if e.k == 0:  return 1
     return n / gcd(n, e.k)
-
-// The position permutation of an element and its disjoint cycles (fixed
-// points are 1-cycles).
 function TO_PERMUTATION(e):
     return [APPLY(e, x) for x in 0..n-1]
-
 function CYCLES(perm):
     for each start in 0..n-1 not yet visited:
         follow x -> perm[x] from start until it returns to start
         record that cycle
-    // the lab checks COMPOSE(a, b) against composing the two permutations
     return cycles
 ```
 '''

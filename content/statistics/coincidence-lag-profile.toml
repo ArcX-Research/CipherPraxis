@@ -7,8 +7,8 @@ status_note = "Lag profiles pass planted periodic checks. A complete aligned-row
 family = "Coincidence and frequency statistics"
 tags = ["coincidence", "lag", "period detection", "zone detection", "fingerprint"]
 related = ["index-of-coincidence", "shuffled-null-z-score", "family-wise-null", "within-coset-null", "kasiski-examination", "exact-period-alignment", "change-point-zone-detection", "family-identification", "coincidence-lab"]
-summary = "At gap d, the coincidence rate is the share of pairs (i, i+d) that contain the same letter. With a key of period m, gaps that are multiples of m have the plaintext rate, about 0.066 for English. Other gaps stay near the random rate of 0.04. Plotting the rate across gaps can reveal the period. Computing it by segment or sliding window also shows where a periodic layer starts and stops. After coset alignment, its shape helps tell different layer orders apart."
-updated = "2026-09-06"
+summary = "At gap d, the coincidence rate is the share of pairs (i, i+d) that contain the same letter. Under an iid plaintext approximation, a periodic key makes multiples of its period approach the plaintext collision rate, about 0.066 for English; other lags often lie nearer 0.04 when relative shifts are well spread. Real prose repeats and key schedules can change either value. A lag profile is therefore a period and boundary diagnostic that must be compared with a matched, family-wise null."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -17,7 +17,7 @@ For a text $c_0 \dots c_{n-1}$ and a lag $d \ge 1$,
 
 $$\kappa(d) = \frac{1}{n-d} \sum_{i=0}^{n-d-1} [\,c_i = c_{i+d}\,].$$
 
-If the text is a periodic substitution of period $m$ over a plaintext with monogram distribution $p$, then for $d \equiv 0 \pmod m$ the two letters were enciphered with the same key element, so $\mathbb{E}\,\kappa(d) = \sum_x p_x^2 \approx 0.066$ for English; for other lags the letters carry different shifts $s \ne t$ and $\mathbb{E}\,\kappa(d) = \sum_x p_x\, p_{x + t - s}$, which averages close to $1/26$. The profile $d \mapsto \kappa(d)$ is therefore a comb with teeth at multiples of $m$.
+If plaintext symbols at the paired positions are independent draws from one monogram distribution $p$, a period-$m$ substitution gives $\mathbb{E}\,\kappa(d)=\sum_xp_x^2\approx0.066$ when $d\equiv0\pmod m$. At a lag whose two key elements differ by $t-s$, the iid expectation is $\sum_xp_xp_{x+t-s}$. That cross-correlation is near $1/26$ only when the relative shifts sample the alphabet broadly; a particular shift can be higher or lower. Under these assumptions, multiples of $m$ tend to form a comb. For real prose, $\Pr(P_i=P_{i+d})$ also depends on lag, so repetitions can strengthen or imitate that comb.
 
 Repeated plaintext words add coincidences at the distance between the repeats (the Kasiski signal), so the profile mixes key periodicity with plaintext self-similarity.
 '''
@@ -44,9 +44,9 @@ body = '''
 kind = "attack"
 title = "How to attack it"
 body = '''
-1. Compute $\kappa(d)$ for $d = 1 \dots 70$ and list the lags whose $z$ against shuffles exceeds $2.5$. A comb at $m, 2m, 3m$ is the period.
+1. Compute $\kappa(d)$ for $d = 1 \dots 70$ and list the lags whose $z$ against shuffles exceeds $2.5$. A repeated excess at $m,2m,3m$ is a candidate period pattern, not an identification by itself.
 2. Slide a window along the text at the candidate lag to find where the periodic layer starts and stops. One zoned 153-letter text showed a lag-7 rate of $0.00$ in its first four 42-letter windows, $0.11$–$0.14$ across its middle and $0.00$ again at the end, and a 144-letter text rose from $0.03$–$0.09$ in its first half to $0.11$–$0.17$ in its second, i.e. periodic layers confined to zones.
-3. Run the alignment z-profile and compare with the planted library. At 153 letters a plain period-7 substitution reads $(p_7, p_{14}, p_{21}) = (+7.4, +4.9, +3.1)$ with nothing at $3, 4, 9, 17$. A period-7 substitution applied *under* a width-9 columnar transposition collapses to $-0.7$ at $p_7$. A Hill layer outside or inside the periodic layer gives $+0.5$. A target whose profile peaks at 7 with the inherited 14/21 tail therefore has its periodic layer outermost, and the magnitude of the peak estimates the inner text's IC.
+3. Run the alignment z-profile and compare it with the planted library. At 153 letters one plain period-7 control reads $(p_7,p_{14},p_{21})=(+7.4,+4.9,+3.1)$ with nothing at $3,4,9,17$. A tested period-7 substitution below a width-9 columnar transposition reads $-0.7$ at $p_7$, while tested Hill-layer variants read about $+0.5$. A similar 7/14/21 profile therefore ranks the outer-periodic construction above those particular alternatives. It does not determine layer order outside the calibrated library; under the iid periodic model, peak size is related to the inner collision rate.
 4. Hand the period to [exact period alignment](/cryptanalysis/exact-period-alignment) and the zone boundaries to [change-point detection](/cryptanalysis/change-point-zone-detection).
 5. If one localized row match was noticed after inspecting the text, replace the fixed-tuple reading with the global aligned-row scan. The null must choose its own best width, gap, and start.
 '''
@@ -117,7 +117,7 @@ title = "Worked example"
 body = '''
 Text `ATTACKATDAWN` ($n = 12$). Lag 6 compares positions $(0,6), (1,7), (2,8), (3,9), (4,10), (5,11)$: A=A, T=T, T$\ne$D, A=A, C$\ne$W, K$\ne$N, so $\kappa(6) = 3/6 = 0.50$. Lag 1 compares eleven adjacent pairs, of which only TT agrees: $\kappa(1) = 1/11 = 0.09$.
 
-The spike at lag 6 is a plaintext repeat (`ATTA…ATDA`), exactly the kind of coincidence a repeating key of period 6 would also produce. On a real ciphertext the two are separated by their nulls: a key period keeps its comb under within-segment shuffles of the plaintext repeats, a repeat does not survive a change of plaintext.
+The spike at lag 6 comes from a repeat in this particular text, exactly the kind of coincidence that a repeating key of period 6 could also produce. One lag profile cannot identify its cause. Compare the complete pattern with length-matched constructions, use a null that preserves the invariants relevant to the claim, and require independent cipher constraints before assigning the spike to a key period.
 '''
 
 [[blocks]]

@@ -7,17 +7,25 @@ status_note = "An exact search checked one to four repeating-substitution rounds
 family = "Layered-construction inference"
 tags = ["rounds", "composition", "compound key", "lcm", "exact enumeration"]
 related = ["compound-periodic-key", "quagmire-iii", "vigenere", "lcm-of-periods", "group-actions-on-alphabets", "exhaustive-enumeration", "family-identification", "coset-shift-recovery", "mixture-inference-under-transposition", "g-family-sweep", "g-inner-and-outer-layer"]
-summary = "Several repeating substitutions combine differently depending on their alphabets. In one alphabet, they become one key whose period is the least common multiple of the round periods. Across different keyed alphabets, they do not collapse into one key. Their final cosets are still monoalphabetic, so the result belongs to the general per-coset substitution family. Exact searches cover small round sets and compare their match patterns with single-layer controls."
-updated = "2026-09-04"
+summary = "Several repeating substitutions combine differently depending on their alphabets and signs. In one alphabet, additive and reciprocal rounds compose into one periodic affine map with slope $+1$ or $-1$; its period divides the least common multiple of the round periods. Across different keyed alphabets, the composition generally does not collapse into one additive key. Each joint residue still uses one fixed substitution, so the construction is a restricted member of the general per-coset substitution family. Exact finite searches can cover declared small round banks, but do not exclude free keys or alphabets."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
-Let $Q_A(k)$ denote the additive substitution $c = A[\,A^{-1}(p) + k_{i \bmod m}\,]$ in alphabet order $A$. Two rounds in the **same** order compose additively:
+Let $Q_{A,s}(k)$ denote the substitution
 
-$$Q_A(k^{(2)}) \circ Q_A(k^{(1)}) = Q_A(k), \qquad k_i = k^{(1)}_{i \bmod m_1} + k^{(2)}_{i \bmod m_2}, \qquad \text{period } \operatorname{lcm}(m_1, m_2).$$
+$$A^{-1}(c_i)=sA^{-1}(p_i)+k_{i\bmod m}\pmod{26},\qquad s\in\{+1,-1\},$$
 
-Two rounds in **different** orders, $Q_B(k^{(2)}) \circ Q_A(k^{(1)})$, are a fixed substitution per residue $i \bmod \operatorname{lcm}(m_1,m_2)$ that is not a rotation of one alphabet. The composite belongs to the family of "one arbitrary substitution per coset". Every round-based reading of a ciphertext is therefore either a compound key (same alphabet) or a coset-substitution family (different alphabets); neither adds structure beyond those two, but the round description restricts the key space enough to enumerate.
+in alphabet order $A$. The signs represent additive and reciprocal relations under the declared convention. Two rounds in the **same** order compose as
+
+$$Q_{A,s_2}(k^{(2)})\circ Q_{A,s_1}(k^{(1)})
+=Q_{A,s_2s_1}(h),\qquad
+h_i=s_2k^{(1)}_{i\bmod m_1}+k^{(2)}_{i\bmod m_2}.$$
+
+The sequence $h$ repeats with period $\operatorname{lcm}(m_1,m_2)$, but its minimal period may be a divisor. With all signs $+1$ this reduces to addition of the round keys.
+
+Two rounds in **different** orders form a fixed permutation for each joint residue modulo $\operatorname{lcm}(m_1,m_2)$. That composite need not be a rotation in either alphabet. It is contained in the family "one arbitrary substitution per coset", but the round factorisation is additional structure: only a restricted subset of those arbitrary substitutions can be expressed by the declared round bank.
 '''
 
 [[blocks]]
@@ -31,7 +39,7 @@ A compound key of periods $7$ and $2$ in one alphabet shows alignment at both pe
 kind = "assumptions"
 body = '''
 - The round keys come from a small declared set (a handful of candidate words, plus the two reference alphabets and six keyed variants of each word) so that exact enumeration is possible; with free keys the family is the general coset-substitution family and needs other tools.
-- Round periods are known or small. The composite period must divide the text length usefully (a period-45 composite over 153 letters leaves 3 letters per coset).
+- Round periods are known or small. The composite period need not divide the text length, but a large least-common-multiple period leaves few observations per joint residue (for example, only three or four at period 45 in a 153-letter text).
 '''
 
 [[blocks]]
@@ -41,7 +49,7 @@ body = '''
 1. Fix the candidate word set, the alphabets per round and the relation per round (additive or reciprocal).
 2. For $r = 1 \dots 4$ rounds enumerate every ordered choice of words, alphabets and relations; decrypt exactly (no search) and score with quadgrams. A true combination reads at the language rate at once.
 3. Calibrate with a planted $r$-round control that must rank first. The corpus control ranked first among 98k combinations.
-4. Same-alphabet rounds are handled once as a compound key: alternate exact monogram maximisation of the $m_1 + m_2$ shifts from many random starts (the alignment is useless here because the inner round flattens the cosets), then quadgram polish, with shuffled-text nulls (controls at $z +51$ and $+27$, 100% match, logs/06).
+4. Same-alphabet additive rounds can be parameterised once as a compound key; reciprocal rounds require the composite sign as well. The recorded solver alternated conditionally exact monogram updates of the $m_1+m_2$ key coordinates from many starts, then applied quadgram polish and shuffled-text nulls. The inner round can weaken a shorter-period alignment by mixing its phases, but does not universally flatten cosets (controls at $z +51$ and $+27$, 100% match, logs/06).
 5. Report the family as excluded only for the declared word set, alphabets, relations and round count.
 '''
 
@@ -51,12 +59,16 @@ body = '''
 ```text
 // Ciphertext c[0..n-1]; word set W; alphabet orders (reference and
 // word-keyed); relations {additive, reciprocal}; rounds r = 1..4. round =
-// (key word, order A, relation); Q_A(k): c = A[A^-1(p) + k_{i mod m}]
+// (key word, order A, relation); additive: y = x + k; reciprocal: y = k - x
 function ROUND_DECRYPT(c, round):
     k = the shifts of the key word;  m = |key word|
     for i in 0..n-1:
-        // reciprocal: A[ (k[i mod m] - A^-1(c[i])) mod 26 ]
-        p[i] = A[ (A^-1(c[i]) - k[i mod m]) mod 26 ]
+        y = A^-1(c[i])
+        if relation is additive:
+            p[i] = A[ (y - k[i mod m]) mod 26 ]
+        else:
+            // reciprocal substitution is its own inverse
+            p[i] = A[ (k[i mod m] - y) mod 26 ]
     return p
 
 function ENUMERATE_ROUNDS(c, W, orders, relations, r_max):
@@ -79,9 +91,10 @@ function MULTIPLE_ROUNDS(c, W, orders, relations, r_max):
             the planted combination first:
         stop
     ranked = ENUMERATE_ROUNDS(c, W, orders, relations, r_max)
-    // rounds in one order are a single compound key of period lcm(m_1, m_2):
-    // fit it once by alternating exact monogram maximisation of the m_1 + m_2
-    // shifts from many random starts, then quadgram polish, against
+    // rounds in one order compose to slope +/-1 and a key whose minimal period
+    // divides lcm(m_1, m_2); fit the declared parameterisation by alternating
+    // conditionally exact monogram updates from many random starts, then
+    // quadgram polish, against
     // shuffled-text nulls excluded only for the declared words, orders,
     // relations and round count
     return (ranked top rates against the noise level)

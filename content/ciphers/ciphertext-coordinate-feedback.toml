@@ -5,10 +5,10 @@ subtitle = "Advance a running alphabet state from ciphertext coordinates already
 status = "VERIFIED"
 status_note = "The recurrence and closed-form peel pass independent coordinate checks, and a complete 1,300-cell selector recovered four fresh full-length controls exactly at rank one. Those controls establish bounded capability; they do not replace a matched-null calibration for a new application."
 family = "Stream and machine ciphers"
-tags = ["ciphertext feedback", "state recurrence", "mixed alphabet", "self-synchronising"]
+tags = ["ciphertext feedback", "state recurrence", "mixed alphabet", "public driver"]
 related = ["plaintext-coordinate-feedback", "right-to-left-plaintext-feedback", "symmetric-second-order-plaintext-feedback", "alberti-progressive", "autokey", "linear-recurrences-lcg", "parameter-versus-plaintext-recovery"]
 summary = "Subtract a running displacement from each ciphertext coordinate, then update that displacement from the observed ciphertext coordinate itself. Because the driver is public, every parameter cell has a closed-form peel into one ordinary substitution problem. This differs from plaintext feedback, whose future state depends on a latent coordinate."
-updated = "2026-09-05"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -48,7 +48,7 @@ body = '''
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- One outer coordinate system, intercept, feedback coefficient, and substitution apply throughout the text.
+- One outer coordinate system, constant drift, feedback coefficient, and substitution apply throughout the text.
 - The entire ciphertext prefix used by each state is available without error.
 - Nonunit feedback values remain valid because no modular division is performed.
 - Structural-cell recovery, substitution fitting, and exact plaintext recovery are reported as separate endpoints.
@@ -59,7 +59,7 @@ body = '''
 kind = "attack"
 title = "How to attack it"
 body = '''
-Build one prefix-sum array for each declared outer representative. Enumerate every intercept and nonzero feedback coefficient, evaluate the closed-form latent stream, canonicalise its equality pattern, and fit one arbitrary monoalphabetic substitution. Retain ties and any data-dependent aliases. Recompute the selected row with the direct recurrence, then independently encrypt every disclosed plaintext and map.
+Build one prefix-sum array for each declared outer representative. Enumerate every constant drift and nonzero feedback coefficient, evaluate the closed-form latent stream, canonicalise its equality pattern, and fit one arbitrary monoalphabetic substitution. Retain ties and any data-dependent aliases. Recompute the selected row with the direct recurrence, then independently encrypt every disclosed plaintext and map.
 '''
 
 [[blocks]]

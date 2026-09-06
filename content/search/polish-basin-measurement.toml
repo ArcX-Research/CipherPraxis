@@ -3,35 +3,31 @@ section = "search"
 title = "Polish-basin measurement"
 subtitle = "Measure how close a starting key must be for local search to reach the truth"
 status = "VERIFIED"
-status_note = "On planted two-sided unknown alphabets, local search recovered 3/4 cases from d=3 swaps away and 0/4 from d>=5, while refitting shifts and allowing two-swap moves. A joint 63+96-letter case recovered 1/4 from d=3–5. Global search stopped about ten swaps away. A crib widened the useful range to three swaps at 13 letters and six at 25 letters."
+status_note = "The recorded perturbation panels measured recovery at several declared distances, including 3/4 at one three-swap setting and 0/4 at tested distances of five or more. With only four replicates per setting and no complete shell enumeration, these results diagnose limited local-search reach for the cited fixtures but do not prove a sharp basin radius or zero recovery probability outside it."
 family = "Stochastic local search"
 tags = ["basin of attraction", "calibration", "landscape", "swap distance", "power"]
 related = ["hill-climbing", "simulated-annealing", "parallel-tempering", "coordinate-descent", "quagmire-iii", "power-measurement", "planted-controls", "tautological-gate-rule", "g-search-basin", "g-move-set"]
-summary = "To measure a search basin, start from a known key, make d random changes, and run the same fixed local search used in production. Record whether it returns to the truth for each d. The largest reliable d is the basin radius. Compare that with how close the broader search gets. If the broad search stops outside the basin, more time will not bridge the gap. The score landscape is the problem, and an exact method is the next step."
-updated = "2026-09-04"
+summary = "For a fixed deterministic polish, the basin of the truth is the set of starts that converge to it. Random starts sampled at declared distances estimate a distance-conditioned recovery curve; they do not establish that the basin is spherical, that recovery is monotone with distance, or that unobserved starts fail. Comparing that curve with broader-search endpoints can diagnose a proposal-power problem. Only complete shell enumeration or another exact argument supports a hard geometric boundary."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
-```
-plant: random alphabet A*, random shifts k*, real text of the target length; c <- encrypt
-for d in {1, 2, 3, 5, 8, ...}:
-    for r in 1 .. R:
-        A <- A* with d random swaps (or insertions) applied
-        k <- shifts refit exactly for A (as production does)
-        (A', k') <- polish(A, k)                # the production finisher, unchanged
-        recovered[d] += [A' == A* up to gauge]
-report recovered[d] / R for every d
-compare: distance from the truth of the search's best states (e.g. % of alphabet positions right)
-```
+Fix the polish, objective, tie rule, and gauge. Let $B^*$ be the set of starts whose polished endpoint is the planted truth class. For each declared distance $d$, sample starts from a specified distribution $\mu_d$ on the exact distance-$d$ shell, or record the realized minimum distance when a random move sequence can cancel. Run the unchanged production polish and report successes, denominators, and uncertainty at every $d$.
 
-The "distance" is the move count of the polish's own neighbourhood (swaps and insertions), so the measurement is stated in the units the polish can traverse.
+Different move sets define different metrics. Minimum transposition distance, insertion distance, and Hamming distance are not interchangeable. Percent of positions matching is a descriptive overlap, not a move distance.
 '''
 
 [[blocks]]
 kind = "equations"
 body = '''
-Basin radius $\rho = \max\{d : \text{recovery}(d) \ge \tau\}$ for a chosen reliability $\tau$. With alphabet match fraction $f$ reported by a search, the swap distance is roughly $(1 - f) \cdot 26 / 2$. A 40% match is about eight to ten swaps. The verdict rule: if $\text{dist}(\text{search best}) > \rho$ for every tested budget, the search is landscape-limited.
+The distance-conditioned recovery probability is
+
+$$p_d=\Pr_{S\sim\mu_d}[\operatorname{polish}(S)\in B^*],$$
+
+estimated by $\hat p_d=x_d/R_d$ with a binomial interval. If a one-number operational radius is needed, declare a threshold $\tau$ and require the lower interval bound to exceed $\tau$ at every tested distance up to that radius; still publish the full curve.
+
+For complete permutations, the minimum number of arbitrary transpositions between $A$ and $A^*$ is $q-c(A^{-1}A^*)$, where $c$ counts all cycles including fixed points. Hamming overlap alone does not determine this distance. A broader search whose endpoints lie in low-recovery regions under the tested budgets is empirically landscape-limited; this does not prove that additional random starts have zero chance of entering $B^*$.
 '''
 
 [[blocks]]
@@ -39,7 +35,7 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - The polish used in the measurement is byte-identical to the production finisher, including any per-move refit of free parameters. A stronger polish in the measurement than in production overstates the basin.
-- Perturbations are random over the move set; adversarial perturbations give a smaller radius.
+- The sampling distribution within each distance shell is part of the estimand. Uniform random move sequences are generally not uniform on a shell and may cancel, so realized minimum distance must be checked.
 - Recovery is judged up to the model's gauge (here rotations of the alphabet absorbed by the shifts).
 '''
 
@@ -47,7 +43,7 @@ body = '''
 kind = "attack"
 title = "Use in an attack programme"
 body = '''
-The measurement was run after batch annealing and parallel tempering plateaued on a two-sided unknown alphabet. It showed that the truth's basin is at most three swaps wide even when the polish refits all shifts for every candidate move and tries two-swap moves, while the annealers' best states matched about 40% of the alphabet, about ten swaps away. The same test applied to the crib-pinned variant showed the crib widening the basin only to three swaps for a 13-letter crib and six for a 25-letter crib, which is why the crib-anneal solves one-sided alphabets and not the two-sided one. On that evidence the programme stopped adding chains and moved to exact constraint methods.
+The measurement followed failed batch annealing and parallel-tempering controls on a two-sided unknown alphabet. Recovery dropped sharply over the sampled nearby starts, while broader-search endpoints had much lower alphabet overlap. A related crib-pinned panel recovered from more distant tested starts as crib length increased. These are empirical contrasts for the recorded perturbation distributions; they neither locate every basin boundary nor prove causation. They justified an engineering decision to stop scaling that heuristic and evaluate exact constraint methods instead.
 '''
 
 [[blocks]]
@@ -57,34 +53,27 @@ body = '''
 // Inputs: the production polish (unchanged), the target text length,
 // replicate count R, distances D, reliability tau. Outputs: recovery rate per
 // d, basin radius rho, verdict.
-function MEASURE_BASIN(polish, length, R, D, tau):
+function MEASURE_BASIN(polish, length, R, distances):
     A* = random alphabet
     k* = random shifts
     c = encrypt(real text of the given length, A*, k*)
-    // e.g. {1, 2, 3, 5, 8, ...}
-    for d in D:
+    for d in distances:
         recovered[d] = 0
         for r in 1..R:
-            // distance in the polish's own move units
-            A = A* with d random swaps (or insertions) applied
-            // as production does
+            A = SAMPLE_FROM_DECLARED_EXACT_SHELL(A*, d)
+            require MINIMUM_DECLARED_DISTANCE(A, A*) == d
             k = shifts refit exactly for A
-            // the production finisher, byte-identical
             (A', k') = polish(A, k, c)
             if A' == A* up to gauge: recovered[d] = recovered[d] + 1
         recovery[d] = recovered[d] / R
-    // basin radius
-    rho = max { d in D : recovery[d] >= tau }
-    return recovery, rho
+        interval[d] = BINOMIAL_INTERVAL(recovered[d], R)
+    return recovery and intervals for every distance
 
-function VERDICT(rho, search_results):
+function COMPARE_WITH_GLOBAL_SEARCH(curve, search_results):
     for each budget in search_results:
-        f = alphabet match fraction of the search's best state at that budget
-        // approximate swap distance
-        dist = (1 - f) * 26 / 2
-        if dist <= rho: return "the search reaches the basin"
-    return "landscape-limited: more budget will not bridge the gap
-    move to an exact method"
+        distance = MINIMUM_DECLARED_DISTANCE(search best, A*)
+        record distance and the measured recovery interval at that distance
+    return an empirical reachability diagnosis, not a zero-probability claim
 ```
 '''
 
@@ -98,7 +87,7 @@ $R$ polishes per $d$, each a few dozen batch-scored neighbourhood sweeps. The wh
 kind = "failure_modes"
 body = '''
 - **Confusing separation with reachability.** On a chained construction the truth scored $-10.01$ per letter against $-12.71$ one swap away and $-16.57$ for random states, yet swap annealing over 12 restarts of 40,000 iterations plateaued at a total of $-2101$ against the truth's $-1477$. A well-separated optimum can still have a tiny basin.
-- **Too few replicates.** Four replicates per $d$ give a coarse radius. The recorded numbers (3/4, 0/4, 1/4) are enough to separate "three swaps" from "ten swaps" but not to estimate a probability.
+- **Too few replicates.** Four replicates per setting give very wide uncertainty intervals. The recorded outcomes diagnose a large performance drop but cannot estimate a sharp radius or establish zero success probability.
 - **Wrong distance metric.** Reporting percent match instead of move distance hides that a few swaps can move many positions.
 - **Basin measured on the wrong objective.** A degenerate objective (coincidence maximisation) has a huge basin around a wrong state. The measurement must use the production objective.
 '''
@@ -119,7 +108,7 @@ A one-dimensional landscape over states $0..10$ with objective $f = (1, 2, 3, 4,
 - From $7$ ($f = 2$): neighbours $f(6) = 3$, $f(8) = 6$; go to $8$, then $9$, then $10$: recover.
 - From $6$ ($f = 3$): neighbours $f(5) = 4$, $f(7) = 2$; go to $5$, then $4$ ($f = 5$), stop: local optimum, no recovery.
 
-The basin of the truth is $\{7, 8, 9, 10\}$, radius $3$. A search whose best states land at $4$ or $5$ (well separated, only two steps from the basin edge) will never finish, however many restarts it is given, unless its moves can jump three positions.
+The basin of the truth for this deterministic one-step-neighbor climb is $\{7,8,9,10\}$. A run starting at $4$ or $5$ cannot reach that basin under the deterministic rule. Random restarts can still help if their start distribution assigns positive probability to $\{7,8,9,10\}$; only a restart distribution that never enters the basin makes additional runs futile.
 '''
 
 [[provenance]]

@@ -3,12 +3,12 @@ section = "ciphers"
 title = "Interrupted key"
 subtitle = "Restart a periodic key whenever a chosen plaintext or ciphertext letter appears"
 status = "VERIFIED"
-status_note = "Held-out controls for Vigenere, Variant, and Beaufort forms each recovered the complete plaintext, period, reset side, interruptor, and key, then passed an independent forward check. The search covered periods 4 through 8 and both reset sides."
+status_note = "Held-out controls for Vigenère/Variant and Beaufort code paths recovered the complete plaintext, period, reset side, interruptor, and a compatible key, then passed an independent forward check. The search covered periods 4 through 8 and both reset sides. Free numeric Vigenère and Variant keys remain exact complementary aliases, so their labels are not separately identifiable."
 family = "Polyalphabetic ciphers"
 tags = ["periodic key", "reset", "interruptor", "vigenere", "beaufort"]
 related = ["vigenere", "variant-beaufort", "beaufort", "autokey", "periodic-substitution-dp", "simulated-annealing", "known-answer-tests"]
 summary = "An interrupted-key cipher uses a short repeating key, but a chosen letter sends the key index back to its first position. The trigger can be read from the plaintext or ciphertext. This creates variable-length key runs: ordinary period tests may weaken even though the arithmetic inside each run is still simple."
-updated = "2026-09-05"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -23,7 +23,7 @@ body = '''
 With letters numbered modulo 26, the common bases are
 
 $$\begin{aligned}
-\text{Vigenere: }&c_i=p_i+k_j,\\
+\text{Vigenère: }&c_i=p_i+k_j,\\
 \text{Variant: }&c_i=p_i-k_j,\\
 \text{Beaufort: }&c_i=k_j-p_i.
 \end{aligned}$$
@@ -41,7 +41,7 @@ kind = "variants"
 body = '''
 - **Ciphertext reset:** trigger positions are known directly from the ciphertext.
 - **Plaintext reset:** trigger positions depend on the candidate decryption.
-- **Vigenere, Variant, or Beaufort base:** the reset schedule is unchanged, but the modular sign changes.
+- **Vigenère/Variant or Beaufort base:** the reset schedule is unchanged. With free numeric key elements, Vigenère and Variant are complementary-key aliases; a literal word-key convention can distinguish their written keys.
 - Some descriptions reset before the trigger character. That is a different convention and must be tested separately.
 '''
 
@@ -111,7 +111,7 @@ Plant controls with several trigger positions, including runs of different lengt
 kind = "example"
 title = "Worked example"
 body = '''
-Use Vigenere with key `DOG`, plaintext interruptor `X`, and reset after the trigger. Plaintext `ATTAXDAWN` uses key positions
+Use Vigenère with key `DOG`, plaintext interruptor `X`, and reset after the trigger. Plaintext `ATTAXDAWN` uses key positions
 
 ```trace
 plain   A T T A X | D A W N

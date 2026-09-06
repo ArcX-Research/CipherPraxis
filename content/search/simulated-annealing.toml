@@ -3,12 +3,12 @@ section = "search"
 title = "Simulated annealing"
 subtitle = "Explore nearby keys while slowly becoming less willing to accept worse moves"
 status = "VERIFIED"
-status_note = "Both single-search and batched NumPy versions are implemented. Planted 5x5-square, one-sided keyed-alphabet, and transposition-order controls recovered at 100%, with saved records. On a two-sided unknown alphabet in Quagmire III at 63–96 letters, the same search stops at 30–40% correct. A separate adjacent-reflection control also missed both planted texts even though each hidden truth outscored every reached proposal. Parallel-tempering and search-basin pages measure that limit."
+status_note = "Both scalar and batched implementations pass their recorded finite control panels for several one-sided and transposition problems. They fail the cited short, two-sided-alphabet and adjacent-reflection controls despite favorable counterfactual truth scores; those failures establish a power limit for the tested schedules, not a universal property of annealing or the cipher families."
 family = "Stochastic local search"
 tags = ["metropolis", "cooling schedule", "swap moves", "batch chains", "quadgram objective"]
 related = ["parallel-tempering", "hill-climbing", "polish-basin-measurement", "coordinate-descent", "quadgram-log-likelihood", "bifid", "playfair", "quagmire-i", "quagmire-iii", "columnar-transposition", "planted-controls", "shuffled-null-z-score", "numpy-instrument-pattern", "g-move-set", "g-temperature-schedule", "g-objective-function"]
-summary = "Simulated annealing explores a key by making random small changes. It always keeps improvements and sometimes accepts worse moves, with that chance falling as the temperature cools. A language model scores each trial decryption. The method works well for keyed squares over fixed inner text, alphabets whose shifts a crib fixes, and many transposition orders. It fails on short texts when one unknown alphabet acts on both sides; the score landscape, not just the computing budget, blocks progress."
-updated = "2026-09-06"
+summary = "Simulated annealing explores a key through random local moves. It accepts improvements and may accept losses according to a temperature schedule. In the recorded controls, fixed-budget implementations recovered several keyed-square, one-sided-alphabet, and transposition instances, but did not recover the tested short instances in which one unknown alphabet acted on both sides. Those results measure the specified objective, moves, schedules, and budgets; they neither guarantee recovery nor exclude the cipher family after a miss."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -50,7 +50,7 @@ with $q_4$ an add-$0.01$ smoothed quadgram table from a generic corpus. English 
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- The objective separates the truth from wrong keys by a margin larger than the noise of the move set, and improving moves form a connected path to the optimum (a "funnel"). Where a single swap corrupts many positions at once (an alphabet that acts on both sides of a substitution) this fails.
+- Finite-schedule recovery requires the proposal kernel and temperature ladder to reach useful basins often enough under the allotted budget. A counterfactually high truth score is not sufficient: local moves may still make the truth hard to reach.
 - Every accepted state is a legal key: the move set preserves the permutation property by construction (swap, insertion, row/column swap of a square).
 - Free parameters that are refit at every step (per-coset shifts derived from crib votes, or re-estimated by monogram maximisation) add selection freedom; shuffled-text nulls through the identical annealer calibrate what score a wrong state can reach.
 '''
@@ -110,7 +110,7 @@ One step costs one decrypt and one score, $O(n)$ in the text length. Recorded bu
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Rugged landscape (two-sided alphabet).** When the same alphabet indexes both plaintext and ciphertext sides, a swap is simultaneously a cryptogram move and a re-slotting of two ciphertext letters, corrupting about four of 26 mapping entries in every coset. On a planted 96-letter instance the polished best reaches only 29-40% of the alphabet, and best-of-$N$ does not improve with $N$: 500 chains $\to -5.045$, 2,000 $\to -4.829$, 8,000 $\to -4.916$ (same instance, two further seeds $-4.971$ and $-4.876$). The polish basin is at most three swaps wide, so the annealer's best states (about ten swaps away) never fall into it.
+- **Rugged recorded landscape (two-sided alphabet).** When the same alphabet indexes both plaintext and ciphertext sides, one alphabet swap changes several induced mappings at once. On one planted 96-letter instance, the polished results matched only 29–40% of the alphabet, and the three tested chain counts did not show monotone improvement: 500 chains $\to -5.045$, 2,000 $\to -4.829$, 8,000 $\to -4.916$ (with two further 2,000-chain seeds at $-4.971$ and $-4.876$). Perturbation experiments found a low recovery rate beyond a few swaps, while reached states were farther away. This diagnoses limited proposal power for these runs; it is not a proof that the probability of entering the basin is zero.
 - **Identifiable but unreachable.** On a chained construction the true state scored $-10.01$ per letter against $-12.71$ one swap away and $-16.57$ for random states, yet swap annealing plateaued at a total of $-2101$ against the truth's $-1477$ over 12 restarts of 40,000 iterations. Separation of the optimum does not imply a reachable optimum.
 - **The score works, but the proposal path does not.** In a 63-letter adjacent-reflection control, one hidden 26-letter permutation acted on the source, ciphertext, and derived plaintext at once. The planted truth would have ranked first by the frozen quadgram score in both a development and an untouched confirmation case, but neither ordinary swaps nor moves grouped by modulo-13 coordinate pairs proposed it. Even after the correct direction, window, and sign were supplied, 512 restarts of 100,000 moves missed in all four arm/control combinations. This is a proposal-access failure, not evidence against the cipher model or the language score.
 - **Partial solves.** A 144-letter Playfair square annealed to a $-5.20$ "partial" state with 60% of the plaintext right while the 153-letter Bifid and the 297-letter joint problem solved at 100%.

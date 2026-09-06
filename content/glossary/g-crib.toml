@@ -6,5 +6,5 @@ status_note = "Standard term."
 family = "Cryptanalysis technique"
 tags = ["known plaintext"]
 related = ["crib-dragging", "crib-driven-alphabet-recovery", "running-key-relation-test", "g-selection-freedom"]
-summary = "A crib is a piece of plaintext that may appear in a message, such as a common phrase or a name. Trying it at one position reveals possible key values or equations. Positions that give an impossible or unreadable key can be dropped. A fair crib search must also test false placements. The true placement must beat the best of those false matches. If the crib is not in the message, a miss does not rule out the cipher."
-updated = "2026-09-04"
+summary = "A crib is a hypothesized plaintext fragment. Trying it at a position can imply key values or algebraic constraints; an exact contradiction can reject that placement, while a low language score is only heuristic evidence. A calibrated crib search applies the complete placement-and-selection procedure to controls or matched null data. If the crib is absent, misspelled, or placed under the wrong cipher convention, a miss does not exclude the cipher family."
+updated = "2026-09-07"

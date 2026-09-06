@@ -8,7 +8,7 @@ family = "Recovery endpoints"
 tags = ["parameter recovery", "plaintext recovery", "latent labels", "certificates"]
 related = ["symmetric-second-order-plaintext-feedback", "feedback-state-gauges-and-cells", "latent-label-identifiability", "identity-plus-one-swap-neighborhood", "endpoint-specific-control-contracts", "isomorph-analysis", "bound-benchmarks-and-certificates", "tautological-gate-rule"]
 summary = "Many attacks have a structural stage and a labelling stage. A structural parameter can determine the right latent equality pattern without naming its symbols correctly. Report recovery of the parameter cell, quotient class, labelled key, plaintext, and forward certificate as separate facts."
-updated = "2026-09-05"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -32,7 +32,7 @@ I_{\rm class}=[R(u_{\hat\theta})=R(u_{\theta^*})],$$
 $$I_{\rm text}=[P_{\hat\theta,\hat M}=P^*],\qquad
 I_{\rm forward}=[E_{\hat\theta,\hat M}(P_{\hat\theta,\hat M})=C],$$
 
-where $\sim$ is the declared parameter gauge and $R$ is a restricted-growth encoding of symbol equality. The implication $I_{\rm text}\Rightarrow I_{\rm class}$ usually holds, but neither $I_{\rm cell}$ nor $I_{\rm forward}$ implies $I_{\rm text}$. A wrong candidate can be internally consistent with its own forward transform.
+where $\sim$ is the declared parameter gauge and $R$ is a restricted-growth encoding of symbol equality. If both the planted and recovered label maps are injective on every observed latent symbol, and $R$ is computed on the same positions, then exact text recovery implies equality-class recovery: $I_{\rm text}\Rightarrow I_{\rm class}$. Without injectivity—for example, in a many-to-one labelling—even that implication need not hold. Neither $I_{\rm cell}$ nor $I_{\rm forward}$ implies $I_{\rm text}$: a wrong candidate can be internally consistent with its own forward transform.
 '''
 
 [[blocks]]

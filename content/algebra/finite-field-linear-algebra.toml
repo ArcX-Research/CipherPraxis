@@ -3,17 +3,17 @@ section = "algebra"
 title = "Linear algebra over GF(2) and GF(13)"
 subtitle = "How row reduction, rank, and nullity narrow an exact alphabet search"
 status = "VERIFIED"
-status_note = "Every cycle solver uses exact row reduction over two prime fields and joins the answers with CRT. Nullity, not simple consistency, carries the useful information. Known-answer tests passed, as did 4/4 hidden shared-plaintext controls and 32/32 exact crib solves."
+status_note = "The cited cycle solvers use exact row reduction over two prime fields and join the answers with CRT. Nullity, not simple consistency, carries the useful information in their homogeneous systems. Known-answer tests passed, as did 4/4 hidden shared-plaintext controls and 32/32 exact crib solves."
 family = "Linear algebra over finite rings and fields"
 tags = ["GF(2)", "GF(13)", "rank", "nullity", "null space", "row reduction"]
-related = ["modular-inverse-and-crt", "all-different-constraints", "modular-arithmetic-z26", "units-mod-26", "residue-class-graphs", "matrix-invertibility-mod-26", "constraint-satisfaction-forward-checking", "word-prefix-csp", "exact-chain-oracle", "g-nullity", "g-all-different"]
-summary = "Linear cipher rules create equations in the unknown alphabet positions over Z26, which is not a field. Solve the same equations over GF(2) and GF(13) instead. The sizes of the two null spaces tell us how many possible alphabets remain. Rank alone does not reject a guess, but it predicts the cost of checking the answers. Small nullities make exact crib solving practical."
-updated = "2026-09-04"
+related = ["modular-inverse-and-crt", "all-different-constraints", "modular-arithmetic-z26", "units-mod-26", "residue-class-graphs", "matrix-invertibility-mod-26", "constraint-satisfaction-forward-checking", "word-prefix-csp", "exact-chain-oracle", "g-nullity", "g-all-different", "exact-optimization-admission"]
+summary = "Linear cipher rules create equations in the unknown alphabet positions over Z26, which is not a field. Solve the same equations over GF(2) and GF(13) instead. Nullity predicts the remaining linear search, while injectivity supplies additional rejection rules. For a complete alphabet, necessary power sums can reduce the coefficient space before enumeration. Keep exact multiplicity and parity checks afterward."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
-A homogeneous linear system $M z \equiv 0 \pmod{26}$ in the 25 free coordinates (after the gauge row $z(A) = 0$) is solved by row-reducing $M$ over $\mathrm{GF}(2)$ and, independently, over $\mathrm{GF}(13)$. Each reduction yields a reduced row echelon form, a rank, and a null space of dimension $d_2$ or $d_{13}$ (also written $f_2, f_{13}$). The solution set modulo 26 is the CRT lift of the product of the two null spaces, with $2^{d_2} \cdot 13^{d_{13}}$ elements.
+A homogeneous linear system $Mz\equiv0\pmod{26}$ may be represented with 26 coordinate variables plus the gauge equation $z(A)=0$, or with $z(A)$ eliminated and 25 free coordinate variables. Row-reduce the chosen representation over $\mathrm{GF}(2)$ and, independently, over $\mathrm{GF}(13)$. Each reduction yields a reduced row echelon form, a rank, and a null space of dimension $d_2$ or $d_{13}$ (also written $f_2,f_{13}$). The solution set modulo 26 is the CRT lift of the product of the two null spaces, with $2^{d_2}13^{d_{13}}$ elements.
 '''
 
 [[blocks]]
@@ -44,6 +44,49 @@ body = '''
 3. If $d_{13}$ is small enough (in practice $\lesssim 7$), enumerate the $\mathrm{GF}(13)$ null space (projectively), apply the residue-twice filter, solve the parity conditions in the $\mathrm{GF}(2)$ null space, lift, and test all-different.
 4. Rank crib guesses by $d_{13}$ (their enumeration cost); require two long cribs, or one crib plus already-fixed letters, before calling a rejection exact.
 5. Keep every distinct all-different read of a system, not only the best-scoring one.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Use complete-dial moments before enumeration"
+body = '''
+Let $z=Lu$ contain all 26 physical alphabet coordinates reduced modulo 13. Each residue occurs twice exactly when $M_k=\sum_i z_i^k$ is zero for $1\le k\le11$ and $M_{12}=-2$. The known zeroth sum is $26=0$ in the field. Vandermonde inversion determines each multiplicity modulo 13; nonnegative counts congruent to two and totaling 26 must all equal two. The last moment is essential: 26 zeros pass all the lower equations.
+
+First impose the linear condition $M_1=0$. On its kernel, $M_2=u^TGu$ with $G=L^TL$. If $G$ is nonzero, choose a direction with nonzero quadratic value and place it last in an invertible basis. A nonzero diagonal gives one; otherwise an off-diagonal entry gives one by adding its two coordinate directions. In every other first-nonzero projective chart, enumerate the remaining coefficients and solve a quadratic for the final coefficient. There are at most two distinct roots. The last-only chart cannot satisfy the equation.
+
+For reduced dimension $r$, this visits $(13^{r-1}-1)/12$ root prefixes instead of $(13^r-1)/12$ completed projective vectors. A zero form requires ordinary enumeration; a singular form must retain its radical points. Keep exact multiplicities and every compatible binary parity fiber after this necessary filter, then restore CRT coordinates and unit aliases. Preserve basis maps so normalization cannot lose physical solutions.
+
+This requires a complete dial. An observed-only alphabet does not have zero observed moments. Also preserve hidden key or phase fibers when a full solution space is projected onto dial coordinates; refusing rank-deficient projections is safer than silently dropping them. The first moment may already follow from the original equations, so its rank reduction is not guaranteed.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Eliminate one or two missing coordinates first"
+body = '''
+If a dial has one or two unobserved letters, account for their missing values instead of forcing the observed moments to zero. Write $A=\sum z_i$, $B=\sum z_i^2$, and $C=\sum z_i^3$ over the observed coordinates in GF(13).
+
+With one missing value $x$, the complete first moment gives $x=-A$. The second then requires $B+A^2=0$. For $z=Lu$, this is a quadratic with matrix $L^TL+ss^T$, where $s$ is the sum of the rows of $L$. The first moment has been used to reconstruct the missing value; it is not an additional linear constraint on the observed coefficients.
+
+With two missing values $x,y$, the first two moments give $x+y=-A$ and $xy=(A^2+B)/2$. The third gives the homogeneous cubic $2C+A^3+3AB=0$. Solve that necessary equation first, then require a square discriminant $\Delta=-A^2-2B$ and reconstruct $x,y=(-A\pm\sqrt\Delta)/2$. Both ordered roots matter because the missing letters have different physical positions. Even when the two residues coincide, their opposite parity orders can give two different full permutations.
+
+A nonzero homogeneous degree-$k$ form can be enumerated by placing a nonzero-valued direction last in an invertible basis and completing that coefficient with at most $k$ roots. For $k=2$ or $3$, testing the grid $\{0,\ldots,k\}^d$ either finds such a direction or proves the form identically zero. A zero form needs ordinary enumeration, not rejection. The other projective charts use $(13^{d-1}-1)/12$ prefixes, but root solving and basis conversion still cost work; this count alone is not a wall-time speedup.
+
+Finally require exactly two copies of each residue and every compatible binary assignment. These low moments are not sufficient for a permutation. This shortcut assumes an observed fixed-zero anchor and genuinely unrestricted missing coordinates. A hidden phase or key kernel, an affine parity space, or a constrained missing letter needs an explicit complete handoff; do not discard those fibers to fit a narrower solver interface. Compare complete accepted sets against an oracle that fills unused actual CRT values, independently of the moment equations.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Condition moments on a complete parity assignment"
+body = '''
+Every permutation of the 26 coordinates has thirteen even and thirteen odd entries. Within each parity class, reduction modulo 13 is itself a permutation of GF(13), not merely a multiset with capacity two. When the original equations leave a small exact binary space, exhaust its admissible assignments and impose separate odd-field sums before enumerating odd directions.
+
+For full support, let $I_0,I_1$ be a proposed parity partition. Require $|I_0|=|I_1|=13$ and, independently for each class, $\sum_{i\in I_b} z_i=0$ and $\sum_{i\in I_b} z_i^2=0$. With $z=Lu$, the two first sums give linear rows in the odd coefficients. Compute their complete kernel, then impose both quadratic forms on that reduced space. The rows can be dependent; extra rank is a possible benefit, not an assumption.
+
+For partial support, class $b$ has deficit $k_b=13-|I_b|$. A negative deficit is impossible. At support 24 through 26, each remaining deficit is zero, one or two, so use the corresponding complete, one-missing or two-missing moment equation separately inside each class. These equations do not replace exact multiplicities, CRT injectivity, inactive-label orders or complete nuisance fibers. Preserve the parity provenance when several masks generate the same canonical odd direction; restoring only one mask can lose physical solutions.
+
+This is not a language-ranked parity search or an oracle parity assumption. The constrained binary domain must be complete, or its truncation must remain inconclusive. A hand-checked additive-grid example reduces six balanced binary assignments to exactly two parity/odd projective pairs through the two half sums and squares. This search order has not yet been implemented or timed; general runtime or solving-power gains are unmeasured.
+
+Use characteristic-correct moments in a smaller oracle. A complete GF(3) half has square sum $0^2+1^2+2^2=2$, not zero. Likewise, a degree-three interpolation argument cannot assume four distinct field points in GF(3). Reusing the GF(13) zero-sum formulas unchanged would reject valid six-symbol controls.
 '''
 
 [[blocks]]
@@ -92,7 +135,7 @@ Reduction is negligible; enumeration is $13^{d_{13}}$: $13^5 = 371{,}293$, $13^7
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Ranks alone never reject.** 40 random wrong crib pairs were 0/40 linearly inconsistent. All 245,766 pairs of an exact pair solver were "linearly consistent". Rejection comes from all-different enumeration only.
+- **Homogeneous consistency is vacuous.** The zero vector solves every homogeneous system: 40 wrong crib pairs and all 245,766 pairs of another exact solver remained linearly consistent. This is not evidence for their guesses. Zero-dimensional gauged dial spaces, forced coordinate equalities and exact injectivity filters can nevertheless reject without exhaustive all-different enumeration.
 - Vacuous tests: a KAT that enumerated length-six inputs at period 7 made every equality residue a singleton, so its 4,096 checks tested nothing. It was labelled REJECTED_VACUOUS and replaced by a nonvacuous KAT (65,536 binary pairs, 175 restricted-growth pairs).
 - Keeping only the best partial read per system: a KAT planted a system whose true read ranked 2nd of 6 all-different reads and was lost. The rule was corrected to retain every read.
 - Integer overflow in index arithmetic (int16) exposed by exhaustive KAT.
@@ -102,6 +145,12 @@ body = '''
 kind = "controls"
 body = '''
 Exhaustive small KATs: all $2 \times 3$ matrices over $\mathrm{GF}(2)$ with complete null spaces (64), all $1 \times 2$ rows over $\mathrm{GF}(13)$ (169), 64 literal CRT permutations. Four hidden common-plaintext controls with true-cell nullities $(1, 1)$ each yielded exactly one structural class and exact plaintext, cycle, keys and three forwards. A 132-cell scan took 1.484 s. The shift-free exact crib solver: 32/32 exact recoveries at crib length 26. The tail-continuation KAT recovered a planted $f_{13} = 5$ pair at index 1,459 of 3,482 large systems exactly, and proved its skip boundary.
+
+A separate complete-dial moment KAT compared all physical accepted sets on ten dial spaces and ten quadratic forms against original Cartesian-space references. It checked every univariate polynomial of degree at most two over GF(13), 891 moment vectors, basis/unit changes, radical and zero-form traps, and all compatible parity fibers. On a hand-derived four-dimensional anchor, 2,380 directions became 183 after the first moment, 14 after the second, six after exact balance and two complete CRT maps. The optimized traversal used 14 root prefixes. Independent receipt-only numerical replay agreed. This validates an exact implementation shortcut, not full-size cipher-family power or applicability to partial alphabets.
+
+A missing-coordinate extension independently matched all complete sets on 16 public dial spaces and six forms: 123 ordered full maps, every monic cubic and quadratic over GF(13), zero-form and false-positive traps, and both parity orders of repeated missing residues. Its four-dimensional anchors each reduced 2,380 raw directions to 196 polynomial candidates using 183 root prefixes. Exact capacity and parity then retained six full maps with one missing coordinate and 24 with two. These are overlapping implementation tests, not independent plaintext controls or a measured wall-time speedup.
+
+An actual-caller integration then matched the complete reference on 18 public additive-grid cells: 15,462 legacy directions versus 180 moment outputs, with the same 54 final-checker calls and 720 physical maps with case/cut provenance. Supplementary six-symbol cases exercised a nonfree unit action, nonzero affine parity fibers, and genuine complete infeasibility. A separately written receipt replay reconstructed 433,296 scalar checks without importing the solver. This validates the integrated necessary filter on those fixed public inputs; it does not establish an end-to-end speed ratio, language power or the proposed parity-conditioned search order.
 '''
 
 [[blocks]]
@@ -167,6 +216,30 @@ note = "K_(7,9) incidence rank 15 and 48 rectangle rows of rank 48 over both fie
 path = "withmath/docs/pk9/PK9_UNITRATIO_NECESSARY_TARGET308_AUDIT.md"
 kind = "audit"
 note = "Identical GF(2) RREF across all 144 unit cells."
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/DIAL_MOMENTS745.md"
+kind = "audit"
+note = "Sole public-symbol KAT passed with external exit0, full accepted-set comparisons and exact counts. Combined independent receipt review passed: the first audit completed numerics then hit a stale30-label expectation; an authorized metadata-only continuation reconciled the six frozen additions and post-read hashes, without repeating enumeration. No source rerun, fresh power or live admission."
+ref = "LOG745"
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/DIAL_MISSING_MOMENTS747.md"
+kind = "audit"
+note = "Independent source/math/runtime review cleared the corrected method before its sole public-symbol invocation. Producer KAT and single independent numerical receipt replay both passed with external exit0:16 dial spaces,6 forms,123 ordered full maps,2197 monic cubics,169 monic quadratics and45 saved refusal reports. The auditor rebuilt literal fixtures and complete sets without importing/rerunning the producer; all four canonical receipts and eight source/runtime files matched before/after. Refusals were not reenacted. No cipher-power, wall-speedup or live claim. Source2ea9b2e08f4f5e3b2476884e25d1559b238b117602269e741e251c6dfd9d3d57; result4c210611aeef9bb536b0a483d532a80caa38523945922c8c9f73e64723d772d0."
+ref = "LOG747"
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/PK9_ADDMOMENTS748_RESULT.md"
+kind = "audit"
+note = "Sole producer and separate-code receipt replay passed with externally observed exit0, empty stderr and unchanged inputs. Public actual-geometry integration, full physical accepted sets, 18 primary cells and nontrivial q6 parity/negative controls. Producer result a2bff59b60bd36c8d2be78ae97e224d59c9c51c361d120a3f1eb49d1a6765d20; independent result e64fb1a5fce36a21c968040fa5468477e3f5e1ebe4ee7a32e42b998f5054457e. No target or language-power claim."
+ref = "LOG748"
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/DIAL_PARITY_MOMENTS755.md"
+kind = "design"
+note = "Independent hand-only review of parity-half first/second moments, per-half deficits and all six binary masks of a public worked grid. Exactly two nonzero parity/odd pairs remain, with zero/pure-last charts checked. The older parity-first decomposition is explicitly credited to prior lanes; this constrained-space moment conditioning has no implementation, timing, fresh-control or target result."
+ref = "LOG755; prior LOG194/213"
 
 [[references]]
 title = "Finite Fields"

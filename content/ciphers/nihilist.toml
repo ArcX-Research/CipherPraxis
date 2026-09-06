@@ -2,13 +2,13 @@ id = "nihilist"
 section = "ciphers"
 title = "Nihilist substitution cipher"
 subtitle = "Add Polybius coordinate numbers to a repeating numeric key"
-status = "VERIFIED"
-status_note = "The construction is documented in standard classical-cipher references, and the worked example round-trips exactly. This page does not claim a dedicated blind solver."
+status = "UNTESTED"
+status_note = "The construction is documented in standard classical-cipher references, and the worked example round-trips exactly. No dedicated blind solver or planted recovery control has been recorded here."
 family = "Coordinate and additive ciphers"
 tags = ["polybius square", "numeric ciphertext", "repeating key", "addition"]
 related = ["polybius-square", "vigenere", "keyword-mixed-alphabet", "kasiski-examination", "frequency-analysis"]
 summary = "The Nihilist substitution cipher turns each plaintext letter into a two-digit Polybius coordinate. It turns a keyword into coordinates in the same way, repeats those key numbers, and adds them as ordinary integers. The result is a stream of numbers rather than letters."
-updated = "2026-09-05"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -130,13 +130,18 @@ Subtracting the key returns the original coordinates and therefore `MEETATNOON`.
 [[blocks]]
 kind = "notes"
 body = '''
-Unlike Vigenere, the visible symbols are sums of coordinate numbers, so decimal carries are part of the ciphertext. The coordinate-validity test is therefore stronger than merely checking a value modulo an alphabet size.
+Unlike Vigenère, the visible symbols are sums of coordinate numbers, so decimal carries are part of the ciphertext. The coordinate-validity test is therefore stronger than merely checking a value modulo an alphabet size.
 '''
+
+[[provenance]]
+path = "CipherPraxis/content/LITERATURE_AND_MODEL_INVENTORY_2026-09-05.md"
+kind = "note"
+note = "Records the literature-backed addition of the standard construction and explicitly notes the absence of an internal blind solver or planted-control claim."
 
 [[provenance]]
 path = "CipherPraxis/content/references/literature-classical-ciphers.toml"
 kind = "note"
-note = "The catalog's classical-cipher bibliography supplies the standard reference trail for this literature-backed definition."
+note = "The site's classical-cipher bibliography identifies the Gaines and American Cryptogram Association sources used for this definition."
 
 [[references]]
 title = "Cryptanalysis: A Study of Ciphers and Their Solution"

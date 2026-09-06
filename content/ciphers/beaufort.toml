@@ -8,7 +8,7 @@ family = "Polyalphabetic substitution"
 tags = ["periodic", "reciprocal", "polyalphabetic", "tabula recta"]
 related = ["vigenere", "variant-beaufort", "porta", "autokey", "exact-period-alignment", "periodic-substitution-dp", "g-reciprocal-cipher", "g-tabula-recta"]
 summary = "Beaufort subtracts each plaintext letter from a repeating key modulo 26. The same operation encrypts and decrypts. Its cosets match Vigenère's, so the same alignment and shift tools work after reversing the plaintext sign. Every periodic test checks both Vigenère and Beaufort instead of assuming one."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -86,7 +86,7 @@ function RECOVER_KEY(c[0..n-1], m, E):
 [[blocks]]
 kind = "complexity"
 body = '''
-Identical to Vigenère: $O(26\,m)$ correlations per relation, $26^{m-1}$ shift vectors for the exact alignment after fixing one gauge shift, and $8^3$ DP states per step for the order-three quadgram chain over an eight-way shortlist. Testing both relations doubles the work.
+Identical to Vigenère: histogram construction costs $O(n)$, followed by $O(26^2m)$ direct shift comparisons for a 26-letter alphabet; exact alignment has $26^{m-1}$ relative vectors after fixing one gauge shift. An order-three dynamic program over an eight-way shortlist uses $O(8^3)$ states and $O(8^4)$ transitions per step. Testing both relations doubles the relation-specific work.
 '''
 
 [[blocks]]

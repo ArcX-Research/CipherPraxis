@@ -6,5 +6,5 @@ status_note = "Standard term; its cipher-specific forms are proven and tested in
 family = "Algebra"
 tags = ["symmetry", "identifiability"]
 related = ["conjugacy-and-gauge", "group-actions-on-alphabets", "gauge-defect-invalidation", "g-affine-orbit"]
-summary = "Gauge freedom means that some parameter changes leave every observable result unchanged. Those parameters cannot be recovered as one unique raw value. For a keyed additive cipher, the alphabet coordinates may be shifted with the key, or multiplied by a unit modulo 26. A solver can fix one coordinate or choose one standard form after enumeration. It must not recover in one gauge and score in another."
-updated = "2026-09-04"
+summary = "Gauge freedom means that specified parameter transformations leave every observable result of a model unchanged. The raw parameters are then not identifiable within each equivalence class. Some keyed additive models permit a common coordinate shift, or multiplication by a unit modulo 26 together with the corresponding key transformation; this must be proved from the model equations. A solver may choose a canonical representative, but recovery, scoring, and comparison must use the same declared gauge action."
+updated = "2026-09-07"

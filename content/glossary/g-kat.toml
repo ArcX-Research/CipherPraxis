@@ -6,5 +6,5 @@ status_note = "Standard term; usage as in the engineering section."
 family = "Engineering vocabulary"
 tags = ["testing"]
 related = ["kat-harness", "known-answer-tests", "compiled-hot-cores"]
-summary = "A known-answer test (KAT) gives a component a fixed input and requires the known output. It can compare a fast score update with a full rescore, check a forward-and-back round trip, require a parser to reject damaged records, or require a filter to keep every planted truth. A KAT must be able to fail. Mutation tests include an unchanged case to prove that their checks are active."
-updated = "2026-09-04"
+summary = "A known-answer test (KAT) gives a component a fixed input and compares its result with a value derived independently in advance. It can compare a fast score update with a full rescore, test a forward/inverse pair, or require exact parser and filter decisions on fixed fixtures. Passing establishes agreement only on the tested cases. In mutation panels, a no-op guard verifies that every intended mutation actually changes the input, and both accepted and rejected fixtures make the decision boundary exercisable."
+updated = "2026-09-07"

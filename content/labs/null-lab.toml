@@ -3,12 +3,12 @@ section = "labs"
 title = "Shuffled-null z-score lab"
 subtitle = "Compare a period score with shuffled copies that keep the same letters"
 status = "VERIFIED"
-status_note = "On a Vigenère test with a five-letter key, mean coset IC at period 5 reaches z > 4 against 200 shuffles. Period 7 stays within noise."
+status_note = "On the recorded Vigenère fixture, period 5 has a larger mean-coset-IC z-score than 200 shuffled copies, while period 7 does not. With only 200 shuffles, the empirical upper-tail resolution is 1/201, and a scan needs a family-wise comparison."
 family = "Analysis labs"
 tags = ["null distribution", "z-score", "permutation test", "calibration"]
 related = ["shuffled-null-z-score", "family-wise-null", "permutation-test", "selection-overfit-diagnostic", "coincidence-lab"]
-summary = "A statistic needs a null comparison. Shuffling a ciphertext keeps its letter counts but destroys position patterns. An order-based statistic, such as mean coset index of coincidence, can then be compared with its shuffled range and reported as a z-score. This lab uses a fixed random seed and tests several possible periods."
-updated = "2026-09-04"
+summary = "A statistic needs a specified null comparison. Uniformly shuffling a ciphertext conditions on its letter multiset while randomizing order. An order-based statistic, such as mean coset index of coincidence, can be compared with that permutation distribution. The z-score is descriptive unless a normal approximation is justified; the plus-one empirical tail fraction needs exchangeable permutations and a family-wise version when the best period is selected."
+updated = "2026-09-07"
 lab = "null"
 
 [[blocks]]
@@ -21,17 +21,18 @@ function PERIODIC_IC(c[0..n-1], m):
     return mean over b in 0..m-1 of IC([c[i] for i in 0..n-1 if i mod m == b])
 
 function SHUFFLED_NULL_Z(c[0..n-1], m, trials, seed):
+    require n >= 2, 1 <= m <= n / 2, and trials >= 2
     observed = PERIODIC_IC(c, m)
     // fixed seed: the same run is repeatable
     rng = RNG(seed)
     for j in 1..trials:
         // same letters, random positions
-        SHUFFLE(rng, c)
+        shuffled = SHUFFLE(rng, copy(c))
         // the statistic recomputed on every shuffle
-        value[j] = PERIODIC_IC(c, m)
+        value[j] = PERIODIC_IC(shuffled, m)
     // sample standard deviation
     mean = MEAN(value); sd = SD(value)
-    z = (observed - mean) / sd if sd > 0 else 0
+    z = (observed - mean) / sd if sd > 0 else UNDEFINED
     p_upper = (#{ j : value[j] >= observed } + 1) / (trials + 1)
     return observed, mean, sd, z, p_upper
 
@@ -50,7 +51,7 @@ function PERIOD_SCAN(c, periods, trials, seed):
 kind = "notes"
 title = "What to try"
 body = '''
-- Raise the number of trials. The null mean, standard deviation, and z-score should become steadier. The seed makes the same run repeatable.
-- Test a period that is not the key length. Its z-score should stay near zero. That is what a sound negative result looks like.
+- Raise the number of trials. Monte Carlo estimates generally become less variable, although one sequence need not change monotonically. The seed makes the same implementation repeatable.
+- Test a period that is not the key length. Its z-score can still depart from zero because of random variation, language structure, or a related divisor or multiple. Failure to stand out is evidence only against the stated statistic and null, not a general negative result.
 - Look at the full scan. It chooses the best of 11 periods, so that z-score tends to be larger than one from a single planned test. A family-wise null repeats all 11 tests on every shuffle and compares the highest scores.
 '''

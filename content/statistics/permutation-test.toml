@@ -3,21 +3,23 @@ section = "statistics"
 title = "Permutation test"
 subtitle = "Rank the observed result among results from shuffled or otherwise transformed data"
 status = "VERIFIED"
-status_note = "Audited exact tests use a strict rank-1-of-100 rule: 99 matched nulls, with ties rejected and a smallest possible p-value of 0.01. Across 700 target-absent selections, it accepted 4/4 planted English positives and rejected 3/3 valid-model random negatives. One live test reported its candidate at rank 100 of 100 and p_perm 0.01 as the available resolution."
+status_note = "Audited sampled randomisation tests use a strict rank-1-of-100 rule: 99 matched nulls, with ties rejected and a smallest attainable plus-one p-value of 0.01. Across 700 target-absent selections, the rule accepted 4/4 planted English positives and rejected 3/3 valid-model random negatives. One live test placed its observation at rank 100 of 100 ($p_+=1.00$) and rejected it."
 family = "Null distributions and calibration"
 tags = ["permutation test", "randomisation", "exact test", "full selector", "add-one p-value", "rank"]
 related = ["shuffled-null-z-score", "within-coset-null", "family-wise-null", "power-analysis", "english-gate-calibration", "valid-model-nulls", "joint-statistic-release-gates", "evidence-scope-ladder", "candidate-bank-lineage-and-cap-accounting", "seal-and-audit-protocol", "g-empirical-p-value", "g-null-distribution", "null-lab"]
-summary = "A permutation test avoids assuming a particular probability distribution. Under the null, allowed transformations such as shuffles should make equivalent data. Compute the statistic on the original and N transformed copies, then rank the original among all N + 1 values. This gives the p-value. The statistic may be a capped heuristic's final score, but every copy must rerun the same complete shortlist, polish, deduplication, and selection process. The rank then calibrates that frozen procedure, not an exhaustive cipher family."
-updated = "2026-09-06"
+summary = "A permutation test avoids a parametric score distribution. Under a null that is invariant to declared transformations, compute the statistic on the original and on transformed copies, then rank the original. With an exchangeable sampling protocol, that rank gives a valid exact or Monte Carlo p-value. Every copy must rerun the same shortlist, polish, deduplication, and selection process. The result calibrates that frozen procedure and null—not an exhaustive cipher family or a posterior probability."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
-Let $G$ be a group of transformations under which the null hypothesis is exchangeable, $T$ any statistic (here typically the score of the *selected* candidate after a full search), and $g_1, \dots, g_N$ independent uniform draws from $G$ (or from a subgroup, sampled without replacement). Then
+Let $G$ be a finite group under which the null distribution is invariant, and let $T$ be any frozen statistic, often the selected score after a full search. Conditional on an orbit, the observation and independent uniform group transforms are exchangeable. For $g_1,\dots,g_N$ drawn independently and uniformly from $G$,
 
 $$\hat p = \frac{1 + \#\{i : T(g_i x) \ge T(x)\}}{N + 1}$$
 
-is a valid $p$-value: under the null, $\Pr(\hat p \le \alpha) \le \alpha$. The **strict rank-1 rule** admits only when $T(x) > \max_i T(g_i x)$, giving $\hat p = 1/(N+1)$, which is $0.01$ for $N = 99$; equality with any null counts as a loss.
+is a valid Monte Carlo $p$-value under that invariance and predeclared sampling protocol: $\Pr_0(\hat p\le\alpha)\le\alpha$ at attainable levels. The **strict rank-1 rule** admits only when $T(x)>\max_iT(g_ix)$, giving $\hat p=1/(N+1)$, or $0.01$ for $N=99$; equality with any null counts against the observation.
+
+For sampling without replacement, append the identity to $N$ distinct transformations drawn uniformly from $G\setminus\{e\}$, independently of the data. The same inclusive rank is valid under group invariance. Drawing $N+1$ distinct uniform group elements and expressing them relative to one randomly chosen anchor gives the same transformation distribution; that extra construction is optional. Distinct transformations may still produce identical data, and those ties remain in the rank. See Definition 2 and Theorem 2 of Hemerik and Goeman (2018).
 '''
 
 [[blocks]]
@@ -38,6 +40,42 @@ Sampling with replacement can draw the identity twice, repeat a transformation, 
 '''
 
 [[blocks]]
+kind = "equations"
+title = "An exact fixed-histogram equality screen"
+body = '''
+Under uniform permutation of a histogram with symbol counts $n_a$ and total length $N$, suppose $k$ specified disjoint position pairs must contain equal symbols. The exact probability is
+
+$$\frac{k!(N-2k)!}{N!}[z^k]\prod_a\sum_{j=0}^{\min(k,\lfloor n_a/2\rfloor)}\frac{(n_a)_{2j}}{j!}z^j,$$
+
+where $(n)_r=n!/(n-r)!$ is a falling factorial. Allocate the $k$ labeled pairs to letters, then count all unrestricted arrangements in the remaining positions. No extra factor of $2!$ belongs to a pair: its two positions have already been specified. Integer polynomial multiplication gives the coefficient without enumerating all permutations.
+
+This is a single matching event. Its probability cannot be raised to powers in an IID [family-wise equality polynomial](/statistics/family-wise-null): conditioning on the total counts makes disjoint components dependent. For selected families, intersect events by taking the union of their required equality edges, count the resulting component sizes, and evaluate the corresponding multivariate coefficient for each signed term. Alternatively, use the complete matched permutation selector.
+
+Exhaustive enumeration of distinct strings verified the formula on six small histograms at every feasible pair count, including absent letters, impossible equality assignments and $k=0$. The denominator is the number of distinct multiset strings; each has the same number of labeled-permutation preimages, so this is equivalent to uniform position permutations.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Condition the complete selected family, component by component"
+body = '''
+For an equality graph with $c_2,c_3,c_4$ nontrivial components of sizes two, three and four, let $M=2c_2+3c_3+4c_4$. Its exact fixed-histogram probability is
+
+$$\frac{(N-M)!\,c_2!c_3!c_4!}{N!}
+[z_2^{c_2}z_3^{c_3}z_4^{c_4}]
+\prod_a\sum_{j_2,j_3,j_4}
+\frac{(n_a)_{2j_2+3j_3+4j_4}}{j_2!j_3!j_4!}
+z_2^{j_2}z_3^{j_3}z_4^{j_4}.$$
+
+Terms exceeding a symbol's available count are zero. The component factorials assign labels to equally sized components; there is no additional factorial for the positions inside a component. Isolated vertices are the $N-M$ unrestricted positions.
+
+Evaluate every signed component term of the family's inclusion-exclusion polynomial by this formula. Linearity remains exact after conditioning. The common-denominator numerator over $N!$ must be divisible by $\prod_a n_a!$; its quotient counts passing distinct strings. This gives a useful integer check beyond comparing rounded probabilities.
+
+If every term has at most one exceptional component of size $e\in\{3,4\}$, use two polynomial channels. For one symbol count $n$, set $A_j=(n)_{2j}/j!$ and $B_j=(n)_{2j+e}/j!$, then update $U_{\rm new}=UA$ and $V_{\rm new}=VA+UB$ using the old arrays on both right-hand sides. A generic multivariate implementation is still needed to check this shortcut and handle several exceptional components.
+
+This is an exact conditional probability under uniform ordering of the declared multiset. It does not establish exchangeability for correlated prose, validate a cipher family, or measure recovery power.
+'''
+
+[[blocks]]
 kind = "variants"
 body = '''
 - **Full symmetric group** (position shuffle): null of "any order structure". See [shuffled-null z-score](/statistics/shuffled-null-z-score).
@@ -54,7 +92,8 @@ kind = "assumptions"
 body = '''
 - Exchangeability: the null distribution of the data is invariant under $G$. This must be argued for the *whole* hypothesis family in use. A union of re-indexings needs a common normaliser or separate tests.
 - Identical processing: every transformed copy goes through the same complete selection (enumeration, fit, polish, forward check). The observed cycle, sign, key or score is never reused.
-- The transformations are drawn before any score is seen and are not filtered by score or adjacency.
+- The null distribution is invariant under the declared group. This exchangeability assumption, not shuffling by itself, justifies the rank.
+- The transformations are drawn before any score is seen and are not filtered by score or adjacency. With- and without-replacement designs are not mixed.
 - The statistic is a deterministic function of its input and frozen runtime. If the selector is stochastic, its seed rule is part of the test and must not depend on whether an input is observed or null.
 - Identical transformed inputs produce identical payloads and scores. A job index or role label must not change the answer.
 - A deterministic cap may be part of $T$ if the selector always returns a predeclared score or sentinel at that cap. Different caps, a missing replicate, or an unclassified timeout make the whole rank incomplete.
@@ -116,13 +155,13 @@ $B + 1$ complete selections for a sampled test, or $|G|$ selections for full enu
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **One null.** A run with a single null bounds $\hat p$ at $1/2$. It is a smoke test, not evidence, and the audit refused to let such a run stand in for a 99-null result.
+- **One null.** A run with a single null has a smallest attainable $\hat p$ of $1/2$. It is a smoke test, not evidence of separation at conventional levels, and the audit refused to let such a run stand in for a 99-null result.
 - **Score-reused nulls.** Scoring the observed key on transformed copies without re-selecting it tests a different, easier hypothesis.
 - **Gate shopping.** Re-tuning the statistic, the group or the threshold after seeing the live rank invalidates the test. The audited lanes freeze source hashes and refuse to run otherwise.
 - **Non-exchangeable unions.** Comparing separately conjugated, hypothesis-specific nulls as if they were one randomisation test overstates significance.
 - **Zero from a sampled tail.** Reporting $R/B$ gives zero when no sampled null exceeds the observation. The plus-one estimator correctly reports the finite resolution.
 - **Ties discarded.** When the statistic is discrete, ties with nulls are common. The upper tail is inclusive, so equality loses under a strict gate.
-- **Duplicate nulls redrawn.** Identity, repeated permutations, or repeated output strings are removed because they look uninformative. This changes the precommitted sample and can improve the observed rank.
+- **Duplicate nulls redrawn.** In a with-replacement design, identity draws, repeated permutations, or repeated output strings are removed because they look uninformative. This changes the precommitted sample and can improve the observed rank. A distinct-transform design must instead be declared and randomised as such before scoring.
 - **Alias votes.** Equivalent physical keys are counted as several candidate wins. Canonicalise the semantic candidate for scoring while retaining every physical origin for replay.
 - **Role-dependent randomness.** The same input receives different scores because its job number changes a search seed. The statistic is then not the same function across exchangeable inputs.
 - **Unequal cap handling.** The observation receives a deeper shortlist or more polish sweeps than the nulls, or a timed-out null is silently assigned a losing score without that sentinel having been predeclared.
@@ -132,9 +171,11 @@ body = '''
 [[blocks]]
 kind = "controls"
 body = '''
-Target-absent exact lane: 4 English positives at rank 1/100 with observed scores above the best null by $0.9$–$1.3$ million scaled units; 3 valid-model random negatives at ranks 84, 55 and 6 (all rejected; rank 6 is the recorded boundary case). Derived-alphabet lane: controls power 47/48 with 6/6 negatives rejected; live candidate rank 100/100, terminal line stating $p_{\text{perm}} \ge 0.01$. Bank search: 9 within-coset nulls, 8 above the candidate, $\hat p \le 0.90$. Shared-cycle bank: identity plus 38 pairing nulls per fixture, 8/8 positives at rank one in both null families with margins $\ge 1.64$ rate units, 4/4 negatives rejected.
+Target-absent sampled-rank lane: 4 English positives at rank 1/100 with observed scores above the best null by $0.9$–$1.3$ million scaled units; 3 valid-model random negatives at ranks 84, 55 and 6 (all rejected; rank 6 is the recorded boundary case). Derived-alphabet lane: controls power 47/48 with 6/6 negatives rejected; the live observation ranked 100/100 and was rejected. Bank search: 9 within-coset nulls, 8 above the candidate, so $\hat p=0.90$. Shared-cycle bank: identity plus 38 pairing nulls per fixture, 8/8 positives at rank one in both null families with margins $\ge 1.64$ rate units, 4/4 negatives rejected.
 
 An exact small-orbit check enumerated 1,728 ordered triples on a 12-string repeated-symbol orbit. Inclusive plus-one ranks rejected 454 triples at the one-third threshold and 1,034 at the two-thirds threshold, both conservative. A separate classifier check retained 99 duplicate transformed strings rather than redrawing them and counted all 99 ties in the upper tail.
+
+The component-conditioned calculation passed 68 exhaustive tiny component cases, four additional hand-reference cases and 29 selected-family histogram cases. These include two triples, two quadruples, impossible joint allocations despite possible marginals, empty events and duplicate events. Generic and two-channel coefficients also agree in 76 declared large-histogram cells. Mixing all ten binary length-nine conditional bins recovers the independently known IID values $7/8$ and $73/81$; one central bin is instead $53/63$. These are public-symbol arithmetic controls, not prose or recovery tests.
 '''
 
 [[blocks]]
@@ -143,7 +184,7 @@ title = "Worked example"
 body = '''
 A solver's endpoint score on a text is $S = -4.60$. Ninety-nine within-coset nulls are drawn from a fixed seed, the whole solver is re-run on each, and their maxima are collected: the largest is $-4.71$, and none reaches $-4.60$. Then $\hat p = (1 + 0)/100 = 0.01$ and the candidate is admitted at strict rank 1.
 
-Had two nulls scored $-4.58$ and $-4.60$, the count would be $2$ (the tie counts against the candidate), $\hat p = 3/100 = 0.03$, and under the strict rule the candidate is refused even though it is in the top three percent: the rule buys a guaranteed size of $0.01$ at the price of admitting only unambiguous winners.
+Had two nulls scored $-4.58$ and $-4.60$, the count would be $2$ (the tie counts against the candidate), $\hat p = 3/100 = 0.03$, and under the strict rule the candidate is refused even though it is in the top three percent. Under the declared exchangeable null, the strict rule has size at most $0.01$ at the price of admitting only unambiguous winners.
 
 With nine nulls of which eight exceed $S$, $\hat p = 9/10 = 0.90$: the candidate is typical of what the pipeline produces on order-free copies of the same histograms.
 '''
@@ -153,6 +194,18 @@ kind = "notes"
 body = '''
 The permutation test does not need a parametric model of the score distribution, but its conclusion is narrow. The rank is conditional on the declared transformation group, statistic, selector, and search family. It is not a posterior probability that a text is meaningful or that a cipher family is correct.
 '''
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_SYMPERM740.md"
+kind = "audit"
+note = "Sole target-free KAT PASS, externally observed exit0: exact selected multiset component DP, OLD-U marked recurrence, integer distinct-string counts, 68+4 component oracles,29 selector histogram rows,76 generic/fast comparisons and18 refusals. Result71d6c8a837da1c9e1fe408c60298a47d04ac6cfa9f49224db8ef3fe880430dbd. No target, corpus, bank, prose-null or recovery-power claim."
+ref = "LOG740"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_SYMNULL739.md"
+kind = "audit"
+note = "Target-free exact coefficient DP agrees with21 independent multiset-string enumerations, and a selected binary cycle distinguishes IID from conditional-permutation probabilities. Result 5243dff23d28cfd82e23f430b65d1d2d9dfe178ab499010e522a5cca642f8677. The general selected multivariate coefficient is a derived successor, not an implementation claim from this KAT."
+ref = "LOG739"
 
 [[provenance]]
 path = "withmath/docs/project-notes/PK10_NULLRELEASE652_PROTOCOL.md"
@@ -192,7 +245,7 @@ ref = "LOG385"
 [[provenance]]
 path = "withmath/logs/152_crosscycle_full.log"
 kind = "log"
-note = "Nine complete-pipeline nulls; candidate p <= 0.90."
+note = "Nine complete-pipeline nulls; eight exceed the observation, so the plus-one p-value is 0.90."
 ref = "logs/152_crosscycle_full.log"
 
 [[provenance]]
@@ -219,3 +272,9 @@ year = 2000
 title = "Permutation P-values Should Never Be Zero: Calculating Exact P-values When Permutations Are Randomly Drawn"
 author = "Belinda Phipson and Gordon K. Smyth"
 year = 2010
+
+[[references]]
+title = "Exact testing with random permutations"
+author = "Jesse Hemerik and Jelle Goeman"
+year = 2018
+url = "https://doi.org/10.1007/s11749-017-0571-1"

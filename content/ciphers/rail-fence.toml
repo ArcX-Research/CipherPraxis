@@ -8,7 +8,7 @@ family = "Transposition"
 tags = ["transposition", "zigzag", "rails", "offset"]
 related = ["route-transposition", "columnar-transposition", "myszkowski", "transposition-width-recovery", "exhaustive-enumeration", "g-transposition-grid"]
 summary = "A rail fence writes a message in a zigzag across r rows, then reads those rows in order. Its only key values are the row count and starting offset. Once those are chosen, the letter positions are fixed, so a solver can check every case. The transposition search covered every row count from 2 to 40 and every offset beneath a repeating layer."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -42,7 +42,7 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - Histogram and index of coincidence are preserved. Only positions move.
-- Invariant: rail lengths are fixed by $(n, r, o)$, so a candidate $(r, o)$ is either exactly right or wrong; there is no partial credit.
+- Rail lengths and the permutation are fixed exactly by $(n,r,o)$. The parameter cell is discrete, but a wrong cell can still place some letters correctly or earn a partial language score; exact parameter recovery and score separation are different claims.
 '''
 
 [[blocks]]
@@ -51,7 +51,7 @@ title = "How to attack it"
 body = '''
 1. Precompute the permutation for every $(r, o)$.
 2. For each, undo the fence (and, in the layered model, fit the periodic key on the un-fenced text in both alphabet orders and relations), score by quadgrams, and polish the best few.
-3. Compare the best rate against the sweep's own distribution. A real solution reads as English at once.
+3. Compare the selected maximum against a matched full-sweep null or calibrated controls. Require readable full text and an independent forward replay; neither a nominal rate nor a near-miss is sufficient alone.
 '''
 
 [[blocks]]
@@ -84,8 +84,8 @@ function DECRYPT(c[0..n-1], r, o):
     return p
 
 // Attack: precompute q for every (r, o), undo the fence (and fit any periodic
-// layer on the un-fenced text), score by quadgrams; a candidate (r, o) is
-// either exactly right or wrong.
+// layer on the un-fenced text), score by quadgrams, and retain partial-score
+// near misses separately from exact parameter recovery.
 ```
 '''
 

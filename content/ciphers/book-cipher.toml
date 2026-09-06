@@ -8,7 +8,7 @@ family = "Stream and machine ciphers"
 tags = ["running key", "book", "known text", "bank"]
 related = ["running-key", "one-time-pad", "vigenere", "dictionary-attack", "corpus-bank-screen", "running-key-relation-test", "frequency-analysis"]
 summary = "A book cipher uses a passage from an agreed text as a running key. The sender shares a page or line location instead of the full key. If the book is unknown, the problem is as hard as any running-key cipher. If likely books are available, try every matching window as the key. The correct passage should produce readable plaintext. The bank search performs these comparisons in batches."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -40,7 +40,7 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - The key text is in the bank. A negative sweep says nothing about texts outside it.
-- Invariant: a true window yields the plaintext's index of coincidence (about 0.066) and quadgram rate (near $-4.3$) far above the shuffled null; there is no partial credit for a nearly right offset except at the overlap.
+- A true window reproduces the encoded plaintext under the declared convention. Its IC and language score should be judged against matched samples from the stated plaintext model; values such as 0.066 or $-4.3$ are corpus-dependent reference levels, not invariants. Nearby or repetitive source windows can receive partial credit, especially where they overlap.
 '''
 
 [[blocks]]

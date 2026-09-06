@@ -6,5 +6,5 @@ status_note = "Corpus term for a scoped exhaustive test of one construction fami
 family = "Method governance"
 tags = ["enumeration", "scope", "closure"]
 related = ["phrase-keyed-alphabet-attack", "multiple-rounds-analysis", "family-identification", "dictionary-attack", "planted-controls", "g-successor-review", "g-selection-freedom"]
-summary = "A family sweep checks every member of a stated cipher family against a ciphertext. It may try every phrase-keyed alphabet, every combination of several rounds, or every column order of one width. A planted control must rank first, and a null test sets the noise level. A negative result rules out only that family, text, length, search space, and measured power. Shared assumptions can make many sweeps fail in the same way, so the project reviews those assumptions between rounds of testing."
-updated = "2026-09-04"
+summary = "A family sweep evaluates every member of a declared finite candidate set, or a clearly labelled approximation to it. Exhaustive coverage can exclude candidates only when the model, enumeration, pruning, and decision predicate are sound; a heuristic sweep cannot. Planted controls estimate recovery for their generating distribution, while a null calibrated over the full sweep measures selection effects. The project's release gate may require exact control recovery, but finite control success is not a general power guarantee."
+updated = "2026-09-07"

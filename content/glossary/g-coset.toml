@@ -6,5 +6,5 @@ status_note = "Standard term."
 family = "Cipher structure"
 tags = ["periodic"]
 related = ["vigenere", "index-of-coincidence"]
-summary = "If a cipher key repeats every m letters, coset b contains the positions i where i ≡ b (mod m). One key element encrypts every position in that coset. Each coset therefore acts like its own monoalphabetic substitution."
-updated = "2026-09-04"
+summary = "For a period-m position schedule, coset b contains the positions i with i ≡ b (mod m). In a periodic substitution cipher, the same substitution parameter applies at every position in one coset, so that restricted stream is monoalphabetically transformed. The conclusion does not extend automatically to feedback ciphers or to other mechanisms that happen to use a periodic parameter."
+updated = "2026-09-07"

@@ -6,5 +6,5 @@ status_note = "Standard term."
 family = "Cipher structure"
 tags = ["feedback", "seed"]
 related = ["autokey", "gromark", "condi", "running-key"]
-summary = "A primer is the short secret that starts a self-extending key stream. It may be the first letters of an autokey, the first digits of a Gromark chain, or Condi's starting value. In a plaintext autokey, each primer element controls positions spaced by the primer length. In a ciphertext autokey, the primer affects only the first m letters and disappears from the lag-m difference text."
-updated = "2026-09-04"
+summary = "A primer is the finite secret that initializes a self-extending key stream. It may be the initial letters of an autokey, the initial digits of a Gromark chain, or Condi's starting value. In the usual plaintext-autokey schedule, primer positions seed interleaved dependency chains. In the additive ciphertext-autokey convention, the primer is used directly only for the first m letters; for later positions, subtracting ciphertext at lag m cancels the feedback term. Other autokey conventions require their own recurrence."
+updated = "2026-09-07"

@@ -6,16 +6,16 @@ status = "UNTESTED"
 status_note = "Single- and two-child process boundaries have passed exact replay, and the full conditional-DAG verifier passed static refusal tests. Its complete model-bearing multi-branch preflight was still running at the inventory cutoff, so end-to-end status remains untested."
 family = "Reproducible solver architecture"
 tags = ["process census", "execution DAG", "subprocess", "provenance", "replay"]
-related = ["isolated-acquisition-solver-handoff", "reproducibility-receipts", "kat-harness", "candidate-bank-lineage-and-cap-accounting", "seal-and-audit-protocol"]
+related = ["isolated-acquisition-solver-handoff", "reproducibility-receipts", "kat-harness", "candidate-bank-lineage-and-cap-accounting", "seal-and-audit-protocol", "drainability-and-throughput"]
 summary = "A multi-process solver should declare the child-process graph implied by its public inputs and intermediate decisions. An independent verifier reconstructs that graph, matches it exactly to committed process records, and replays every edge binding. Missing, extra, reordered, or unauthenticated children then fail even when the final summary claims success."
-updated = "2026-09-06"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
 A **transitive process census** treats a solver pipeline as a directed acyclic graph $G=(V,E)$. Each vertex is one expected invocation and each edge carries a committed input or output artefact. The verifier derives $G$ from the frozen protocol and authenticated public results, not from a worker's reported process count.
 
-For every observed child it requires a process record containing the exact command, executable and source identities, standard-input hash, standard-output hash, standard-error hash, exit status, and declared output hashes. Acceptance requires a bijection between expected and observed vertices plus semantic replay along every edge.
+For every observed child it requires a process record containing the exact command, executable and source identities, standard-input hash, standard-output hash, standard-error hash, exit status, and declared output hashes. Acceptance requires a bijection between expected and observed vertices plus semantic replay along every edge. This is an execution-completeness check relative to the declared protocol, not proof that the protocol itself is complete or scientifically adequate.
 '''
 
 [[blocks]]
@@ -48,7 +48,7 @@ kind = "assumptions"
 body = '''
 - Expected branches are functions of authenticated public state and frozen policy, never hidden truth.
 - Process records and every referenced stream are included in the pre-reveal output commitment.
-- Exit success alone is insufficient; empty standard error, complete record schema, and semantic output checks remain explicit requirements.
+- Exit success alone is insufficient. The protocol must declare whether standard error must be empty or merely authenticated and parsed; complete record-schema and semantic output checks remain explicit requirements.
 - A replayed ancestor is labelled replayed. Its presence cannot be misreported as a new invocation or fresh power measurement.
 - The graph describes observable orchestration, not operating-system containment against a malicious child.
 '''
@@ -58,6 +58,31 @@ kind = "attack"
 title = "Audit a process pipeline"
 body = '''
 Write the frozen protocol as a small independent graph builder. Starting from the public packet, derive each mandatory child and each conditional branch. Parse all committed process files, reject undeclared files, and compare canonical invocation identities. For every vertex, rehash the executable, input, output, and sidecars, then independently parse and replay its semantics. Finally, check that output-to-input hashes agree on every graph edge and that no child ran after a withholding or support-miss terminal.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Test the execution lifetime as well as the output graph"
+body = '''
+A correct output census does not show that a timed-out process tree has stopped. If every nested child starts a separate process group or session, killing only the wrapper's group can leave a native worker running. Declare which session and group owns each child and how the supervisor reaches all of its own descendants. Never infer permission to signal unrelated processes.
+
+Exercise a timeout while a nested child is actually alive, not merely while the wrapper imports. Record process identities, launch hashes, the stop cause, cleanup and child reaping, then verify that no live descendant remains. Include exceptions after a successful launch. Cleanup belongs on every exit path, and a failed monitor observation must not be mistaken for child absence.
+
+Keep ownership simple enough to enforce when monitoring fails. One isolated process group containing a wrapper and its fixed native worker is easier to stop than a collection of groups discovered by polling. If group creation is part of the frozen child code, account for it explicitly. A worker can wait on a one-byte launch gate until its parent has verified and durably recorded ownership; an unreleased gate must refuse, not start work. This closes the interval in which a child could launch further work before its parent has recorded how to stop it.
+
+Preserve a verified identity for every signal. Do not reap a group leader and later treat its old numeric identifier as continuing authority. Keep cleanup independent of process-table reads, bound the wait for reaping, and withhold further launches if lifetime verification fails. A later independent observation can show that a diagnostic child really stopped, but must not retroactively turn its failed production monitor into a successful certificate. Readiness has a similar publication rule: a pathname becoming visible is not proof that its JSON is complete; consume a post-write, post-flush commit notification.
+
+A one-shot alarm does not bound cleanup after its exception has been caught. Do not follow a failed stop operation with an unbounded blocking wait and assume the original timer still protects it. Cleanup needs its own bounded stop-and-reap path, with verified ownership and an independent deadline. Handle catchable termination of the supervisor too; otherwise its separately owned worker may outlive it.
+
+Test ordinary completion too. A worker can finish correctly while its supervisor rejects the final cleanup operation. Process death, zombie state, reaping, a successful signal call and verified absence are different facts. Exercise both a completed leader with no live child and a completed leader whose child is still alive. Do not suppress an unexpected signal error after the run or turn a numerical result into an execution certificate. Preserve the failed receipt and test a revised cleanup contract separately.
+
+Make monitor refusals diagnosable without weakening them. A parser that reports only "domain or duplicate" and discards the rejected row cannot distinguish an invalid state from a repeated process identifier afterward. Record the specific failed predicate and bounded relevant numeric/state fields, or an appropriately protected raw receipt, without exposing unrelated command-line secrets. A later successful census does not repair the earlier failure. Valid cleanup evidence from one stage can be preserved while the complete panel remains incomplete.
+
+The corresponding resource gate must cover the whole orchestration interval. Pass remaining total time to each child and check the total again after the final stage, including output flush and final receipt publication. A pre-publication reserve does not measure the memory peak of serialization. Individually successful children can still produce an over-budget panel. Numerical replay and process-lifetime checks establish different facts; neither substitutes for the other.
+
+Include the outer shell launcher in the evidence boundary. A guard can return and leave complete-looking output, yet a later shell bookkeeping error can discard its actual exit status. Keep a simple guard command last so the command runner observes its status directly. If more commands must follow, capture the status immediately in an ordinary task-specific variable; do not reuse shell special variables, some of which are read-only. Check the launcher with both zero-exit and nonzero-exit stubs under the actual shell before a one-shot experiment. A later wrapper failure proves neither that the guarded computation failed nor that it exited zero. Preserve the output and mark the missing status incomplete rather than rerunning or inferring success.
+
+Distinguish the requested launch environment from the environment the interpreter actually observes. Even a cleared environment can acquire platform-generated variables during startup. Test that boundary with a tiny runtime-only probe before committing a one-shot scientific panel; record declared inputs and the observed environment, and freeze any permitted normalization explicitly. Otherwise an exact dictionary comparison may refuse before the method or fixtures run. Such a failure supplies no evidence about the mathematical method, and a later diagnosis does not authorize a retry of the consumed panel.
 '''
 
 [[blocks]]
@@ -137,6 +162,48 @@ path = "withmath/docs/project-notes/PK89_DUAL638_GATE.md"
 kind = "design"
 note = "LOG638 specifies the complete conditional worker graph, full process-file census, no-child-after-withholding rules, and current end-to-end limitation."
 ref = "LOG638"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_UNION732.md"
+kind = "audit"
+note = "Independent session review accepted the numerical composition but held release for whole-controller timing, nested-process cleanup and audit-admission defects. An import-time cap probe did not exercise an active native descendant."
+ref = "LOG732"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_UNION735.md"
+kind = "design"
+note = "Source review addressed monitor-failure cleanup, early reaping, setup-attestation and readiness-publication races. The single public-symbol attempt then failed closed: completed native work was followed by EPERM from a final group signal on an observed zombie-only capsule. The outer record stayed INCOMPLETE; active-native fault probes were not reached. This supports testing ordinary completion separately, not a runtime pass for the proposed guard."
+ref = "LOG735"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_UNION737_REPLAY.md"
+kind = "audit"
+note = "A source-bound, child-free partial replay verified the saved numerical payload and all ancestor hashes without rerunning either search or repairing the failed outer certificate. Independent receipt readback passed; no complete-preflight or power admission followed."
+ref = "LOG737"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_LIFETIME738.md"
+kind = "audit"
+note = "A sole tiny lifetime attempt preserved valid terminal-then-fresh zombie observations, no-signal exact reap0 and an empty primary post-census. The later emergency census parser refused a domain/duplicate predicate without retaining the rejected row; the whole panel stayed INCOMPLETE and six cases were not run. Independent receipt-only readback reconciled the evidence, not a complete guard certificate."
+ref = "LOG738"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "audit"
+note = "LOG736 sole guard attempt retained worker return0 and complete-looking process/terminal artifacts, but the outer zsh wrapper assigned its return code to the read-only status variable. Wrapper exit1 did not preserve the guard status required for admission. The run remains INCOMPLETE with no retry; read-only inventory checks agree, and the frozen numerical auditor was not invoked."
+ref = "LOG736 outer-wrapper failure"
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/PK89_WORDCUTS743.md"
+kind = "audit"
+note = "The sole public-symbol invocation exited3 before its method manifest, attempt or mathematical KAT: an exact-environment check refused. A separate runtime-only probe confirmed macOS-added __CF_USER_TEXT_ENCODING despite env-i. The immutable result has null mathematical payload and remains INCOMPLETE with no retry."
+ref = "LOG743 startup environment"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "audit"
+note = "LOG742 revised source-only review held execution for an unbounded reap after a caught one-shot alarm, missing catchable-stop cleanup, signaling from a reaped numeric ownership anchor, unconditional zombie-only group signaling, and resource checks before final publication. These are static findings, not observed runtime failures or a new guard test. Controls1d62b3df09bc8ebd1c5ce2f15736b4e82ff6bb2c2aecea9c7ca159f25ce080a7; auditec81070c863adffacae2fd33ec2d00b984eea3f465c9035c4c9866a81ffa115f."
+ref = "LOG742 revised-source execution HOLD"
 
 [[provenance]]
 path = "withmath/scripts/experiments/pk89/wm_pk89_dual638_verify.py"

@@ -178,10 +178,10 @@ impl Status {
 
     pub fn description(self) -> &'static str {
         match self {
-            Status::Verified => "Built and checked with known test cases. The records are saved.",
+            Status::Verified => "The stated claim has a cited derivation or recorded validation. Read the status note for the assumptions and checks.",
             Status::Promising => "The early evidence is positive, but some matching checks or audits are still missing.",
-            Status::Closed => "A tested method ruled this out within the stated scope. It does not prove universal impossibility.",
-            Status::PowerLimited => "This test cannot detect the effect with the available text or computing budget, so a negative result tells us little.",
+            Status::Closed => "A completed search or test gave a negative result within a defined scope. The entry states whether this is an exact exclusion or statistical evidence.",
+            Status::PowerLimited => "Recovery or detection was insufficient under the tested conditions and computing budget. A miss gives limited evidence of absence.",
             Status::Inconclusive => "The evidence is mixed, an audit is unresolved, or a run was found to be invalid.",
             Status::Untested => "Explained here, but not yet tested.",
         }

@@ -53,10 +53,12 @@ Decision: **Rust + Leptos 0.8 (client-side rendering) compiled to WebAssembly**,
 `cargo build --target wasm32-unknown-unknown` and the installed `wasm-bindgen` CLI (pinned to the
 same version in `Cargo.toml`). No Trunk dependency: one shell script builds, one serves. Rationale:
 
-- Everything needed is installed and versions are pinned, so the build is reproducible.
+- The dependency lockfile and version checks constrain the build inputs. Byte-for-byte
+  reproducibility still needs a recorded comparison under the same toolchain, environment,
+  content, and optional optimization settings.
 - Leptos gives fine-grained reactivity, a typed router, and small binaries; the whole UI, the
   search index, the Markdown+math renderer and the cipher labs run in WASM.
-- The cipher and statistics code lives in a plain Rust module tree (`src/crypto`) with unit tests
+- The cipher and statistics code lives in `crates/core/src/crypto` with unit tests
   that run natively (`cargo test`), independent of the web layer.
 
 Rendering pipeline: content TOML → `build.rs` (validate, lint, bundle to JSON) → `include_str!` →
@@ -104,12 +106,13 @@ url = "https://…"               # optional
 
 Status vocabulary (rendered as badges; the Overview explains them):
 
-- `VERIFIED` — implemented and validated on planted controls with recorded receipts.
+- `VERIFIED` — the stated claim has a cited derivation or recorded validation. The status note
+  identifies the assumptions, evidence, and scope; the badge does not imply independent peer review.
 - `PROMISING` — positive evidence exists but matched controls or audits are incomplete.
-- `CLOSED` — the hypothesis family was tested with validated instruments and excluded within a
-  declared scope (scoped closure, not a universal impossibility).
-- `POWER-LIMITED` — the instrument cannot detect the effect at the available text length or budget;
-  negatives are uninformative.
+- `CLOSED` — a completed search or test produced a documented negative result within a declared
+  scope. The entry distinguishes exact exclusion from statistical evidence or a bounded search miss.
+- `POWER-LIMITED` — measured recovery or detection was insufficient under the tested conditions
+  and budget. A miss gives limited evidence of absence; this is not a proof of impossibility.
 - `INCONCLUSIVE` — mixed evidence, unresolved audit, or invalidated run.
 - `UNTESTED` — documented but not exercised.
 
@@ -121,7 +124,8 @@ block `title`/`body`, glossary text):
    as puzzle labels, `leaderboard`, `submission`.
 2. Never quote a live ciphertext, plaintext, hint, or crib list. Examples must be generic and
    reproducible (a stated plaintext of your own, a stated key, the resulting ciphertext).
-3. Numbers are quoted only from a receipt (a log, audit, or note named in `[[provenance]]`).
+3. Empirical numbers need a receipt (a log, audit, or note named in `[[provenance]]`).
+   Mathematical values and synthetic examples need a derivation or mathematical source.
 4. Say what a negative means: scope, text length, control power.
 
 ## 5. Brand (Dilate, light theme only)
@@ -142,9 +146,10 @@ Derived from dilate.co.ke (Framer site) on 2026-09-04:
 CipherPraxis/
   ARCHITECTURE.md      this note
   README.md            run/build instructions
-  Cargo.toml, build.rs
+  Cargo.toml, Cargo.lock
   content/<section>/*.toml
-  src/                 app (Leptos), content model, search, markdown+math, labs, crypto core
+  crates/core/         content model, search, Markdown+math, crypto core, validators and tests
+  crates/web/          Leptos app and labs; build.rs validates and bundles the content
   static/              index.html template assets: styles.css, favicon, fonts CSS
   scripts/             build.sh, serve.py, check.sh
   dist/                build output (generated, ignored)

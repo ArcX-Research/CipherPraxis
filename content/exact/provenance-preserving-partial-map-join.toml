@@ -8,7 +8,7 @@ family = "Exact constraint joins"
 tags = ["partial permutations", "constraint join", "provenance", "deduplication", "witnesses"]
 related = ["all-different-constraints", "partial-involution-conjugacy-query", "partial-permutation-completion-bounds", "candidate-bank-lineage-and-cap-accounting", "two-involution-component-templates", "conjugacy-and-gauge", "bound-benchmarks-and-certificates", "factorial-completion-resource-guards"]
 summary = "Two partial substitution maps can be joined exactly when their union is still a function and still injective. Identical merged maps may come from different cuts, proposal rows, or anchor choices. Deduplicate the map value, but keep the complete set of origins because later constraints can depend on those origins even when the merged assignments are identical."
-updated = "2026-09-06"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -107,7 +107,9 @@ function JOIN_PARTIAL_BANKS(left_bank, right_bank, map_cap):
     for bucket in retained:
         for witness in bucket.witnesses:
             require REPLAY_JOIN(witness) == bucket.map
-    return retained with complete cap and witness census
+    if SIZE(ordered) > map_cap:
+        return retained with INCOMPLETE_OUTPUT_CAP and full pre-cap census
+    return retained with COMPLETE and witness census
 ```
 '''
 

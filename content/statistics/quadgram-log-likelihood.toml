@@ -7,17 +7,17 @@ status_note = "A fixed corpus supplies a smoothed table of all 26^4 quadgrams. O
 family = "Language-model scoring"
 tags = ["quadgram", "language model", "log-likelihood", "scoring", "objective"]
 related = ["english-gate-calibration", "bayesian-evidence-model-selection", "selection-overfit-diagnostic", "shuffled-null-z-score", "order-free-width-statistic", "simulated-annealing", "hill-climbing", "exact-dynamic-programming", "g-quadgram", "g-nats-per-letter"]
-summary = "A quadgram score adds the log-probability of every overlapping four-letter group in a text. Divide by the number of groups to get the rate. English prose scores about -4.3 log10 per letter and random letters about -7. This wide gap makes quadgrams useful for hill climbing, annealing, and dynamic programming. The score is a likelihood, not the chance that an answer is correct. Wrong keys with many free settings and text with an unremoved transposition need separate calibration."
-updated = "2026-09-04"
+summary = "A quadgram score adds a frozen log weight for every overlapping four-letter group in a text. Divide by the number of groups to get the rate. In the recorded table, English prose scores about -4.3 and random letters about -7. This gap makes the score useful for search, but overlapping windows and a corpus-fitted table do not provide a posterior probability that an answer is correct. Free parameters, selection, unusual plaintext, and any remaining transposition need separate calibration."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
-Let $q(abcd)$ be the count of the quadgram $abcd$ in a reference corpus of $N$ letters. With additive smoothing the table entry is
+Let $q(abcd)$ be the count of the quadgram $abcd$ in a reference corpus and let $Q=\sum_gq(g)$ be the total number of quadgram windows. A normalized additive-smoothed frequency table over the $V=26^4$ possible groups would use
 
-$$\ell(abcd) = \log_{10}\frac{q(abcd) + \alpha}{N}$$
+$$\ell_{\rm norm}(abcd)=\log_{10}\frac{q(abcd)+\alpha}{Q+\alpha V}.$$
 
-(the toolkit uses $\alpha = 0.01$), and for a text $x_0 \dots x_{n-1}$
+The recorded toolkit instead uses $\ell(abcd)=\log_{10}((q(abcd)+\alpha)/Q)$ with $\alpha=0.01$. This differs from the normalized table by one constant per window, so it preserves rankings at a fixed length but its absolute totals must be calibrated with that exact implementation. Summing overlapping joint-window weights is a composite score, not by itself a normalized probability distribution over complete strings. For a text $x_0\dots x_{n-1}$,
 
 $$L(x) = \sum_{i=0}^{n-4} \ell(x_i x_{i+1} x_{i+2} x_{i+3}), \qquad r(x) = \frac{L(x)}{n - 3}.$$
 
@@ -56,12 +56,13 @@ body = '''
 kind = "pseudocode"
 body = '''
 ```text
-// q(abcd) = count of the quadgram abcd in a reference corpus of N letters;
-// alpha = smoothing.
+// q(abcd) = count of the quadgram abcd; Q = total quadgram windows;
+// alpha = smoothing. This reproduces the toolkit's fixed-length score. Use
+// Q + alpha*26^4 instead for a normalized table.
 function BUILD_TABLE(corpus, alpha):
-    N = length(corpus)
+    Q = length(corpus) - 3
     for every quadgram abcd (26^4 entries):
-        table[abcd] = log10((q(abcd) + alpha) / N)
+        table[abcd] = log10((q(abcd) + alpha) / Q)
     return table
 
 // L(x): the sum over the n - 3 overlapping four-letter windows; r(x): the
@@ -109,7 +110,7 @@ Every solver prints its planted controls first: a control decrypt that does not 
 kind = "example"
 title = "Worked example"
 body = '''
-A 153-letter candidate has $150$ quadgram windows. At the English rate $-4.3$ its total is $L = -645$; at the random rate $-7$ it would be $-1050$. The verdict threshold English $-0.7$ corresponds to a total $0.7 \times 150 = 105$ decades, i.e. the candidate above the threshold is $10^{105}$ times more probable under the quadgram model than one at the threshold. That enormous ratio is exactly why the score cannot be read as a posterior: it compares two strings under one model, not the hypothesis "this is the plaintext" against "this is the best of a million wrong keys".
+A 153-letter candidate has $150$ quadgram windows. At the English rate $-4.3$ its total is $L=-645$; at the random rate $-7$ it would be $-1050$. A rate difference of $0.7$ therefore changes the frozen additive score by 105 base-10 log units, so the ratio of the two products of window weights is $10^{105}$. Because overlapping joint-window weights do not define a normalized full-string likelihood, this is a composite-score ratio, not automatically a likelihood ratio. Corpus estimation and selection over keys add further calibration needs. It is neither posterior odds nor a comparison with the best of a large search unless that search is included in the null.
 
 Because windows overlap, the score of `THEQUICK` is $\ell(\mathrm{THEQ}) + \ell(\mathrm{HEQU}) + \ell(\mathrm{EQUI}) + \ell(\mathrm{QUIC}) + \ell(\mathrm{UICK})$, five terms for eight letters.
 '''

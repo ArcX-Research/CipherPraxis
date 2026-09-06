@@ -8,7 +8,7 @@ family = "Power and calibration"
 tags = ["held-out", "corpus ranges", "leakage", "gates"]
 related = ["blind-controls", "power-measurement", "planted-controls", "control-first-policy", "seed-determinism", "english-gate-calibration"]
 summary = "A selector may do well on the same examples used to tune it. The real test is fresh material that neither the selector nor its language model used for training or calibration. A held-out gate reserves separate text ranges, makes new cases with new seeds, and sets the pass mark in advance, such as 18 exact recoveries out of 24. The live version cannot run until the gate's record says PASS."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -30,6 +30,8 @@ A **held-out gate** plants $N$ fixtures from the hidden or a fresh reservoir, at
 kind = "equations"
 body = '''
 With true power $\pi$ and $N$ independent fixtures, the gate passes with probability $\Pr[\operatorname{Bin}(N, \pi) \ge k]$. For $N = 24$ and $k = 18$ this is about $0.99$ at $\pi = 0.9$, $0.61$ at $\pi = 0.75$ and $0.10$ at $\pi = 0.6$, so the gate separates a strong selector from a weak one but is close to a coin flip at the declared minimum power of $0.75$. The result is therefore reported as the count, not as pass/fail alone.
+
+Passing 18 of 24 does not prove that $\pi\ge0.75$; it is one noisy outcome under this decision rule. Report a binomial interval and the fixture distribution when estimating power. The binomial probabilities above also require independent, identically distributed Bernoulli outcomes. Deterministically spaced corpus windows or heterogeneous strata need a design-based analysis or stratum-specific reporting instead. The threshold is an operational release rule, not a confidence bound.
 '''
 
 [[blocks]]

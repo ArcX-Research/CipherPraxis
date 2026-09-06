@@ -6,9 +6,9 @@ status = "VERIFIED"
 status_note = "Exact small-alphabet checks and a separate implementation verify that all four text models are normalized and scored correctly. A disclosed, already-consumed panel separated all 12 prose cases from all 40 nonprose cases, but it does not validate a cutoff or a cipher-level decision."
 family = "Normalized text-model comparison"
 tags = ["likelihood ratio", "KT distribution", "Markov model", "periodic strings", "conditional evidence"]
-related = ["bayesian-evidence-model-selection", "n-gram-language-scoring", "arbitrary-substitution-equality-classes", "all-class-substitution-finishing", "selection-overfit-diagnostic", "family-wise-null", "valid-model-nulls", "fresh-holdout-after-selector-change"]
+related = ["bayesian-evidence-model-selection", "n-gram-language-scoring", "arbitrary-substitution-equality-classes", "all-class-substitution-finishing", "selection-overfit-diagnostic", "family-wise-null", "valid-model-nulls", "fresh-holdout-after-selector-change", "label-free-collision-geometry"]
 summary = "A raw n-gram score can strongly prefer repetitive nonsense. Turn the n-gram table into a proper language probability and compare it with an equal mixture of three normalized alternatives: an integrated iid source, an integrated first-order Markov source, and finite periodic strings. The resulting log-likelihood ratio says which text model better explains one fixed candidate. It is not a false-positive probability after searching many cipher keys."
-updated = "2026-09-06"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -90,6 +90,7 @@ body = '''
 - Every compatible finite-word period contributes to the periodic mixture; the best period is not selected.
 - Mixture weights, alphabet size, period cap, logarithm base, and score quantization are frozen together.
 - Input texts have the same declared length when their total evidence is ranked.
+- The displayed order-three formula assumes $n\ge3$, and the periodic component assumes an integer cap $1\le D\le n$. Shorter inputs need an explicitly defined prefix distribution.
 - The calculation is conditional on a supplied candidate text. It does not include a prior or marginalization over cipher keys, schedules, restarts, or candidate count.
 '''
 
@@ -178,6 +179,8 @@ The null probability is invariant under any bijection $\pi$ of symbol labels:
 $$P_N(\pi x)=P_N(x).$$
 
 The iid counts are permuted, the Markov transition matrix has its rows and columns permuted, and the equality conditions defining periods are unchanged. Thus $P_N$ is constant on a restricted-growth equality class and may be cached once per class. $P_E$, and therefore $W$, generally changes when labels change; the shortcut does not remove the substitution-fitting stage.
+
+A different invariance supports [order-matched controls](/statistics/label-free-collision-geometry): replacing each block by an Euler trail with the same directed-edge counts and endpoints preserves its monograms and all whole-text transition counts, including block boundaries. Therefore $P_{\rm KT0}$ and $P_{\rm KT1}$ remain exactly equal even if longer-range order changes. The periodic component need not remain equal, so this does **not** make the full $P_N$ invariant. Such a surrogate tests what the language model adds beyond first-order counts; it remains a valid encrypted sequence, not evidence against the cipher family.
 '''
 
 [[provenance]]

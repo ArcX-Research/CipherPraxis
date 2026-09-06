@@ -3,12 +3,12 @@ section = "cryptanalysis"
 title = "Key cancellation"
 subtitle = "Subtract two ciphertexts to remove a stream they share"
 status = "VERIFIED"
-status_note = "The exact cancellation checks covered 144 combinations of offset, direction, and sign, including both inverses and forward reconstructions. A segment-aware selector then recovered 16/16 hidden positive pairs and rejected 4/4 negatives, each against 99 full-pipeline nulls. It did not test the two project texts because an earlier family check found that the required chain did not fit them (segment-cancellation review, logs/373, coupling note)."
+status_note = "The exact cancellation checks covered 144 combinations of offset, direction, and sign, including both inverses and forward reconstructions. A segment-aware selector then recovered 16/16 hidden positive pairs and rejected 4/4 negatives, each against 99 full-pipeline nulls. It was not run on the two research texts: a separate simulation check found their recorded summary statistics inconsistent with the tested chain generator, which is a scoped statistical screen rather than an algebraic exclusion (segment-cancellation review, logs/373, coupling note)."
 family = "Relations between ciphertexts"
 tags = ["two ciphertexts", "running key", "difference", "periodic IC", "gauge", "cancellation", "index map"]
 related = ["running-key", "vigenere", "beaufort", "one-time-pad", "segment-chain-analysis", "running-key-relation-test", "shared-cycle-attack", "exact-period-alignment", "index-of-coincidence", "within-coset-null", "family-wise-null", "affine-maps-mod-26", "conjugacy-and-gauge", "difference-operators", "valid-model-nulls", "target-absent-controls", "known-answer-tests", "g-key-cancellation", "g-selection-freedom"]
 summary = "Two ciphertexts may share one hidden stream because one plaintext keys the other or one running key is reused. Adding or subtracting aligned source indices with the right sign can remove that stream and leave a simpler periodic cipher. Whole-stream IC can miss that residual because it mixes differently shifted cosets, so the screen must measure periodic IC, aligned cosets, or shift-marginalised language evidence. Cancellation requires compatible index orders, leaves gauge aliases, and still needs exact reconstruction and matched nulls."
-updated = "2026-09-06"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -50,7 +50,7 @@ body = '''
 - The shared stream enters both texts additively in the same index order, at a known or enumerable alignment.
 - The residual key $K$ has enough structure to be solved from $d$ (periodic, segmented periodic, or constant).
 - The period and every selected source pair, order, sign, orientation, offset, and zone are either fixed in advance or re-selected inside every null replicate.
-- The family is consistent with the texts' invariants: adding a high-entropy running key destroys the coset structure of $y$, so a text that shows a strong periodic alignment cannot be the output of such a chain (see failure modes).
+- Before applying an expensive selector, compare the texts with matched simulations of the proposed chain. In the recorded independent-stream generator, adding the running stream usually weakened periodic coset structure. That distributional expectation can make observed strong alignment inconsistent with that generator; it is not a necessary condition for every dependent stream or plaintext source (see failure modes).
 '''
 
 [[blocks]]
@@ -126,7 +126,7 @@ body = '''
 - **Degenerate nulls.** Histogram-only gates (periodic IC, marginalised monogram evidence, exact coset alignment) are invariant under shuffles within the derived cosets, so such a null cannot calibrate them. A structural null must destroy the cross-source pairing while preserving each source's coset histograms. If the period or alignment is selected, the null must repeat that selection too.
 - **No common matched shuffle.** Different periods, zones, or position maps may induce incompatible groups. A permutation valid for one cell is not automatically exchangeable for their union. Use separate matched tests with a predeclared family-wise combination, or prove that a finer common partition both preserves every required margin and still contains non-identity permutations.
 - **Variable-length scores.** A raw sum of log-probabilities over segments of different length grows deterministically with the breakpoint. An earlier design was blocked for exactly this bias.
-- **Premise inconsistent with the data.** Simulated chains of this kind predict for the 153-letter text a period-7 alignment of $z +0.13$ (range $-1.1$ to $+2.0$) and a zone coset IC of about $0.040$, against the measured $+4.2$ and $0.066$. The chain premise is disfavoured at roughly 3 to 4$\sigma$ before any run, and a hidden-bank pass would validate a test for a family the text does not resemble.
+- **Premise inconsistent under the tested generator.** Simulated chains with the recorded source and key distributions gave a period-7 alignment centred at $z +0.13$ (range $-1.1$ to $+2.0$) and zone coset IC about $0.040$, versus measured values $+4.2$ and $0.066$. Those discrepancies disfavoured that simulated chain model before any selector run. They do not rule out all dependent-stream constructions, and a hidden-bank pass would establish power only for its generator.
 - **Reading too much.** A readable $Q$ determines $P$ only algebraically. A claim about $P$ needs its own predeclared criterion.
 '''
 

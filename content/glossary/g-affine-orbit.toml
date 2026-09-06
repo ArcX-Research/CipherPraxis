@@ -2,9 +2,9 @@ id = "g-affine-orbit"
 section = "glossary"
 title = "Affine orbit of a cycle"
 status = "VERIFIED"
-status_note = "Orbit completeness was checked in every enumerated solution set of the corpus's exact cycle solvers."
+status_note = "The 312-map orbit size is an exact derivation; observational equivalence is asserted only for models whose equations are equivariant under the action."
 family = "Algebra"
 tags = ["group action", "canonical form"]
 related = ["group-actions-on-alphabets", "conjugacy-and-gauge", "affine-maps-mod-26", "g-gauge-freedom"]
-summary = "Start with one cipher alphabet z. Apply every map z' = alpha z + beta, where alpha is a unit modulo 26 and beta is any residue. The resulting 12 times 26 = 312 alphabets form its affine orbit. They all describe the same substitution when the keys change with them. Exact solvers therefore count whole orbits and score one standard representative from each."
-updated = "2026-09-04"
+summary = "Start with one bijective alphabet coordinate map z. Apply every map z' = alpha z + beta, where alpha is a unit modulo 26 and beta is any residue. The 312 distinct coordinate maps form its orbit under the affine group. In cipher models whose equations and keys transform equivariantly under this action, the orbit members are observationally equivalent parameterizations. An exact solver may then choose one canonical representative, but only after proving that model-specific equivalence."
+updated = "2026-09-07"

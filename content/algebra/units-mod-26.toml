@@ -8,7 +8,7 @@ family = "Number theory"
 tags = ["units", "totient", "multiplicative group", "gauge", "unit ratio"]
 related = ["modular-arithmetic-z26", "modular-inverse-and-crt", "affine-maps-mod-26", "group-actions-on-alphabets", "conjugacy-and-gauge", "finite-field-linear-algebra", "affine-cipher", "g-unit-group", "g-affine-orbit"]
 summary = "The twelve values that share no factor with 26 form a cyclic group under multiplication. They matter in two ways. First, multiplying every alphabet coordinate by one of these units gives an equivalent description that a solver should count only once. Second, a unit can be an unknown multiplier linking two ciphertext streams from one hidden text. Every unit is odd, so modulo 2 they look the same; modulo 13 tells them apart."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -36,7 +36,7 @@ uses no inverse and is valid over the composite ring. Its reduction modulo 2 is 
 [[blocks]]
 kind = "assumptions"
 body = '''
-- Coefficients must be units: a non-unit multiplier is not a bijection and cannot be a cipher relation.
+- In the stated one-letter invertible affine relation, coefficients must be units. A nonunit multiplier is not a permutation of the 26 coordinates; nonbijective or homophonic cipher models are different families rather than impossible ciphers in general.
 - The multiplier acts on the coordinates of one shared cycle; different cycles per row are outside the family.
 - The ratio chart is a valid necessary structural family, but language scoring of a decrypt is not invariant under $L \mapsto z^{-1}(b\,z(L) + c)$: a selector for an absolute model must score all twelve orientations $b$.
 '''
@@ -125,7 +125,7 @@ Powers of 7 modulo 26: $7, 23, 5, 9, 11, 25, 19, 3, 21, 17, 15, 1$ — twelve di
 [[blocks]]
 kind = "notes"
 body = '''
-Unit multiplication appears as a gauge in every cycle solver of the corpus ("canonicalise over the 12 units"). When the class maps of a keyed cipher do not generate the full rotation group (all shifts even, for instance), the equivalence group of the alphabet is larger than the affine group: a normaliser of order 4,056 was measured, and the cycle is then identifiable only up to that group.
+Unit multiplication appears as a gauge in the cycle solvers described here. In the specifically tested all-even or all-odd distinct-shift regime, the class maps generate the order-13 translation subgroup; its measured normalizer has order 4,056, so the cycle is identifiable only up to that larger group. Other proper generated subgroups require their own normalizer and stabilizer calculation.
 '''
 
 [[provenance]]

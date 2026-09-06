@@ -8,7 +8,7 @@ family = "Polygraphic substitution"
 tags = ["digraphic", "slide", "periodic", "reciprocal"]
 related = ["porta", "vigenere", "beaufort", "variant-beaufort", "playfair", "two-square-four-square", "g-polygraphic", "g-reciprocal-cipher"]
 summary = "Slide ciphers encrypt two letters at a time with a two-row rectangle. The top row is the straight alphabet. A repeating key shifts the bottom row. The plaintext pair marks two corners, and the ciphertext uses the other two, as in Playfair. Portax uses Porta's half-alphabet rectangle instead. Both ciphers need a period search followed by the rectangle rule."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -17,7 +17,7 @@ body = '''
 
 $$\operatorname{bottom}_k(j) = j + k \ (\text{Vigenère}), \qquad j - k \ (\text{Variant}), \qquad k - j \ (\text{Beaufort}) \pmod{26}.$$
 
-With $a$ at column $j_a = a$ of the top row and $b$ at column $j_b = \operatorname{bottom}_k^{-1}(b)$ of the bottom row, the ciphertext is $\big(\text{top}[j_b], \text{bottom}[j_a]\big)$: the columns are exchanged. **Portax** lays each block of $2P$ letters in two rows of width $P$ and uses the Porta rectangle for each vertical pair with $s = \lfloor \operatorname{pos}(k)/2 \rfloor$. The same-column case exchanges rows, so encryption and decryption coincide.
+With $a$ at column $j_a=a$ of the top row and $b$ at column $j_b=\operatorname{bottom}_k^{-1}(b)$ of the bottom row, unequal columns encrypt as $\big(\text{top}[j_b],\text{bottom}[j_a]\big)$. In the audited same-column convention, encryption moves both outputs one column right and decryption moves them one column left. **Portax** lays each block of $2P$ letters in two rows of width $P$ and uses the Porta rectangle for each vertical pair with $s=\lfloor\operatorname{pos}(k)/2\rfloor$; its same-column case exchanges rows, so Portax encryption and decryption coincide.
 '''
 
 [[blocks]]
@@ -28,7 +28,7 @@ For the Vigenère rule, $j_b = b - k$ and the digraph maps to
 
 $$(a, b) \mapsto \big((b - k) \bmod 26,\ (a + k) \bmod 26\big),$$
 
-which is an involution on digraphs for each $k$: applying it again returns $(a, b)$. When $j_a = j_b$ (the "vertical" case) a convention shifts one column. Under Portax the observable key is the pair class A/B, C/D, ... of each key letter, canonicalised to the even representative, exactly as for Porta.
+For unequal columns this rectangle exchange is an involution: applying it again returns $(a,b)$. The displayed algebra does not describe the same-column exception. Under the audited convention that exception uses $j_a+1$ on encryption and $j_a-1$ on decryption, so full Slidefair requires a directional inverse. Under Portax the observable key is the pair class A/B, C/D, ... of each key letter, canonicalised to the even representative, exactly as for Porta.
 '''
 
 [[blocks]]
@@ -44,7 +44,7 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - Digraph boundaries aligned with the text; period 1 to 12.
-- Invariant: each Slidefair digraph map is an involution, so a fitted key round-trips and the round-trip is not evidence.
+- The unequal-column Slidefair rectangle rule is an involution; its same-column rule is directional. A fitted key still round-trips under the matching inverse, and that round-trip is an implementation check rather than evidence for the model.
 - Invariant: the first ciphertext letter of a digraph depends only on $b$ and $k$, the second only on $a$ and $k$: the digraph is not mixed the way a Hill block is.
 '''
 
@@ -69,21 +69,21 @@ function BOTTOM(j, k, rule):
     if rule == Variant:  return (j - k) mod 26
     if rule == Beaufort: return (k - j) mod 26
 
-function SLIDEFAIR_DIGRAPH(a, b, k, rule):
+function SLIDEFAIR_DIGRAPH(a, b, k, rule, decrypt):
     // column of a in the top row
     j_a = a
     // column of b in the bottom row
     j_b = the column j with BOTTOM(j, k, rule) == b
     if j_a == j_b:
-        apply the declared vertical-case convention (shift one column)
+        j = (j_a - 1) mod 26 if decrypt else (j_a + 1) mod 26
+        return (top[j], BOTTOM(j, k, rule))
     // the columns are exchanged
     return (top[j_b], BOTTOM(j_a, k, rule))
 
-// encrypts and decrypts alike (involution)
-function SLIDEFAIR(text[0..n-1], key[0..P-1], rule):
+function SLIDEFAIR(text[0..n-1], key[0..P-1], rule, decrypt=false):
     for i in 0..n/2-1:
         (out[2i], out[2i+1]) = SLIDEFAIR_DIGRAPH(text[2i], text[2i+1], key[i
-                mod P], rule)
+                mod P], rule, decrypt)
     return out
 
 // Portax: each block of 2P letters is written in two rows of width P; every
@@ -130,7 +130,7 @@ top row     A B C D E F G H I ...   (j)
 bottom row  D E F G H I J K L ...   (j + 3)
 ```
 
-`H` is column 7 of the top row; `I` is in the bottom row at column $8 - 3 = 5$. Exchanging columns gives top[5] $=$ `F` and bottom[7] $= 7 + 3 = 10 =$ `K`: ciphertext `FK`. Applying the same rule to `FK` returns `HI`.
+`H` is column 7 of the top row; `I` is in the bottom row at column $8-3=5$. Exchanging columns gives top[5] $=$ `F` and bottom[7] $=7+3=10=$ `K`: ciphertext `FK`. This pair is not vertical, so its inverse happens to use the same rectangle exchange and returns `HI`; vertical pairs instead use the left-shift decryption case.
 '''
 
 [[blocks]]

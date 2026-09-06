@@ -7,8 +7,8 @@ status_note = "Bank searches cover 202,504 phrase-keyed alphabets, 2.06 million 
 family = "Enumeration strategies"
 tags = ["dictionary", "keyword alphabet", "phrase key", "word bank", "finite bank", "scoped closure"]
 related = ["exhaustive-enumeration", "corpus-bank-screen", "k-best-lists", "keyword-mixed-alphabet", "phrase-keyed-alphabet-attack", "columnar-transposition", "myszkowski", "hill-cipher", "quagmire-iii", "multiple-rounds-analysis", "family-wise-null", "quadgram-log-likelihood", "planted-controls"]
-summary = "A dictionary attack checks a fixed list of keys that a person might choose. The list may contain transposition words, mixed alphabets built from words or phrases, word pairs, or other structured objects. Every item is decrypted and scored. If the true key is in the bank and the score works, it should rank first. A miss rules out only that bank. The main risk is mistaking the lucky winner of a large list for real signal."
-updated = "2026-09-04"
+summary = "A dictionary attack checks a fixed finite bank of candidate keys or structured objects. Membership of the true key is necessary but not sufficient for top-rank recovery: short data, score mismatch, ties, or additional fitted parameters can still misrank it. Planted controls estimate recall for the declared bank and pipeline. A completed miss excludes only candidates actually enumerated under the stated conventions, while the selected maximum requires a family-wise null comparison."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -30,7 +30,7 @@ kind = "equations"
 body = '''
 Bank size is a product of independent choices: for four 7-letter words as round keys with $r$ rounds, each round choosing one of 8 alphabets (two fixed orders and six styles) and one of 2 relations, the count is $P(4, r) \cdot 16^r$: $64$, $3{,}072$, $98{,}304$ and $1{,}572{,}864$ for $r = 1, 2, 3, 4$.
 
-Noise floor: the maximum of $B$ independent wrong-key scores grows like the upper tail of the score distribution. A per-trial null that ignores $B$ overstates significance. In one recorded relation test the best of 1,296 trials looked like $+5.7\sigma$ per trial and $+0.8\sigma$ against the family-wise null.
+Noise floor: selecting the maximum of $B$ wrong-key scores shifts the null distribution upward. The scores are usually dependent, so an independence approximation is not a reliable correction; rerun the whole bank selection on matched null data. In one recorded relation test, a per-trial standardization gave $+5.7\sigma$ while the empirically selected family maximum gave $+0.8\sigma$.
 '''
 
 [[blocks]]
@@ -38,7 +38,7 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - The bank is fixed and enumerated before the target is scored; its hash and size are printed. Adding entries after seeing near-misses is selection.
-- A planted control from the bank at the target length must rank first. A bank whose control fails proves nothing about the target.
+- A planted control from the bank at the evaluation length must meet the preregistered recovery gate. Failure demonstrates inadequate power for that control distribution; success estimates, but does not guarantee, future recall.
 - The verdict threshold is the bank's own null (shuffled text through the same sweep, or the distribution of wrong-key scores), not an absolute number.
 '''
 
@@ -62,18 +62,13 @@ body = '''
 // fixed before scoring.
 function DICTIONARY_SWEEP(c, bank, configurations, rate):
     print hash(bank) and |bank|
-    // control first: a bank key planted on real text of the target length
-    // must rank first
     c_ctrl = encrypt(real text of length |c|, a key drawn from bank, some
             configuration)
-    // bank proves nothing
     if rank of the planted key in SCORE_ALL(c_ctrl, bank, configurations,
             rate) != 1:
         stop
-    null = level reached by the same sweep on shuffled text (or the wrong-key
-            score distribution)
+    null = selected scores from the same sweep on matched null inputs
     results = SCORE_ALL(c, bank, configurations, rate)
-    // verdict against null, not an absolute
     return the top entries of results, the control's rank, and null
 
 function SCORE_ALL(c, bank, configurations, rate):
@@ -85,12 +80,6 @@ function SCORE_ALL(c, bank, configurations, rate):
             results = results + [(rate(p), key, configuration)]
     return results sorted by score descending
 
-// Keyword-mixed alphabet from a word w with repeated letters removed: std: w
-// then the unused letters in straight order;   rev: unused letters reversed;
-// kry: unused letters in a second fixed order;        cont: unused letters
-// continuing from the last letter of w and wrapping;  col / kcol: the keyed
-// alphabet written in rows of width |w| and read by columns, over either base
-// order.
 ```
 '''
 
@@ -103,9 +92,9 @@ Cost is bank size times configurations times one decrypt-and-score. A compiled o
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Coverage.** A bank of 100 word-derived entries carries about 6.6 bits. An unstructured alphabet carries about 84 bits after gauge. A miss excludes the bank, not the family, and every corpus sweep reports it so.
+- **Coverage.** Under a uniform prior on a bank of 100 entries, the candidate index has about 6.6 bits of entropy; this does not measure the prior mass that the bank captures in practice. An arbitrary alphabet belongs to a vastly larger space. A miss excludes the enumerated bank, not all structured or unstructured alphabets.
 - **Multiple comparisons.** The best of many trials always looks significant against a per-trial null (the $+5.7\sigma$ versus $+0.8\sigma$ case above); banks need family-wise nulls.
-- **Noise floor.** Wrong keys under a keyed substitution score $-6.0$ to $-6.5$. A partial-looking $-5.5$ from a large bank is usually the bank's maximum, not a partial solve.
+- **Noise floor.** Score ranges are table-, length-, and preprocessing-specific. A relatively fluent-looking maximum from a large bank may be selection noise rather than a partial solve; only the matched maximum distribution calibrates it.
 - **Free parameters inside the sweep.** Refitting shifts per bank element lifts the null on short texts. The control's rank, not its absolute score, is the calibration.
 '''
 
@@ -119,7 +108,7 @@ Phrase alphabets: control 100%. Structured library: control rank 1 / 100%. Four-
 kind = "example"
 title = "Worked example"
 body = '''
-Ciphertext `LXFOPVEFRNHR` (the Vigenère exemplar: plaintext `ATTACKATDAWN`, key `LEMON`). Bank $\{$`APPLE`, `LEMON`, `MANGO`, `PEACH`$\}$ as Vigenère keys. Decrypting with `APPLE` position by position ($c - k \bmod 26$): L$-$A = L, X$-$P = I, F$-$P = Q, O$-$L = D, P$-$E = L, V$-$A = V, E$-$P = P, F$-$P = Q, R$-$L = G, N$-$E = J, H$-$A = H, R$-$P = C, giving `LIQDLVPQGJHC`, which scores like random text. `LEMON` returns `ATTACKATDAWN`, the only readable decrypt. A quadgram scorer ranks it first by several units per letter, and the control principle is exactly this: a bank key must come out on top when it is present.
+Ciphertext `LXFOPVEFRNHR` (the Vigenère exemplar: plaintext `ATTACKATDAWN`, key `LEMON`). Bank $\{$`APPLE`, `LEMON`, `MANGO`, `PEACH`$\}$ as Vigenère keys. Decrypting with `APPLE` position by position ($c-k\bmod26$) gives `LIQDLVPQGJHC`; decrypting with `LEMON` returns `ATTACKATDAWN`, and re-encryption reproduces the ciphertext. A scorer used as the selector must rank this planted member according to the declared gate. The example checks mechanics only; score separation on a larger bank is an empirical property to calibrate.
 '''
 
 [[provenance]]

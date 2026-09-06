@@ -3,12 +3,12 @@ section = "algebra"
 title = "Feedback-state gauges and cell counting"
 subtitle = "Count observable parameter cells after removing coordinate conventions"
 status = "VERIFIED"
-status_note = "Target-absent exhaustive checks over small rings and independent modular probes confirm the phase gauge, affine outer-coordinate action, reversal rule, cell count, and separation from the compared neighbouring families."
+status_note = "Target-absent exhaustive checks over small rings and independent modular probes confirm the phase gauge, affine outer-coordinate action, reversal rule, and formal raw-cell count. Probe witnesses distinguish the compared cells; equality collisions on one ciphertext remain sample-specific and are not proofs of global model equivalence."
 family = "Equivalence and identifiability"
 tags = ["gauge", "feedback", "parameter cells", "affine coordinates", "identifiability"]
 related = ["plaintext-coordinate-feedback", "right-to-left-plaintext-feedback", "symmetric-second-order-plaintext-feedback", "latent-label-identifiability", "parameter-versus-plaintext-recovery", "conjugacy-and-gauge", "affine-maps-mod-26", "units-mod-26", "group-actions-on-alphabets", "linear-recurrences-lcg"]
-summary = "A feedback cipher may have many written keys that describe the same observable transform. Translate the hidden state, or relabel the outer coordinates by an invertible affine map, and the parameters and substitution change together while every letter stays the same. Honest cell counting fixes one representative per gauge orbit, excludes boundary families, and keeps only genuinely different outer alphabets."
-updated = "2026-09-05"
+summary = "A feedback cipher may have many written keys that describe the same transform. Translating the hidden state or relabelling the outer coordinates by an invertible affine map changes the parameters and substitution together while preserving every output. Quotient these proved gauges when counting formal model cells. If two cells merely give the same equality pattern on one ciphertext, record a sample collision rather than declaring the models equivalent."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -17,7 +17,7 @@ For the symmetric feedback state
 
 $$x_i=u_i+a_i, \qquad a_{i+1}=a_i+\beta+\lambda(u_i+u_{i-1}), \qquad P_i=M(u_i),$$
 
-all equations are modulo $q$. A **raw cell** is one declared triple $(B,\beta,\lambda)$ before fitting the arbitrary substitution $M$. An **observable cell** is an equivalence class of raw descriptions that induce the same coordinate-equality function after all allowed relabellings and boundary aliases are removed.
+all equations are modulo $q$. A **raw cell** is one declared triple $(B,\beta,\lambda)$ before fitting the arbitrary substitution $M$. Two raw cells are **model-equivalent** only when a proved transformation makes their coordinate-equality functions identical for every admissible input. A **sample-equivalent class** is weaker: its members happen to yield the same restricted-growth string on one fixed ciphertext. Formal cell counts quotient model equivalence; sample classes are reported separately.
 '''
 
 [[blocks]]
@@ -53,7 +53,7 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - Only bijective coordinate changes are gauges; a nonunit scale can collapse symbols and is not a relabelling.
-- Literal outer alphabets are merged only when an explicit affine map relates them or when their peeled equality classes coincide on the actual text.
+- Literal outer alphabets are merged as formal model cells only when an explicit affine action relates them. Equal peeled patterns on the actual text may be bucketed as sample aliases, but do not establish equality on other inputs.
 - $\lambda$ is invariant under the affine action above. $\beta$ is coordinate-dependent and should not be compared literally across gauges.
 - A finite probe can prove two cells differ when it supplies a witness input. Failure to find a witness on a small probe is not, by itself, proof of equality.
 '''
@@ -62,7 +62,7 @@ body = '''
 kind = "attack"
 title = "How to audit a family census"
 body = '''
-Write the most general allowed coordinate transformation, substitute it into the update, and solve for the transformed parameters. Canonicalise the initial state. Enumerate the remaining raw cells in a fixed order, map each peeled stream to a restricted-growth string that records equality only, and merge exact duplicates dynamically. Compare the resulting observable functions with boundary and neighbouring families. Report both the formal raw count and the data-dependent class count.
+Write the most general allowed coordinate transformation, substitute it into the update, and solve for the transformed parameters. Canonicalise the initial state and outer-coordinate gauge using those transformed parameters. Enumerate the remaining formal cells in a fixed order. On a particular ciphertext, bucket identical restricted-growth strings for computation while retaining every formal cell in each bucket. Compare families by symbolic proof or an explicit distinguishing input, and report the formal orbit count separately from the data-dependent sample-class count.
 '''
 
 [[blocks]]
@@ -73,21 +73,25 @@ function CANONICAL_CELL(outer, beta, lambda, initial_phase):
     h = initial_phase
     beta = (beta - 2 * lambda * h) mod q
     initial_phase = 0
-    outer = CANONICAL_AFFINE_REPRESENTATIVE(outer)
+    // This routine returns both the canonical outer alphabet and the affine
+    // map x' = s*x+t used to reach it.
+    (outer, s, t) = CANONICAL_AFFINE_REPRESENTATIVE_WITH_WITNESS(outer)
+    beta = (s * beta - 2 * lambda * t) mod q
     return (outer, beta, lambda)
 
 function CENSUS(ciphertext, outer_representatives):
-    groups = empty map from equality signature to raw cells
+    sample_groups = empty map from equality signature to formal cells
     for outer in outer_representatives:
         for beta in Z_q:
             for lambda in Z_q excluding 0:
                 u = PEEL(ciphertext, outer, beta, lambda)
                 signature = RESTRICTED_GROWTH_STRING(u)
-                groups[signature].append((outer, beta, lambda))
+                sample_groups[signature].append((outer, beta, lambda))
     report raw cells = count of appended triples
-    report observable classes = number of groups
+    report formal gauge-orbit cells from the symbolic canonicalisation
+    report sample-equivalent classes = number of sample_groups
     report every alias list without dropping members
-    return groups
+    return sample_groups
 
 function FAMILY_WITNESS(family_A, family_B, probes):
     compare equality signatures on every probe input

@@ -3,12 +3,12 @@ section = "algebra"
 title = "Modular arithmetic in Z26"
 subtitle = "Treat letters as the numbers 0 to 25 and calculate around a 26-value loop"
 status = "VERIFIED"
-status_note = "Every additive cipher model and exact solver here uses Z26. Before any target test, known-answer checks passed for 32/32 derived streams, inverses, and separate forward runs over random cycles and sign choices. Planted chain equations passed 50/50."
+status_note = "The cited additive models and exact solvers represent letter coordinates in Z26. Before any target test, known-answer checks passed for 32/32 derived streams, inverses, and separate forward runs over random cycles and sign choices. Planted chain equations passed 50/50."
 family = "Modular arithmetic"
 tags = ["ring", "residues", "coordinates", "additive", "zero divisors"]
 related = ["units-mod-26", "modular-inverse-and-crt", "affine-maps-mod-26", "conjugacy-and-gauge", "difference-operators", "vigenere", "beaufort", "caesar-shift", "exact-period-alignment", "g-residue-class", "g-coset"]
 summary = "Give each letter a number from 0 to 25 and every additive cipher rule becomes an equation modulo 26. Because 26 = 2 times 13, some nonzero values multiply to zero and only twelve values have inverses. Exact solvers therefore work modulo 2 and modulo 13, then join the answers. A mixed alphabet changes only the function z that maps a letter to its position, so the same formulas still work."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -50,7 +50,7 @@ title = "How the ring is used"
 body = '''
 1. Write each cipher relation as a congruence in the unknown coordinates and keys.
 2. Eliminate shared unknowns by subtraction (derived streams; see [Difference operators](/algebra/difference-operators)).
-3. Fix the gauge: in most models a translation $z \to z + b$ leaves the relations invariant, so one letter is pinned to 0 (see [Conjugacy and gauge](/algebra/conjugacy-and-gauge)).
+3. Test the proposed gauge by substitution. When translating every coordinate can be absorbed by the declared key parameters, pin one letter to 0; otherwise translation is a real family axis and may not be removed (see [Conjugacy and gauge](/algebra/conjugacy-and-gauge)).
 4. Solve the remaining linear system over the two prime components, lift, and impose the bijection constraint ([All-different](/algebra/all-different-constraints)).
 5. For a purely periodic additive layer, maximise $J(s)$ over all $26^{m-1}$ relative shift vectors after fixing $s_0 = 0$ ([Exact period alignment](/cryptanalysis/exact-period-alignment)).
 '''

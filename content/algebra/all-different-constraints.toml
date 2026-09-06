@@ -8,12 +8,12 @@ family = "Combinatorial constraints"
 tags = ["all-different", "bijection", "CSP", "forward checking", "enumeration"]
 related = ["modular-inverse-and-crt", "finite-field-linear-algebra", "permutation-cycles", "permutation-keystream", "residue-class-graphs", "all-different-enumeration", "constraint-satisfaction-forward-checking", "maximum-weight-bipartite-assignment", "exact-chain-oracle", "word-prefix-csp", "corpus-bank-screen", "crib-driven-alphabet-recovery", "g-all-different", "g-nullity"]
 summary = "An unknown cipher alphabet gives each letter its own position. Any answer must therefore satisfy an AllDifferent constraint. Assigned-value collision checks are only the first layer: Hall's condition or a covering bipartite matching can reject a partial branch even before any two assigned letters collide. Modular equations, CRT structure, and matching feasibility can be maintained together during exact search."
-updated = "2026-09-06"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
-For a coordinate function $z$ on the alphabet, $\mathrm{AllDifferent}(z(A), \dots, z(Z))$ requires $z$ to be injective, hence a bijection onto $\mathbb{Z}_{26}$. In a search, a **partial assignment** must be injective on the letters assigned so far and extendable; in an exact solver the constraint is imposed on the full solution set of the linear relations. Unobserved letters are free: the constraint ranges over the letters that occur in the crib and at the relevant ciphertext positions.
+For a coordinate function $z$ on the full alphabet, $\mathrm{AllDifferent}(z(A), \dots, z(Z))$ requires $z$ to be injective, hence a bijection onto $\mathbb{Z}_{26}$. In a search, a **partial assignment** must be injective on the letters assigned so far and extendable. Linear equations may be projected onto only the observed letters; then injectivity is checked on those assigned coordinates and the unused letters must be shown extendable to the unused positions. The full-key constraint still ranges over all 26 letters.
 '''
 
 [[blocks]]

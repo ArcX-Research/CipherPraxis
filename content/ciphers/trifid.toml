@@ -8,7 +8,7 @@ family = "Fractionation"
 tags = ["fractionation", "cube", "27 symbols", "period"]
 related = ["bifid", "digrafid", "playfair", "polybius-square", "simulated-annealing", "known-answer-tests", "conjugacy-and-gauge", "g-fractionation", "g-period"]
 summary = "Trifid places 26 letters and one extra symbol in a 3 x 3 x 3 cube. Each letter becomes three base-3 coordinates. Within a block, the cipher writes all first coordinates, then all second coordinates, then all third coordinates, and groups them back into threes. It is a three-dimensional form of Bifid. Tests checked a known answer, matched a separate generator byte for byte, and covered direct, shared-cube, and layered forms."
-updated = "2026-09-05"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -24,7 +24,7 @@ The inverse expands each ciphertext letter into three coordinates and reads $x_i
 kind = "equations"
 title = "Gauge and the 27th symbol"
 body = '''
-Applying one permutation $\pi \in S_3$ to all three coordinates of every cell, $(a, b, c) \mapsto (\pi(a), \pi(b), \pi(c))$, commutes with the scalar regrouping, so a cube is identified only modulo this six-element class. The audits enumerate the orbit and check ciphertext equality before any search. An arbitrary cube emits its 27th symbol, so a 26-letter outer layer is not closed over the Trifid output. The program instead used explicit 27-symbol orders with arithmetic modulo 27 for the layered variant, and read the absence of the extra symbol from a ciphertext as data rather than a reason to change the model.
+Applying one permutation $\pi\in S_3$ to the three coordinate **values** in every axis, $(a,b,c)\mapsto(\pi(a),\pi(b),\pi(c))$, gives the six-element coordinate-label gauge checked by the audits. This is a value relabelling, not an arbitrary permutation of the three axes. An arbitrary cube can emit its 27th symbol even when plaintext uses only 26, so a 26-letter outer layer is not closed over every Trifid output. The program instead used explicit 27-symbol orders with arithmetic modulo 27 for the layered variant, and treated absence of the extra symbol as data rather than changing the model.
 '''
 
 [[blocks]]
@@ -41,7 +41,7 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - A 27-symbol alphabet. A plaintext restricted to 26 letters may still produce the extra symbol in the ciphertext.
-- Invariant: each ciphertext letter depends on three plaintext letters of the same block, so block boundaries carry a periodic signature.
+- Each ciphertext letter draws three coordinates and can depend on up to three plaintext letters in the same block. Repeated block boundaries may create a statistical period signature, but its visibility depends on the cube, text, and block length and is not an invariant guarantee.
 - Invariant: a fitted cube always round-trips its own decryption.
 '''
 

@@ -3,19 +3,19 @@ section = "cryptanalysis"
 title = "Order-free width statistic"
 subtitle = "Score a transposition width from class patterns before knowing the column order"
 status = "VERIFIED"
-status_note = "The project implements both residue-pattern reduction and a class-probability block score. On a 153-letter planted control, the true residue pattern ranked first at z +9.4 against the family-wide null. On four planted layered ciphers, the block score ranked the true width first at z 4 to 13. Shuffled ciphertexts went through the same full pipeline (logs/300, 05)."
+status_note = "The project implements residue-pattern reduction and a class-probability block score for the stated columnar layouts. On one 153-letter planted control, the true residue pattern ranked first at z +9.4 against a family-wide null; on four planted layered controls, the block score ranked the true tested width first at recorded z-scores from 4 to 13. Shuffled ciphertexts went through the same fitted pipeline. These results do not cover arbitrary transpositions or uncorrected width scans (logs/300, 05)."
 family = "Layered-construction inference"
 tags = ["order-free", "transposition", "width", "residue pattern", "class posterior", "dynamic programming"]
 related = ["transposition-width-recovery", "mixture-inference-under-transposition", "sandwich-construction", "columnar-transposition", "exact-period-alignment", "bayesian-evidence-model-selection", "shuffled-null-z-score", "exact-dynamic-programming", "conjugacy-and-gauge", "g-order-free-statistic", "g-residue-pattern", "g-selection-freedom"]
-summary = "While a transposition remains, letter-order scores cannot see the correct answer; even true plaintext scores like noise on quadgrams. Order-free tests use facts the transposition cannot change. These include the letters in each coset, the likely inner class of each position, and the block pattern those classes form at the right width. Two such methods found widths that annealing missed."
-updated = "2026-09-04"
+summary = "When a candidate still has an unresolved transposition, a score that assumes plaintext adjacency may be poorly matched to it. Order-free tests instead use explicitly preserved quantities, such as the global letter multiset, or geometry-specific class patterns predicted by a columnar layout. Coset membership is not preserved by every transposition, so each statistic needs the stated position map and a matched null. The recorded residue-pattern and block methods recovered widths in specified planted controls."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
-The rule: **while any transposition remains unstripped, score order-free (shift-marginalised monogram evidence, class patterns). Only once every transposition is stripped, score with quadgrams.** The reason is exact: a transposition preserves the letter multiset, so the correct outer key leaves a residue whose monogram distribution is exactly the language's, while the same residue has a quadgram rate indistinguishable from noise.
+Practical rule: while the plaintext adjacency required by a language score has not been restored, prefer a statistic whose invariance or geometry has been proved for the candidate transform. A transposition exactly preserves the **global empirical letter multiset**, but it can change coset histograms and adjacency. Removing a correct outer key therefore preserves the appropriate inner stream's global histogram; whether that histogram equals a language marginal depends on any inner substitution and the plaintext model. The recorded correct candidates had noise-like quadgram scores before order restoration, but this is an empirical property of those controls, not a theorem about every transposition.
 
-Two order-free width statistics follow. Given an inner period $k$ and a hypothesised width $w$, the **residue pattern** is the sequence $\sigma(s) \bmod k$ over read-out columns. The **block pattern** is the predicted class of every output position under $w$, constant per column if $k \mid w$ and alternating otherwise.
+Two order-free width statistics follow for the declared columnar convention. Given an inner period $k$ and a hypothesised width $w$, the **residue pattern** is the sequence $\sigma(s) \bmod k$ over read-out columns. The **block pattern** is the predicted class of every output position under $w$. Down a regular column it advances by $w\bmod k$: it is constant if $k\mid w$ and otherwise cycles with length $k/\gcd(k,w)$. It is specifically alternating only when $k=2$ and $w$ is odd.
 '''
 
 [[blocks]]
@@ -26,7 +26,7 @@ Let $P_i(\gamma)$ be the posterior that position $i$ belongs to inner class $\ga
 
 $$S(w) = \max_{\text{layout}} \sum_{\text{blocks } B} \max_t \sum_{i \in B} \big[P_i\big((t + \text{step}\cdot i) \bmod k\big) - \bar P\big], \qquad \text{step} = (\pm w) \bmod k,$$
 
-where the layout (which $e$ of the $w$ blocks are long) is optimised by a dynamic programme over the columns, or enumerated when $\binom{w}{e}$ is small. The null pushes shuffled ciphertexts through the identical pipeline (fit, spacing candidates, class-EM, DP), so $z(w)$ is honest; widths with $z \ge 3$ go to the column solver.
+where the layout (which $e$ of the $w$ blocks are long) is optimised by a dynamic programme over the columns, or enumerated when $\binom{w}{e}$ is small. The null pushes shuffled ciphertexts through the identical pipeline (fit, spacing candidates, class-EM, DP), so $z(w)$ is calibrated against that shuffle model for a fixed width. Selecting among many widths requires the null distribution of the maximum or another predeclared multiple-testing rule; $z\ge3$ is the recorded screening threshold, not a universal decision rule.
 
 For the residue-pattern fit, the outer shifts $u$ (period $p$) and inner shifts $v$ (period $k$) are fitted per pattern by alternating exact monogram maximisation. Both coordinates stay free during the iteration and the gauge (a common rotation of $v$) is fixed only after convergence: pinning $v_0 = 0$ mid-iteration destroys the monotone ascent and collapses every fit onto $v = 0$.
 '''
@@ -47,7 +47,7 @@ body = '''
 2. For every width $2 \le w \le w_{\max}$ and orientation, compute $S(w)$ with the layout DP; refine the outer shifts by class-EM for that width and keep the better statistic.
 3. Repeat on shuffled ciphertexts to obtain $z(w)$.
 4. Alternatively, for an exact grid, enumerate residue patterns and fit $(u, v)$ per pattern by evidence; rank patterns against a familywise shuffle null.
-5. Hand widths with $z \ge 3$ (smallest first; odd widths share the alternation signal and even widths the constancy signal) to the column solver, which fixes residue classes from the block phases and orders the rest by quadgrams.
+5. Hand widths passing the calibrated scan to the column solver, which fixes residue classes from the block phases and orders the rest by quadgrams. For $k=2$, odd widths share the alternating signal and even widths the constant signal; for general $k$, group widths by $w\bmod k$ and the resulting cycle.
 '''
 
 [[blocks]]
@@ -59,7 +59,8 @@ body = '''
 function BLOCK_STATISTIC(P, k, w, orientation):
     // rows; number of long columns
     h = ceil(n / w);  e = n mod w
-    // 0 when k divides w (constant blocks), otherwise alternating
+    // 0 when k divides w (constant blocks); otherwise a cycle whose length is
+    // k / gcd(k, w), alternating only for k = 2
     step = (orientation * w) mod k
     // centring: "every letter is class 0" scores zero
     Pbar[gamma] = mean over i of P[i][gamma]
@@ -86,8 +87,10 @@ function WIDTH_Z(c, m, k, w_max, N):
     // identical pipeline: fit, spacing candidates, class-EM, DP
     for r in 1..N: S_null[r] = SCAN(SHUFFLE(c), m, k, w_max)
     for w in 2..w_max: z[w] = (S[w] - MEAN_r S_null[r][w]) / SD_r S_null[r][w]
-    // to the column solver
-    return { w : z[w] >= 3 } smallest first, with z
+    family_null = distribution over r of max over w of STANDARDISE(S_null[r][w])
+    // apply the predeclared family-wise rule before handing widths to the
+    // column solver
+    return (z, widths passing the family-wise rule)
 
 // Exact-grid alternative: enumerate the residue patterns sigma(s) mod k; fit
 // the outer shifts u and inner shifts v per pattern by alternating exact
@@ -158,4 +161,4 @@ note = "The order-free rule, residue-pattern counts, control rank 1 of 504 at z 
 [[provenance]]
 path = "withmath/docs/project-notes/README.md"
 kind = "note"
-note = "Mathematics of the mixture attack: transposition invariance, centred posteriors, class-EM, honest nulls."
+note = "Mathematics of the mixture attack: global multiset invariance, geometry-specific class patterns, centred posteriors, class-EM, and full-pipeline shuffle nulls."

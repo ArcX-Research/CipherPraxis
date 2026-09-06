@@ -6,5 +6,5 @@ status_note = "Term as used in the compute and throughput entries."
 family = "Engineering vocabulary"
 tags = ["compute"]
 related = ["drainability-and-throughput", "throughput-fail", "power-measurement"]
-summary = "Search throughput is the measured rate of work in the real task order, such as pairs per second or nodes per pair. Combined with the number of tasks left, it estimates the time needed to finish. If a control cannot reach its planted answer within budget, that shows a speed limit. A capped live run reports the share it covered. Neither result rules out the cipher."
-updated = "2026-09-04"
+summary = "Search throughput is an observed work rate, such as tasks per second, together with task-cost diagnostics such as nodes per task. Projecting completion time from it assumes the measured interval represents the remaining task mix; heterogeneous frontiers need stratified or conservative estimates. Failure to recover a planted control within budget establishes a pipeline power limit, which may reflect speed, ranking, or search geometry. A capped run reports exact coverage only for a validated, gap-free task enumeration."
+updated = "2026-09-07"

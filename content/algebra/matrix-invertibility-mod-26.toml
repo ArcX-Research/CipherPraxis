@@ -8,7 +8,7 @@ family = "Linear algebra over finite rings and fields"
 tags = ["matrix", "determinant", "Hill", "GL(n, Z26)", "adjugate"]
 related = ["modular-inverse-and-crt", "units-mod-26", "finite-field-linear-algebra", "lcm-of-periods", "hill-cipher", "periodic-substitution-dp", "shuffled-null-z-score", "hill-lab", "g-unit-group"]
 summary = "A square matrix over Z26 can be reversed exactly when its determinant is a unit. This is the same as being invertible both modulo 2 and modulo 13. The rule tells us which Hill keys are valid and which rows can belong to them. An attack lists possible decryption rows, scores each output stream, and joins rows only when their determinant passes the unit test."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -22,7 +22,7 @@ body = '''
 - Hill encryption of blocks: $c_j = E\, p_j$, decryption $p_j = D\, c_j$ with $D = E^{-1} \pmod{26}$.
 - Row streams: for a candidate decryption row $r$, $y_{r,j} = r \cdot c_j \pmod{26}$ is one coordinate of the plaintext block if $r$ is a row of $D$.
 - Counts: $n = 2$: $3 \cdot 168 = 504$ primitive rows; $n = 3$: $7 \cdot 2196 = 15{,}372$; $|\mathrm{GL}_2(\mathbb{Z}_{26})| = 6 \cdot 26{,}208 = 157{,}248$.
-- Composite with an inner additive layer of period $p$: a row stream is a decimation by $n$, so it has period $q = p / \gcd(p, n)$.
+- Composite with an inner additive layer having period $p$: a row stream is a decimation by $n$, so $q=p/\gcd(p,n)$ is a valid period. Its minimal period may be a proper divisor for special keys.
 - Shift marginalisation per residue $b$ of the decimated period: $Z_b(r) = 26^{-1} \sum_s \prod_x E[x - s]^{F_{b,x}(r)}$ with $F_{b,x}(r)$ the count of value $x$ in the stream at residue $b$.
 '''
 

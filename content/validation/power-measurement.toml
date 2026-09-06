@@ -7,28 +7,28 @@ status_note = "Recorded measurements include keeping all seven true shifts in 19
 family = "Power and calibration"
 tags = ["power", "calibration", "coverage", "controls"]
 related = ["planted-controls", "blind-controls", "held-out-gates", "throughput-fail", "tautological-gate-rule", "power-analysis", "estimator-standard-error", "drainability-and-throughput"]
-summary = "Power tells us how much a negative result is worth. Measure it as the share of planted cases a frozen pipeline recovers with the real budget and task order. Do not interpret a target miss without that number. For a time-limited search, multiply the chance of recovery when the true segment runs by the fraction of segments reached before the limit. In one case, this turned a hopeful 24-hour run into an honest power estimate near 2%."
-updated = "2026-09-04"
+summary = "Power measures recovery frequency under a declared family, fixture distribution, budget, and task order. Report it with uncertainty before interpreting a target miss. For a time-limited search, estimate both whether the solver recovers truth when its task runs and how much of the scheduled frontier is reached. Multiplying those terms is justified only when their dependence is controlled; direct end-to-end capped controls are stronger."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
-For $N$ planted fixtures drawn uniformly from the model, run through the exact frozen pipeline (same code, gates, nulls, ordering and budget as the live run), with recovery indicators $r_i$:
+For $N$ planted fixtures drawn from the declared model distribution, run through the same frozen pipeline (same code, gates, nulls, ordering and budget as the live run), with recovery indicators $r_i$:
 
 $$\hat{\pi} = \frac{1}{N}\sum_i r_i, \qquad \operatorname{se}(\hat\pi) \approx \sqrt{\frac{\hat\pi(1-\hat\pi)}{N}}.$$
 
-A negative on the target is then reported as "excluded with power $\hat\pi$ at length $n$", and a family is called `POWER-LIMITED` when $\hat\pi$ is too small for the negative to mean anything.
+A target miss is reported together with $\hat\pi$, its interval, and the fixture scope. It is a powered heuristic miss, not an exact exclusion of the family. A family is called `POWER-LIMITED` when the measured recovery rate is too small for the miss to support even that scoped interpretation.
 '''
 
 [[blocks]]
 kind = "equations"
 title = "Power under a time cap"
 body = '''
-For an exhaustive search over a deterministically ordered frontier of $F$ tasks that processes $\rho$ tasks per second, a cap of $T$ seconds covers a fraction $\kappa = \min(1, \rho T / F)$. If the truth's position is uniform over the frontier and the search recovers it whenever its task is scheduled (probability $\pi_{\text{sched}}$),
+For an exhaustive search over a deterministically ordered frontier of $F$ tasks, let $D(T)$ be the number of tasks actually completed by cap $T$ and $\kappa=D(T)/F$. If truth positions are uniform over that frontier and conditional recovery when scheduled is independent of position and task difficulty, then
 
 $$\pi_{\text{cap}} = \pi_{\text{sched}} \cdot \kappa .$$
 
-The program measured $\pi_{\text{sched}} = 20/20$ by searching a ten-task segment around each planted truth's located index in the live order, and $\kappa$ per fixture between $0.012$ and $1.0$ with median $0.087$ at a 24 h cap, so $\pi_{\text{cap}} \approx 9\%$ for random plants. The live text's own coverage at its cap was $0.75\%$.
+The product is a model-based estimate, not an identity when speed or recovery varies with task position. The program measured $\pi_{\text{sched}}=20/20$ by searching a ten-task segment around each planted truth and estimated $\kappa$ per fixture between $0.012$ and $1.0$, with median $0.087$ at a 24-hour cap. This suggests median capped power near 9% under the stated assumptions. The live run covered 0.75% of its own frontier; that coverage alone is not a live-instance recovery probability.
 '''
 
 [[blocks]]
@@ -42,7 +42,7 @@ body = '''
 [[blocks]]
 kind = "attack"
 body = '''
-Power measurement is where a pipeline's weak link is found. In a segment-chain lane the suspected weak link was a width-8 shortlist of per-residue shifts. A different-agent review measured that all seven true shifts survived the shortlist in 195 of 200 hard-plaintext trials (0.975) and that the per-residue true shift was in the top eight 99.64% of the time, so the shortlist was not the reason the live runs missed. In a blind annealing lane, best-of-$N$ recovery plateaued at 30 to 40% of the alphabet for $N$ from 500 to 8,000 chains, which showed that the landscape, not the budget, was the obstacle and closed the approach.
+Power measurement helps locate a pipeline's weak link. In a segment-chain lane the suspected weak link was a width-8 shortlist of per-residue shifts. A different-agent review found that all seven true shifts survived the shortlist in 195 of 200 hard-plaintext trials (0.975) and that a per-residue true shift was in the top eight 99.64% of the time. Those controls make shortlist loss an unlikely explanation under that fixture distribution; they do not identify the cause of every live miss. In a blind annealing lane, best-of-$N$ recovery plateaued at 30 to 40% of the alphabet for $N$ from 500 to 8,000 chains. That result closed the tested annealer and budget range, not every larger budget or search method.
 '''
 
 [[blocks]]
@@ -51,25 +51,30 @@ body = '''
 ```text
 // Inputs: the frozen pipeline P (same code, gates, nulls, task order and
 // budget as the live run), model M, live length n, N fresh seeds; for a
-// capped search, the measured task rate rho, frontier size F and declared cap
-// T. Output: power_hat with its standard error, or power at the cap.
+// capped search, the frontier size F and declared cap T. Output: power_hat
+// with an interval, or a model-based power estimate at the cap.
 function POWER(P, M, n, seeds):
+    N = LENGTH(seeds)
     r = []
     for seed in seeds:
-        // drawn uniformly from the model
+        // drawn from the declared fixture distribution
         (p, k, c) = PLANT(M, n, seed)
         // the whole decision, gates and nulls included
         r.append(1 if P(c) recovers (p, k) else 0)
     power_hat = SUM(r) / N
     se = SQRT(power_hat * (1 - power_hat) / N)
+    interval = BINOMIAL_INTERVAL(SUM(r), N)
     report N, the fixture distribution, the task order and the budget with
-            power_hat and se
-    // a miss is "excluded with power power_hat at length n"
+            power_hat, se, and interval
+    // A miss is reported with this scoped estimate; it is not an exact
+    // family exclusion.
     return power_hat
 
-function POWER_AT_CAP(P, M, n, seeds, rho, F, T):
-    // fraction of the frontier reached before the cap
-    coverage = MIN(1, rho * T / F)
+function POWER_AT_CAP(P, M, n, seeds, F, T):
+    N = LENGTH(seeds)
+    // Prefer the observed completed-task count. A rate extrapolation is an
+    // additional model and must retain its uncertainty.
+    coverage = COMPLETED_TASKS_BY_CAP(P, T) / F
     recovered_when_scheduled = 0
     for seed in seeds:
         (p, k, c) = PLANT(M, n, seed)
@@ -79,6 +84,9 @@ function POWER_AT_CAP(P, M, n, seeds, rho, F, T):
         if P(c, tasks = SEGMENT_AROUND(t_star)) recovers (p, k):
             recovered_when_scheduled += 1
     power_sched = recovered_when_scheduled / N
+    require truth position is uniform and scheduled recovery is not associated
+            with position or task difficulty; otherwise report both factors
+            without multiplying them
     // coverage is also reported per fixture
     return power_sched * coverage
 ```
@@ -94,7 +102,7 @@ A power panel costs $N$ full solves. Segment panels reduce this for exhaustive s
 kind = "failure_modes"
 body = '''
 - **Unmeasured power reported as a negative.** A cell whose blind control never reached its truth was at first described in outcome language. The ledger amended it to `POWER_UNMEASURED + SCOPED_INCONCLUSIVE` and ruled that no result from it may be called a negative.
-- **One control read as a panel.** A one-null disclosed run establishes rank against a single null, worth $p \le 1/2$. The auditor recorded that it must not be read as evidence of separation.
+- **One control read as a panel.** A disclosed run with one null has a smallest attainable plus-one value of $p=1/2$. The auditor recorded that it must not be read as evidence of separation at conventional levels.
 - **Power from the wrong region.** Prose plants recovered at 97.5% say nothing about a target whose statistics no prose plant reproduces. The audit recommended citing such figures as within-family power only.
 '''
 
@@ -151,5 +159,5 @@ ref = "logs/32_q3joint_ctrl.log"
 [[provenance]]
 path = "withmath/docs/pk9/PK9_STRUCTURED_P7_CHAIN383_INDEPENDENT_AUDIT391.md"
 kind = "audit"
-note = "Observation O2: a rank-one result against a single null is worth p <= 1/2 and must not be read as separation."
+note = "Observation O2: a rank-one result against a single null has a smallest attainable plus-one p-value of 1/2 and must not be read as separation."
 ref = "LOG391"

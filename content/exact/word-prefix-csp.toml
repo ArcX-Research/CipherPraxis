@@ -3,12 +3,12 @@ section = "exact"
 title = "Word-prefix and crib-pair constraint solving"
 subtitle = "Let language suggest openings or crib pairs, then let exact algebra accept or reject them"
 status = "VERIFIED"
-status_note = "The crib-pair solver passed both target-absent planted controls, recovering full answers at rates -4.247 and -4.503 with forced-crib and round-trip checks, then completed its finite search. The tail continuation passed its known-answer test and checked 8,851 systems with zero readable results. The word-prefix chain form passed a known-answer test with 144 all-different answers containing the planted cycle and a 1/1 deployment control. Its full control panel was still in calibration."
+status_note = "The crib-pair algebra passed two planted controls and the successor exhausted the admitted d13=5 tail: 8,851 systems with zero all-different reads. Systems with d13 at least 6 remained open, and full-key completion beyond seven unused coordinates used a greedy heuristic. The word-prefix form has a known-answer check but its full control panel was still in calibration."
 family = "Constraint programming"
 tags = ["crib pair", "word prefix", "null space", "particle filter", "decoy bank", "scoped closure"]
 related = ["all-different-enumeration", "exact-chain-oracle", "constraint-satisfaction-forward-checking", "beam-search", "corpus-bank-screen", "crib-dragging", "crib-driven-alphabet-recovery", "quagmire-iii", "family-wise-null", "local-language-model-prior", "target-absent-controls", "g-forward-checking"]
-summary = "A word-prefix solver uses language only to suggest short plaintext pieces, such as an 18- to 24-letter opening or two long cribs. Exact algebra decides whether each suggestion can work. Every fragment letter adds a linear equation in unknown alphabet positions modulo 26. The solver lists the GF(2) and GF(13) null-space answers under an all-different rule. It completes, scores, and re-encrypts every surviving alphabet. Matched false banks show how often wrong fragments survive by chance."
-updated = "2026-09-04"
+summary = "A word-prefix solver uses language to propose short plaintext pieces, such as an 18- to 24-letter opening or two long cribs. Exact algebra can accept or reject a supplied proposal when its declared null-space enumeration completes. It retains every observed all-different read. Literal full-key completion and language ranking are exhaustive only when all unused-label assignments are enumerated; greedy completion is a heuristic and cannot support uniqueness or a full-family negative."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -20,9 +20,10 @@ for each proposal and each placement (offset, relation, key phase):
     (d2, d13) <- null-space dimensions over GF(2), GF(13)
     if d13 > cap: mark unresolved (explicitly counted), continue           # honest boundary
     reads <- all-different enumeration; keep every distinct read
-    for each read: complete the free letters (exhaustive if <= 7 unused positions, else greedy);
+    for each read: complete the free letters (exhaustive if <= 7 unused positions;
+                   otherwise mark the greedy ranking branch heuristic);
                    score by quadgrams; require forced-crib consistency and literal roundtrip
-rank completions; compare with nine equality- and length-matched decoy banks (familywise endpoint)
+rank completions; compare with the frozen matched decoy panel as an empirical endpoint
 ```
 
 Adaptive mode (particle filter): sample candidate openings, keep prefixes whose partial permutation is exactly feasible (and conservatively keep resource-unknown ones), ask the language model to continue each retained prefix; default stages 18, 21 and 24 clean letters.

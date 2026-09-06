@@ -7,15 +7,15 @@ status_note = "The basic tests include single-letter likelihood, chi-square, cor
 family = "Period and structure recovery"
 tags = ["monogram", "histogram", "index of coincidence", "chi-square", "monoalphabetic", "calibration"]
 related = ["caesar-shift", "keyword-mixed-alphabet", "homophonic-substitution", "index-of-coincidence", "chi-squared-fit", "estimator-standard-error", "coset-shift-recovery", "exact-period-alignment", "family-identification", "hill-climbing", "g-coset"]
-summary = "Frequency analysis compares a ciphertext's letter patterns with those of the expected language. A simple substitution keeps the same counts under different labels. A Caesar shift rotates those labels. A repeating cipher does the same within each coset. Letter counts and the index of coincidence can therefore suggest the outer cipher before any key search. Every result here includes an exact or simulated error range and planted comparisons at the same length."
-updated = "2026-09-05"
+summary = "Frequency analysis compares a ciphertext's letter patterns with a declared language model. A simple substitution keeps the same empirical counts under different labels, and a Caesar shift rotates those labels. A periodic substitution applies the same fact separately within each coset, although finite plaintext cosets need not have identical histograms. Letter counts and coincidence statistics can therefore diagnose compatible outer ciphers before key search; they do not identify a cipher by themselves. Recorded results use exact sampling formulas or matched simulations at the tested length."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
 For a text of $n$ letters with counts $f_x$, the histogram $\hat h(x) = f_x/n$ estimates the letter distribution. Under a monoalphabetic substitution $\sigma$ the ciphertext histogram is $\hat h(\sigma(x))$: the same multiset of frequencies with permuted labels. Under a Caesar shift $k$ it is $\hat h(x - k)$. Under a periodic substitution of period $m$ each coset $b$ has its own rotation or relabelling of the plaintext histogram of the positions $i \equiv b \pmod m$.
 
-The **index of coincidence** $\operatorname{IC} = \sum_x f_x(f_x-1)/(n(n-1))$ is invariant under relabelling and separates peaked (English $\approx 0.066$) from flat (uniform $1/26 \approx 0.0385$) material. For $n$ independent letters from a distribution with $\kappa_2 = \sum_x h(x)^2$ and $\kappa_3 = \sum_x h(x)^3$ the estimator's variance is
+The **index of coincidence** $\operatorname{IC} = \sum_x f_x(f_x-1)/(n(n-1))$ is invariant under relabelling. It helps distinguish samples from peaked and near-uniform marginal models; the often-quoted English value near $0.066$ is model- and corpus-dependent, while an independent uniform model has expectation $1/26$. For $n$ independent letters from a distribution with $\kappa_2 = \sum_x h(x)^2$ and $\kappa_3 = \sum_x h(x)^3$ the estimator's variance is
 
 $$\operatorname{Var}(\operatorname{IC}) = \frac{N\kappa_2(1-\kappa_2) + 2N(n-2)(\kappa_3 - \kappa_2^2)}{N^2}, \qquad N = \binom{n}{2},$$
 
@@ -29,7 +29,7 @@ body = '''
 - Shift or relabelling fit against a reference $E$: correlation $\sum_x E(x-k)\hat h(x)$, chi-square $\sum_x (f_x - nE(x-k))^2/(nE(x-k))$, or log-likelihood $\sum_x f_x \log E(x-k)$ (see [Coset shift recovery](/cryptanalysis/coset-shift-recovery)).
 - Sorted profile: sort the histogram and compare with sorted profiles of language windows of the same length. This is invariant under any relabelling and tests "English letters under some substitution" without recovering it.
 - Segment identity: the cosine between two segment histograms (or its maximum over rotations in a reference order) tests whether two parts of a text share one substitution.
-- Within-coset coincidences: adjacent-pair and triple coincidences within one coset stay at the language digram/trigram level under any per-coset substitution and fall toward the product of letter rates under any inner mixing.
+- Within-coset coincidences: a fixed one-to-one substitution preserves the actual equality indicators within each coset. Their expected rates are the plaintext's lag-$m$ and lag-$(m,2m)$ coincidence rates under the declared source model. Some mixing constructions reduce those rates in matched simulations, but neither a universal "language level" nor a fall to independent-letter products follows from relabelling alone.
 '''
 
 [[blocks]]
@@ -45,9 +45,9 @@ kind = "attack"
 title = "How to attack it"
 body = '''
 1. Histogram, index of coincidence with error bar, number of distinct letters; compare with language, uniform and planted references at the same length.
-2. If the text is monoalphabetic ($\operatorname{IC}$ near the language value), map the most frequent ciphertext letters to the most frequent plaintext letters as a start and finish with a quadgram hill-climb over the substitution.
+2. If a monoalphabetic model is plausible (for example, its IC and sorted profile fit matched language samples), map frequent ciphertext letters to frequent plaintext letters as a starting hypothesis and finish with a quadgram hill-climb over the substitution.
 3. If periodic, repeat per coset after the period is found. If the text is not homogeneous, repeat per zone.
-4. Read the sorted profile and the within-coset pair coincidences to decide between "substitution of language" and "mixed inner" before committing to a key family.
+4. Compare the sorted profile and within-coset equality statistics with matched generators to assess "substitution of language" versus the declared mixed-inner alternatives before committing to a key family.
 '''
 
 [[blocks]]
@@ -91,15 +91,15 @@ function FREQUENCY_ANALYSIS(c, E, references):
             length n
     pairs = adjacent-pair and triple coincidences within each coset against
             planted per-coset-substitution and mixed-inner references
-    return the decision "substitution of language" or "mixed inner", with its
-            z against those references
+    return the model comparison, with each statistic calibrated against its
+            matched references
 ```
 '''
 
 [[blocks]]
 kind = "complexity"
 body = '''
-All statistics are linear in $n$. The fits are $O(26)$ per candidate rotation and $O(26^2)$ per relabelling hypothesis. Simulated references cost one encryption and one statistic per replicate: 400 planted windows per model per text run in about a minute.
+The listed histogram and coincidence diagnostics are linear in $n$ once the cosets are chosen. Comparing all 26 rotations costs $O(n+26^2)$ using 26-bin histograms; a single proposed relabelling is $O(26)$ after counting. Searching the $26!$ substitution space is not $O(26^2)$ and the quadgram hill-climb has budget-dependent cost. Simulated references cost one encryption and one statistic per replicate; the recorded 400-window runs took about a minute per model and text.
 '''
 
 [[blocks]]
@@ -132,7 +132,7 @@ Plaintext (39 letters) `ATTACKTHEEASTGATEATDAWNANDHOLDTHEBRIDGE` has counts A 7,
 FYYFHPYMJJFXYLFYJFYIFBSFSIMTQIYMJGWNILJ
 ```
 
-with counts F 7, Y 7, J 5, I 4, M 3: the same frequency multiset, rotated. The index of coincidence of both texts is $\sum f_x(f_x-1)/(39 \cdot 38) = (42+42+20+12+6+2+2)/1482 = 0.085$ (G and N occur twice, every other letter once). Only the labels moved. Mapping F$\to$A (or F$\to$T), Y$\to$T, J$\to$E already fixes the rotation $k = 5$, and the sorted profile $(7,7,5,4,3,2,\dots)$ is the same before and after encryption.
+with counts F 7, Y 7, J 5, I 4, M 3: the same frequency multiset, rotated. The index of coincidence of both texts is $\sum f_x(f_x-1)/(39 \cdot 38) = (42+42+20+12+6+2+2)/1482 = 0.085$ (G and N occur twice, every other letter once). Only the labels moved. The tied counts first leave the two assignments $\{F,Y\}\to\{A,T\}$ ambiguous; testing the Caesar constraint selects F$\to$A, Y$\to$T, and J$\to$E, all consistent with $k = 5$. The sorted profile $(7,7,5,4,3,2,\dots)$ is the same before and after encryption.
 '''
 
 [[provenance]]

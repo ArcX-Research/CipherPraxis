@@ -8,12 +8,12 @@ family = "Literature"
 tags = ["bibliography", "search", "optimisation", "constraint programming"]
 related = ["simulated-annealing", "parallel-tempering", "hill-climbing", "beam-search", "viterbi-decoding", "expectation-maximisation", "constraint-satisfaction-forward-checking", "cp-sat-and-smt-solvers", "exact-dynamic-programming", "all-different-enumeration", "exhaustive-enumeration", "literature-methodology"]
 summary = "Sources for heuristic search cover simulated annealing, parallel tempering, beam search, and expectation-maximization. Exact-method sources cover Bellman's dynamic programming, Viterbi decoding, forward checking, and all-different propagation. The list also includes the constraint-programming handbook, Google's OR-Tools CP-SAT solver, the Z3 SMT solver, and Knuth's dancing links method for complete enumeration."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "notes"
 body = '''
-On this site, a failed heuristic search rules out nothing. It may simply have missed a candidate. An exact solver can support a narrow negative result only after it finishes every case naturally. The first group of sources covers methods that find candidates. The second covers methods that can produce proof certificates.
+On this site, failure by a heuristic search does not exclude its search family. An exact solver can support a narrow negative only when the declared model is sound for the claim, enumeration and pruning are complete, all relevant cases finish, and any certificate is independently checked. The first group of sources covers candidate-search methods. Some methods in the second group can support exact optimization or complete enumeration when their assumptions and implementations are validated; the citations alone provide no certificate for this site's runs.
 '''
 
 [[references]]

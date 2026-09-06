@@ -6,7 +6,7 @@ status = "VERIFIED"
 status_note = "The monogram and adjacent-pair expectation identities and exhaustive score calculations are verified under their stated independence assumptions. Pair counts recover structured, uniform-marginal examples missed by monograms, but periodic nonlanguage defeats both: these are proposal statistics, not language tests."
 family = "Permutation-invariant statistics"
 tags = ["collision counts", "unknown substitution", "schedule recovery", "histograms", "invariants"]
-related = ["index-of-coincidence", "coincidence-lag-profile", "observable-function-fingerprinting", "permutation-test", "family-wise-null", "parameter-versus-plaintext-recovery", "alternating-velocity-disk-cipher", "piecewise-constant-velocity-disk-cipher", "valid-model-nulls"]
+related = ["index-of-coincidence", "coincidence-lag-profile", "observable-function-fingerprinting", "permutation-test", "family-wise-null", "parameter-versus-plaintext-recovery", "alternating-velocity-disk-cipher", "piecewise-constant-velocity-disk-cipher", "valid-model-nulls", "conditional-language-evidence"]
 summary = "An unknown monoalphabetic substitution preserves equality of symbols and of ordered symbol pairs. Undo a candidate position schedule, then count collisions without naming the latent letters. Single-letter counts use uneven frequencies; adjacent-pair counts can also exploit order when individual letter frequencies are flat. Both need matched controls and explicit failure cases before selecting candidates for a language solver."
 updated = "2026-09-06"
 
@@ -64,6 +64,55 @@ Use $\delta=\phi_s-\phi_r$, where $\phi_r=L\sum_{k<r}d_k$. Only $m/\gcd(L,m)$ ph
 '''
 
 [[blocks]]
+kind = "equations"
+title = "Count population-score ties exactly"
+body = '''
+For a stationary pair law $Q$ over $m$ coordinates, define its translation stabilizer
+
+$$H=\{(h,k):Q(a+h,b+k)=Q(a,b)\text{ for all }a,b\},$$
+
+and subgroups $D=\{s:(s,s)\in H\}$, $V=\{s:(0,s)\in H\}$ and $W=D\cap V$. Fix one outer coordinate order and the initial phase gauge. With $b\ge2$ independent blocks, each at least three symbols long, a velocity-error vector ties the true expected pair-collision score exactly when
+
+$$s_0\in D,\qquad s_r-s_0\in W\quad(r>0).$$
+
+The exact count is $|D|\,|W|^{b-1}$. Consecutive internal pairs force each $s_r$ into $D$. Every accumulated boundary phase is then in $D$, so cross-block agreement reduces to the vertical condition in $V$. Unequal block lengths do not alter this count while all lengths remain at least three.
+
+For a permutation-plus-uniform transition law the vertical subgroup is trivial. Only common velocity offsets survive, namely translations commuting with the transition permutation. A noncirculant permutation may still commute with a proper rotation subgroup. These are equalities of population expectations, not identical finite-text scores or [latent equality patterns](/algebra/latent-label-identifiability).
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Cross-text pair counts along coincidence diagonals"
+body = '''
+For strings $A,B$ and a declared period $p$, let $N_A(g,r,x,y)$ count valid starts $i$ with $i\bmod p=r$ and $(A_i,A_{i+g})=(x,y)$. Define $N_B$ similarly. A fixed weighted cross-text pair score is
+
+$$T_d=\sum_{g\ge1}w_g\sum_{r,x,y}N_A(g,r,x,y)N_B(g,r-d,x,y).$$
+
+Form the coincidence matrix $M(i,j)=[A_i=B_j]$. Expanding the histogram product shows that it counts $M(i,j)M(i+g,j+g)$ with $i-j=d\bmod p$. Both endpoints lie on the same diagonal $k=j-i$. If $x_k[h]$ lists that diagonal's bits, then
+
+$$T_d=\sum_{k\equiv-d\; (\mathrm{mod}\ p)}\sum_{g\ge1}w_g\sum_h x_k[h]x_k[h+g],$$
+
+with all sums truncated at valid endpoints. This identity needs no language or independence assumption. When each diagonal fits in one unsigned machine word $B_k$, its lag count is exactly $\operatorname{popcount}(B_k\mathbin{\&}(B_k\gg g))$. Integer-scaled rational weights preserve every score and phase tie; floating tolerances need not. The operation count must include all declared lags, and the one-word bound does not apply to arbitrarily long strings.
+
+With equal weights over consecutive lags, rolling counts give a linear pass over each diagonal. With all positive lags equally weighted, the diagonal contributes $\binom{\sum_h x_k[h]}{2}$. Neither shortcut replaces inverse-lag weights: the bit strings `110` and `101` both contain two matches, but contribute respectively $1$ and $1/2$ under $w_g=1/g$.
+'''
+
+[[blocks]]
+kind = "variants"
+title = "A negative control that preserves every pair statistic"
+body = '''
+Represent each block as a directed multigraph: letters are vertices and each adjacent pair contributes one edge occurrence. Reorder the outgoing occurrences at each vertex, then traverse an Euler trail from the original first letter, using every edge exactly once. This preserves the block's directed-pair counts and endpoints. It also preserves monograms because
+
+$$n_a=\operatorname{outdegree}(a)+[\text{last letter}=a].$$
+
+Apply the original substitution and schedule to the new sequence. The planted global monogram, cross-block monogram and cross-block pair scores are exactly unchanged. Fixed block endpoints also preserve boundary pairs, hence the whole-text iid and first-order Markov [KT likelihoods](/statistics/conditional-language-evidence). Higher-order text likelihoods can change.
+
+No statistic that is a function only of the preserved edge multigraph can distinguish this pair: this includes its degrees, spectrum and number of Euler trails. The rearranged sequence is still a valid instance of the cipher family. Distinguishing it as non-prose requires longer-range traversal order or a declared source assumption, not merely a different graph summary.
+
+Shuffling outgoing occurrences and taking a trail does **not** establish uniform sampling over Euler trails. This construction is a matched adversarial control, not automatically an exact randomization test. Some graphs have only one trail, and some rearrangements preserve the whole equality pattern. Record those fixed points as uninformative; do not redraw until a convenient negative appears.
+'''
+
+[[blocks]]
 kind = "variants"
 body = '''
 - **Global histogram score:** $S_{\rm all}=\sum_x n_x(n_x-1)$, computed from one histogram instead of visiting every pair.
@@ -71,6 +120,15 @@ body = '''
 - **Weighted graph score:** assign a fixed weight to each position pair before seeing the result.
 - **Ordered-pair collision:** histogram adjacent pairs $(U_i,U_{i+1})$ inside each block, then count identical ordered pairs between blocks. This keeps local order while remaining invariant under a shared alphabet relabelling.
 - **Tie-expanded shortlist:** retain every schedule tied at the cutoff, together with its physical origin and outer-alphabet choice.
+'''
+
+[[blocks]]
+kind = "variants"
+title = "Separate order information from comparison opportunities"
+body = '''
+Shuffling one string's positions independently within each residue modulo $p$ preserves every residue histogram. It therefore preserves every cross-text monogram score, its selected maximum and all phase ties, while potentially changing the pair score. This is a useful matched order diagnostic. It becomes an exact permutation test only under conditional within-residue exchangeability; independently substituted ordered prose does not automatically meet that assumption. Do not silently replace a frozen alphabet-relabel null with this different null.
+
+Phase candidates can also have different numbers of comparisons. Write $e_A(g,r)$ for the number of valid lag-$g$ starts in residue $r$. The weighted exposure is $\sum_g w_g\sum_r e_A(g,r)e_B(g,r-d)$, which need not be constant in $d$ after endpoint trimming. A same-graph, equal-opportunity expected-maximum proof cannot be transferred unchanged to this selector. Fully reselected nulls keep the declared geometry, but a population guarantee for the correct phase needs a separate argument. Normalizing by exposure changes the statistic and must be frozen before evaluating its power.
 '''
 
 [[blocks]]
@@ -130,6 +188,8 @@ body = '''
 - **Post-selected objective:** choosing global or cross-block collisions after seeing which ranks better invalidates the stated control power.
 - **Schedule called plaintext:** equality geometry does not name latent symbols or recover the substitution.
 - **Uncharged extra objective:** adding pair-score seeds enlarges the selector. Preserve all origins and repeat the complete enlarged selection in every decision null; an earlier release gate cannot be inherited unchanged.
+- **Population versus sample:** exact translation symmetries of a declared source law do not identify the unknown law from one fitted sample, and do not justify deduplicating actual plaintext candidates.
+- **Blocks too short:** the subgroup tie-count shortcut needs two internal pairs per block. Two-symbol blocks can have additional ties and require the direct expectation calculation.
 '''
 
 [[blocks]]
@@ -140,6 +200,10 @@ The exhaustive implementation was checked against a separate per-position refere
 A later frozen panel added twelve 504-letter correlated prose controls and matched transformations. The planted schedule ranked first for all twelve prose texts, but also for all twenty-four plaintext histogram-shuffle and within-block-sort transformations. Conditional ciphertext-shuffle nulls overlapped the prose score range, and periodic concentration traps could favor a wrong schedule. This confirms that strong retention measures position geometry; it does not identify prose.
 
 An order-sensitive extension tested four public 504-symbol Markov examples with uniform population letter marginals. Pair collisions placed the plant first in all four, preserving a legitimate two-way outer-order tie, while both monogram objectives missed all four top-64 sets. Two peaked independent sources were first under every objective; two uniform independent references were not retained. Two arithmetic-progression traps preferred a wrong schedule that made the coordinates constant. A separate implementation reconstructed every score distribution and retained origin. This demonstrates additional proposal information, not fresh prose power or language/null separation.
+
+The subgroup tie formula was separately checked against literal expectation scores for 10,319 small-alphabet schedules, matching all 224 ties. A six-symbol noncirculant permutation retains two common offsets; a six-symbol parity-block law leaves 162 velocity tuples tied across four blocks. A two-symbol-block counterexample has three ties where an out-of-domain use of the formula would predict one. Degree-26 checks cover exact stabilizers and literal witnesses only, not full expected-score enumeration.
+
+A later public-symbol integration preserved the original class-seed identity while unioning all three tie-expanded objectives. It produced 201 endpoints from 67 classes, versus 192 endpoints from the unchanged 64-class monogram projection. A separate implementation replayed the complete geometry, every endpoint's swap stationarity and all physical forwards. Six symbolic Euler-trail tests included loops, repeated edges and fixed points. These are composition and invariant checks, not prose power or a live release gate.
 '''
 
 [[blocks]]
@@ -230,3 +294,39 @@ path = "withmath/logs/722_audit_1788697398677791000.report.json"
 kind = "audit"
 note = "SHA256 b41af7c060a30c5179284ec5872956d02d02849b1264560b22dd3c6f9922bd30. Same-researcher separate code reconstructs 9,151,877 schedule-score triples, 3,766 metric/origin rows, 14 malformed refusals and 12 independent output-corruption refusals."
 ref = "LOG722"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_PAIRSYM728.md"
+kind = "design"
+note = "Proves the exact D/V subgroup formula for population pair-score ties, its unequal-block-length invariance, same-outer restriction and length-two counterexample."
+ref = "LOG728"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_UNION732.md"
+kind = "design"
+note = "Defines the order-matched Euler control, graph-only impossibility boundary, alias-preserving three-statistic union and unchanged per-class seed projection."
+ref = "LOG732"
+
+[[provenance]]
+path = "withmath/logs/732_preflight_audit.result.json"
+kind = "audit"
+note = "SHA256 eb59fc69900bfc9f94ca9c436ab03ff37c42de041b54eea6498f2130871315d7. Separate replay of 1,827,905 schedule triples including intentional cap probes, 69,225 full swaps, 101,304 scalar forward letters and six Euler-trail invariance cases. Independent session review accepted these mathematical checks but held release for execution-lifecycle and audit-admission defects; no prose or live admission."
+ref = "LOG732"
+
+[[provenance]]
+path = "withmath/logs/728_symbol_1788698666185263000.result.json"
+kind = "log"
+note = "SHA256 bef5a3c8983088fb4a766fa8077c95c158b68035e73ce975c5e4d7085575e883. Thirteen integer-law fixtures, 63 unit/translation gauge checks, 15 producer refusals and exact-count/incomplete-payload cases."
+ref = "LOG728"
+
+[[provenance]]
+path = "withmath/logs/728_audit_1788698689414227000.report.json"
+kind = "audit"
+note = "SHA256 eab6fb476a1b70a2de3ce1e9f3e1f44d61838968f46e5aeb744f0ffefdfa3a87. Independent expected-score replay of 10,319 small schedules and 224 ties, 156 degree26 witnesses and the length2 counterexample."
+ref = "LOG728"
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/SHAREDMAP_PAIR_IDENTITY750.md"
+kind = "design"
+note = "Independently hand-reviewed exact cross-text diagonal identity, bounded-word harmonic computation, phase and endpoint traps, conservative integer bound, matched order diagnostic and unequal-exposure caveat. Proof-only result: no implementation KAT, timing, fresh power or live admission."
+ref = "LOG750"

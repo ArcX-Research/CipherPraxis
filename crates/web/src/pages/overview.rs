@@ -97,10 +97,10 @@ pub fn Overview() -> impl IntoView {
                 }).collect_view()}
             </div>
             <div class="rules glass">
-                <div class="rule"><span class="rule-n mono">"01"</span><p><b>"Run controls first."</b>" A solver shows its planted controls before the target. If a control fails to recover readable language, do not trust the target results."</p></div>
+                <div class="rule"><span class="rule-n mono">"01"</span><p><b>"Run controls first."</b>" Define what each control should recover and test it with the same procedure. A failed control limits what a target miss can establish."</p></div>
                 <div class="rule"><span class="rule-n mono">"02"</span><p><b>"Trace every number."</b>" Each pass rate, z-score, and speed figure points to its source log, audit, or note."</p></div>
-                <div class="rule"><span class="rule-n mono">"03"</span><p><b>"Keep negative claims narrow."</b>" State exactly what the test ruled out, the text length, and the control power. Do not claim that something is impossible in every case."</p></div>
-                <div class="rule"><span class="rule-n mono">"04"</span><p><b>"Prove that checks can fail."</b>" Use a check only after it rejects a known bad case. Test null cases that fit the model and cases that break it."</p></div>
+                <div class="rule"><span class="rule-n mono">"03"</span><p><b>"Keep negative claims narrow."</b>" State the tested family, assumptions, text length, and recovery rate. Distinguish an exhaustive exclusion from a search that found no answer."</p></div>
+                <div class="rule"><span class="rule-n mono">"04"</span><p><b>"Test failure modes."</b>" Use matching positive and negative controls. Separate null cases that satisfy the model from cases that violate its assumptions."</p></div>
             </div>
         </section>
 

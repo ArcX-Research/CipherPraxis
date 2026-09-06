@@ -7,8 +7,8 @@ status_note = "Exact reduced-alphabet tests verified the coherent polynomial and
 family = "Proposal-guided constrained search"
 tags = ["coherent endpoints", "distance polynomial", "shared cycle", "proposal ranking", "counterexample"]
 related = ["unique-proposal-voting", "candidate-bank-lineage-and-cap-accounting", "relabeling-permutation-distance", "quadgram-log-likelihood", "local-language-model-prior", "planted-controls", "cross-residue-collision-alignment"]
-summary = "When several approximate substitution maps come from one search endpoint, preserve each complete row instead of combining its best cells with cells from other rows. For a legal candidate, count its distance to every physical endpoint and record the whole distance polynomial. This is a sound way to describe proposal support. It is not a language likelihood: a wrong legal key can be closer to the endpoint bank than the planted key. Use the polynomial to generate or order proposals, then select with an independently validated plaintext score."
-updated = "2026-09-06"
+summary = "Preserve each approximate substitution map as a complete row instead of assembling its best cells from unrelated rows. A distance polynomial records the full distribution of distances from a legal candidate to those rows. Products of per-residue polynomials additionally assume that endpoint choices across residues form an allowed Cartesian product; coupled multi-residue endpoints require a joint polynomial. Distance is proposal geometry, not language likelihood, and recorded controls contain legal wrong keys closer than the planted key."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -17,11 +17,15 @@ Let residue $r$ have a deduplicated bank $E_r$ of complete physical endpoint map
 
 $$F_r(G_r;x)=\sum_{M\in E_r} x^{d_H(G_r,M)},$$
 
-where $d_H$ is Hamming distance on the declared observed domain. For a tuple $G=(G_0,\ldots,G_{p-1})$, keep only tuples that satisfy the shared algebra, such as powers or reflections of one regular cycle. The combined support can be represented by
+where $d_H$ is Hamming distance on the declared observed domain. For a tuple $G=(G_0,\ldots,G_{p-1})$, keep only tuples that satisfy the shared algebra, such as powers or reflections of one regular cycle. If endpoint rows in different residue banks are independent choices, their Cartesian support can be represented by
 
 $$F(G;x)=\prod_r F_r(G_r;x).$$
 
-Its smallest nonzero degree is the minimum total distance to one coherent endpoint per residue. Coherence matters: every term comes from a whole physical row, never a per-cell plurality assembled from unrelated endpoints.
+Its smallest nonzero degree is the minimum total distance to one complete endpoint row from each residue bank. This is coherent within each map, but does not mean that the chosen rows came from one coupled search run. If a physical endpoint jointly supplies $(M_0,\ldots,M_{p-1})$, preserve a joint bank $E$ and use
+
+$$F_{\rm joint}(G;x)=\sum_{M\in E}x^{\sum_r d_H(G_r,M_r)}$$
+
+rather than multiplying marginals. In either form, no term is a per-cell plurality assembled from fragments of maps.
 '''
 
 [[blocks]]
@@ -31,7 +35,8 @@ body = '''
 - Distance uses a declared symbol domain; changing the domain changes the statistic.
 - Every output tuple passes the full shared-cycle or reflection legality test.
 - Zero-support edges remain searchable. Absence from an approximate proposal bank is not an algebraic contradiction.
-- Distance is proposal evidence only unless fresh controls independently prove it is a safe selector.
+- Distance is a proposal heuristic unless fresh controls measure the complete selector's recovery behavior.
+- The product form is valid only when the declared proposal family permits independent endpoint-row choices across residue banks; coupled origins use the joint form.
 '''
 
 [[blocks]]
@@ -52,7 +57,8 @@ function COHERENT_PROPOSALS(endpoint_banks, legal_generator, betas):
         for residue r:
             polynomial *= sum(x ^ HAMMING(G[r], M) for M in endpoint_banks[r])
         for beta in betas:
-            proposal_score = log E[exp(-beta * distance)] from polynomial
+            proposal_score = log of the normalized mean exp(-beta * distance)
+                    represented by polynomial
             RETAIN_BY_DECLARED_BUDGET(candidates, G, beta, proposal_score)
 
     candidates = SEMANTIC_DEDUPLICATE(candidates)

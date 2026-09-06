@@ -3,12 +3,12 @@ section = "statistics"
 title = "Mahalanobis family distance"
 subtitle = "Identify a cipher by comparing several patterns that do not depend on its key"
 status = "POWER-LIMITED"
-status_note = "Calibration used 29 cipher types, 120 real-English simulations per type with random keys, and 19 key-independent features. At 153 letters, the method identifies plain English at 100% and transposed English at 78–92%. It identifies similar fractionated, mixed-alphabet, and layered types at only 8–40%, so a negative within that group tells us little."
+status_note = "Calibration used 29 cipher types, 120 real-English simulations per type with random keys, and 19 features computed without a supplied key. At 153 letters, resubstitution classified fitting examples of plain English at 100% and transposed English at 78–92%. Similar fractionated, mixed-alphabet, and layered types reached only 8–40%, so a negative within that group tells us little."
 family = "Bayesian evidence and model selection"
-tags = ["Mahalanobis", "family identification", "approximate Bayesian computation", "simulation", "features"]
+tags = ["Mahalanobis", "family identification", "synthetic likelihood", "simulation", "features"]
 related = ["family-identification", "index-of-coincidence", "coincidence-lag-profile", "bayesian-evidence-model-selection", "power-analysis", "planted-controls", "bifid", "quagmire-iii", "sandwich-construction"]
-summary = "When a full cipher has no usable likelihood formula, simulate it. Encrypt many real English samples with random keys for each possible cipher. Measure the same fixed set of key- and transposition-independent features each time. These samples form a cloud for each family. Mahalanobis distance measures how far the target is from each cloud. The same simulations show how often the method classifies its own family correctly, so its limits are visible."
-updated = "2026-09-04"
+summary = "When a cipher family has no usable likelihood formula, simulate it. Encrypt many English samples with random keys for each declared family and measure the same fixed features. These samples form a cloud for each family. Mahalanobis distance measures how far a new text is from each cloud. Fresh or cross-validated simulations are needed to estimate classification performance; distances from fitted clouds are diagnostics, not family exclusions by themselves."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -17,7 +17,7 @@ For a feature vector $x \in \mathbb{R}^k$ and a family $F$ with simulated mean $
 
 $$d^2_F(x) = (x - \mu_F)^{\top} \Sigma_F^{-1} (x - \mu_F), \qquad \log \mathcal{L}_F(x) = -\tfrac{1}{2}\big(d^2_F(x) + \ln \det \Sigma_F\big) + \text{const}.$$
 
-Features are standardised by the pooled standard deviation over all families before the covariance is estimated, and the covariance is shrunk towards its diagonal, $\Sigma_F \leftarrow 0.7\,\Sigma_F + 0.3\,\operatorname{diag}(\Sigma_F) + 10^{-6} I$, so that 120 simulations can support a $19 \times 19$ matrix. The per-feature standardised residual $(x_j - \mu_{F,j})/\sigma_{F,j}$ says *which* statistic disagrees with a family.
+The first expression is a distance. The second is a Gaussian synthetic log-density and includes the determinant term; when covariances differ, ranking by $d_F^2$ is not the same as ranking by $\log\mathcal L_F$. The recorded implementation ranks by distance and prints the density as a separate diagnostic. Features are standardised by the pooled standard deviation over all families before covariance estimation, and the covariance is shrunk towards its diagonal, $\Sigma_F \leftarrow 0.7\,\Sigma_F + 0.3\,\operatorname{diag}(\Sigma_F) + 10^{-6} I$. The per-feature residual shows which measurement differs from the simulated cloud.
 '''
 
 [[blocks]]
@@ -26,14 +26,14 @@ title = "The 19 invariant features"
 body = '''
 Raw IC; number of distinct symbols; union IC after heuristic period-7 alignment; mean within-coset IC; digram IC of the aligned text. The largest residual periodic IC of the aligned text over periods $2 \dots 30$ not divisible by 7; periodic IC at 7, 14 and 28. The smallest per-coset alignment margin. The M1, M2 and M3 [family evidences](/statistics/bayesian-evidence-model-selection) with shifts marginalised. The differences M2$-$M1 and M3$-$M2. The M2 MAP gain. The mean maximum shift posterior under M2; and the lag-1 and lag-2 autocorrelations of the M2 class posterior along the text.
 
-None of these depends on the key values, and all but the last two are unchanged by any transposition below the periodic layer.
+These features can be computed without supplying a key, but their observed values may still vary with the generated key. Histogram-only features are invariant to reorderings that preserve the relevant residue assignments. Lag, adjacency, heuristic alignment, and posterior-correlation features need separate invariance arguments for each proposed layer order; they are not invariant to an arbitrary transposition merely because the transposition lies below another named layer.
 '''
 
 [[blocks]]
 kind = "assumptions"
 body = '''
 - Each family's feature cloud is approximately Gaussian at the simulated length; with 120 draws the tails are not resolved.
-- The simulated plaintexts (random windows of a large English corpus) are representative of the target plaintext. A peaked or non-prose plaintext belongs to no simulated family.
+- The simulated plaintexts (random windows of a large English corpus) represent the source distribution being claimed. A peaked or non-prose plaintext may lie outside every fitted simulation cloud even when its cipher mechanism is present.
 - The target is homogeneous. A text whose key changes part-way, or whose periodic layer covers only a zone, lies between clouds and its distances are not interpretable as family membership.
 '''
 
@@ -43,8 +43,8 @@ title = "How to attack it"
 body = '''
 1. Simulate every candidate construction $N$ times on real English with random keys (plain and transposed English, periodic substitution, sandwiches at several widths and inner periods, double columnar, bifid with several periods, running key, autokey, compound keys, binary-perturbed keys, random-alphabet keyed substitution, seven independent alphabets, two alphabet orders in sequence, four rounds, segment-varied keys, 20% nulls, progressive key, Hill-then-periodic, and, for even lengths, Playfair-then-periodic).
 2. Compute the feature vector for the target and for each simulation; rank families by $d^2$; print the per-feature residuals above $|2|$.
-3. Read the self-classification table: a family that the test cannot recognise in its own simulations cannot be excluded for the target.
-4. Use the ranking to *choose solvers*, not to close families: the excluded families are those with many features at $|z| > 3$.
+3. Estimate classification on fresh simulations or by cross-validation. Resubstitution on the same samples used to fit the clouds is optimistic and is only a development diagnostic.
+4. Use the ranking to choose solvers, not to close families. Large residuals show mismatch with the simulated distribution; an exclusion needs a separately calibrated test and an explicit source model.
 '''
 
 [[blocks]]
@@ -80,8 +80,8 @@ function CLASSIFY(target, mu, Sigma, sigma_pool):
             residual[F][j] = (x[j] - mu_F[j]) / sqrt(Sigma_F[j][j])
     return families sorted by d2 ascending, residuals with |value| > 2
 
-// Self-classification: CLASSIFY every simulated X_F[i]; the share that lands
-// on F is the test's resolution for that family at this length.
+// Estimate classification on fresh simulations or by cross-validation.
+// Reclassifying the fitting rows measures resubstitution performance only.
 ```
 '''
 
@@ -94,7 +94,7 @@ $29 \times 120 = 3{,}480$ simulations, each requiring an alignment and three evi
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **Plug-in optimism.** Self-classification is measured on the same simulations that estimated the clouds, so the quoted accuracies are upper bounds.
+- **Plug-in optimism.** Self-classification is measured on the same simulations that estimated the clouds, so the quoted accuracies are resubstitution estimates and are usually biased upward. They are not guaranteed mathematical upper bounds.
 - **Cluster degeneracy at short length.** At 153 letters bifid, keyed random alphabet, seven independent alphabets, four rounds, sandwiches and 7+3 compounds all sit within $d^2$ $10.7$–$17.1$ of the same target and classify themselves correctly only 8–40% of the time. The test places the target in the cluster and stops.
 - **Feature saturation.** Several features are maxima over scans (residual periodicity, alignment margin), which are right-skewed. The Gaussian model underestimates their tails.
 - **Heterogeneous targets.** A zoned text is not any single simulated family. The per-feature residuals then flag the zone-sensitive statistics (lag-based) rather than the construction.
@@ -103,7 +103,7 @@ body = '''
 [[blocks]]
 kind = "controls"
 body = '''
-Self-classification at 153 letters in one alphabet order: plain English 100%, transposed English 78%, seven independent alphabets 82%, progressive key 57%, plain periodic substitution 52%, sandwiches 18–40%, bifid 8–22%. For the 153-letter target the clouds ranked by $d^2$ were bifid-7 (10.7), four rounds (13.2), random-alphabet keyed substitution (13.3), sandwiches (14.7) and, far away, random letters (30.3, with alignment and coset IC at $z > +2.8$), plain English (102.2), transposed English (109.8) and plain periodic substitution (159.2, M1 at $z = -8.3$). The last three exclusions are the useful part of the reading.
+Resubstitution at 153 letters in one alphabet order gave: plain English 100%, transposed English 78%, seven independent alphabets 82%, progressive key 57%, plain periodic substitution 52%, sandwiches 18–40%, and bifid 8–22%. For one 153-letter observation the clouds ranked by $d^2$ were bifid-7 (10.7), four rounds (13.2), random-alphabet keyed substitution (13.3), sandwiches (14.7), random letters (30.3), plain English (102.2), transposed English (109.8), and plain periodic substitution (159.2). The last three are strong mismatches to those fitted simulation clouds, not calibrated family exclusions.
 '''
 
 [[blocks]]
@@ -114,13 +114,13 @@ Suppose a family's simulations give means $\mu = (0.070, 0.070)$ and standard de
 
 $$d^2 = \Big(\frac{0.062 - 0.070}{0.004}\Big)^2 + \Big(\frac{0.054 - 0.070}{0.008}\Big)^2 = 4 + 4 = 8.$$
 
-For two independent features $d^2$ is chi-squared with 2 degrees of freedom, so $\Pr(d^2 \ge 8) = e^{-4} \approx 0.018$: the target is unlikely to come from that family, and both features disagree at $z = -2$. With 19 correlated features the same logic uses $\Sigma_F^{-1}$ and 19 degrees of freedom.
+If the feature vector were exactly Gaussian and $\mu$ and $\Sigma$ were known rather than estimated, $d^2$ would follow chi-squared with 2 degrees of freedom and $\Pr(d^2\ge8)=e^{-4}\approx0.018$. With fitted, shrunk covariance and selected, non-Gaussian features, that reference tail is only an approximation; calibrate the complete distance on fresh simulations. Correlated features enter through $\Sigma_F^{-1}$, not by treating their individual residuals as independent.
 '''
 
 [[blocks]]
 kind = "notes"
 body = '''
-This is approximate Bayesian computation with a Gaussian synthetic likelihood. Its value is less in the ranking than in the self-classification table, which states the test's resolution at the text length in hand and thereby prevents a negative from being over-read.
+As implemented, this is a simulation-based feature-distance classifier. It becomes a Gaussian synthetic-likelihood method only when the full log-density, including the determinant term, is used under a declared family prior. It is not approximate Bayesian computation without a prior, discrepancy kernel or posterior approximation. Its useful output is a calibrated map of which families the chosen features can and cannot distinguish at the stated length.
 '''
 
 [[provenance]]
@@ -137,7 +137,7 @@ ref = "logs/04_abc.log"
 [[provenance]]
 path = "withmath/docs/project-notes/README.md"
 kind = "note"
-note = "Results of the first full run: both texts sit in one cluster that the invariant statistics cannot split at n = 153 (self-classification 8-40%); excluded families and their z."
+note = "Results of the first full run: both texts sit in one cluster that the feature statistics cannot split at n = 153 (resubstitution 8-40%); reports the distant fitted clouds and their z diagnostics."
 
 [[references]]
 title = "On the generalised distance in statistics"

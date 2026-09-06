@@ -7,8 +7,8 @@ status_note = "The exact algebra removes the middle text, handles gauge equivale
 family = "Exactness guarantees"
 tags = ["oracle", "chain", "shared cycle", "gauge", "pre-filter", "black box"]
 related = ["all-different-enumeration", "word-prefix-csp", "corpus-bank-screen", "segment-chain-analysis", "shared-cycle-attack", "conjugacy-and-gauge", "modular-inverse-and-crt", "running-key", "gauge-defect-invalidation", "target-absent-controls", "g-certificate"]
-summary = "In this chain, the first text uses a keyed substitution. Its plaintext then acts as a running key for the second text under the same unknown alphabet. Removing that middle plaintext leaves one homogeneous equation per position in the alphabet map. The exact oracle takes a proposed opening of the second plaintext, runs fast alphabet-free collision checks, and solves the remaining CRT null spaces under an all-different rule. It returns every matching alphabet and key class. Each answer must re-encrypt both ciphertexts byte for byte."
-updated = "2026-09-04"
+summary = "In this chain, the first text uses a keyed substitution and its plaintext acts as a running key for the second text under the same unknown alphabet. Eliminating that middle plaintext leaves homogeneous equations in the alphabet map. For a supplied opening, the oracle exactly decides the observed-coordinate equations when its enumeration completes and returns every observed all-different read. Full literal alphabets remain a completion family unless unused coordinates are also exhausted or retained symbolically."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -21,10 +21,11 @@ with $e_A, e_B \in \{\pm 1\}$, $z$ an unknown bijection of the 26 letters onto $
 
 ```
 oracle(prefix P[0..L-1], signs):
-    pre-filter: (C_i, C'_i) = (C_j, C'_j) => P_i = P_j;  exactly one equal component => P_i != P_j   # reject cheaply
+    pre-filter within one kappa class: equal ciphertext pairs force equal P;
+                exactly one equal component forces unequal P
     rows: z(P_i) - e8 z(C_i) + e8 e9 z(C'_j) - e8 e9 kappa_j = 0 over the observed letters; gauge z(X0) = 0
     null spaces over GF(2) and GF(13); enumerate all-different reads (2^d2 + 13^d13)
-    for each read: complete unused positions; derive kappa classes from the prefix; fit the periodic classes on the full text
+    for each read: retain or exhaust unused-position completions; derive kappa classes from the prefix; fit the periodic classes on the full text
                    decrypt both texts; require literal re-encryption of both ciphertexts
     return the finished candidates (possibly none)
 ```
@@ -39,7 +40,7 @@ $$z(P_i) - e_A\, z(C_i) + e_A e_B\, z(C'_j) - e_A e_B\, \kappa_j = 0 \pmod{26}.$
 
 Subtracting two positions $i, r$ of the same $\kappa$ class removes $\kappa$ exactly. Translation $z \mapsto z + b$ is a symmetry with $\kappa \mapsto \kappa + b(1 + e_A e_B - e_B)$. The second text's decrypt is invariant only up to that translation, so any score of it must be maximised over the 26 translations of each candidate, and the first text's positions are ranked invariantly.
 
-Collision invariants: $z$ injective and the equation linear in $z(P_i)$ imply that equal $(C_i, C'_j)$ pairs force equal $P_i$, and exactly one equal component forces unequal $P_i$, for every $z$, $\kappa$ and sign pair.
+Collision invariants: for two positions in the same $\kappa$ class, injectivity of $z$ and the differenced equation imply that equal ciphertext-component pairs force equal plaintext letters, while exactly one equal component forces unequal plaintext letters. Across different $\kappa$ classes an unknown key difference remains, so these implications do not follow.
 '''
 
 [[blocks]]
@@ -48,7 +49,7 @@ title = "Assumptions and invariants"
 body = '''
 - The chain relation, the class boundary of $\kappa$ and the wrap rule are hypotheses of the family. The oracle is exact given them and silent about them.
 - A roundtrip after fitting is necessary but tautological: any invertible fitted key reproduces its ciphertext. Readability of the full text, an independent implementation, and null or uniqueness evidence are separate gates.
-- The oracle returns all reads, so a proposal generator (a language model, a particle filter, a corpus screen) can be arbitrarily heuristic without compromising the exactness of the decision.
+- The algebraic oracle returns all observed-coordinate reads only when its declared null-space enumeration completes. A proposal generator may be heuristic without changing that conditional decision, but it can still omit the true opening. If unused coordinates are greedily completed for language scoring, that ranking stage is heuristic and cannot support a full-key uniqueness or exhaustive-negative claim.
 '''
 
 [[blocks]]
@@ -56,7 +57,7 @@ kind = "attack"
 title = "How to attack it"
 body = '''
 - **Word-prefix front end.** Complete English words are proposed for the opening of the second text; cheap GF(2)/GF(13) consistency precedes a local all-different check; language-model selection happens only among algebraically feasible complete words. An adaptive mode keeps feasible prefixes as particles at 18, 21 and 24 clean letters and asks the model to continue them.
-- **Word-pair front end.** Two words of at least 18 letters placed anywhere in the constant-$\kappa$ class. Each surviving cycle decrypts all 62 class positions of the second text and the 53-letter prefix of the first directly, with no shift search, which is the selection statistic. The completion of unobserved letters is exhaustive over at most 7 unused positions, else greedy.
+- **Word-pair front end.** Two words of at least 18 letters are placed inside one constant-$\kappa$ class. Each surviving observed cycle decrypts the exercised positions exactly. Completion is exhaustive only with at most seven unused positions in the cited implementation; beyond that, greedy completion is a heuristic language-ranking step.
 - **Corpus front end.** Every 24-letter window of a 2,344,368-letter corpus through the pre-filter (39,528 unique survivors) and then the oracle under all four sign pairs: zero endpoints.
 '''
 
@@ -67,8 +68,9 @@ body = '''
 // Inputs: second-text ciphertext C, first-text ciphertext C' (length 144, j =
 // i mod 144), signs e_A, e_B, and a proposed opening P[0..L-1] of the second
 // text. alphabet-free collision implications
-function PREFILTER(P, C, C'):
+function PREFILTER(P, C, C', kappa_class):
     for i in 0..L-1, r in i+1..L-1:
+        if kappa_class(i) != kappa_class(r): continue
         j = i mod 144; s = r mod 144
         both = (C[i] == C[r]) and (C'[j] == C'[s])
         // exactly one equal component
@@ -77,27 +79,29 @@ function PREFILTER(P, C, C'):
         if one  and P[i] == P[r]: return REJECT
     return PASS
 
-function ORACLE(P, C, C', e_A, e_B):
-    if PREFILTER(P, C, C') == REJECT: return []
+function ORACLE(P, C, C', e_A, e_B, kappa_class):
+    if PREFILTER(P, C, C', kappa_class) == REJECT: return []
     rows = []
     // kappa cancels
     for each pair (i, r) with i, r < L in the same kappa class:
         rows.append( [z(P_i) - z(P_r)] - e_A [z(C_i) - z(C_r)] + e_A e_B
                 [z(C'_j) - z(C'_s)] = 0 )
     add the gauge row z(X0) = 0; unknowns = the letters that occur
-    // GF(2) x GF(13) null spaces, 2^d2 + 13^d13
+    // GF(2) x GF(13) null spaces; use a complete, output-aware factor join
     reads = ALL_DIFFERENT_READS(rows)
     out = []
-    for z in reads:
-        complete z on the unused positions
-        derive kappa on the prefix classes
-        fit the periodic classes
-        P_full = DECRYPT(C, C', z, kappa, e_A, e_B)
-        if ENCRYPT(P_full, z, kappa, e_A, e_B) reproduces both C and C'
-                literally:
-            out.append((z, kappa, P_full))
-    // possibly empty: an exact decision
-    return out
+    for z_observed in reads:
+        // Enumerate every completion that affects a forward check. Coordinates
+        // unused by both forwards may remain an exact factorial fibre.
+        for (z, inactive_fibre) in EXACT_UNUSED_COMPLETIONS(z_observed):
+            derive kappa on the prefix classes
+            fit the periodic classes
+            P_full = DECRYPT(C, C', z, kappa, e_A, e_B)
+            if ENCRYPT(P_full, z, kappa, e_A, e_B) reproduces both C and C'
+                    literally:
+                out.append((z, inactive_fibre, kappa, P_full))
+    // Empty is exact only if every declared factor and completion cap drained.
+    return out with COMPLETE/INCOMPLETE status and factored unused-label fibres
 ```
 '''
 

@@ -3,12 +3,12 @@ section = "ciphers"
 title = "Compressocrat"
 subtitle = "Turn letters into variable-length base-3 codes, group the digits by threes, and substitute"
 status = "CLOSED"
-status_note = "Two independent 504-letter controls with keyed alphabets were recovered exactly: 527/527 and 520/520 plaintext letters, both with a passing forward check. Their output also matched a separately compiled generator byte for byte. The live 504-letter text failed both the language check and forward replay, ruling out this direct family for that text."
+status_note = "Two independent 504-letter controls with keyed alphabets were recovered exactly: 527/527 and 520/520 plaintext letters, both with a passing forward check and byte agreement with a separate generator. The live run produced no valid language-and-forward candidate under the tested annealing budget. This is a bounded heuristic miss for the standard code, not exhaustive exclusion of all 26! alphabets."
 family = "Fractionation"
 tags = ["fractionation", "variable-length code", "trigraph", "prefix-free"]
 related = ["trifid", "bifid", "keyword-mixed-alphabet", "simulated-annealing", "known-answer-tests", "g-fractionation"]
 summary = "Compressocrat gives each plaintext letter a prefix-free code made from 1, 2, and 3. It joins the codes, adds at most two 1s to make groups of three, and maps each digit triplet to a ciphertext letter through a keyed alphabet. The code never makes 333, leaving exactly 26 triplets and a one-to-one mapping. Like Trifid, it splits letters into parts, but its codes have different lengths, so plaintext and ciphertext lengths can differ."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -111,14 +111,14 @@ Two generic-corpus controls chosen to produce exactly 504 ciphertext letters (pl
 kind = "example"
 title = "Worked example"
 body = '''
-A small prefix-free code that never creates `333`: `E=1, T=2, A=31, O=32, N=331, S=332`. Plaintext `NOTES` encodes as `331 32 2 1 332` $=$ `3313221332` (10 digits); pad with `11` to 12 digits and split: `331 322 133 211`.
+Using the standard table, `N=23`, `O=22`, `T=12`, `E=31`, and `S=112`. Plaintext `NOTES` therefore encodes as `23 22 12 31 112` $=$ `23221231112` (11 digits). Append one padding `1` and split the result as `232 212 311 121`.
 
 ```trace
 trigraph  331  322  133  211
 rank      24   22    8    9
 ```
 
-With $\sigma$ the straight alphabet the ciphertext is `YWIJ`. Decryption re-expands `331322133211` and parses greedily: `331`=N, `32`=O, `2`=T, `1`=E, `332`=S, `11` = padding.
+With $\sigma$ the straight alphabet, the trigraph ranks are 16, 10, 18, and 3 (zero-based), so the ciphertext is `QKSD`. Decryption re-expands `232212311121` and greedily parses `23`=N, `22`=O, `12`=T, `31`=E, `112`=S; the final single `1` is the declared padding.
 '''
 
 [[blocks]]

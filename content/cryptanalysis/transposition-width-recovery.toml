@@ -3,12 +3,12 @@ section = "cryptanalysis"
 title = "Transposition width recovery"
 subtitle = "Find the width and column order of a transposition around substitution layers"
 status = "VERIFIED"
-status_note = "Three methods recover width and order: an order-free residue-pattern fit, a class-probability block score, and dictionary or complete order searches after removing the substitution. Planted controls recovered the true width and order exactly (logs/317, 300, 05, 29, 48). Plain repeated local search failed its own width-9 control, and quadgrams scored the truth like noise while the transposition remained."
+status_note = "The recorded methods combine a geometry-specific residue-pattern fit, a class-probability block score, and dictionary or finite complete order searches after peeling a substitution. The cited planted columnar, rail-fence, and stacked-family controls recovered their declared width and order exactly. Plain local search failed one width-9 control, and the correct candidate in another control had a noise-like quadgram score before its transposition was removed. These results are scoped to the tested generators and search ranges (logs/317, 300, 05, 29, 48)."
 family = "Layered-construction inference"
 tags = ["columnar", "transposition", "width", "column order", "residue pattern", "peel"]
 related = ["columnar-transposition", "myszkowski", "rail-fence", "sandwich-construction", "order-free-width-statistic", "mixture-inference-under-transposition", "exact-period-alignment", "dictionary-attack", "simulated-annealing", "exhaustive-enumeration", "lcm-of-periods", "g-residue-pattern", "g-inner-and-outer-layer"]
-summary = "A columnar transposition scrambles letter order but keeps total letter counts. A repeating substitution applied afterward still has clear cosets, while the text beneath looks like noise. Width recovery finds the grid width and column order that undo the transposition. Order-free residue and class patterns find the width first. Dictionary keys or a complete search then find the order. Quadgrams cannot rank the truth while the transposition remains, and an untested local search is not reliable."
-updated = "2026-09-04"
+summary = "A columnar transposition permutes letter order while preserving global counts. A repeating substitution applied afterward retains its algebraic cosets, although their statistical visibility depends on the inner stream and sample. Width recovery seeks the grid width and column order that undo the transposition. Geometry-specific residue and class patterns can rank widths before plaintext adjacency is restored; dictionary keys or a finite complete search can then rank orders. Language scores are appropriate only when the candidate has restored the order they assume."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -25,7 +25,7 @@ kind = "equations"
 title = "Three order-free handles on the width"
 body = '''
 - **Residue pattern.** If a period-$k$ inner substitution sits under the transposition, position $j$ of the output belongs to inner class $\tau(j) \bmod k = (\sigma(s) + r w) \bmod k$. For $k \mid w$ every output column is one constant class; for odd $w$ and $k = 2$ the classes alternate down each column. The class structure depends on $\sigma$ only through $\sigma(s) \bmod k$, so the shift fit ranges over $w!/\prod_j (\text{mult}_j!)$ residue patterns instead of $w!$ orders: 126 for $(w,k) = (9,2)$, 1,680 for $(9,3)$, 24,310 for $(17,2)$ against $17! \approx 3.6 \times 10^{14}$ orders.
-- **Class-posterior blocks.** Under a mixture model every letter has a posterior class. A width $w$ predicts constant or alternating blocks of length $h$ or $h-1$, scored by a dynamic programme over the long/short column layout (see [Order-free width statistic](/cryptanalysis/order-free-width-statistic)).
+- **Class-posterior blocks.** Under a declared mixture model every letter has a posterior class. A width $w$ predicts blocks of length $h$ or $h-1$ whose class advances by $w\bmod k$ down a column: constant when $k\mid w$, alternating only for $k=2$ and odd $w$, and a longer cycle otherwise. A dynamic programme scores the long/short layout (see [Order-free width statistic](/cryptanalysis/order-free-width-statistic)).
 - **Exact-grid arithmetic.** If the text fills the grid exactly, then $w \mid n$. Start with the divisors of $n$. For 153 letters they are 3, 9, 17, and 51. For 144 letters they are 2, 3, 4, 6, 8, 9, 12, 16, 18, 24, 36, 48, and 72.
 '''
 
@@ -33,7 +33,7 @@ body = '''
 kind = "assumptions"
 body = '''
 - The transposition is a single columnar (or a known small family: rail fence, route, block reversal, Myszkowski, powers and compositions of columnars). Each family needs its own permutation generator.
-- While any transposition is unstripped, only order-free statistics are valid; language scores apply after every transposition is undone.
+- A score is valid only when the candidate transform preserves or restores the feature it uses. Global histograms survive any transposition; coset and class statistics require the declared position map; an n-gram language score requires the relevant plaintext adjacency to be restored.
 - Dictionary-word column orders assume a keyword habit; exhaustive enumeration is limited to about $w \le 9$ ($9! = 362{,}880$ orders per hypothesis).
 '''
 
@@ -44,7 +44,7 @@ body = '''
 1. Fit and peel the outer periodic layer with order-free statistics (marginalised monogram evidence), so that what remains is transposed language.
 2. Rank widths order-free: residue patterns if an inner period is suspected, class-posterior blocks under a mixture model, or the exact-grid divisors.
 3. For each surviving width, resolve the column order: dictionary-word orders first, exhaustive orders for $w \le 7$, annealing only with a control that passes at that width.
-4. Score the fully stripped text with quadgrams. A correct order reads at the language rate (about $-4.3$ per letter) while wrong orders stay near $-6$.
+4. Score the fully stripped text with quadgrams and compare it with matched language and wrong-order controls. Values near $-4.3$ and $-6$ describe the cited quadgram table and control setup, not universal thresholds.
 5. Joint refit: alternate the outer shifts and the order, since a nearly right order and nearly right shifts polish each other and neither reads alone.
 '''
 
@@ -77,13 +77,14 @@ function WIDTH_AND_ORDER(c, words):
         orders = word orders of length w first, then all w! orders for w <=
                 7, annealing only with a control that passes at w
         for sigma in orders, and its relabellings (sigma + d) mod w:
-            // valid only now: every transposition is stripped
+            // valid here only if this candidate restores the adjacency assumed
+            // by the language model
             rate[w, sigma] = QUADGRAM_RATE(UNTRANSPOSE(t, w, sigma))
         // joint refit
         repeat:
             refit u given sigma, refit sigma given u, until neither improves
     (w*, sigma*) = argmax rate
-    // a correct order reads at the language rate
+    // compare with matched language and wrong-order controls
     return (w*, sigma*, u, rate[w*, sigma*] against the level of wrong orders)
 ```
 '''
@@ -97,10 +98,10 @@ Residue-pattern fit: patterns $\times$ (alternating exact monogram maximisation 
 [[blocks]]
 kind = "failure_modes"
 body = '''
-- **The statistic error.** Ranking candidates by quadgrams with a transposition still in place: on a planted substitution-over-transposition the correct outer key leaves an inner whose monogram log-likelihood is $-2.83$ per letter (English $-2.89$) but whose quadgram rate is $-6.95$, indistinguishable from noise; after stripping the transposition it reads $-4.38$ (logs/301). Every negative produced that way is void for constructions with an unstripped transposition.
+- **The statistic error.** On one planted substitution-over-transposition, the correct outer key left an inner with monogram log-likelihood $-2.83$ per letter (reference language $-2.89$) but quadgram rate $-6.95$, inside its noise range; after stripping the transposition it read $-4.38$ (logs/301). A negative from a score whose required adjacency has not been restored does not test that declared construction.
 - **Unvalidated local search.** A plain iterated local search over column orders failed its own width-9 control ($-4.995$, three columns wrong). The same stage with dictionary-word orders recovered the planted text exactly (logs/317). An earlier annealer reported width 15 as 0/3 on controls.
 - **Width ranking without refit.** In a solved text of the series the true width ranked fourth in the width scan at $-6.37$ and reached $-4.23$ only after a joint refit of shifts and order.
-- **Relabel symmetry.** $(\sigma + d) \bmod w$ (every row rotated) is a near-miss local optimum of the order search and must be tried explicitly.
+- **Row-rotation near-neighbours.** Replacing $\sigma$ by $(\sigma+d)\bmod w$ rotates every plaintext row. This is generally a different transposition, not an exact gauge, but it can be a strong local near-miss and is tried explicitly.
 - **Chance level of the periodic-IC objective.** Annealing a column order to maximise the periodic IC of the untransposed text reaches $0.045$ to $0.084$ on shuffled texts depending on width and text; undoing every order of widths 6 to 9 on the 504-letter text never restored a period-7 structure above that band (maximum $0.0437$ at width 8, logs/106).
 '''
 

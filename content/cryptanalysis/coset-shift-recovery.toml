@@ -8,7 +8,7 @@ family = "Period and structure recovery"
 tags = ["periodic", "shift", "monogram", "maximum likelihood", "chi-square", "evidence"]
 related = ["vigenere", "caesar-shift", "exact-period-alignment", "chi-squared-fit", "bayesian-evidence-model-selection", "quadgram-log-likelihood", "coordinate-descent", "expectation-maximisation", "conjugacy-and-gauge", "g-coset", "g-selection-freedom"]
 summary = "Once the period is known, each coset of a repeating additive cipher is a Caesar shift. Compare its letter counts with expected language counts to find that shift. Correlation, chi-square, and likelihood are three ways to do this. Short cosets give uncertain answers. When comparing larger models, average over all shifts instead of choosing the best one; this avoids rewarding a model merely for having more choices."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -39,7 +39,7 @@ Profiling (taking $\max_k$ instead of the mean) buys about $0.15$ nats per lette
 kind = "assumptions"
 body = '''
 - The reference distribution is right: the plaintext language and the alphabet order in which the additive rule acts are both known. A wrong order gives shifts that fit at a diluted level and decrypt to nothing.
-- Each coset has enough letters: with $n/m$ letters per coset the argmax is reliable for English at about 20 or more letters and becomes a vote below that.
+- Each coset has enough information for the chosen reference and desired error rate. Uncertainty depends on the source distribution, text dependence, period, and competing shifts; the recorded short-coset failures do not define a universal 20-letter cutoff.
 - The layer is additive; for keyed alphabets on one or both sides the same estimators apply once the alphabet is hypothesised (as in a structured-alphabet screen).
 '''
 
@@ -103,7 +103,7 @@ function LOG_EVIDENCE(F[0..m-1], f):
 [[blocks]]
 kind = "complexity"
 body = '''
-$O(26\,m)$ fits per hypothesis; in a vectorised screen over $M$ candidate alphabets the per-coset likelihood table is one $M \times m \times 26$ contraction, so 2.06 million alphabets were screened in about 30 s per family and relation (logs/24). Quadgram coordinate descent over $m$ shifts costs $O(26\,m\,n)$ per sweep.
+With alphabet size $q$, building the histograms costs $O(n)$ and scoring every shift directly costs $O(q^2m)$, hence $O(n+26^2m)$ here. In a vectorised screen over $M$ candidate alphabets the per-coset likelihood table is one $M \times m \times 26$ contraction; the recorded 2.06-million-alphabet screen took about 30 s per family and relation (logs/24). Quadgram coordinate descent over $m$ shifts costs $O(26mn)$ per sweep when every trial move re-scores all $n$ positions.
 '''
 
 [[blocks]]
@@ -112,7 +112,7 @@ body = '''
 - **Selection freedom.** Profiling $m$ free shifts inflates the fit by about $0.15$ nats per letter at 153 letters; free sub-coset shifts (a period-$7m$ key read as $m$ varied copies of a 7-letter word) fitted to *shuffled* text reached quadgram rates of $-5.83$ to $-5.87$, so a target row at that level is noise (logs/27).
 - **Tautological flexibility.** A key modelled as any 7-letter dictionary word per block makes any text read like English: the planted control scored $-3.84$ with only 51% of its letters right, and shuffled text reached $-4.04$ (logs/40). A family that quadgrams cannot falsify needs its key set constrained first.
 - **Short cosets.** At zone lengths of 63 to 96 letters (9 to 14 letters per coset) the marginal fit alone is unreliable. The corpus relied on joint constraints (cribs, exact solvers) there.
-- **Diluted inner.** With a flat inner text the shifts are unrecoverable even though the alignment is visible.
+- **Diluted or mismatched inner.** As the inner marginal approaches uniform, both relative alignment and reference-based absolute shifts lose information. A peaked marginal in an unknown relabelling may still support relative histogram alignment while the fit against the declared $E$ gives the wrong absolute labels.
 '''
 
 [[blocks]]

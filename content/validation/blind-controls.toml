@@ -7,8 +7,8 @@ status_note = "The project ran one-shot hidden control banks from seeds fixed in
 family = "Control design"
 tags = ["controls", "hidden bank", "one-shot", "seed commitment"]
 related = ["planted-controls", "target-absent-controls", "held-out-gates", "power-measurement", "seal-and-audit-protocol", "seed-determinism", "g-planted-control"]
-summary = "A blind control has a known answer, but the solver's author cannot see its plaintext, key, or source position until the run ends. One form builds a hidden bank from a seed held only by the release authority and allows one recorded attempt. Another hides the answer in the full search space and gives the solver no shortcut. Visible controls help develop a tool. Blind controls measure how well the finished tool really works."
-updated = "2026-09-04"
+summary = "A blind control has a known answer, but the solver's author cannot see its plaintext, key, or source position until the run ends. One form builds a hidden bank from a seed held only by the release authority and allows one recorded attempt. Another hides the answer in the full search space and gives the solver no shortcut. Visible controls help develop a tool. Blind controls estimate recovery on their frozen fixture distribution under the declared search limits."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -42,7 +42,7 @@ body = '''
 [[blocks]]
 kind = "attack"
 body = '''
-Disclosed controls are where a solver is developed, and development is selection: schedules and thresholds drift toward whatever makes the disclosed plants pass. A hidden bank asks the frozen bytes the only question that matters, whether they recover plants they were not tuned on. In the program's alpha-13 progressive-key lane the disclosed bank passed every case, positives 6/6, sentinels 6/6, independent-letter negatives 3/3 and shuffled nulls 19/19, while the hidden bank's fourth case failed and the transaction terminated `POWER_BLOCKED` with the bank burned and no retry. That outcome was admitted as a valid measurement of a power failure and no target successor was authorised from it.
+Disclosed controls are where a solver is developed, and development is selection: schedules and thresholds can drift toward whatever makes the disclosed plants pass. A hidden bank asks whether the frozen program recovers fresh plants drawn by the predeclared generator. In the program's alpha-13 progressive-key lane the disclosed bank passed every case, positives 6/6, sentinels 6/6, independent-letter negatives 3/3 and shuffled nulls 19/19, while the hidden bank's fourth case failed and the transaction terminated `POWER_BLOCKED` with the bank burned and no retry. That outcome measured a recovery failure on that hidden bank; it did not estimate performance outside the bank's fixture distribution. No target successor was authorised from it.
 '''
 
 [[blocks]]

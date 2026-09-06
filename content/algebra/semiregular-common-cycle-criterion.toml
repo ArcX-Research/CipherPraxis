@@ -8,7 +8,7 @@ family = "Permutation-group reconstruction"
 tags = ["semiregular action", "group closure", "reflections", "common cycle", "fixed points"]
 related = ["reflection-product-cycle-lift", "permutation-cycles", "dihedral-group", "group-actions-on-alphabets", "conjugacy-and-gauge", "two-involution-component-templates", "modular-inverse-and-crt"]
 summary = "Pairwise reflection products can each look like legal rotations and still fail to come from one hidden cycle. The missing joint condition is semiregularity: no nonidentity product may fix a symbol. For complete reflections on twice an odd-prime number of symbols, commuting products plus this rule exactly characterise common-cycle compatibility. For partial maps, one known fixed image together with one known moved image in the same mixed power is an exact rejection witness."
-updated = "2026-09-06"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -59,7 +59,7 @@ If $U=w^a$ and $V=w^b$, then $D_j=w^{b-ja}$. Its exponent may be tracked as the 
 
 $$\bigl(b-ja\bmod 2,\ b-ja\bmod 13\bigr).$$
 
-Scanning $j=0,\ldots,25$ visits every compatible parity and modulo-thirteen exponent pair once. The split helps organise the search, but the rejection certificate still comes from the literal partial permutation: one known fixed cell and one known moved cell in the same mixed word.
+As $j$ runs from 0 to 25, $b-ja$ visits the coset $b-\langle a\rangle$ in the additive group $\mathbb{Z}_{26}$. Each distinct exponent in that coset is visited $\gcd(a,26)$ times; all 26 exponents occur exactly once only when $a$ is a unit. Scanning all 26 values is still complete for the declared words $VU^{-j}$, but implementations may deduplicate repeated exponents. The rejection certificate comes from the literal partial permutation: one known fixed cell and one known moved cell in the same mixed word.
 '''
 
 [[blocks]]

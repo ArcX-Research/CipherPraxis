@@ -7,8 +7,8 @@ status_note = "The implementation includes the exact standard deviation and plan
 family = "Coincidence and frequency statistics"
 tags = ["coincidence", "frequency", "period detection", "monoalphabetic test"]
 related = ["coincidence-lag-profile", "estimator-standard-error", "shuffled-null-z-score", "within-coset-null", "chi-squared-fit", "exact-period-alignment", "key-cancellation", "running-key-relation-test", "vigenere", "g-coset", "coincidence-lab"]
-summary = "The index of coincidence (IC) is the chance that two randomly chosen letters from a text match. It is about 0.066 for English and 1/26 = 0.0385 for uniform random letters. A simple substitution or transposition does not change it. Whole-text IC is only the period-1 view: a periodic cipher can mix shifted coset histograms into an almost flat total while every coset remains language-shaped. Periodic IC and aligned union IC recover that hidden structure. Exact error bars and matched selection nulls keep these comparisons honest."
-updated = "2026-09-06"
+summary = "The index of coincidence (IC) is the chance that two randomly chosen letters from a text match. It is about 0.066 for English and 1/26 = 0.0385 for uniform random letters. A simple substitution or transposition does not change it. Whole-text IC is only the period-1 view: a periodic cipher can mix shifted coset histograms into an almost flat total while every coset remains language-shaped. Periodic IC and aligned union IC can expose that structure. Exact error bars and matched selection nulls keep these comparisons honest."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -49,7 +49,7 @@ kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
 - The reference values assume letters drawn independently from one distribution. Real prose has word repeats, so an English window of a few dozen letters scatters more than the formula says; simulated references on real text windows are used alongside the exact formula.
-- Invariance: IC is blind to order. A transposition of English keeps IC at the English level. A periodic substitution lowers the whole-text IC towards $0.038$ while leaving each coset at the plaintext level. A fractionating or mixed inner layer lowers the coset IC as well.
+- Invariance: IC is blind to order, so a transposition leaves the observed IC unchanged. Periodic substitution often moves the pooled IC toward $0.038$ while leaving each coset near the plaintext level. Fractionating or mixed inner layers often lower coset IC, but none of these directions is guaranteed for every finite text or key schedule.
 - Two different keys mixed inside one coset (a key change in the middle of a text) pull the coset IC below the monoalphabetic level even though every segment is monoalphabetic on its own.
 - Periodic IC is invariant under any bijective relabelling applied separately inside each coset. It detects peaked cosets, not the stronger claim that those cosets use rotations of one declared alphabet.
 '''
@@ -59,10 +59,10 @@ kind = "attack"
 title = "How to attack it"
 body = '''
 1. **Is it monoalphabetic?** Compare the whole-text IC with $0.066$ and $0.0385$, using the exact standard deviation at that length.
-2. **Period.** Scan the periodic IC over candidate periods. The true period (and its multiples) shows cosets at the plaintext level. The [lag profile](/statistics/coincidence-lag-profile) is the same signal read pairwise.
+2. **Period.** Scan the periodic IC over candidate periods. Under the periodic iid model, the true period and some multiples are expected to give cosets near the plaintext level. Finite samples, harmonics, and selected periods require a matched family-wise null. The [lag profile](/statistics/coincidence-lag-profile) reads related pairwise information.
 3. **Alignment.** Choose per-coset rotations that maximise the union IC; for period 7 all $26^6$ relative shift vectors can be enumerated exactly with a closed-form pairwise objective (see [Exact period alignment](/cryptanalysis/exact-period-alignment)). The maximised union IC is then compared with the same maximisation on position-shuffled texts, because a maximum over shift vectors is biased upwards.
 4. **Derived streams.** For every aligned sum or difference of two sources, treat raw IC as $m=1$ and repeat steps 2 and 3 at every declared residual period. Rerun source-pair, sign, alignment, order, period, and statistic selection inside the null.
-5. **Gate for transposition.** In a cascade solver a monogram histogram that is still English (IC $\ge 0.058$ together with a small [chi-squared misfit](/statistics/chi-squared-fit)) marks a pure transposition and diverts the text to order solvers.
+5. **Transposition branch.** In the recorded cascade, a histogram compatible with calibrated English monograms (IC $\ge0.058$ together with a small [chi-squared misfit](/statistics/chi-squared-fit)) routes the text to order solvers. This is a pipeline decision supported by its controls, not proof that a pure transposition is present.
 '''
 
 [[blocks]]

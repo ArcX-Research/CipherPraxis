@@ -8,7 +8,7 @@ family = "Null distributions and calibration"
 tags = ["standard error", "variance", "error bars", "U-statistic", "simulation"]
 related = ["index-of-coincidence", "shuffled-null-z-score", "power-analysis", "english-gate-calibration", "chi-squared-fit", "planted-controls", "g-z-score", "g-held-out"]
 summary = "A measurement needs a standard error to show how much it may vary by chance. This site uses three sources. Exact formulas work when available. Planted simulations encrypt real English with random keys under the tested cipher. Held-out calibration measures thousands of separate text windows at the target length. Comparing an observation with the right error range gives its z-score and helps separate a real pattern from normal variation."
-updated = "2026-09-04"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -29,9 +29,9 @@ where $\theta_0$ is the value predicted by the hypothesis under test. Three ways
 kind = "equations"
 title = "Means of cosets and proportions"
 body = '''
-- The mean of $m$ independent coset readings has standard error $\sigma/\sqrt{m}$: $0.0210/\sqrt{7} = 0.0079$.
-- A recovery rate $\hat\rho = k/N$ from planted trials has standard error $\sqrt{\hat\rho(1-\hat\rho)/N}$: for $1013/1024$, $0.9893 \pm 0.0032$; for $59/64$, $0.922$ with a 95% interval $[0.856, 0.988]$.
-- An empirical $p$ from $N$ nulls has resolution $1/(N+1)$ and, for a true $p$ near $0.5$, standard error $\approx 0.5/\sqrt{N}$: nine nulls resolve nothing finer than $0.1$.
+- The mean of $m$ independent, equal-variance coset readings has standard error $\sigma/\sqrt{m}$: $0.0210/\sqrt{7} = 0.0079$. With covariance, use $\operatorname{Var}(\bar X)=m^{-2}\sum_{i,j}\operatorname{Cov}(X_i,X_j)$.
+- A recovery rate $\hat\rho = k/N$ from independent planted trials has plug-in standard error $\sqrt{\hat\rho(1-\hat\rho)/N}$: for $1013/1024$, it is $0.0032$. Near zero or one, and for small $N$, report a binomial interval rather than relying on this approximation. For $59/64$, the Wald interval is about $[0.856,0.988]$; an exact interval is wider.
+- A plus-one Monte Carlo $p$ from $N$ exchangeable null replicates has resolution $1/(N+1)$. A binomial Monte Carlo error approximation may describe repeated independent sampling, but it is not a replacement for the valid rank calculation: nine nulls resolve nothing finer than $0.1$.
 '''
 
 [[blocks]]
@@ -47,7 +47,7 @@ kind = "attack"
 title = "Use in an attack pipeline"
 body = '''
 1. Print every measurement as value, expected value under the hypothesis, standard error and $z$.
-2. Treat $|z| < 2$ as "consistent", $2$–$3$ as "strained", and require $|z| \ge 3$ together with a matched null before calling anything a fact; with many readings, apply the [family-wise](/statistics/family-wise-null) correction.
+2. Use $z$ as a standardised diagnostic, not a universal decision scale. A matched null and a predeclared family-wise rule determine the decision; $|z|$ cutoffs alone do not.
 3. Use the error bar to size the next experiment: to turn a $1.5\sigma$ coset reading into a $3\sigma$ one at the same effect requires four times the letters.
 4. Prefer tests with smaller standard errors for the same question: the aligned union IC and the aligned digram IC were sharper than the mean coset IC for the monoalphabetic question.
 '''
@@ -78,11 +78,12 @@ function HELD_OUT_SD(STAT, windows_of_length_n):
 function Z(theta_hat, theta_0, sigma):
     return (theta_hat - theta_0) / sigma
 
-// Derived error bars. mean of m independent coset readings
+// Derived error bar for a mean of m independent, equal-variance readings.
 function SD_OF_MEAN(sigma, m):
     return sigma / sqrt(m)
 
-// recovery rate k/N from planted trials
+// Plug-in standard error for a recovery rate k/N. Also report a binomial
+// interval, especially near 0 or 1.
 function RATE_SE(k, N):
     rho = k / N
     return sqrt(rho * (1 - rho) / N)
@@ -102,7 +103,7 @@ kind = "failure_modes"
 body = '''
 - **Ignoring correlation.** The binomial guess $\sqrt{\kappa_2(1-\kappa_2)/P}$ is $0.016$ at $n = 22$. The exact value is $0.021$, 30% larger, because pairs sharing a position are positively correlated.
 - **Too few draws for a skewed maximum.** A change-point statistic reported at $z = +3.3$ rested on 60 null draws of a right-skewed maximum. The error bar of the error bar was not small.
-- **Ambiguity of the hypothesis.** An IC that matches one key geometry to $z = +0.38$ also matches 134 of 373 alternative geometries within one standard deviation. A small $z$ certifies consistency, not identification.
+- **Ambiguity of the hypothesis.** An IC that matches one key geometry to $z = +0.38$ also matches 134 of 373 alternative geometries within one standard deviation. A small $z$ indicates compatibility with the reference under its assumptions; it does not certify the model or identify one geometry.
 - **Over-reading small z.** "Cosets are not monoalphabetic" was a $-1.5\sigma$ reading (mean coset IC $0.0536$ against $0.0652$ with standard error $0.0079$); several search rounds branched on it as if it were a fact.
 '''
 

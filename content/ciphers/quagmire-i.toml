@@ -7,8 +7,8 @@ status_note = "The crib-based solver recovered 3/3 planted 153-letter Quagmire I
 family = "Polyalphabetic substitution"
 tags = ["periodic", "keyed alphabet", "polyalphabetic", "quagmire"]
 related = ["vigenere", "keyword-mixed-alphabet", "quagmire-ii", "quagmire-iii", "quagmire-iv", "crib-driven-alphabet-recovery", "phrase-keyed-alphabet-attack", "simulated-annealing", "quagmire-lab", "g-keyed-alphabet"]
-summary = "Quagmire I is a Vigenère cipher with a mixed plaintext alphabet and a straight ciphertext alphabet. Its Vigenère cosets remain, so the usual methods find the period. Each coset's letter counts are a shifted, rearranged language profile. A continuous crib of seven or more letters fixes the shifts. At 153 letters, a batched annealing search can then recover the remaining alphabet."
-updated = "2026-09-04"
+summary = "Quagmire I is a Vigenère cipher with a mixed plaintext alphabet and a straight ciphertext alphabet. Its periodic cosets remain, so standard period diagnostics apply. Each coset's expected letter profile is a shifted, relabelled language profile. A contiguous crib at least as long as the tested period fixes every shift conditional on a trial alphabet. In recorded 153-letter controls, batched annealing then recovered the remaining alphabet."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -86,7 +86,9 @@ function CRIB_ATTACK(c, crib, offset, m):
     P = a random alphabet
     repeat (batched annealing with swap and insertion moves):
         k = SHIFTS_FROM_CRIB(c, crib, offset, P, m)
-        propose P' and accept by the quadgram score of DECRYPT(c, P', k)
+        propose P'
+        k' = SHIFTS_FROM_CRIB(c, crib, offset, P', m)
+        accept the pair (P', k') by the quadgram score of DECRYPT(c, P', k')
     // a hit reads as English end to end
     return P, k
 ```

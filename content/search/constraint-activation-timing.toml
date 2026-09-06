@@ -7,8 +7,8 @@ status_note = "Three controlled searches exposed the timing failure directly. Ex
 family = "Search-stage diagnostics"
 tags = ["beam search", "constraint propagation", "proposal recall", "late pruning", "truth rank", "power measurement"]
 related = ["incremental-two-dial-feasibility", "proposal-bank-recall-audit", "beam-search", "word-prefix-csp", "constraint-satisfaction-forward-checking", "all-different-constraints", "power-measurement", "held-out-gates", "g-beam-width"]
-summary = "A mathematically exact constraint can still add no discovery power if it becomes selective only after an approximate proposal beam has removed the correct path. Measure truth rank and exact rejection rate at every prefix or layer. If truth disappears before the filter activates, raising the final exact-search budget does not repair the pipeline. Change the representation, preserve more early uncertainty, or add a second source that forces constrained variables sooner."
-updated = "2026-09-06"
+summary = "A mathematically exact constraint can add no recall to a capped proposal beam if it rejects nothing before the correct path is discarded. On planted controls, measure truth rank and exact status counts at every prefix or layer. If loss precedes activation, increasing only the later exact-search budget leaves the earlier decision unchanged. A repair must alter early representation, retention, variable order, or information flow and then pass fresh controls."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -25,7 +25,7 @@ $$t_{\rm act}=\min\left\{t:
 \frac{|\{x\in B_t:F(x)=\text{INFEASIBLE}\}|}{|B_t|}\ge\rho
 \right\},$$
 
-for a predeclared useful rejection fraction $\rho$. If $t_{\rm loss}<t_{\rm act}$, the exact filter activates too late for that proposal search. Its correctness is unchanged; its pipeline power is poor.
+for a predeclared useful rejection fraction $\rho$, considering only nonempty frontiers and taking $t_{\rm act}=\infty$ if the threshold is never reached. If $t_{\rm loss}<t_{\rm act}$, the filter activates too late to preserve the planted path in that run. Its logical correctness is unchanged; the complete pipeline has failed that control.
 '''
 
 [[blocks]]
@@ -38,9 +38,9 @@ $$r_t=\operatorname{rank}_{B_t}(x^*_t),$$
 
 $$s_t=1-\frac{|\{x\in B_t:F(x)\ne\text{INFEASIBLE}\}|}{|B_t|},$$
 
-and, for modular filters, the remaining factor nullities and exact assignment count. A useful handoff normally has rising selectivity before the truth rank reaches the beam width $W_t$:
+where $r_t=\infty$ when the truth is absent and $s_t$ is reported only for $|B_t|>0$. For modular filters, also record factor nullities and an exact or explicitly bounded assignment count. A useful handoff requires meaningful rejection before the truth rank exceeds beam width $W_t$; merely observing one rejection is not sufficient:
 
-$$s_t>0\quad\text{while}\quad r_t\le W_t.$$
+$$s_t\ge\rho\quad\text{for some }t\text{ with }r_t\le W_t.$$
 
 If $s_t=0$ until after $r_t>W_t$, then the combined solver is behaviorally identical to the proposal-only solver at the decision that matters. A near-perfect $s_t$ later cannot reinsert the deleted state.
 '''

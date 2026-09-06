@@ -8,7 +8,7 @@ family = "Digraphic fractionation ciphers"
 tags = ["digraph", "fractionation", "mixed alphabets", "period", "three coordinates"]
 related = ["trifid", "bifid", "polybius-square", "digraphic-slide", "two-square-four-square"]
 summary = "Digrafid maps each pair of plaintext letters to three digits using one horizontal and one vertical mixed tableau. Within a period, it writes all first coordinates, then all middle coordinates, then all last coordinates, and groups that stream into new triples. Each output digraph can therefore combine parts of several input digraphs."
-updated = "2026-09-05"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -77,6 +77,15 @@ function TRANSFORM_BLOCK(digraphs, horizontal, vertical):
         col_v = (z - 1) mod 3
         append horizontal[row_h, x - 1], vertical[y - 1, col_v] to out
     return out
+
+function INVERSE_BLOCK(cipher_digraphs, horizontal, vertical):
+    // Encoding the output digraphs reconstructs Gamma in consecutive triples.
+    gamma = CONCATENATE([ENCODE_DIGRAPH(d, horizontal, vertical)
+            for d in cipher_digraphs])
+    L = length(cipher_digraphs)
+    X = gamma[0..L-1]; Z = gamma[L..2L-1]; Y = gamma[2L..3L-1]
+    return [DECODE_DIGRAPH(X[i], Z[i], Y[i], horizontal, vertical)
+            for i in 0..L-1]
 ```
 '''
 

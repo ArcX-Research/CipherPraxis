@@ -3,28 +3,28 @@ section = "search"
 title = "Expectation-maximisation over latent letter classes"
 subtitle = "Alternate between likely letter classes and better shift estimates"
 status = "VERIFIED"
-status_note = "Class-EM refines outer shifts in the mixture solver. It corrected the one or two wrong cosets left by the first evidence fit in every planted control, reaching 7/7 after EM. Four planted layered ciphers solved from a cold start and ranked the true width first at z 6–13."
+status_note = "The recorded EM-like alternating refinement corrected the remaining wrong cosets in 7/7 planted cases, and the surrounding pipeline ranked the true width first on four cited controls. Centering, layout optimization, and hard class assignments break the standard soft-EM monotonicity proof, so this verifies control behavior rather than an EM convergence guarantee."
 family = "Deterministic heuristics"
 tags = ["EM", "latent class", "mixture", "posterior", "alternating maximisation"]
 related = ["mixture-inference-under-transposition", "order-free-width-statistic", "bayesian-evidence-model-selection", "exact-dynamic-programming", "coordinate-descent", "sandwich-construction", "vigenere", "columnar-transposition", "shuffled-null-z-score", "planted-controls"]
-summary = "Suppose a short-period substitution sits below a transposition and a period-7 outer key. Each ciphertext letter then came from one of k inner alphabets. Expectation-maximization alternates two steps. The E-step estimates the likely class of every position from the best column layout. The M-step updates each outer coset's shift from those class-weighted letters. Repeating these steps can correct the last one or two wrong cosets and complete the solve."
-updated = "2026-09-04"
+summary = "A latent-class mixture model can alternate between estimating class responsibilities and updating cipher parameters. Standard soft EM optimizes one observed-data likelihood and has a monotonicity guarantee under exact E- and M-steps. The recorded cryptanalytic routine additionally centers class scores, optimizes a column layout, hardens assignments, and keeps the best width statistic. It is therefore an EM-inspired alternating heuristic whose recovery must be measured on controls."
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
 body = '''
-Latent variable $z_i \in \{0, \dots, k-1\}$ = the inner alphabet that produced position $i$; parameters $\theta$ = the seven outer shifts $k_b$ (and the inner spacing $\delta$ carried from the evidence stage). With class-conditional letter distributions $E_z$ in the outer order:
+Let $z_i \in \{0, \dots, k-1\}$ denote a latent inner class and let the parameters include the outer shifts $k_b$. A standard mixture E-step computes posterior responsibilities from class-conditional distributions $E_z$. The project routine then performs additional layout and hard-assignment operations:
 
 ```
 initialise shifts from the evidence fit (shifts marginalised, not maximised)
 repeat up to 4 sweeps:
-    E-step: P(z_i | x_i, k) proportional to E_z(x_i - k_{b(i)})            # per position
-            lay the posteriors out at width w by the long/short column DP    # predicted class per position
-    M-step: for each coset b:  k_b <- argmax_s  sum_{i in coset b} log E_{z_i}((x_i - s) mod 26)
+    responsibilities: P(z_i | x_i, k) proportional to E_z(x_i - k_{b(i)})
+    center class scores and choose a long/short-column layout and hard class z_i
+    shift update: for each coset b, maximize the hard-class monogram score
     stop if no shift changed; keep the shifts with the best width statistic
 ```
 
-The hard-EM variant used by the class solver (alternating exact monogram maximisation of the 7 outer and $k$ inner shifts, four sweeps) replaces posteriors by the current best assignment.
+Alternating exact monogram updates of outer and inner shifts are likewise block-coordinate heuristics unless they are shown to optimize one common objective at every step. Both procedures keep their best observed endpoint because their transformations do not inherit the standard EM theorem automatically.
 '''
 
 [[blocks]]
@@ -38,15 +38,15 @@ M-step for coset $b$ given predicted classes $z_i$:
 
 $$k_b \leftarrow \arg\max_{s \in \mathbb{Z}_{26}} \sum_{i \in \text{coset } b} \log E_{z_i}\big((x_i - s) \bmod 26\big).$$
 
-Both steps are monotone in the complete-data likelihood, so EM converges to a stationary point. It is not global.
+For standard soft EM, an exact M-step increases or preserves the auxiliary expectation and therefore does not decrease the observed-data likelihood under regular conditions. That result does not apply automatically to centered scores, a separately optimized layout, hard assignments, sweep caps, or selection by another width statistic. The recorded routine reports a heuristic endpoint rather than a likelihood-stationarity certificate.
 '''
 
 [[blocks]]
 kind = "assumptions"
 title = "Assumptions and invariants"
 body = '''
-- The multiset of inner letters is invariant under the transposition, so the class-conditional distributions are rotations of the language distribution and can be estimated before the column order is known.
-- Posteriors are centred per class before the width statistic: a period-$k$ inner puts exactly $n/k$ letters in each class, so the degenerate assignment "everything is class 0" must score zero rather than maximise every even width.
+- A transposition preserves the global letter multiset, but class-specific membership depends on the construction and candidate layout. The rotated class distributions require the stated periodic-inner model; they are not invariant under an arbitrary reassignment of positions to classes.
+- The width statistic centers scores by class to suppress an all-in-one-class degeneracy. A period-$k$ schedule gives class counts differing by at most one when the text length is not divisible by $k$, not necessarily exactly $n/k$ each.
 - The shifts entering EM come from an evidence (marginalised) fit; profiling the seven shifts instead buys about $0.15$ nats per letter of selection freedom at 153 letters, enough to make wrong models win.
 '''
 
@@ -107,7 +107,7 @@ One EM sweep costs one DP layout per width plus $7 \times 26$ coset-shift evalua
 kind = "failure_modes"
 body = '''
 - **Degeneracy.** Without per-class centring the all-in-one-class configuration maximises even widths. The fix is structural, not a tuning.
-- **Local optima.** EM from a fit with more than two wrong cosets can converge to a wrong stationary point. The recorded controls needed at most two corrections.
+- **Local and nonmonotone endpoints.** The alternating routine can return a wrong fixed point or a best-so-far state; the recorded controls happened to require at most two coset corrections. That observation is not a threshold theorem.
 - **Flat inner texts.** If the inner layer is not a short-period substitution of natural language (fractionation, a second transposition-substitution layer, random letters) the classes are uninformative and EM has nothing to sharpen. The negative signatures of a Bifid, a plain periodic layer and a double columnar are printed alongside the controls for that reason.
 - **Selection freedom.** Maximising rather than marginalising the shifts in the first stage overfits by about $0.15$ nats per letter and picks wrong models on shuffled nulls.
 '''
@@ -126,7 +126,7 @@ Two classes over a three-letter alphabet with $E_0 = (0.6, 0.3, 0.1)$ and $E_1 =
 
 E-step: $P(z{=}0 \mid A) = 0.6/(0.6 + 0.1) = 0.857$; $P(z{=}0 \mid C) = 0.1/0.7 = 0.143$; $P(z{=}0 \mid B) = 0.3/0.6 = 0.5$. Posteriors for class 0: $(0.857, 0.143, 0.857, 0.5)$.
 
-M-step for the prior: $\pi_0 = (0.857 + 0.143 + 0.857 + 0.5)/4 = 0.589$. A shift M-step would instead score each of the 26 candidate rotations of $E_{z_i}$ against the coset's letters and keep the best. One more E-step with the new prior moves the A posterior to $0.589 \cdot 0.6 / (0.589 \cdot 0.6 + 0.411 \cdot 0.1) = 0.896$ and the C posterior to $0.589 \cdot 0.1 / (0.589 \cdot 0.1 + 0.411 \cdot 0.6) = 0.193$. The complete-data likelihood rises at every step, which is the monotonicity that makes EM converge.
+M-step for the prior: $\pi_0 = (0.857 + 0.143 + 0.857 + 0.5)/4 = 0.589$. A shift M-step in a standard soft mixture would weight every candidate rotation by the responsibilities; the recorded hard variant instead uses selected classes. One more E-step with the new prior moves the A posterior to $0.896$ and the C posterior to $0.193$. Standard soft EM guarantees a nondecreasing observed-data likelihood when its exact assumptions hold. The extra centering, layout, and hardening operations above require separate empirical checks.
 '''
 
 [[provenance]]

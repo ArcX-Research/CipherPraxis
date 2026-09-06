@@ -7,8 +7,8 @@ status_note = "The lab matches Delastelle's published example: FLEEATONCE → UA
 family = "Fractionation labs"
 tags = ["bifid", "fractionation", "polybius"]
 related = ["bifid", "trifid", "polybius-square", "family-identification"]
-summary = "Bifid finds each letter's row and column in a 5×5 square. Within each block, it writes all row numbers, then all column numbers, and pairs the digits into new letters. One ciphertext letter can contain parts of two plaintext letters up to a period apart. This flattens single-letter patterns, so attacks usually find the period first."
-updated = "2026-09-04"
+summary = "Bifid finds each letter's row and column in a 5×5 square. Within each block, it writes all row numbers, then all column numbers, and pairs the digits into new letters. One ciphertext letter can contain coordinates from two plaintext letters within the same block. Fractionation often weakens single-letter frequency signals, but its effect and the usefulness of period recovery depend on the text, square, and block length."
+updated = "2026-09-07"
 lab = "bifid"
 
 [[blocks]]
@@ -48,6 +48,6 @@ kind = "notes"
 title = "What to try"
 body = '''
 - Set the period to 0 to use one block for all the text. Then set it to 1. At period 1, each letter keeps its own coordinates, so the cipher makes no useful change.
-- Change one plaintext letter and watch two ciphertext letters change. An attack can use this fractionation pattern.
-- Compare the ciphertext and plaintext letter counts in the [coincidence lab](/labs/coincidence-lab). The ciphertext's index of coincidence moves toward the uniform value.
+- Change one plaintext letter and inspect which ciphertext letters change. Within a block, its two coordinates can feed different output letters; boundary cases may place both in one output letter.
+- Compare the ciphertext and plaintext letter counts in the [coincidence lab](/labs/coincidence-lab). Bifid often moves the index of coincidence toward the uniform reference on natural-language examples, but this is an empirical tendency rather than an invariant.
 '''

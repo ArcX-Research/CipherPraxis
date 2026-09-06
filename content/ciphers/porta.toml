@@ -8,7 +8,7 @@ family = "Polyalphabetic substitution"
 tags = ["periodic", "reciprocal", "polyalphabetic", "half-alphabet"]
 related = ["beaufort", "vigenere", "autokey", "digraphic-slide", "sympathetic-alphabet-dial", "periodic-substitution-dp", "exact-dynamic-programming", "reflection-product-cycle-lift", "g-reciprocal-cipher", "g-period"]
 summary = "Porta splits the alphabet into two groups of 13. Each key-letter pair, such as AB or CD, chooses one rotation that swaps the two halves. There are 13 distinct tables. The same operation decrypts, and a letter never maps within its own half. An exact cyclic dynamic program solved one free Z13 key value per coset. Separate tests covered word keys and plaintext autokey."
-updated = "2026-09-06"
+updated = "2026-09-07"
 
 [[blocks]]
 kind = "definition"
@@ -24,7 +24,7 @@ The same formula decrypts: the map is an involution, and a letter of the top hal
 kind = "equations"
 title = "Key classes and invariants"
 body = '''
-Key letters in the same pair (A/B, C/D, ...) select the same table, so the observable key is the vector $(t_0, \dots, t_{m-1}) \in \mathbb{Z}_{13}^m$ rather than a word. A sign-reversed tableau ($t \mapsto -t$) is absorbed into the free-key family, so it is not a separate trial. Because a letter never encrypts within its own half, a plaintext letter and its ciphertext differ in half at every position: $\lfloor x/13 \rfloor \ne \lfloor \operatorname{pos}_A(c_i)/13 \rfloor$. In a word-keyed Porta an ordinary word can produce only two or three distinct tables, which gives a period-7 text an unusually small number of substitution classes.
+Key letters in the same pair (A/B, C/D, ...) select the same table, so the observable key is the vector $(t_0,\dots,t_{m-1})\in\mathbb{Z}_{13}^m$ rather than a literal word. A sign-reversed tableau ($t\mapsto-t$) is absorbed into the free-key family, so it is not a separate trial. Because a letter never encrypts within its own half, a plaintext letter and its ciphertext differ in half at every position: $\lfloor x/13\rfloor\ne\lfloor\operatorname{pos}_A(c_i)/13\rfloor$. A word key may repeat pair classes and therefore use fewer than $m$ distinct tables, but it can use as many as $\min(m,13)$; there is no universal two- or three-table limit.
 
 Write a symbol as $(a,h) \in \mathbb{Z}_{13} \times \{0,1\}$, where $h$ selects the half. Table $t$ acts as
 
@@ -99,7 +99,7 @@ function SHORTLIST(c[0..n-1], m, A):
 [[blocks]]
 kind = "complexity"
 body = '''
-Free key: $13^m$ raw keys ($13^7 \approx 6.3 \times 10^7$, $13^{26} \approx 9 \times 10^{28}$). The DP makes the shortlisted product exact at $8^3$ states per step. Word keys: every seven-letter dictionary word times seven phases, batched, in one to two minutes.
+Free key: $13^m$ raw keys ($13^7\approx6.3\times10^7$, $13^{26}\approx9\times10^{28}$). Over an eight-way per-coset shortlist, the order-three cyclic DP is exact and uses $O(8^3)$ states with $O(m\,8^4)$ transitions; later unrestricted polish is heuristic. Word keys: every seven-letter dictionary word times seven phases, batched, in one to two minutes.
 '''
 
 [[blocks]]

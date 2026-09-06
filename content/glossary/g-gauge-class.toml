@@ -6,5 +6,5 @@ status_note = "Term used throughout the program's audits."
 family = "Cipher structure"
 tags = ["equivalence", "identifiability"]
 related = ["conjugacy-and-gauge", "quagmire-iv", "alberti-progressive", "condi", "trifid", "gauge-defect-invalidation"]
-summary = "A gauge is a way to change a key without changing any plaintext-ciphertext pair. Examples include rotating a Quagmire alphabet while adjusting its shifts, relabelling a Trifid cube's coordinates, or rotating and reflecting an Alberti disc. These keys look different but act the same. A control must treat them as equal under the gauge. Requiring the raw keys to match would reject correct answers."
-updated = "2026-09-04"
+summary = "A gauge class is an equivalence class of parameter values that induce the same observables under a specified model. Examples can include rotating a Quagmire alphabet while compensating its shifts, relabelling a coordinate square or cube with corresponding parameter changes, or applying proved disc symmetries. These transformations are not automatic for every variant. Recovery controls should compare the induced transform or a model-specific canonical representative, rather than require one arbitrary raw parameterization."
+updated = "2026-09-07"
