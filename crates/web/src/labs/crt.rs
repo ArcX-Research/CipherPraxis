@@ -54,10 +54,13 @@ pub fn CrtLab() -> impl IntoView {
             }}
             <div class="lab-viz">
                 <div class="lab-viz-head mono">"Modular inverse"</div>
-                <div class="lab-row">
+                <div class="lab-fields lab-fields-3">
                     <TextField label="a" value=inv_a mono=true/>
                     <TextField label="m" value=inv_m mono=true/>
-                    <div class="stat"><div class="stat-label mono">"a⁻¹ mod m"</div><div class="stat-value mono">{move || match (inv_a.get().trim().parse::<i64>(), inv_m.get().trim().parse::<i64>()) { (Ok(a), Ok(m)) => mod_inverse(a, m).map(|i| i.to_string()).unwrap_or_else(|| "none (a and m are not coprime)".into()), _ => "—".into() }}</div></div>
+                    <div class="field">
+                        <span class="field-label" id="crt-inverse-label">"a⁻¹ mod m"</span>
+                        <output class="field-input field-output mono" aria-labelledby="crt-inverse-label">{move || match (inv_a.get().trim().parse::<i64>(), inv_m.get().trim().parse::<i64>()) { (Ok(a), Ok(m)) => mod_inverse(a, m).map(|i| i.to_string()).unwrap_or_else(|| "No inverse".into()), _ => "—".into() }}</output>
+                    </div>
                 </div>
             </div>
             <Note>"The Chinese remainder theorem combines residues for pairwise coprime moduli into one residue. If the moduli share factors, the congruences may have no common solution. In cryptanalysis, this can combine partial key results modulo small primes. The same idea explains why mixed periods join at their least common multiple."</Note>

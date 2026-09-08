@@ -27,9 +27,12 @@ pub fn ColumnarLab() -> impl IntoView {
         <div class="lab">
             <div class="lab-controls">
                 <TextField label="Plaintext" value=plain multiline=true/>
-                <div class="lab-row">
+                <div class="lab-fields">
                     <TextField label="Keyword" value=key mono=true/>
-                    <label class="filter-toggle field"><input type="checkbox" prop:checked=move || padded.get() on:change=move |ev| padded.set(event_target_checked(&ev))/><span>"Fill the last row with padding"</span></label>
+                    <div class="field">
+                        <span class="field-label">"Padding"</span>
+                        <label class="field-toggle filter-toggle"><input type="checkbox" prop:checked=move || padded.get() on:change=move |ev| padded.set(event_target_checked(&ev))/><span>"Fill the last row with padding"</span></label>
+                    </div>
                 </div>
             </div>
             <ErrorNote message=err/>

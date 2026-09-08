@@ -41,7 +41,7 @@ pub fn VigenereLab() -> impl IntoView {
         <div class="lab">
             <div class="lab-controls">
                 <TextField label="Plaintext" value=plain multiline=true/>
-                <div class="lab-row">
+                <div class="lab-fields">
                     <TextField label="Key" value=key mono=true hint="Use letters only. The key repeats."/>
                     <div class="field">
                         <label class="field-label" for="variant">"Rule"</label>

@@ -166,7 +166,9 @@ Derived from the Dilate visual language, with restrained scientific reading surf
   activity marker. The affine lab pairs encryption with recovered plaintext, shows the first
   letter's arithmetic and offers accessible multiplier buttons with their modular inverses.
   Lab container queries keep inputs, output comparisons and the key selector readable at
-  the article column's actual width.
+  the article column's actual width. Shared field grids align labels, controls and helper
+  text on separate tracks; result cards share label and value tracks as well. Three-field
+  rows stack together on narrow screens, and four-result comparisons become two columns.
 
 ## 6. Layout of this directory
 

@@ -24,13 +24,17 @@ pub fn DihedralLab() -> impl IntoView {
     view! {
         <div class="lab">
             <div class="lab-controls">
-                <div class="lab-row">
-                    <NumberField label="n (positions on the ring)" value=n min=3 max=60/>
-                    <div class="field"><span class="field-label">"a"</span><div class="lab-row tight"><label class="filter-toggle"><input type="checkbox" prop:checked=move || a_ref.get() on:change=move |ev| a_ref.set(event_target_checked(&ev))/><span>"Use reflection"</span></label><NumberField label="k" value=a_k min=0 max=59/></div></div>
-                    <div class="field"><span class="field-label">"b"</span><div class="lab-row tight"><label class="filter-toggle"><input type="checkbox" prop:checked=move || b_ref.get() on:change=move |ev| b_ref.set(event_target_checked(&ev))/><span>"Use reflection"</span></label><NumberField label="k" value=b_k min=0 max=59/></div></div>
+                <div class="lab-fields lab-fields-3">
+                    <NumberField label="Ring positions · n" value=n min=3 max=60/>
+                    <NumberField label="Shift k for a" value=a_k min=0 max=59>
+                        <label class="filter-toggle"><input type="checkbox" prop:checked=move || a_ref.get() on:change=move |ev| a_ref.set(event_target_checked(&ev))/><span>"Reflect a"</span></label>
+                    </NumberField>
+                    <NumberField label="Shift k for b" value=b_k min=0 max=59>
+                        <label class="filter-toggle"><input type="checkbox" prop:checked=move || b_ref.get() on:change=move |ev| b_ref.set(event_target_checked(&ev))/><span>"Reflect b"</span></label>
+                    </NumberField>
                 </div>
             </div>
-            <div class="stat-row">
+            <div class="stat-row stat-row-4">
                 {[("a", a), ("b", b), ("a ∘ b", ab), ("b ∘ a", ba)].into_iter().map(|(label, e)| view! {
                     <div class="stat">
                         <div class="stat-label mono">{label}</div>

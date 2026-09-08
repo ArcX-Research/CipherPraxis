@@ -33,13 +33,13 @@ pub fn NullLab() -> impl IntoView {
         <div class="lab">
             <div class="lab-controls">
                 <TextField label="Ciphertext" value=text multiline=true mono=true/>
-                <div class="lab-row">
+                <div class="lab-fields lab-fields-3">
                     <NumberField label="Period m to test" value=period min=1 max=40/>
                     <NumberField label="Number of shuffles" value=trials min=10 max=5000/>
                     <NumberField label="Seed" value=seed min=0 max=1000000/>
                 </div>
             </div>
-            <div class="stat-row">
+            <div class="stat-row stat-row-4">
                 <div class="stat"><div class="stat-label mono">"observed mean coset IC"</div><div class="stat-value mono">{move || format!("{:.4}", summary.get().observed)}</div></div>
                 <div class="stat"><div class="stat-label mono">"null mean ± standard deviation"</div><div class="stat-value mono">{move || format!("{:.4} ± {:.4}", summary.get().mean, summary.get().sd)}</div></div>
                 <div class="stat"><div class="stat-label mono">"z"</div><div class="stat-value mono" class:hot=move || { summary.get().z > 3.0 }>{move || format!("{:+.2}", summary.get().z)}</div></div>

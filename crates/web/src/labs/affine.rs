@@ -43,12 +43,10 @@ pub fn AffineLab() -> impl IntoView {
                     b.set(8);
                 }>"Reset example"</button>
             </div>
-            <div class="affine-setup">
+            <div class="lab-fields affine-setup">
                 <TextField label="Plaintext" value=plain hint="Uses A–Z; spaces and punctuation are omitted."/>
-                <div class="affine-key-fields">
-                    <NumberField label="Multiplier · a" value=a min=0 max=25/>
-                    <NumberField label="Shift · b" value=b min=0 max=25/>
-                </div>
+                <NumberField label="Multiplier · a" value=a min=0 max=25/>
+                <NumberField label="Shift · b" value=b min=0 max=25/>
             </div>
             <ErrorNote message=err/>
             <div class="affine-results">

@@ -23,7 +23,7 @@ pub fn CoincidenceLab() -> impl IntoView {
             <div class="lab-controls">
                 <TextField label="Ciphertext" value=text multiline=true mono=true hint="Paste any text. The lab ignores non-letters."/>
             </div>
-            <div class="stat-row">
+            <div class="stat-row stat-row-4">
                 <div class="stat"><div class="stat-label mono">"letters"</div><div class="stat-value mono">{move || n.get()}</div></div>
                 <div class="stat"><div class="stat-label mono">"IC (whole text)"</div><div class="stat-value mono">{move || format!("{:.4}", ic.get())}</div></div>
                 <div class="stat"><div class="stat-label mono">"English reference"</div><div class="stat-value mono">{format!("{:.4} ± {:.4}", english_ic(), 0.0)}</div><div class="stat-sub mono">{move || format!("standard deviation at n={}: {:.4}", n.get(), ic_std_dev(&ENGLISH, n.get()))}</div></div>

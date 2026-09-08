@@ -33,6 +33,7 @@ pub fn NumberField(
     value: RwSignal<i64>,
     #[prop(default = 0)] min: i64,
     #[prop(default = 1000)] max: i64,
+    #[prop(optional)] children: Option<Children>,
 ) -> impl IntoView {
     let id = format!("n-{}", label.to_lowercase().replace(' ', "-"));
     let id2 = id.clone();
@@ -40,6 +41,7 @@ pub fn NumberField(
         <div class="field field-num">
             <label class="field-label" for=id>{label}</label>
             <input id=id2 class="field-input mono" type="number" min=min max=max prop:value=move || value.get().to_string() on:input=move |ev| { if let Ok(v) = event_target_value(&ev).parse::<i64>() { value.set(v.clamp(min, max)); } }/>
+            {children.map(|children| view! { <div class="field-extra">{children()}</div> })}
         </div>
     }
 }

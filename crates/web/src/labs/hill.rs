@@ -37,7 +37,7 @@ pub fn HillLab() -> impl IntoView {
         <div class="lab">
             <div class="lab-controls">
                 <TextField label="Plaintext" value=plain/>
-                <div class="lab-row">
+                <div class="lab-fields">
                     <div class="field">
                         <label class="field-label" for="hsize">"Block size"</label>
                         <select id="hsize" class="field-input" on:change=move |ev| { let n = event_target_value(&ev).parse().unwrap_or(2); size.set(n); cells.set(if n == 2 { "3 3 2 5".into() } else { "6 24 1 13 16 10 20 17 15".into() }); }>

@@ -31,7 +31,7 @@ pub fn QuagmireLab() -> impl IntoView {
     view! {
         <div class="lab">
             <div class="lab-controls">
-                <div class="lab-row">
+                <div class="lab-fields lab-fields-3">
                     <div class="field">
                         <label class="field-label" for="qkind">"Type"</label>
                         <select id="qkind" class="field-input" on:change=move |ev| kind.set(QuagmireKind::from_slug(&event_target_value(&ev)).unwrap_or(QuagmireKind::III))>
@@ -41,7 +41,7 @@ pub fn QuagmireLab() -> impl IntoView {
                     <TextField label="Key" value=key mono=true/>
                     <TextField label="Indicator" value=indicator mono=true hint="Use one letter"/>
                 </div>
-                <div class="lab-row">
+                <div class="lab-fields">
                     <TextField label="Plaintext keyword" value=plain_kw mono=true hint="Used by types I, III, and IV"/>
                     <TextField label="Ciphertext keyword" value=cipher_kw mono=true hint="Used by types II and IV"/>
                 </div>

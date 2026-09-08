@@ -17,7 +17,7 @@ pub fn BifidLab() -> impl IntoView {
         <div class="lab">
             <div class="lab-controls">
                 <TextField label="Plaintext" value=plain multiline=true/>
-                <div class="lab-row">
+                <div class="lab-fields">
                     <TextField label="Square keyword" value=kw mono=true hint="J is treated as I"/>
                     <NumberField label="Period (use 0 for all text)" value=period min=0 max=100/>
                 </div>
