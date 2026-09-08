@@ -146,6 +146,12 @@ Derived from the Dilate visual language, with restrained scientific reading surf
 - Motifs: hairline grids, faint dotted fields, concentric geometry and subtle blue/teal washes.
   Equations and pseudocode use quiet, high-contrast reading panels. Amber marks limited power;
   status text always accompanies color. No dark mode.
+- Category indexes use aligned entry rows and a 300 px right sidebar for search, family,
+  topic, grouping, and evidence status. All eleven categories share the filter logic;
+  Glossary retains its definitions and letter index, and References retains bibliographies.
+  Topics are counted once per entry, grouped without regard to case, and alphabetized.
+  Full search uses the same row layout and tools rail. Below 920 px of available workspace,
+  the rail becomes an expandable panel between the heading and results.
 
 ## 6. Layout of this directory
 
