@@ -1,0 +1,81 @@
+id = "morbit-and-pollux"
+section = "ciphers"
+title = "Morbit and Pollux"
+status = "VERIFIED"
+status_note = "The constructions follow the published cipher specifications. Morse-domain scoring is a heuristic search instrument and must be followed by exact parsing and forward consistency."
+family = "Fractionation"
+tags = ["Morse", "Morbit", "Pollux", "ternary", "homophonic substitution"]
+related = ["fractionated-morse", "homophonic-substitution", "incremental-language-score"]
+summary = "Two Morse-based ciphers with different substitution constraints: Morbit substitutes pairs of ternary symbols, while Pollux uses homophones for individual dots, dashes and separators."
+updated = "2026-09-08"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Encode text as Morse symbols using a dot, a dash and a separator. One separator marks a letter boundary and two mark a word boundary. Morbit groups this stream into pairs and substitutes the nine possible pairs through a permutation to nine output symbols. Pollux maps output symbols into three nonempty classes; encryption chooses a homophone from the appropriate class for each individual Morse symbol.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+Fix the permitted Morse character set and edge-padding convention. Morbit pairs may cross Morse-letter boundaries. Pollux is generally many-to-one in decryption; its key is a class assignment, not a permutation of nine pairs. Larger output alphabets or longer ternary groups define extensions and should be labeled separately.
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+Precompute a language model on correctly encoded Morse text. Rank key swaps for Morbit, or symbol-class moves for Pollux, using that model. Sparse n-gram dependency lists permit exact score deltas. Parsing legality remains a hard constraint: a fluent-looking decoded fragment cannot repair an illegal separator run or a non-Morse codeword.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function DECODE_MORSE_SUBSTITUTION(cipher, key, family, boundary_policy):
+    if family == MORBIT:
+        require key is a bijection between output symbols and all nine pairs
+        stream = CONCATENATE_PAIR_IMAGES(cipher, key)
+    else if family == POLLUX:
+        require every output symbol has exactly one dot, dash or separator image
+        require all three image classes are nonempty
+        stream = CONCATENATE_SINGLE_SYMBOL_IMAGES(cipher, key)
+    else: reject unsupported family
+    parses = EXACT_MORSE_PARSE(stream, boundary_policy)
+    if no legal parse: return INFEASIBLE_FOR_KEY
+    for plain, padding_witness in parses:
+        require ENCODE_MORSE(plain, padding_witness) == stream
+        require every cipher symbol agrees with its declared key image
+    return parses with all key and boundary witnesses
+```
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+Homophonic extensions must not inherit a permutation constraint from Fractionated Morse. A key search may omit valid class sizes if it fixes their counts. A search trained only on letters must not claim to cover digits and punctuation. Search-selected scores require a matched complete-selector null.
+'''
+
+[[provenance]]
+path = "archive-b/frac_morse_hom.cpp"
+kind = "solver"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[provenance]]
+path = "archive-b/frac_pollux.cpp"
+kind = "solver"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[provenance]]
+path = "archive-b/frac_morbit_synthetic.py"
+kind = "script"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[references]]
+title = "Morbit"
+url = "https://www.cryptogram.org/downloads/aca.info/ciphers/Morbit.pdf"
+author = "American Cryptogram Association"
+
+[[references]]
+title = "Pollux"
+url = "https://www.cryptogram.org/downloads/aca.info/ciphers/Pollux.pdf"
+author = "American Cryptogram Association"

@@ -6,9 +6,9 @@ status = "CLOSED"
 status_note = "Tests reduced each turning schedule to one substitution problem. Hidden controls passed 6/6 for constant advance, 30/30 for unit acceleration, and 4/4 for constant acceleration. On the 504-letter text, constant advance stayed ambiguous at a random-like score and all 1,352 constant-acceleration schedules gave non-English text. Irregular, key-driven, and piecewise turns were not tested."
 family = "Stream and machine ciphers"
 tags = ["disc", "progressive key", "polyalphabetic", "schedule", "monoalphabetic reduction"]
-related = ["vigenere", "keyword-mixed-alphabet", "chaocipher", "conjugacy-and-gauge", "permutation-cycles", "simulated-annealing", "shuffled-null-z-score", "g-progressive-key", "g-gauge-class"]
+related = ["vigenere", "keyword-mixed-alphabet", "chaocipher", "conjugacy-and-gauge", "permutation-cycles", "simulated-annealing", "shuffled-null-z-score", "g-progressive-key", "g-gauge-class", "progressive-polyalphabetic-key"]
 summary = "An Alberti cipher places plaintext and ciphertext alphabets on two discs. The inner disc turns according to a schedule as the message continues. If that schedule is known for each position, subtracting it from the ciphertext leaves one fixed substitution. The recorded search enumerated every schedule in its stated constant-advance and constant-acceleration ranges; fitting the otherwise arbitrary inner alphabet remained a validated heuristic."
-updated = "2026-09-07"
+updated = "2026-09-08"
 
 [[blocks]]
 kind = "definition"

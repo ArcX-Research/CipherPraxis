@@ -22,7 +22,7 @@ make serve                  # serve ./dist without rebuilding
 make dev PORT=9000          # use a custom development port
 make check                  # format, lint, test, content and wasm checks
 make content                # content lint only
-make provenance             # check cited paths against ../Cryptanalysis
+make provenance             # check cited paths across the research archives
 ```
 
 The server starts at `http://127.0.0.1:8787/`. If that port is occupied, it reports the conflict
@@ -68,6 +68,24 @@ the stated statistical argument supports that conclusion.
 The Evidence panel links each claim to its recorded source. Checking that a cited file exists
 does not verify its contents or repeat the experiment. Historical measurements remain evidence
 from their recorded conditions unless an independent replay is documented.
+
+Public articles lead with cryptography and literature. Supporting research records are available
+in a separate disclosure. The [research review](content/RESEARCH_REVIEW_2026-09-08.md) records the
+latest additions, merges and limits of the source audit. Extend the existing canonical article
+when a source adds a variant, optimization or correction to an already documented method.
+
+Provenance paths without an alias resolve under `../Cryptanalysis`; `CipherPraxis/` resolves in
+this repository. The `archive-a/` and `archive-b/` aliases identify the two additional local
+research collections. To use different checkout locations, run:
+
+```bash
+python3 scripts/check_provenance.py --corpus /path/to/Cryptanalysis \
+  --archive-a /path/to/first-archive --archive-b /path/to/second-archive
+```
+
+`make test` includes finite, synthetic comparisons of the added algebra and scoring algorithms
+against independent exhaustive calculations. These checks establish the tested identities and
+implementation behavior, not general cryptanalytic recovery power.
 
 ## Evidence requests
 

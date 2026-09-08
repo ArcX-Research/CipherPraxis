@@ -6,9 +6,9 @@ status = "VERIFIED"
 status_note = "Given the true partial map, the one-cycle test and 720-way completion recovered 64/64 planted cycles, with 63/64 ranked first. The earlier language beam kept that true map in only 32/64 cases. The full attack is therefore power-limited, and its one live run was inconclusive."
 family = "Group theory"
 tags = ["permutation", "cycle type", "conjugacy", "completion", "involution"]
-related = ["conjugacy-and-gauge", "group-actions-on-alphabets", "dihedral-group", "all-different-constraints", "units-mod-26", "keyword-mixed-alphabet", "quagmire-iii", "beaufort", "shared-cycle-attack", "beam-search", "power-measurement", "g-cycle-type", "g-conjugate-permutation"]
+related = ["conjugacy-and-gauge", "group-actions-on-alphabets", "dihedral-group", "all-different-constraints", "units-mod-26", "keyword-mixed-alphabet", "quagmire-iii", "beaufort", "shared-cycle-attack", "beam-search", "power-measurement", "g-cycle-type", "g-conjugate-permutation", "rotor-machines"]
 summary = "Every alphabet permutation splits into separate cycles. Relabelling a permutation does not change its cycle lengths. A keyed additive alphabet with a unit shift is a relabelled rotation, so it forms one 26-cycle. Beaufort-like classes are reflections whose paired products are rotations. These facts turn alphabet recovery into a small completion problem: a partial map must not close a short cycle, and its remaining paths can be joined in a limited number of ways."
-updated = "2026-09-04"
+updated = "2026-09-08"
 
 [[blocks]]
 kind = "definition"

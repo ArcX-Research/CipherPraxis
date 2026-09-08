@@ -1,0 +1,86 @@
+id = "linear-feedback-hill"
+section = "ciphers"
+title = "Linear feedback around a Hill transformation"
+status = "VERIFIED"
+status_note = "The reductions are exact algebraic identities for the specified linear models. They are classical analysis models and do not inherit the security properties of modern block-cipher modes."
+family = "Composite constructions"
+tags = ["Hill cipher", "linear feedback", "cancellation", "Cayley-Hamilton", "recurrence"]
+related = ["hill-cipher", "linear-recurrences-lcg", "key-cancellation"]
+summary = "Linear block feedback can often be canceled before solving a Hill cipher. The placement of the feedback term determines which sequence must be transformed."
+updated = "2026-09-08"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $P_t,C_t$ be dimension-$d$ blocks and $H$ invertible modulo 26. Three different constructions are
+$$C_t=HP_t+\gamma C_{t-\ell},\qquad C_t=H(P_t+\gamma C_{t-\ell}),\qquad C_t=H(P_t+\gamma P_{t-\ell}).$$
+Their initial blocks or initialization values are part of the keying convention. Addition here is coordinate addition modulo 26, not binary XOR. Modern CBC and OFB specifications describe other operations and require an appropriate block cipher.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+For a linear output-feedback stream $s_{t+1}=Hs_t$, Cayley–Hamilton implies a scalar recurrence of order at most $d$ for every coordinate of $s_t$. A recurrence-first screen can therefore search coefficients and seeds before reconstructing $H$. A shared recurrence is necessary but does not establish the existence of one valid invertible matrix; reconstruction and replay remain mandatory.
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+For the first construction, transform the observed stream to $Y_t=C_t-\gamma C_{t-\ell}=HP_t$ and use an ordinary Hill solver. For the second, use $P_t=H^{-1}C_t-\gamma C_{t-\ell}$. For the third, first obtain $U_t=H^{-1}C_t$ and recover plaintext recursively as $P_t=U_t-\gamma P_{t-\ell}$. The first construction loses the first $\ell$ transformed blocks unless their predecessor values are known.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function DECRYPT_LINEAR_FEEDBACK(cipher, H, gamma, lag, placement, initials):
+    require H invertible modulo 2 and modulo 13
+    inverse = CRT_MATRIX_INVERSE(H)
+    plain = []
+    for block t in increasing order:
+        if placement == OUTSIDE_CIPHER_FEEDBACK:
+            prior = CIPHER_PREDECESSOR(cipher, initials, t, lag)
+            plain[t] = inverse * (cipher[t] - gamma * prior) mod 26
+        else if placement == INSIDE_CIPHER_FEEDBACK:
+            prior = CIPHER_PREDECESSOR(cipher, initials, t, lag)
+            plain[t] = inverse * cipher[t] - gamma * prior mod 26
+        else if placement == PLAINTEXT_FEEDBACK:
+            prior = PLAIN_PREDECESSOR(plain, initials, t, lag)
+            plain[t] = inverse * cipher[t] - gamma * prior mod 26
+        else: reject unsupported placement
+    require INDEPENDENT_FORWARD(plain, H, gamma, lag, placement, initials) == cipher
+    return plain
+```
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+Confusing feedback placement, block versus character lag, matrix orientation, and initialization creates different models. A top-ranked modulo-13 seed pool is a heuristic restriction unless it uses a certified upper bound for every omitted lift.
+'''
+
+[[provenance]]
+path = "archive-b/struct_hill_cbc_difference.py"
+kind = "solver"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[provenance]]
+path = "archive-b/struct_hill_plainfeedback.py"
+kind = "solver"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[provenance]]
+path = "archive-b/struct_ofb_charpoly.cpp"
+kind = "solver"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[provenance]]
+path = "archive-b/struct_ofb_lift.cpp"
+kind = "solver"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[references]]
+title = "Recommendation for Block Cipher Modes of Operation"
+url = "https://csrc.nist.gov/pubs/sp/800/38/a/final"
+author = "Morris Dworkin"
+year = 2001

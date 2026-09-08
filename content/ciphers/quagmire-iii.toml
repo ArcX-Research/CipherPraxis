@@ -7,8 +7,8 @@ status_note = "With an unknown alphabet at 153 letters, annealing recovered 0/24
 family = "Polyalphabetic substitution"
 tags = ["periodic", "keyed alphabet", "polyalphabetic", "quagmire", "power limit"]
 related = ["vigenere", "quagmire-i", "quagmire-ii", "quagmire-iv", "keyword-mixed-alphabet", "parallel-tempering", "simulated-annealing", "polish-basin-measurement", "power-measurement", "crib-driven-alphabet-recovery", "quagmire-lab", "g-mixed-alphabet"]
-summary = "Quagmire III uses one mixed alphabet for both plaintext and ciphertext, with a repeating shift between them. The alphabet acts on both sides. One swap in a trial alphabet changes about four of the 26 mappings in every coset. At 63 to 153 letters, this makes the quadgram score too rough for annealing, even with a crib. Search works when a word or phrase narrows the alphabet to a list."
-updated = "2026-09-07"
+summary = "Quagmire III uses the same mixed alphabet for plaintext and ciphertext, with a repeating shift between them. Changing one alphabet position affects both sides of the transformation, coupling the search variables. Finite alphabet banks, exact conditional key search and matched controls help distinguish a search failure from evidence against the model."
+updated = "2026-09-08"
 
 [[blocks]]
 kind = "definition"

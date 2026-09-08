@@ -1,0 +1,75 @@
+id = "progressive-polyalphabetic-key"
+section = "ciphers"
+title = "Progressive polyalphabetic keys"
+status = "VERIFIED"
+status_note = "The forward and inverse equations and local score-update identity are algebraic. The documented optimizer is a heuristic; neither convergence to the global optimum nor general recovery power is established."
+family = "Polyalphabetic substitution"
+tags = ["progressive key", "periodic", "affine", "triangular increments", "cached scoring"]
+related = ["alberti-progressive", "incremental-language-score", "coordinate-descent"]
+summary = "A periodic substitution whose shift also evolves with the cycle number. Precomputed residue streams and local score updates make joint intercept-and-slope search practical without changing the objective."
+updated = "2026-09-08"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For alphabet size $m$, period $p$, residue $r=i\bmod p$ and cycle number $t=\lfloor i/p\rfloor$, define
+$$c_i=x_i+a_r+b_r f(t)\pmod m.$$
+Decryption subtracts the same shift. Fixed coordinate alphabets may replace the ordinary letter order. The schedule function is part of the model: $f(t)=t$, $t(t+1)/2$, and $t^2$ are different families. Evaluate the triangular number as an integer before reducing modulo $m$; division by two in a composite ring is not generally defined.
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+For each residue precompute the decrypted stream for every pair $(a_r,b_r)$. Rank these streams by a monogram score for initialization, then optimize the full character n-gram score. When one residue changes, score only the distinct n-gram windows touching it. Scan the complete pair domain for each coordinate update and retain the incumbent on ties. Restarts and perturbations explore other local optima.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function FIT_PROGRESSIVE(cipher, period, shape, restart_policy):
+    bank = PRECOMPUTE_STREAMS(cipher, period, shape, every intercept and slope)
+    windows = UNIQUE_NGRAM_STARTS_TOUCHING_EACH_RESIDUE(cipher, period)
+    best = NONE
+    for seed in restart_policy:
+        state = INITIALIZE_FROM_BANK(bank, seed)
+        repeat:
+            changed = false
+            for residue in FIXED_OR_SEEDED_ORDER(period):
+                old = SCORE_WINDOWS(state, windows[residue])
+                choice, new = BEST_PAIR_IN_FULL_DOMAIN(state, residue, bank, windows)
+                changed = changed or STRICTLY_IMPROVES(new, old)
+                COMMIT_IF_STRICTLY_BETTER(state, residue, choice)
+            UPDATE_BEST_WITH_FULL_SCORE_AND_FORWARD_CHECK(best, state)
+        until not changed or declared sweep limit reached
+    return best, HEURISTIC_SEARCH_METADATA
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+There are $m^{2p}$ raw parameter tuples, but only $m^2$ trials per residue in a sweep. For fixed n-gram order, the union of affected-window lists has size $O(n)$, giving $O(m^2n)$ scoring work per sweep and $O(m^2n)$ stream storage. This is a work bound, not a measured speedup.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+A short residue may not distinguish slopes. Equivalent finite streams can have several physical parameter origins. A full scan of each coordinate is still local optimization of the joint key. Stage-dependent scores need separate incumbents and final rescoring.
+'''
+
+[[blocks]]
+kind = "example"
+body = '''
+With $m=26$, $p=2$, $a=(1,2)$, $b=(3,4)$ and $f(t)=t$, plaintext coordinates $(0,1,2,3)$ encrypt to $(1,3,6,9)$. Subtracting the four scheduled shifts $(1,2,4,6)$ recovers the input.
+'''
+
+[[provenance]]
+path = "archive-a/progressive_vigenere.cpp"
+kind = "solver"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[provenance]]
+path = "archive-a/check_progressive_vigenere.py"
+kind = "script"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."

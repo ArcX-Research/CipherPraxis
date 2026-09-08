@@ -7,8 +7,8 @@ status_note = "The test uses single-letter chi-squared/n against English and cho
 family = "Coincidence and frequency statistics"
 tags = ["chi-squared", "goodness of fit", "monogram", "transposition gate", "change point"]
 related = ["index-of-coincidence", "frequency-analysis", "quadgram-log-likelihood", "bayesian-evidence-model-selection", "family-wise-null", "change-point-zone-detection", "columnar-transposition", "coset-shift-recovery"]
-summary = "Chi-squared compares observed and expected letter counts. For each letter, it squares the difference and divides by the expected count, then adds the results. Comparing with English measures compatibility with English single-letter frequencies; comparing with uniform counts measures departure from a flat histogram. Dividing by text length gives a useful effect-size scale in this project: about 0.10 for English, 0.2–0.45 for a partly removed substitution, and at least 0.6 for tested flat polyalphabetic texts. A low score on unreadable text can suggest a transposition, but it does not prove one."
-updated = "2026-09-07"
+summary = "Chi-squared compares observed letter counts with a declared expected distribution. It can measure compatibility with a language’s single-letter frequencies or departure from uniformity. Sparse expected counts, dependent observations and selection across many keys can invalidate a textbook chi-squared reference distribution."
+updated = "2026-09-08"
 
 [[blocks]]
 kind = "definition"

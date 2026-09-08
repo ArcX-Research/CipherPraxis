@@ -21,6 +21,9 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
 echo "▸ tests"
 cargo test --workspace --all-features
 
+echo "▸ finite algorithm checks"
+python3 scripts/check_research_algorithms.py
+
 echo "▸ content"
 cargo run --quiet -p praxis-core --features authoring --bin praxis-check -- content --strict
 echo "▸ math spans"

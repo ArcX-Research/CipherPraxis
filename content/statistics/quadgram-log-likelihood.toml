@@ -7,8 +7,8 @@ status_note = "A fixed corpus supplies a smoothed table of all 26^4 quadgrams. O
 family = "Language-model scoring"
 tags = ["quadgram", "language model", "log-likelihood", "scoring", "objective"]
 related = ["english-gate-calibration", "bayesian-evidence-model-selection", "selection-overfit-diagnostic", "shuffled-null-z-score", "order-free-width-statistic", "simulated-annealing", "hill-climbing", "exact-dynamic-programming", "g-quadgram", "g-nats-per-letter"]
-summary = "A quadgram score adds a frozen log weight for every overlapping four-letter group in a text. Divide by the number of groups to get the rate. In the recorded table, English prose scores about -4.3 and random letters about -7. This gap makes the score useful for search, but overlapping windows and a corpus-fitted table do not provide a posterior probability that an answer is correct. Free parameters, selection, unusual plaintext, and any remaining transposition need separate calibration."
-updated = "2026-09-07"
+summary = "A quadgram score sums fixed log weights over overlapping groups of four symbols. It is a fast search objective whose scale depends on the training data, smoothing and logarithm base. The score is neither a normalized full-text probability nor a posterior probability that a decryption is correct; selection and model flexibility need separate calibration."
+updated = "2026-09-08"
 
 [[blocks]]
 kind = "definition"

@@ -1,0 +1,87 @@
+id = "hill-row-recovery"
+section = "cryptanalysis"
+title = "Hill recovery by constrained row banks"
+status = "VERIFIED"
+status_note = "The row-replacement feasibility test is exact when the other rows have rank one less than the dimension in both fields. The finite bank and coordinate search are heuristic restrictions on key recovery."
+family = "Algebraic cryptanalysis"
+tags = ["Hill cipher", "row recovery", "null space", "rank", "cached scoring"]
+related = ["hill-cipher", "circulant-hill", "incremental-language-score", "proposal-bank-recall-audit"]
+summary = "Cache candidate decryption rows, optimize their combined language score, and keep the matrix invertible with two finite-field dot products per row proposal."
+updated = "2026-09-08"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Write $x=Dc$ for decryption with an invertible $d\times d$ matrix over $\mathbb Z_{26}$. Enumerate a declared bank of candidate rows, which may be all coefficient vectors or a finite word-derived bank. Cache each row's output stream over all ciphertext blocks. The full plaintext is formed by interleaving these streams under a fixed output layout.
+'''
+
+[[blocks]]
+kind = "equations"
+body = '''
+Remove the row being updated. Over each field, the other $d-1$ rows span a hyperplane if their rank is $d-1$. Let $v_p$ span its right nullspace. A proposed row $r$ restores full rank exactly when $r\cdot v_p\ne0\pmod p$, for both $p=2,13$. Compute these null vectors once per coordinate update, not once per candidate. A rank-deficient remainder cannot be repaired by one row.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function IMPROVE_HILL_ROWS(cipher, row_bank, initial_invertible_matrix):
+    require every initial row belongs to row_bank
+    streams = CACHE_EACH_ROW_OUTPUT(cipher, row_bank)
+    state = initial_invertible_matrix
+    repeat:
+        changed = false
+        for slot in rows(state):
+            others = state without slot
+            v2 = ONE_DIMENSIONAL_RIGHT_NULLSPACE(others mod 2)
+            v13 = ONE_DIMENSIONAL_RIGHT_NULLSPACE(others mod 13)
+            require v2 and v13 exist
+            winner = state[slot]
+            for row in row_bank:
+                if DOT(row, v2) mod 2 == 0: continue
+                if DOT(row, v13) mod 13 == 0: continue
+                UPDATE_STRICT_BEST_BY_AFFECTED_WINDOWS(winner, row, streams, slot)
+            changed = COMMIT_WINNER(state, slot, winner) or changed
+    until not changed or declared budget reached
+    require FULL_RANK_IN_BOTH_FIELDS(state)
+    return DECODE(state), INVERT_BY_CRT(state), HEURISTIC
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+For a bank of size $B$, the feasibility scan costs $O(Bd)$ per slot after elimination. Cached streams require $O(Bn/d)$ symbols. Local n-gram deltas avoid rescoring unaffected plaintext. Rank checks alone supply no global language optimum.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+Pruning the row bank by monogram rank can discard a true row. A matrix assembled from individually attractive rows can be singular. Initialization must use bounded retries or exact feasibility search, since a bank may contain no invertible matrix. Distinguish encryption-word keys from decryption-word keys.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Compare every row-admission decision against direct determinant or rank tests on small fields. Compare cached scores with full rescoring, and test a bank with no invertible matrix. For recovery, record true-row recall before measuring the final optimizer.
+'''
+
+[[provenance]]
+path = "archive-a/hill_decryption_words.cpp"
+kind = "solver"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[provenance]]
+path = "archive-a/check_hill_decryption_words.py"
+kind = "script"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[provenance]]
+path = "archive-b/t9_hill3_free.cpp"
+kind = "solver"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[provenance]]
+path = "CipherPraxis/scripts/check_research_algorithms.py"
+kind = "script"
+note = "Every candidate row on a small composite alphabet is compared with direct matrix rank. These checks do not establish general recovery power or replay the external solver."

@@ -1,0 +1,95 @@
+id = "rotor-machines"
+section = "ciphers"
+title = "Reflecting rotor machines"
+status = "VERIFIED"
+status_note = "The conjugation identity establishes reciprocity and the no-fixed-point property for the stated reflector. Exact machine behavior additionally depends on the specified rotor, ring, notch, plugboard and stepping conventions."
+family = "Stream and machine ciphers"
+tags = ["rotor", "reflector", "involution", "ring setting", "double stepping"]
+related = ["permutation-cycles", "conjugacy-and-gauge", "known-answer-tests"]
+summary = "A rotor machine composes position-dependent permutations. A reflecting construction is reciprocal at each state, while the stepping mechanism makes that state evolve with every symbol."
+updated = "2026-09-08"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For rotor wiring $R$ and effective offset $s$, the forward map is $R_s(x)=R(x+s)-s\pmod m$ and the reverse map uses $R^{-1}$. Let $F_t$ be the composed outward rotor path at time $t$, $U$ an involutory reflector and $S$ an involutory plugboard. The full substitution is
+$$E_t=S^{-1}F_t^{-1}UF_tS.$$
+Thus $E_t^2$ is the identity. If $U$ has no fixed points, neither does $E_t$. Decryption uses the same initial state and stepping schedule as encryption.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+For the three moving rotors of a conventional pawl-stepped Enigma, inspect notches before the keypress: the left rotor steps if the middle is at its notch; the middle steps if either it or the right rotor is at a notch; the right rotor always steps. Perform these changes simultaneously before traversing the electrical path. This produces the middle rotor’s double step. Other machines have different stepping mechanisms.
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+Precompute wiring lookups per offset and, for a fixed rotor order, compose full-state symbol tables when memory permits. Scan declared initial states and retain candidates under a fixed score. A short window that assumes no turnover is a heuristic screen; it cannot exclude ring settings or states whose turnover occurs inside that window.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function ROTOR_TRANSFORM(text, machine, initial_windows):
+    windows = COPY(initial_windows)
+    tables = CACHE_FORWARD_AND_INVERSE_WIRING_BY_EFFECTIVE_OFFSET(machine)
+    output = []
+    for symbol in text:
+        middle_notch = AT_NOTCH(machine.middle, windows.middle)
+        right_notch = AT_NOTCH(machine.right, windows.right)
+        windows.left += middle_notch
+        windows.middle += middle_notch or right_notch
+        windows.right += 1
+        REDUCE_WINDOW_POSITIONS(windows, alphabet_size)
+        x = machine.plugboard(symbol)
+        for rotor in outward order:
+            x = tables.forward[rotor, EFFECTIVE_OFFSET(windows, rings), x]
+        x = machine.reflector(x)
+        for rotor in reverse outward order:
+            x = tables.inverse[rotor, EFFECTIVE_OFFSET(windows, rings), x]
+        output.append(machine.plugboard(x))
+    return output
+```
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+Window letters, ring settings and effective wiring offsets are different quantities. In window coordinates the notch test follows the specified physical rotor; in core coordinates its index must be shifted consistently. A no-plugboard search is a restricted family. Reciprocity alone will not catch a shared stepping bug in both encoder and decoder.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Use an independently specified stepping trace that crosses a middle-rotor double step, plus a literal wiring reference. Check forward/reverse tables at every offset, all reflector fixed-point constraints, ring changes and message resets.
+'''
+
+[[provenance]]
+path = "archive-b/frac_enigma.cpp"
+kind = "solver"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[provenance]]
+path = "archive-b/frac_enigma_rings.cpp"
+kind = "solver"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[provenance]]
+path = "archive-b/frac_enigma_naval_synthetic.py"
+kind = "script"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[references]]
+title = "Enigma: actions involved in the double stepping of the middle rotor"
+url = "https://www.cryptomuseum.com/people/hamer/files/double_stepping.pdf"
+author = "David Hamer"
+year = 1997
+
+[[references]]
+title = "Ciphering machine, US1657411A"
+url = "https://patents.google.com/patent/US1657411A/en"
+author = "Arthur Scherbius"
+year = 1928

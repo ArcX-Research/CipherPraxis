@@ -1,0 +1,81 @@
+id = "joint-transposition-periodic-search"
+section = "search"
+title = "Joint transposition and periodic-key search"
+status = "VERIFIED"
+status_note = "The decoding equations and cached local scores are exact for a fixed layout. Beam truncation, staged language scores, and local search are heuristic and cannot establish a complete exclusion."
+family = "Search and optimisation"
+tags = ["transposition", "periodic key", "composition order", "ragged columns", "beam search"]
+related = ["columnar-transposition", "sandwich-construction", "proposal-bank-recall-audit", "incremental-language-score"]
+summary = "Optimize column order and periodic shifts together, with correct ragged-column lengths and a separate key phase for each composition order."
+updated = "2026-09-08"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $\pi(i)$ map plaintext positions to ciphertext positions. With fixed coordinate alphabets and $j=\pi(i)$, compare $P_i=C_j-k_{i\bmod p}$ with $P_i=C_j-k_{j\bmod p}$. They represent periodic substitution before and after the transposition, respectively. Testing one does not test the other.
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+Cache the position permutation while proposing only shift changes, and cache shifted column streams when the key schedule allows one shift per column. For $n=hw+r$, plaintext columns $0,\ldots,r-1$ contain $h+1$ symbols and the rest contain $h$. A beam over ciphertext chunks must also enumerate which serialized chunks are long, or explicitly declare that assignment fixed. Append only a chunk with the required destination length.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function JOINT_SEARCH(cipher, width, period, composition, policy):
+    best = NONE
+    for declared long_chunk_assignment:
+        chunks = SPLIT_WITH_DECLARED_LENGTHS(cipher, long_chunk_assignment)
+        cache = PRECOMPUTE_COMPATIBLE_SHIFTED_STREAMS(chunks, composition)
+        beam = [EMPTY_COLUMN_ORDER]
+        for destination in 0 .. width - 1:
+            next = BOUNDED_HEAP(policy.beam_width)
+            for state in beam:
+                for unused chunk with correct destination length:
+                    for compatible shift or key assignment:
+                        child = EXTEND_WITH_NEWLY_CLOSED_LANGUAGE_FACTORS(state, cache)
+                        OFFER(next, child, deterministic_tie_policy)
+            beam = CONTENTS(next)
+        for candidate in beam:
+            candidate = ALTERNATE_KEY_UPDATES_AND_COLUMN_MOVES(candidate, policy)
+            RECOMPUTE_COMPLETE_PLAINTEXT_SCORE(candidate)
+            require INDEPENDENT_FORWARD(candidate, composition) == cipher
+            UPDATE_BEST(best, candidate)
+    return best, HEURISTIC, full_search_policy
+```
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+A row-local score omits words crossing row boundaries; full rescoring is required. Changing from bigram to higher-order scoring requires rescoring the incumbent. Strong final scoring cannot rescue a column order pruned at an early beam depth. Reversal, block permutation, and columnar transposition are distinct position maps.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Use generated examples in both composition orders, with divisible and ragged lengths. Record whether the true chunk-length assignment and true column prefix survive each stage. Compare cached key updates with direct complete decryption.
+'''
+
+[[provenance]]
+path = "archive-a/joint_column_vigenere.cpp"
+kind = "solver"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[provenance]]
+path = "archive-a/check_joint_column_routes.py"
+kind = "script"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[provenance]]
+path = "archive-b/poly_ragged_column_beam.cpp"
+kind = "solver"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[provenance]]
+path = "archive-b/struct_transpose_monogram.cpp"
+kind = "solver"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."

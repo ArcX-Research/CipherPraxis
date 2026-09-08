@@ -6,9 +6,9 @@ status = "POWER-LIMITED"
 status_note = "When the key text came from a known bank, an exact window test found the planted passage and rejected wrong windows within a few nodes. The general cascade also found a running-key link between two earlier solved texts. With an unknown English key, a joint beam decoder recovered only 41%, 50%, and 26% on controls at 63, 95, and 126 letters. That case is not identifiable with this method."
 family = "Stream and machine ciphers"
 tags = ["running key", "aperiodic", "book key", "two-language-stream"]
-related = ["vigenere", "book-cipher", "autokey", "one-time-pad", "running-key-relation-test", "key-cancellation", "beam-search", "viterbi-decoding", "constraint-satisfaction-forward-checking", "word-prefix-csp", "transposed-running-key-endpoint-scoring"]
+related = ["vigenere", "book-cipher", "autokey", "one-time-pad", "running-key-relation-test", "key-cancellation", "beam-search", "viterbi-decoding", "constraint-satisfaction-forward-checking", "word-prefix-csp", "transposed-running-key-endpoint-scoring", "block-word-boundary-dp"]
 summary = "A running-key cipher adds a long meaningful text to the plaintext one letter at a time. The key does not repeat, so there is no period to find. If the key passage is in a known bank, a solver can search for it. If it is unknown, both key and plaintext are language, and many wrong pairs can sound convincing. Tests solved the known-bank case but showed that the unknown-key decoder lacks power."
-updated = "2026-09-07"
+updated = "2026-09-08"
 
 [[blocks]]
 kind = "definition"

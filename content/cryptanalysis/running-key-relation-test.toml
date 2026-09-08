@@ -6,9 +6,9 @@ status = "POWER-LIMITED"
 status_note = "For the restricted model comprising a known long text plus a free period-7 operand in one unknown alphabet, the exact window solver found the planted passage with 5 assignments in 255 nodes while one wrong passage failed in 26 nodes. A separate known-plaintext cascade recovered a recorded link between two solved texts. For an unknown shared key, the difference-screen maximum stayed within its family-wide null and a language beam failed all 3 hidden controls at 144–153 letters; that endpoint is power-limited, not excluded (logs/60, 63, 03, 166)."
 family = "Relations between ciphertexts"
 tags = ["running key", "known text", "difference text", "periodic residual", "all-different", "CRT", "family-wise null", "constraint satisfaction"]
-related = ["running-key", "book-cipher", "one-time-pad", "key-cancellation", "autokey-difference-periodicity", "exact-period-alignment", "family-wise-null", "within-coset-null", "index-of-coincidence", "all-different-constraints", "modular-inverse-and-crt", "all-different-enumeration", "constraint-satisfaction-forward-checking", "beam-search", "power-measurement", "g-key-cancellation", "g-selection-freedom"]
+related = ["running-key", "book-cipher", "one-time-pad", "key-cancellation", "autokey-difference-periodicity", "exact-period-alignment", "family-wise-null", "within-coset-null", "index-of-coincidence", "all-different-constraints", "modular-inverse-and-crt", "all-different-enumeration", "constraint-satisfaction-forward-checking", "beam-search", "power-measurement", "g-key-cancellation", "g-selection-freedom", "independent-coordinate-alphabets", "residue-class-graphs", "conjugacy-and-gauge"]
 summary = "A running key adds a long stream to another operand. If one long operand is known and the other is restricted to a short-period stream, an unknown alphabet window can be tested by exact modular constraints. If the other operand is unrestricted language plus a periodic residual, the recorded method instead uses a heuristic shortlist and language scoring across declared sources, offsets, signs, periods, and orders. Two ciphertexts may cancel a shared unknown key, but the remainder can still be periodic, so raw IC is only a period-1 screen."
-updated = "2026-09-07"
+updated = "2026-09-08"
 
 [[blocks]]
 kind = "definition"
@@ -47,6 +47,26 @@ Enumerate the modulo-13 null space, turn its required parity differences into li
 Difference-text index of coincidence over all offsets $o$, both orientations of the second text and both signs: the corpus's best values were $0.0455$ to $0.0468$ against a random-pairing level of $0.0383 \pm 0.0017$. With 324 trials, maxima around three single-trial standard deviations were expected under the recorded null, and the observed selected maximum was compatible with the family-wise null (logs/03). A per-trial comparison had instead made the same selection look like $+5.7\sigma$ across 1,296 index-space cells (logs/11).
 
 That measurement is a period-1 test. When cancellation leaves $q_i+h_{i\bmod m}$, its whole histogram mixes $m$ rotations of the plaintext histogram and may look flat. Periodic IC keeps pairs inside $i\bmod m$; exact coset alignment tests whether those histograms are rotations of one distribution. The maximum across all source pairs, alignments, signs, orders, relations, and periods must be compared with the same maximum after a matched source-pair shuffle.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Verified third-stream elimination"
+body = '''
+A known third stream can constrain two observed streams under one unknown coordinate alphabet:
+$$z(W_i)-a z(X_i)-b z(Y_i)=h_{i\bmod q}\pmod{26}.$$
+Subtract one original equation per phase from the others to eliminate $h$ exactly. Compile every repeated-symbol coefficient, fix one justified coordinate translation, solve both field systems and require injective CRT lifts. Recover $h$ from the original equations and replay all positions. A homogeneous zero solution is always present algebraically and is not a permutation witness.
+
+If $W$ comes from a previously recovered cipher stage, establish its bytes from independently checked adjacent forward and inverse transformations before using it as a known operand. An attractive upstream candidate is not a verified known stream. Restore all translation readings and ordered roles before any physical-language score.
+'''
+
+[[blocks]]
+kind = "variants"
+title = "Reuse a known stage at the right level"
+body = '''
+A verified periodic stage supports three successively broader tests. First test literal reuse of its complete physical maps. Second union all known and proposed edges within each repeated map class, requiring a partial bijection; a class with $k$ observed inputs has $(26-k)!$ unrestricted completions. Third ask whether every class is a translation in one shared coordinate alphabet. The third test requires known-known edges as well as proposed-known edges: one anchor against every other edge in each class spans all displacement-equality constraints.
+
+These tests answer different questions. Partial-map compatibility is weaker than literal reuse or shared-cycle feasibility. Pooling equal physical map classes can be stronger and cheaper than treating each period residue independently. A complete empty result excludes only the declared stage, offsets, directions, signs and model tier.
 '''
 
 [[blocks]]
@@ -218,3 +238,13 @@ path = "withmath/logs/657_knownresidual_20260906T011407Z_1788657247581387000_457
 kind = "log"
 note = "Frozen finite-selector receipt with target-absent planted controls, full score-bearing null reselection, shortlist census, add-one ranks, and bounded heuristic terminals."
 ref = "LOG657"
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/KNOWNSTREAM_CROSSELIM753.md"
+kind = "design"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/KNOWNSTAGE_SQUARE754.md"
+kind = "design"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."

@@ -7,8 +7,8 @@ status_note = "This classical method is documented for completeness. The project
 family = "Period and structure recovery"
 tags = ["isomorphs", "patterns", "rotor", "polyalphabetic", "classical"]
 related = ["kasiski-examination", "frequency-analysis", "coset-shift-recovery", "permutation-cycles", "g-period"]
-summary = "Two fragments are isomorphic when their letters repeat in the same pattern, such as ABCA and XYZX. If corresponding positions use the same substitutions, repeated plaintext produces matching repeat patterns even when the actual letters differ. This can show where two stretches used the same alphabet sequence. The method is common for rotor machines and can help with keyed periodic ciphers. It is explained here but has not been tested in this project."
-updated = "2026-09-04"
+summary = "Two fragments are isomorphic when their symbols repeat in the same pattern, such as ABCA and XYZX. A shared bijective relabeling preserves this pattern. Position-dependent substitutions require an explicit alignment model before matching patterns can be interpreted as repeated plaintext."
+updated = "2026-09-08"
 
 [[blocks]]
 kind = "definition"

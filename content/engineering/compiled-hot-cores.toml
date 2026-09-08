@@ -6,9 +6,9 @@ status = "VERIFIED"
 status_note = "The project has fifty single-file cores. Each launcher compiles its core, requires --self-kat to pass, and controls it through pipes. Recorded examples include a complete search of 248,405 pairs in 307.5 s and a 209 ms benchmark using at most 96 MB."
 family = "Compute and throughput"
 tags = ["c++", "cores", "protocol", "threads", "integer scores"]
-related = ["numpy-instrument-pattern", "kat-harness", "seed-determinism", "drainability-and-throughput", "exhaustive-enumeration", "simulated-annealing"]
+related = ["numpy-instrument-pattern", "kat-harness", "seed-determinism", "drainability-and-throughput", "exhaustive-enumeration", "simulated-annealing", "incremental-language-score"]
 summary = "When a measured hot loop is awkward to express as array operations, a small compiled core can expose it through a narrow protocol while a higher-level driver owns controls and receipts. Integer accumulation makes ranks and ties deterministic only when the quantized score table, overflow bounds, candidate order, and tie rules are also fixed. Reproducibility across machines additionally requires compiler, architecture, dependencies, and binary provenance; a source hash alone is insufficient."
-updated = "2026-09-07"
+updated = "2026-09-08"
 
 [[blocks]]
 kind = "definition"

@@ -6,9 +6,9 @@ status = "VERIFIED"
 status_note = "The cited cycle solvers use exact row reduction over two prime fields and join the answers with CRT. Nullity, not simple consistency, carries the useful information in their homogeneous systems. Known-answer tests passed, as did 4/4 hidden shared-plaintext controls and 32/32 exact crib solves."
 family = "Linear algebra over finite rings and fields"
 tags = ["GF(2)", "GF(13)", "rank", "nullity", "null space", "row reduction"]
-related = ["modular-inverse-and-crt", "all-different-constraints", "modular-arithmetic-z26", "units-mod-26", "residue-class-graphs", "matrix-invertibility-mod-26", "constraint-satisfaction-forward-checking", "word-prefix-csp", "exact-chain-oracle", "g-nullity", "g-all-different", "exact-optimization-admission"]
+related = ["modular-inverse-and-crt", "all-different-constraints", "modular-arithmetic-z26", "units-mod-26", "residue-class-graphs", "matrix-invertibility-mod-26", "constraint-satisfaction-forward-checking", "word-prefix-csp", "exact-chain-oracle", "g-nullity", "g-all-different", "exact-optimization-admission", "conjugacy-and-gauge"]
 summary = "Linear cipher rules create equations in the unknown alphabet positions over Z26, which is not a field. Solve the same equations over GF(2) and GF(13) instead. Nullity predicts the remaining linear search, while injectivity supplies additional rejection rules. For a complete alphabet, necessary power sums can reduce the coefficient space before enumeration. Keep exact multiplicity and parity checks afterward."
-updated = "2026-09-07"
+updated = "2026-09-08"
 
 [[blocks]]
 kind = "definition"
@@ -48,6 +48,21 @@ body = '''
 
 [[blocks]]
 kind = "attack"
+title = "Use unavoidable residue pairs before enumeration"
+body = '''
+Write all coordinates of a complete alphabet as linear forms $L_i(y)$ over GF(13) and $B_i(x)$ over GF(2), using the complete remaining coefficient spaces. If two distinct physical letters have identical odd-field forms, they share a residue for every odd assignment. Their two different lifts modulo 26 must have opposite parity, so impose
+
+$B_i(x)+B_j(x)=1\pmod2$.
+
+Collect every such equation, together with the necessary binary coordinate sum $\sum_i B_i(x)=1$: the integers 0 through 25 sum to 325. Solve them simultaneously as an affine system. An inconsistent system proves that no full permutation exists before any odd vector is enumerated. Otherwise retain a particular solution plus the complete homogeneous kernel; enumerating only the homogeneous kernel can lose every valid solution. For affine coordinate forms $B_i(x)=b_i x+c_i$, the pair equation is $(b_i+b_j)x=1+c_i+c_j$. Odd affine forms are identical only when both coefficients and constants agree.
+
+Apply occupancy checks separately within each alphabet: more than two identical odd forms or more than thirteen identical binary forms is impossible. Keep gauge and unused-letter coordinates. Compare exact forms in a shared basis, not independently normalized proportional rows. With several maps, express their binary equations in the same global parameters, but do not demand different output values across different maps.
+
+These are necessary tests only. Distinct odd forms can coincide at a particular coefficient value. Every surviving odd vector still needs the complete residue-pair parity solve described under [All-different constraints](/algebra/all-different-constraints), exact CRT injectivity and the original forward equations. The early test moves unavoidable pair equations ahead of enumeration; it does not replace that existing final solve. A truncated coefficient space or a cap exit cannot establish impossibility for the omitted assignments.
+'''
+
+[[blocks]]
+kind = "attack"
 title = "Use complete-dial moments before enumeration"
 body = '''
 Let $z=Lu$ contain all 26 physical alphabet coordinates reduced modulo 13. Each residue occurs twice exactly when $M_k=\sum_i z_i^k$ is zero for $1\le k\le11$ and $M_{12}=-2$. The known zeroth sum is $26=0$ in the field. Vandermonde inversion determines each multiplicity modulo 13; nonnegative counts congruent to two and totaling 26 must all equal two. The last moment is essential: 26 zeros pass all the lower equations.
@@ -57,6 +72,25 @@ First impose the linear condition $M_1=0$. On its kernel, $M_2=u^TGu$ with $G=L^
 For reduced dimension $r$, this visits $(13^{r-1}-1)/12$ root prefixes instead of $(13^r-1)/12$ completed projective vectors. A zero form requires ordinary enumeration; a singular form must retain its radical points. Keep exact multiplicities and every compatible binary parity fiber after this necessary filter, then restore CRT coordinates and unit aliases. Preserve basis maps so normalization cannot lose physical solutions.
 
 This requires a complete dial. An observed-only alphabet does not have zero observed moments. Also preserve hidden key or phase fibers when a full solution space is projected onto dial coordinates; refusing rank-deficient projections is safer than silently dropping them. The first moment may already follow from the original equations, so its rank reduction is not guaranteed.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Count balanced binary assignments from the smaller side"
+body = '''
+An affine binary space can satisfy the coordinate checksum and form-capacity bounds without containing a balanced assignment. To test balance exactly, first remove inconsistent equations and eliminate nuisance variables existentially. Write the remaining independent system on physical coordinate bits as $Ax=b$, with n bits and rank r. Keep unused physical coordinates free.
+
+Let $N_w(b)$ count its vectors with exactly w ones. Define $K_w(j)=\sum_t(-1)^t\binom jt\binom{n-j}{w-t}$, taking out-of-range binomial coefficients as zero. Character orthogonality gives
+
+$N_w(b)=2^{-r}\sum_{y\in\mathrm{GF}(2)^r}(-1)^{y\cdot b}K_w(\operatorname{wt}(A^Ty))$.
+
+Indeed, insert the binary-character indicator of $Ax=b$ into the sum over weight-w vectors. For a fixed dual vector, grouping those vectors by their overlap with its support gives the displayed Krawtchouk polynomial. The affine sign is essential: dropping b counts a different coset. This is a coding-theoretic weight-enumerator method, not a new cipher constraint.
+
+Enumerate whichever is smaller: the $2^r$ dual words in this formula or the $2^{n-r}$ distinct vectors of a particular solution plus the homogeneous kernel. For a26-coordinate permutation with one coordinate fixed to parity0, n=25 and w=13; either choice needs at most4096 terms. If the fixed bit is1, use w=12. Exact signed sums and integer divisibility checks avoid cancellation errors. Gaussian reduction, table construction and output reconstruction are additional costs; the term count alone is not a timing result.
+
+For example, the full vector with one0, nine copies of u, nine of v and seven of $u+v+1$ has weights7,9,9,25. Every assignment has odd checksum, and its identical affine-form classes have sizes1,9,9,7, below the capacity13. Nevertheless its exact balanced count is zero. This is a hand-derived affine example, not a demonstrated cipher-search improvement.
+
+A positive count proves only parity feasibility. It neither lists every mask nor proves compatibility with the odd-field coordinates. Once all thirteen odd-residue pairs are fixed and their opposite-parity equations are consistent, balance is automatic. Keep the final [all-different and CRT checks](/algebra/all-different-constraints), and never apply a full-alphabet balance equation to an observed-only subset; see [observable completions](/algebra/conjugacy-and-gauge).
 '''
 
 [[blocks]]
@@ -84,9 +118,37 @@ For full support, let $I_0,I_1$ be a proposed parity partition. Require $|I_0|=|
 
 For partial support, class $b$ has deficit $k_b=13-|I_b|$. A negative deficit is impossible. At support 24 through 26, each remaining deficit is zero, one or two, so use the corresponding complete, one-missing or two-missing moment equation separately inside each class. These equations do not replace exact multiplicities, CRT injectivity, inactive-label orders or complete nuisance fibers. Preserve the parity provenance when several masks generate the same canonical odd direction; restoring only one mask can lose physical solutions.
 
-This is not a language-ranked parity search or an oracle parity assumption. The constrained binary domain must be complete, or its truncation must remain inconclusive. A hand-checked additive-grid example reduces six balanced binary assignments to exactly two parity/odd projective pairs through the two half sums and squares. This search order has not yet been implemented or timed; general runtime or solving-power gains are unmeasured.
+This is not a language-ranked parity search or an oracle parity assumption. The constrained binary domain must be complete, or its truncation must remain inconclusive. A hand-checked additive-grid example reduces six balanced binary assignments to exactly two parity/odd projective pairs through the two half sums and squares. The complete-dial search order and a literal three-stream caller have since passed separate public-symbol implementations and independent full-set replays. General runtime gains and representative language-recovery power remain unmeasured; partial-coordinate and hidden-fiber extensions are not implied.
 
 Use characteristic-correct moments in a smaller oracle. A complete GF(3) half has square sum $0^2+1^2+2^2=2$, not zero. Likewise, a degree-three interpolation argument cannot assume four distinct field points in GF(3). Reusing the GF(13) zero-sum formulas unchanged would reject valid six-symbol controls.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Count a quadratic intersection before enumerating it"
+body = '''
+Suppose two homogeneous quadratic equations, $Q_0(x)=Q_1(x)=0$, remain on a complete $d$-dimensional coefficient space over an odd prime field GF(p). A projective point means a nonzero vector up to multiplication by a nonzero scalar. There are $P_d=(p^d-1)/(p-1)$ such points.
+
+Consider the $p+1$ forms $Q_0+tQ_1$, one for each field element t, together with $Q_1$. This family is called a quadratic pencil. Let Z(R) count the projective zeros of a member R. A common zero lies on all $p+1$ members. Every other point lies on exactly one, because its nonzero pair $(Q_0(x),Q_1(x))$ has one projective linear relation. Hence the exact common-zero count is
+
+$B=(\sum_R Z(R)-P_d)/p$.
+
+Each Z(R) can be computed from a symmetric Gram matrix by exact congruence reduction. For positive rank r and determinant D of its nondegenerate part, the number N of zero vectors, including zero, is $p^{d-1}$ when r is odd. For even r it is $p^{d-1}+(p-1)\chi((-1)^{r/2}D)p^{d-r/2-1}$, where $\chi$ is +1 for a nonzero square and -1 for a nonsquare. Then $Z=(N-1)/(p-1)$. Rank zero instead gives $N=p^d$, including dimension zero. Radical directions must not be removed.
+
+Keep every projective pencil coefficient even when two coefficients produce the same matrix or one produces the zero matrix. The identity remains valid for dependent equations. An exact B can certify an empty quadratic intersection, reserve the unique output count, and detect lost roots after enumeration. It does not give those roots, bound duplicate branch records, or show that any root satisfies alphabet capacities and the original cipher. Rank counts alone also do not measure runtime savings.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Turn a low-rank pencil member into linear branches"
+body = '''
+A low-rank combination of two quadratic constraints can be easier to generate than either original constraint. Over an odd field, a rank-one form is a nonzero multiple of one linear form squared, so its zeros form one hyperplane. A split rank-two form factors into two distinct linear forms: its zero set is the union of their hyperplanes. A nonsplit rank-two form has zeros only where both independent linear coordinates vanish, namely its radical.
+
+Find complete kernel bases for these linear branches and restrict a complementary quadratic to each basis. For $R=c_0Q_0+c_1Q_1$, use $Q_1$ as the complement when $c_0\ne0$, and $Q_0$ otherwise. Enumerate the restricted quadratic completely, map each root back to the original coefficient coordinates, and check both original equations. Preserve all branch memberships before deduplicating: an intersection point belongs to both split branches. A zero restriction requires complete projective enumeration, not rejection.
+
+For example, over GF(13), $Q_0=x_0x_1$ and $Q_1=x_2x_3-x_0^2-x_1^2$ split into two conics with fourteen points each. They share exactly $(0,0,1,0)$ and $(0,0,0,1)$, giving 28 memberships and 26 distinct roots. In contrast, two proportional split forms in dimension five produce two unrestricted branches with 2,380 points each. Ordinary single-form generation can then be cheaper.
+
+Choose a plan using complete work and output bounds before enumeration, not its first promising roots. Sum branch bounds across every mask and origin required by the caller. A unique-root count does not replace the prefix, duplicate-membership or physical-key budgets. Refuse an unadmitted traversal as incomplete. The combined pencil implementation has passed a fixed public-symbol complete-set test and separate exhaustive replay. A cipher caller still needs its own full-geometry and resource checks before integration.
 '''
 
 [[blocks]]
@@ -127,6 +189,36 @@ function NULLITIES(M):
 '''
 
 [[blocks]]
+kind = "pseudocode"
+title = "Pencil-aware exact enumeration"
+body = '''
+```text
+function COMMON_QUADRATIC_ZEROS(G0, G1, p, limits):
+    require odd prime p and symmetric same-size matrices
+    plans = [GENERIC_SINGLE_FORM_PLAN(G0, G1)]
+    pencil_counts = []
+    for projective coefficient pair (a, b):
+        R = a * G0 + b * G1 mod p
+        diagonal, basis, radical = EXACT_CONGRUENCE_DIAGONALIZATION(R)
+        pencil_counts.append(EXACT_PROJECTIVE_ZERO_COUNT(diagonal, dimension))
+        if rank(R) <= 2:
+            plans.append(LINEAR_BRANCH_PLAN(R, COMPLEMENT(a, b), basis, radical))
+    expected = (SUM(pencil_counts) - PROJECTIVE_SPACE_SIZE(p, dimension)) / p
+    plan = DETERMINISTIC_MINIMUM_ADMITTED_WORK_PLAN(plans, limits)
+    if no plan admitted: return INCOMPLETE
+    roots = MAP_FROM_VECTOR_TO_ALL_BRANCH_MEMBERSHIPS()
+    for branch in plan:
+        B = FULL_KERNEL_BASIS(branch.linear_equations)
+        for y in COMPLETE_PROJECTIVE_ZEROS(B.transposed * branch.complement * B):
+            x = NORMALIZE_FIRST_NONZERO(B * y)
+            require Q0(x) == 0 and Q1(x) == 0
+            roots[x].append(branch.identity)
+    require COUNT(roots) == expected
+    return COMPLETE, roots
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
 Reduction is negligible; enumeration is $13^{d_{13}}$: $13^5 = 371{,}293$, $13^7 = 62{,}748{,}517$. On a target-absent plant: one 10-letter word in a constant-key region gives $(f_2, f_{13}) = (24, 24)$ true crib and $(23, 23)$ wrong crib — $13^{23}$ solutions, nothing to enumerate. One 18-letter word in a period-7 region $(15, 15)$. Two words of 15 and 18 letters $(3, 3)$ true and $(2, 2)$ wrong — enumerable. An exact crib-pair solver left 976 systems of one text unresolved by dimension ($f_{13} = 5$: 781, 6: 174, 7: 19, 8: 2) and 261 of another ($f_{13} = 5$: 160, 6: 95, 7: 6); its continuation processed all 8,851 $f_{13} = 5$ systems at $13^7$ each.
@@ -151,6 +243,21 @@ A separate complete-dial moment KAT compared all physical accepted sets on ten d
 A missing-coordinate extension independently matched all complete sets on 16 public dial spaces and six forms: 123 ordered full maps, every monic cubic and quadratic over GF(13), zero-form and false-positive traps, and both parity orders of repeated missing residues. Its four-dimensional anchors each reduced 2,380 raw directions to 196 polynomial candidates using 183 root prefixes. Exact capacity and parity then retained six full maps with one missing coordinate and 24 with two. These are overlapping implementation tests, not independent plaintext controls or a measured wall-time speedup.
 
 An actual-caller integration then matched the complete reference on 18 public additive-grid cells: 15,462 legacy directions versus 180 moment outputs, with the same 54 final-checker calls and 720 physical maps with case/cut provenance. Supplementary six-symbol cases exercised a nonfree unit action, nonzero affine parity fibers, and genuine complete infeasibility. A separately written receipt replay reconstructed 433,296 scalar checks without importing the solver. This validates the integrated necessary filter on those fixed public inputs; it does not establish an end-to-end speed ratio, language power or the proposed parity-conditioned search order.
+
+A later parity-conditioned primitive matched all sixteen complete public sets: 112 unit groups, 624 physical maps and 1,248 source origins; four deliberate cap cases stayed unknown. Its literal three-stream caller then matched nine complete sets and all 7,542 group/translation readings, retaining 89,964 affine keys and 179,928 origin-key aliases. Both had independently recorded normal exits and separate accepted-set replays. These close specific implementation and reconstruction gaps, not the question of which cipher family generated an unseen text.
+
+The quadratic-pencil primitive then matched all sixteen declared root sets against a separate enumeration of 480,820 original projective points. All 224 individual pencil counts, 9,799 distinct roots and 35 overlapping branch memberships agreed. The cost planner found a hidden low-rank combination but chose ordinary enumeration on a case where factoring cost more. Twenty-five input/cap and twelve host refusal checks passed; their saved records were attested, not independently reenacted. No alphabet-capacity, cipher-power or paired speed claim follows from this algebra test.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Marginal balance can hide a collective contradiction"
+body = '''
+For indices $0,\ldots,25$, take odd forms $L_{2j}=L_{2j+1}=jz$, $j=0,\ldots,12$. Every nonzero z gives exactly two copies of every odd residue. Let the first six binary forms be $(0,s,s,s+t,0,s+t)$, each pair numbered $j=3,\ldots,11$ be $(0,s)$, and the last pair be $(0,t)$.
+
+No odd-residue pair has identical binary forms. The four binary forms $0,s,s+t,t$ occur 12, 11, 2 and 1 times, so no form exceeds its capacity. The binary assignment $(s,t)=(1,0)$ has exactly thirteen ones. Thus each field separately has a correctly balanced assignment.
+
+Nevertheless, the first three odd-residue pairs demand $s=1$, $t=1$ and $s+t=1$ simultaneously. Their sum is $0=1$ in GF(2). No CRT permutation exists. This is a hand-checked coefficient-space example, not a cipher fixture or a measured search result. It tests collective affine consistency rather than an immediate pair of coordinates that are equal in both fields.
 '''
 
 [[blocks]]
@@ -241,6 +348,30 @@ kind = "design"
 note = "Independent hand-only review of parity-half first/second moments, per-half deficits and all six binary masks of a public worked grid. Exactly two nonzero parity/odd pairs remain, with zero/pure-last charts checked. The older parity-first decomposition is explicitly credited to prior lanes; this constrained-space moment conditioning has no implementation, timing, fresh-control or target result."
 ref = "LOG755; prior LOG194/213"
 
+[[provenance]]
+path = "withmath/docs/cross-cipher/DIAL_PARITY_CALLER756.md"
+kind = "audit"
+note = "Completed full-coordinate parity-half implementation and independent original-space replay. Both actual exits zero; complete public sets matched, four cap cases unknown. Producer result 3bd3bea0147b46098b3c65474be4abcf047be2b0892c1fbac7dfeca617862c77; audit 92287f5740861002a92596a9b7041a74d6c5be28ef258199bca67154163be3df. Does not implement partial-coordinate or hidden-nuisance fibers."
+ref = "LOG756"
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/THREESTREAM_PARITY758.md"
+kind = "audit"
+note = "Sole public-symbol producer and separate literal-map/affine-reading oracle both passed with actual external exit zero, empty stderr and unchanged source/runtime pins. Full nine-case and alias sets matched; wrong-period cases complete empty. Producer result d21bb2581c8c9629d44035ddd7fdeb62c2b164eb8fc8dbbd3e2d1b103f9689a3; audit 0e1a5df96b19f8fb9081fef86db034f5d7fe5e5d6bd122683e4d1551867304ca. Refusal records were attested, not reenacted; publication infrastructure was shared. No target, fresh language power or speed comparison."
+ref = "LOG758"
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/QUADRATIC_PENCIL759.md"
+kind = "design"
+note = "Two independent source-free reviews preceded the frozen sixteen-case public-symbol KAT and independent original-space replay, both complete with actual normal exits. All 480820 original points, 224 pencil zero censuses, 9799 roots and 9834 memberships reconciled. Producer result 5b2527e144d8284afff022a71ff11b3aa7d1bcff7faf0b7927c8f27ff2c154e5; audit 59bbea51f0df0edde0e56b99ef8af31a333dd5f964ec7183ec20a383f94bc080. Publication was shared; refusal calls and historical prefix work were not independently reenacted. These are established algebraic identities and an exact implementation test, not a novelty, paired performance, cipher-power or live claim."
+ref = "LOG759"
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/THREE_COORDINATE760.md"
+kind = "design"
+note = "Source-free derivation and two independent hand reviews of universal odd-form twins, per-map occupancy, affine parity sums and inactive-coordinate retention. Lead ledger handoff adds the full26 collective contradiction with form multiplicities12/11/2/1. No new numerical or cipher-power evidence is claimed. Fixed odd-vector affine parity solves were already implemented by the earlier additive-surface finisher; the new lesson is moving universally forced pairs before enumeration."
+ref = "LOG760; LOG761 source-only reservation; prior LOG744/748"
+
 [[references]]
 title = "Finite Fields"
 author = "Rudolf Lidl and Harald Niederreiter"
@@ -250,3 +381,26 @@ year = 1997
 title = "Linear Algebra"
 author = "Kenneth Hoffman and Ray Kunze"
 year = 1971
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK9_EARLY_CLOSURE766_DESIGN.md"
+kind = "design"
+note = "Independent hand proof of the affine character formula, rank-adaptive4096-term bound and checksum/capacity separator. Source audit credits earlier exact-weight and twin filters; only the rank-adaptive dual counting shortcut was absent from the inspected implementations. No numerical, timing, early-row power or target claim."
+ref = "LOG766 refinement; prior LOG282/447/449/753/756"
+
+[[references]]
+title = "A Theorem on the Distribution of Weights in a Systematic Code"
+author = "Jessie MacWilliams"
+year = 1963
+url = "https://www.nokia.com/bell-labs/publications-and-media/publications/a-theorem-on-the-distribution-of-weights-in-a-systematic-code/"
+
+[[references]]
+title = "Handbook of Applied Cryptography, Chapter 2"
+url = "https://cacr.uwaterloo.ca/hac/about/chap2.pdf"
+author = "Alfred Menezes, Paul van Oorschot and Scott Vanstone"
+year = 1996
+
+[[provenance]]
+path = "CipherPraxis/scripts/check_research_algorithms.py"
+kind = "script"
+note = "Projective pencil counts compared with every normalized projective point, including dependent and zero forms. These checks do not establish general recovery power or replay the external solver."

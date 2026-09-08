@@ -7,8 +7,8 @@ status_note = "Straight-alphabet plaintext autokey controls passed at 153, 144, 
 family = "Stream and machine ciphers"
 tags = ["autokey", "feedback", "primer", "aperiodic"]
 related = ["vigenere", "beaufort", "porta", "running-key", "condi", "autokey-difference-periodicity", "key-cancellation", "beam-search", "g-autokey-primer"]
-summary = "An autokey starts with a short primer, then continues the key with the message itself. In the plaintext form, each primer letter starts a chain of positions spaced by the primer length. A wrong primer letter changes that whole chain. In the ciphertext form, a lagged ciphertext difference reveals the plaintext and removes the primer. Both forms were tested with controls at the target lengths and separate forward implementations."
-updated = "2026-09-07"
+summary = "An autokey begins with a short primer and extends it using plaintext or ciphertext. Plaintext feedback couples positions separated by the primer length; ciphertext feedback allows the observed ciphertext to remove later key symbols directly. The primer, feedback direction and boundary convention determine the model."
+updated = "2026-09-08"
 
 [[blocks]]
 kind = "definition"

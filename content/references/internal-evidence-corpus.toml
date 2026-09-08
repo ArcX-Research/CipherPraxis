@@ -1,73 +1,44 @@
 id = "internal-evidence-corpus"
 section = "references"
-title = "Internal evidence corpus"
-subtitle = "How to read the project paths, record types, and log names cited on this site"
+title = "Reading sources and research evidence"
+subtitle = "Literature, derivations, experiments and reproducibility records"
 status = "VERIFIED"
-status_note = "The counts come from directory listings taken on 2026-09-04. This repository supplies the records cited elsewhere on the site; its directory listing is not an experimental claim."
+status_note = "This page documents the reference’s evidence conventions. It does not assign a common level of support to every cited result."
 family = "Provenance"
-tags = ["provenance", "corpus", "ledger", "logs"]
-related = ["ledger-reservations", "reproducibility-receipts", "seal-and-audit-protocol", "literature-methodology"]
-summary = "Every `[[provenance]]` item on this site points into one research repository. This page explains its layout. The toolkit directory holds solvers, launchers, compiled cores, designs, audits, JSON manifests, and a shared ledger. The logs directory holds numbered transcripts, failed logs, attempt markers, and saved state. Other folders hold earlier key searches, archived public pages, and the general text corpus used to make controls."
-updated = "2026-09-04"
+tags = ["provenance", "sources", "scientific method"]
+related = ["reproducibility-receipts", "evidence-scope-ladder", "correction-and-retraction", "literature-methodology"]
+summary = "A useful cryptographic reference distinguishes established theory, explicit derivations, implementation checks and empirical recovery results. Public literature and archived records have complementary roles: one identifies the underlying method, while the other records exactly what was tested."
+updated = "2026-09-08"
 
 [[blocks]]
 kind = "definition"
-title = "Layout"
+title = "What each source establishes"
 body = '''
-The evidence corpus keeps four kinds of material separate:
-
-- **Documentation** explains each method, result, and limit.
-- **Tools** contain the code used to run and check an analysis.
-- **Data** holds the inputs and saved models those tools read.
-- **Run records** preserve outputs, checkpoints, and audit decisions.
-
-This structure makes supporting material easier to find. It also helps readers distinguish an explanation from the code, input, and recorded result behind it.
-
-The directory layout, with counts from the 2026-09-04 listing:
-
-```tree
-<repository>/
-  ck_*.py                 38 earlier key-search scripts (dictionary keys, squares, column orders scored by quadgrams)
-  ck_logs/                their transcripts
-  <archive>/              109 archived public-page files: HTML, payload copies, scripts, images, a 2,344,368-letter
-                          generic corpus (pure A-Z) and six NumPy arrays used as banks
-  withmath/               the inference toolkit (the source of nearly every receipt)
-    wm_*.py               469 solver, instrument, parser, build and audit scripts
-    run_*.sh              325 launchers (one per lane; frozen no-argument gates for releases)
-    *_core.cpp            50 single-file compiled cores with --self-kat
-    *.md                  284 notes: 16 designs, 9 creator audits, 33 independent audits, 216 audit notes of all
-                          kinds (including creator, independent, boundary, re-audit and design audits), 16 notes,
-                          6 reviews, a README, a negative-results ledger and the coordination ledger
-    *.json                13 build manifests, release records and vocabulary banks
-    COORDINATION.md       the coordination ledger: 240 headed entries, 13,552 lines, 1.2 MB
-    LOG_AUDIT.md          the negative-results ledger (200 logs classified at its snapshot)
-    logs/                 1,334 entries: 1,284 numbered transcripts, state_*.json checkpoints, NumPy banks
-      failed/             21 invalidated transcripts with defect suffixes
-      *.attempt           9 durable one-shot attempt markers
-```
+- **Literature and specifications** define established constructions and results. Prefer original papers, authors’ descriptions and official specifications.
+- **Derivations** justify a statement from explicit assumptions. An independently checked derivation is not automatically a new result in the historical literature.
+- **Implementation checks** compare software with independent examples or complete finite references. They establish the tested behavior, not general recovery power.
+- **Experiments** measure a specified method on a declared data distribution and budget. A small control panel cannot support a universal success claim.
+- **Designs** explain proposed procedures. A reviewed design remains distinct from a completed implementation or experiment.
 '''
 
 [[blocks]]
-kind = "variants"
-title = "Note types"
+kind = "assumptions"
+title = "Optimization and novelty"
 body = '''
-- **Design** (`*_DESIGN.md`): states the family, math, controls, nulls, gates, end states, resources, and reserved paths before implementation begins.
-- **Creator audit / seal** (`*_CREATOR_AUDIT.md`, `*_AUDIT.md`): records the implementer's fixed hashes, known-answer test (KAT), disclosed evidence, remaining limits, and release boundary.
-- **Independent audit** (`*_INDEPENDENT_AUDIT*.md`): gives a different agent's PASS or BLOCK decision after checking the exact bytes and recalculating hashes.
-- **Review** (`*_REVIEW.md`): assesses an idea or proposed next step without running it.
-- **Note** (`*_NOTE.md`): records a measurement or answers a closed question, with its transcript.
-- **Ledger** (`COORDINATION.md`, `LOG_AUDIT.md`): keeps append-only reservations, seals, decisions, end states, corrections, and the class of every log.
-- **Manifest / release** (`*.json`): pins the approved bytes and permissions in one standard record.
-- **Transcript** (`logs/NNN_*.log`): records a machine run. Files ending in `_smoke`, `_dev`, or `_disclosed` are not evidence. Invalid files move to `failed/` and get a defect suffix.
-- **Attempt marker** (`logs/NNN_*.log.attempt`): proves that a one-use resource was spent.
-- **State checkpoint** (`logs/state_*.json`): saves scan state and whether its controls passed.
+An optimized procedure must preserve the objective and the required feasible set. A smaller candidate count is not a measured speedup, and a faster incomplete search is not an exact replacement. State whether an optimization is implemented, checked against a reference, or still a derivation.
+
+A technique first encountered in a research project may already be established elsewhere. This reference does not infer scientific priority from local discovery. New specializations are explained in their own mathematical terms and linked to the established methods they use.
 '''
 
 [[blocks]]
 kind = "notes"
-title = "How to read a provenance path"
+title = "Trace an individual claim"
 body = '''
-A `[[provenance]]` item lists a path from the repository root and a file type, such as solver, library, audit, design, note, log, script, data, or ledger. Ledger and log items may also give a `ref`, such as `LOG503` or `logs/152_crosscycle_full.log`. A ledger reference points to the heading for that log number. A log reference points to the transcript itself. Corpus file names contain internal identifiers, so public pages name texts only by length.
+An entry’s status note defines the claim being assessed. Its Sources and evidence panel lists literature first and keeps supporting archival records in an expandable section. A record identifies a source path, its role and, where appropriate, a log reference. Paths are archival locators rather than names for cryptographic concepts.
+
+The archive includes multiple source collections. Unprefixed paths refer to the primary analysis archive; `archive-a/` and `archive-b/` distinguish two additional collections, while `CipherPraxis/` identifies this reference’s own files. The maintainer inventory records their local locations and review scope. Requesting the supporting files preserves these identifiers so a record can be located precisely.
+
+A path-existence check only establishes that a file can be found. A file hash binds the bytes read; it does not prove those bytes executed, authenticate an outcome, or replace an independent mathematical check. Superseded, incomplete and failed records remain useful when their limitations are explicit.
 '''
 
 [[provenance]]

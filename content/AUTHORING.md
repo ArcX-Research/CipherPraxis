@@ -1,8 +1,8 @@
 # Authoring guide for Cipher Praxis content
 
 Cipher Praxis — A Dilate Cryptography Knowledge Base — is a **public, general-cryptography**
-reference. The sibling repository (`../Cryptanalysis/`, especially its `withmath/` directory) is only the internal evidence
-corpus. Read `../ARCHITECTURE.md` §1 and §4 first, then the exemplar `ciphers/vigenere.toml`.
+reference. The research archives supply supporting evidence; their projects are not the subject
+of an article. Read `../ARCHITECTURE.md` §1 and §4 first, then the exemplar `ciphers/vigenere.toml`.
 
 ## Hard rules (enforced by the build lint and by review)
 
@@ -10,8 +10,8 @@ corpus. Read `../ARCHITECTURE.md` §1 and §4 first, then the exemplar `ciphers/
    and `body`) contain general cryptography only. Forbidden, case-insensitive, word-bounded:
    `kryptos`, `ctf`, `sanborn`, `langley`, `cia`, `pk0`…`pk10`, `pk89`, `pk98`, `pk8910`,
    `k1`…`k4` (as puzzle labels), `leaderboard`, `submission`, `poem`, `paradigm`.
-   Write "a 153-letter ciphertext", "the 144-letter text", "two related ciphertexts", "the
-   second text", "text A / text B" instead of puzzle names.
+   State general assumptions such as "a ciphertext of length N" or "two related ciphertexts".
+   Use a source's particular text length only when it is necessary to describe a measured result.
 2. Never reproduce a live ciphertext, plaintext, hint, story vocabulary, or crib list from the
    corpus. Examples are generic and reproducible: state your own plaintext and key, derive the
    ciphertext by hand or by the definition, and show the check.
@@ -53,6 +53,37 @@ corpus. Read `../ARCHITECTURE.md` §1 and §4 first, then the exemplar `ciphers/
    `ledger`. Provenance `note` may use internal file names but should still avoid quoting
    ciphertext or hints.
 9. Dates: use the `YYYY-MM-DD` date of the last material edit.
+
+## Integrating research without duplicate articles
+
+Search titles, definitions, related ids and existing pseudocode before adding a page. A new
+implementation, faster inner loop, tighter bound or corrected experiment normally belongs in
+the canonical article for that method. Add a separate entry when its model, objective or state
+space is substantively different; cross-link the parent and explain that difference.
+
+Describe standard results with literature references where available. A local discovery is not
+automatically a claim of priority. Identify a derivation, a source-level implementation, an exact
+finite comparison and a recovery experiment separately. Preserve failed controls and corrected
+results that limit the claim. Do not turn a bounded search miss into a family exclusion.
+
+Publish the optimized procedure with its state invariant, precomputation, pruning condition,
+cost and exactness limits. If a beam, shortlist or cap removes candidates without an admissible
+bound, label it heuristic. Retain a slower reference only when it provides an independent check
+or explains the derivation. Synthetic examples must be checkable without private inputs.
+
+Provenance paths resolve as follows:
+
+| Prefix | Collection |
+| --- | --- |
+| No prefix | `../Cryptanalysis/` (override with `--corpus`) |
+| `CipherPraxis/` | This repository (override with `--site`) |
+| `archive-a/` | First additional research checkout (override with `--archive-a`) |
+| `archive-b/` | Second additional research checkout (override with `--archive-b`) |
+
+See `scripts/check_provenance.py` for default local locations. Keep source paths and project
+identifiers in provenance, never in the scientific explanation. An inventory hash records the
+file as found; it is not evidence that the file was executed or validated. The dated review and
+source index in this directory document coverage and merge decisions for the latest import.
 
 ## Canonical ids (use these spellings for cross-links)
 

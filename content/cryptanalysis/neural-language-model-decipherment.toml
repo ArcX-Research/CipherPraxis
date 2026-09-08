@@ -6,9 +6,9 @@ status = "POWER-LIMITED"
 status_note = "Published work demonstrates neural language models in substitution decipherment. In this project's frozen local-model controls, however, proposal and reranking gates failed, so the technique is documented as literature-backed but not locally authorised as a decoder."
 family = "Language-guided cryptanalysis"
 tags = ["neural language model", "decipherment", "beam search", "reranking"]
-related = ["n-gram-language-scoring", "local-language-model-prior", "combined-character-word-models", "beam-search", "k-best-lists", "held-out-gates", "tautological-gate-rule"]
+related = ["n-gram-language-scoring", "local-language-model-prior", "combined-character-word-models", "beam-search", "k-best-lists", "held-out-gates", "tautological-gate-rule", "shared-prefix-neural-cache"]
 summary = "A neural language model can score complete plaintext prefixes and supply a lookahead estimate while a beam searches substitution assignments. It captures longer context than a fixed n-gram table, but the beam is still heuristic, model provenance matters, and fluent output is not a cryptographic certificate."
-updated = "2026-09-05"
+updated = "2026-09-08"
 
 [[blocks]]
 kind = "definition"

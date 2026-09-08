@@ -1,12 +1,12 @@
 /* Cipher Praxis — A Dilate Cryptography Knowledge Base
    Light-only design system derived from the Dilate visual language:
-   ink #000020, Dilate blue #0454ff, indigo #4946ff/#6764ff, purple #A95DC9, warm off-whites,
+   ink #000020, Dilate blue #0454ff, slate blue #3d5b8c, teal #35777d, warm off-whites,
    Geist (UI), Adamina (editorial serif), DM Mono (annotations). */
 
 :root {
   --ink: #000020;
   --ink-2: rgba(0, 0, 32, 0.68);
-  --ink-3: rgba(0, 0, 32, 0.5);
+  --ink-3: #626779;
   --hair: #e4e4e1;
   --hair-2: rgba(0, 0, 32, 0.08);
   --paper: #ffffff;
@@ -15,14 +15,14 @@
   --paper-4: #edede8;
   --blue: #0454ff;
   --blue-ink: #0a3fbf;
-  --indigo: #4946ff;
-  --violet: #6764ff;
-  --purple: #a95dc9;
-  --purple-ink: #7b3fa3;
-  --lavender: #e1e0ff;
-  --lilac: #f3ecf8;
-  --spectral: linear-gradient(90deg, #0454ff 0%, #6764ff 55%, #a95dc9 100%);
-  --spectral-soft: linear-gradient(90deg, rgba(4, 84, 255, 0.14), rgba(103, 100, 255, 0.14), rgba(169, 93, 201, 0.14));
+  --indigo: #3d5b8c;
+  --violet: #35777d;
+  --purple: #627a94;
+  --purple-ink: #36596c;
+  --lavender: #e6edf8;
+  --lilac: #edf2f5;
+  --spectral: linear-gradient(90deg, #0454ff 0%, #3d5b8c 60%, #35777d 100%);
+  --spectral-soft: linear-gradient(90deg, rgba(4, 84, 255, 0.08), rgba(53, 119, 125, 0.08));
   --glass: rgba(255, 255, 255, 0.72);
   --glass-strong: rgba(255, 255, 255, 0.88);
   --glass-border: rgba(0, 0, 32, 0.08);
@@ -32,7 +32,7 @@
   --r-s: 8px;
   --r-m: 12px;
   --r-l: 20px;
-  --shadow-1: 0 1px 2px rgba(0, 0, 32, 0.04), 0 10px 30px -14px rgba(4, 84, 255, 0.18);
+  --shadow-1: 0 1px 2px rgba(0, 0, 32, 0.04), 0 8px 24px -14px rgba(0, 0, 32, 0.16);
   --shadow-2: 0 2px 6px rgba(0, 0, 32, 0.06), 0 30px 60px -30px rgba(4, 84, 255, 0.28);
   --max: 1200px;
   --header-h: 64px;
@@ -52,8 +52,7 @@ body {
   letter-spacing: -0.01em;
   color: var(--ink);
   background:
-    radial-gradient(1100px 520px at 85% -8%, rgba(225, 224, 255, 0.65), transparent 62%),
-    radial-gradient(700px 420px at 8% 0%, rgba(4, 84, 255, 0.07), transparent 60%),
+    radial-gradient(1100px 520px at 85% -8%, rgba(230, 237, 248, 0.45), transparent 62%),
     var(--paper);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -64,7 +63,7 @@ body::before {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background-image: radial-gradient(rgba(0, 0, 32, 0.11) 1px, transparent 1.2px);
+  background-image: radial-gradient(rgba(0, 0, 32, 0.045) 1px, transparent 1.2px);
   background-size: 26px 26px;
   -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.15) 45%, transparent 80%);
   mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.15) 45%, transparent 80%);
@@ -89,7 +88,7 @@ img, svg { max-width: 100%; }
 .display { font-weight: 600; letter-spacing: -0.04em; line-height: 1.08; font-size: clamp(30px, 4vw, 46px); margin: 0 0 16px; text-wrap: balance; }
 .display-xl { font-size: clamp(38px, 4vw, 64px); margin-bottom: 20px; }
 .display-sm { font-size: clamp(22px, 2.6vw, 30px); }
-.display em.serif { font-family: var(--font-serif); font-style: normal; font-weight: 400; letter-spacing: -0.02em; background: var(--spectral); -webkit-background-clip: text; background-clip: text; color: transparent; padding-right: 0.04em; }
+.display em.serif { font-family: var(--font-serif); font-style: normal; font-weight: 400; letter-spacing: -0.02em; color: var(--blue-ink); padding-right: 0.04em; }
 .serif { font-family: var(--font-serif); }
 .lede { font-size: clamp(17px, 1.5vw, 20px); line-height: 1.55; color: var(--ink-2); max-width: 64ch; margin: 0 0 20px; }
 .lede p, .entry-status-note p, .glossary-item dd div p { margin: 0 0 8px; }
@@ -245,12 +244,12 @@ img, svg { max-width: 100%; }
 .status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 .status-verified { background: #e6eeff; color: var(--blue-ink); border-color: rgba(4, 84, 255, 0.25); }
 .status-verified .status-dot { background: var(--blue); }
-.status-promising { background: #ecebff; color: #3a37c9; border-color: rgba(103, 100, 255, 0.3); }
+.status-promising { background: #eaf3f2; color: #285e63; border-color: rgba(53, 119, 125, 0.3); }
 .status-promising .status-dot { background: var(--violet); }
 .status-closed { background: #eeeef3; color: #3b3b5c; border-color: rgba(0, 0, 32, 0.15); }
 .status-power-limited { background: #fff3d6; color: #7a4d00; border-color: rgba(217, 143, 0, 0.35); }
 .status-power-limited .status-dot { background: #d98f00; }
-.status-inconclusive { background: var(--lilac); color: var(--purple-ink); border-color: rgba(169, 93, 201, 0.35); }
+.status-inconclusive { background: var(--lilac); color: var(--purple-ink); border-color: rgba(98, 122, 148, 0.3); }
 .status-inconclusive .status-dot { background: var(--purple); }
 .status-untested { background: var(--paper-3); color: #5c5c70; border-color: rgba(0, 0, 32, 0.12); }
 .status-untested .status-dot { background: #9a9aa8; }
@@ -425,7 +424,7 @@ h1[id], h2[id], h3[id], section[id], div[id] { scroll-margin-top: 90px; }
 .prose a:hover { text-decoration-color: var(--blue); }
 .table-scroll { overflow-x: auto; max-width: 100%; }
 math { font-size: 1.06em; }
-.math-display { overflow-x: auto; padding: 10px 14px; margin: 0 0 16px; border-radius: var(--r-s); background: linear-gradient(180deg, rgba(225, 224, 255, 0.25), rgba(243, 236, 248, 0.25)); border: 1px solid var(--hair-2); }
+.math-display { overflow-x: auto; padding: 14px 18px; margin: 0 0 18px; border-radius: var(--r-s); background: #f6f8fc; border: 1px solid var(--hair-2); border-left: 3px solid var(--indigo); }
 .math-display math { font-size: 1.15em; }
 .math-error { color: #b22222; }
 
@@ -446,8 +445,8 @@ math { font-size: 1.06em; }
 @media (max-width: 560px) { .tree { grid-template-columns: minmax(0, 1fr); row-gap: 2px; } .tree-desc { padding-left: calc(var(--depth, 0) * 1.6ch + 1.5ch); margin-bottom: 6px; } }
 
 /* Pseudocode: numbered lines that keep their indentation when they wrap */
-.pc { --pc-gutter: 3.8ch; border: 1px solid rgba(4, 84, 255, 0.18); border-radius: 12px; background: linear-gradient(180deg, rgba(225, 224, 255, 0.22), rgba(246, 245, 244, 0.92)); padding: 14px 16px 14px 0; margin: 0 0 16px; }
-.pc-lines, .prose .pc-lines { list-style: none; margin: 0; padding: 0; max-width: none; counter-reset: pc; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.65; color: var(--ink); }
+.pc { --pc-gutter: 3.8ch; border: 1px solid #dce3ed; border-radius: 8px; background: #f7f9fc; padding: 18px 16px 18px 0; margin: 0 0 18px; }
+.pc-lines, .prose .pc-lines { list-style: none; margin: 0; padding: 0; max-width: none; counter-reset: pc; font-family: var(--font-mono); font-size: 13.5px; line-height: 1.75; color: var(--ink); }
 .pc-line { counter-increment: pc; position: relative; white-space: pre-wrap; overflow-wrap: anywhere; padding-left: calc(var(--pc-gutter) + var(--pc-indent, 0) * 1ch + 2ch); text-indent: -2ch; min-height: 1.65em; }
 .pc-line::before { content: counter(pc); position: absolute; left: 0; top: 0; width: calc(var(--pc-gutter) - 1.2ch); text-align: right; color: var(--ink-3); font-size: 11px; line-height: inherit; text-indent: 0; user-select: none; }
 .pc-line code { font: inherit; background: none; padding: 0; color: inherit; }
@@ -610,4 +609,25 @@ textarea.field-input { resize: vertical; min-height: 72px; line-height: 1.5; }
   .kb-shell { display: block; }
   .entry-grid { grid-template-columns: 1fr; }
   body::before { display: none; }
+}
+
+/* Quiet reference surfaces; blue for navigation, teal for qualified evidence. */
+.evidence-records { margin-top: 20px; border-top: 1px solid var(--hair); padding-top: 14px; }
+.evidence-records > summary { cursor: pointer; color: var(--blue-ink); font-size: 14px; font-weight: 500; }
+.evidence-records[open] > summary { margin-bottom: 12px; }
+.kb-tree-item { font-size: 13.5px; padding-block: 6px; }
+.kb-tree-heading { font-size: 13px; }
+.kb-sidebar-search input { font-size: 14px; }
+.entry-context > summary { font-size: 12.5px; }
+.prose th { font-size: 12px; color: var(--ink-2); background: var(--paper-2); }
+.entry-status { background: #f7f9fc; border-color: #dce3ed; }
+@media (max-width: 560px) {
+  .entry-status { flex-direction: column; gap: 10px; }
+  .hero-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+  .pc { --pc-gutter: 3.2ch; padding-right: 10px; }
+  .pc-lines, .prose .pc-lines { font-size: 12.5px; }
+}
+@media print {
+  .pc, .math-display { background: white; }
+  .evidence-records { border-top: 0; }
 }

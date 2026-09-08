@@ -7,8 +7,8 @@ status_note = "A bank of 66,628 distinct 26-cycles was built from ciphertext, ig
 family = "Relations between ciphertexts"
 tags = ["mixed alphabet", "cycle bank", "relaxation", "cyclic DP", "selection overfit", "within-coset null"]
 related = ["quagmire-iii", "keyword-mixed-alphabet", "permutation-cycles", "periodic-substitution-dp", "exact-dynamic-programming", "selection-overfit-diagnostic", "within-coset-null", "blind-controls", "corpus-bank-screen", "crib-driven-alphabet-recovery", "modular-inverse-and-crt", "g-selection-freedom", "g-family-sweep"]
-summary = "If a keyed periodic cipher's alphabet is unknown, a blind search may be too large. Instead, build possible 26-cycles from first-occurrence orders in ciphertext fragments and grid reads. Test each cycle as the shared alphabet of all cosets. A cheap approximate score makes a shortlist, and an exact cyclic dynamic program finishes it. Then repeat the whole selection on within-coset shuffles. This showed that the strongest target candidate was only the best of many choices."
-updated = "2026-09-04"
+summary = "Construct candidate alphabet cycles from a declared structural bank, then solve the periodic key conditional on each cycle. A cheap screen can prioritize candidates for an exact cyclic dynamic program. The bank and any shortlist restrict coverage, and the complete selection must be calibrated with matched nulls."
+updated = "2026-09-08"
 
 [[blocks]]
 kind = "definition"

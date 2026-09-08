@@ -1,0 +1,79 @@
+id = "shared-prefix-neural-cache"
+section = "engineering"
+title = "Shared-prefix caches for constrained neural search"
+status = "VERIFIED"
+status_note = "This is a source-level engineering pattern with supplied synthetic cache-equivalence checks. No current model benchmark, end-to-end speedup, or cryptanalytic recovery claim is inferred."
+family = "Compute and throughput"
+tags = ["neural language model", "KV cache", "shared prefix", "beam search", "parent reordering"]
+related = ["neural-language-model-decipherment", "beam-search", "exact-optimization-admission"]
+summary = "Reuse an immutable prompt cache across beam candidates, while keeping each branch’s continuation, positions and constraint state independent. Validate cache operations against full-prefix model evaluation."
+updated = "2026-09-08"
+
+[[blocks]]
+kind = "definition"
+body = '''
+An autoregressive model caches attention keys and values for consumed tokens. Beam candidates with the same exact token prefix can share the immutable prefix storage. Each candidate still owns its generated suffix cache, attention mask, position information and cipher constraints. In a two-stream decoder, maintain separate prompt and continuation states for the plaintext and the key.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+Share only byte-identical model inputs under the same weights, tokenizer, prompt, position scheme and runtime configuration. A branching operation may select one parent several times. Index-select every mutable state using the same parent vector. Updating one side of a coupled beam must preserve the other side’s logits and logical token length.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function EXTEND_COUPLED_BEAM(parents, selected_sides, tokens, beam):
+    next = REORDER_ALL_CONSTRAINT_AND_HISTORY_STATES(beam, parents)
+    for side in [PLAINTEXT, KEY]:
+        prefix = beam[side].immutable_prompt_cache
+        suffix = INDEX_SELECT_SUFFIX_CACHE(beam[side], parents)
+        old_logits = INDEX_SELECT_LOGITS(beam[side], parents)
+        active = selected_sides equal side
+        masks, positions = BUILD_LOGICAL_POSITIONS_AND_ATTENTION_MASKS(next, side, active)
+        new_cache, new_logits = MODEL_STEP(prefix, suffix, tokens, masks, positions)
+        next[side].cache = PRESERVE_INACTIVE_LOGICAL_HISTORY(new_cache, active)
+        next[side].logits = SELECT(active, new_logits, old_logits)
+    return next
+function VERIFY_CACHE(branches, model):
+    for branch and side:
+        reference = MODEL_WITH_FULL_EXACT_PROMPT_AND_HISTORY(branch, side)
+        require cached next-token logits match reference within fixed tolerance
+        require cache lengths, masks and parent histories match
+    return CACHE_CHECK_ONLY
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+For beam size $B$, prompt length $P$ and continuation length $T$, fully replicated persistent storage scales with $B(P+T)$ tokens per layer. Shared-prefix storage can scale with $P+BT$. A runtime may still materialize an expanded concatenation during attention, so this does not prove the same reduction in peak memory or arithmetic.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+Masked padding is not a real consumed token and must not advance logical positions. Cache sharing is unsafe for differing prompts or mutable prefix buffers. Tiny random-model checks verify mechanics only; they do not validate candidate quality on encrypted text. Token text must still be checked by the cipher constraints, including tokenizer boundary effects.
+'''
+
+[[provenance]]
+path = "archive-a/shared_prompt_cache.py"
+kind = "library"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[provenance]]
+path = "archive-a/check_dual_cache.py"
+kind = "script"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[provenance]]
+path = "archive-a/dual_running_neural.py"
+kind = "solver"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[references]]
+title = "Cache strategies"
+url = "https://huggingface.co/docs/transformers/en/kv_cache"
+author = "Hugging Face"

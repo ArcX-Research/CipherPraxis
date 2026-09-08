@@ -6,9 +6,9 @@ status = "VERIFIED"
 status_note = "An independent encoder matched a separate generator. On one held-out sample, the decoder recovered all 427 plaintext letters and rebuilt all 504 ciphertext letters. Four table cells were not observable; all 24 permutations of their labels produced the same ciphertext."
 family = "Fractionation ciphers"
 tags = ["morse", "fractionation", "ternary", "keyed alphabet", "identifiability"]
-related = ["compressocrat", "trifid", "keyword-mixed-alphabet", "simulated-annealing", "parameter-versus-plaintext-recovery", "known-answer-tests", "g-fractionation"]
+related = ["compressocrat", "trifid", "keyword-mixed-alphabet", "simulated-annealing", "parameter-versus-plaintext-recovery", "known-answer-tests", "g-fractionation", "morbit-and-pollux", "incremental-language-score"]
 summary = "Fractionated Morse changes letters into dots, dashes, and separators. It reads that three-symbol stream in groups of three and replaces each group with a letter from a table. The method is simple, but some table cells may never occur. A solver must report the table only up to what the observed stream can identify."
-updated = "2026-09-05"
+updated = "2026-09-08"
 
 [[blocks]]
 kind = "definition"
@@ -52,6 +52,13 @@ body = '''
 Invert a candidate table, turn every ciphertext letter into a trigraph, and score both the resulting Morse validity and the decoded language. Search table permutations with swaps or another permutation optimiser. Reject candidates with malformed Morse runs instead of silently replacing them with filler. Finally, re-encode the decoded text and require an exact ciphertext match.
 
 Before comparing a recovered table with hidden truth, find the ranks that the sample actually emits. Compare observed cells literally and report unobserved cells as one equivalence class.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "Score in the Morse representation"
+body = '''
+Train the scoring table in the representation the solver actually searches. For a fixed conventional ternary-triplet ordering, encode generic training text into the unkeyed triplet alphabet, then optimize the cipher substitution under those triplet-domain n-grams. Alternatively score the expanded dot/dash/separator stream. This avoids applying ordinary letter frequencies to triplet labels. Precompute affected windows for key swaps, and require exact Morse parsing and forward consistency afterward.
 '''
 
 [[blocks]]
@@ -140,3 +147,23 @@ note = "Predeclared observable-rank equivalence replay."
 path = "withmath/logs/186b_colossus_fracmorse_equiv.log"
 kind = "log"
 note = "Exact plaintext, forward reconstruction, emitted-rank census, and 24-member equivalence check."
+
+[[provenance]]
+path = "archive-a/fractionated_morse.cpp"
+kind = "solver"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[provenance]]
+path = "archive-a/cp_fractionated_morse.py"
+kind = "solver"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[provenance]]
+path = "archive-b/frac_morse.cpp"
+kind = "solver"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[references]]
+title = "Automated Cryptogram Solving, Morse-based ciphers"
+url = "https://www.cryptogram.org/resources/downloads/AutomatedCryptogramSolving.V2.pdf"
+author = "American Cryptogram Association"

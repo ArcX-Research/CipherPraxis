@@ -6,9 +6,9 @@ status = "VERIFIED"
 status_note = "The max-score path is an exact dynamic program for a fixed acyclic lattice. It has been checked against scalar enumeration in the project and is supported by established word-lattice and Viterbi literature."
 family = "Exact language decoding"
 tags = ["word lattice", "segmentation", "Viterbi", "unspaced text"]
-related = ["semi-markov-word-model", "viterbi-decoding", "exact-dynamic-programming", "word-prefix-csp", "combined-character-word-models", "lexical-reranking-and-oov-bias", "running-key-relation-test", "parameter-versus-plaintext-recovery"]
+related = ["semi-markov-word-model", "viterbi-decoding", "exact-dynamic-programming", "word-prefix-csp", "combined-character-word-models", "lexical-reranking-and-oov-bias", "running-key-relation-test", "parameter-versus-plaintext-recovery", "running-key", "block-word-boundary-dp", "best-first-frontier-memory"]
 summary = "Represent every admitted word or fallback fragment as an edge from its start to end position in an unspaced string. The best segmentation is the maximum-weight path through this directed acyclic graph. Viterbi dynamic programming finds that path exactly relative to the frozen lexicon and penalties."
-updated = "2026-09-06"
+updated = "2026-09-08"
 
 [[blocks]]
 kind = "definition"
@@ -89,6 +89,13 @@ body = '''
 '''
 
 [[blocks]]
+kind = "assumptions"
+title = "Coupled-trie decoding with aggregated resets — scope"
+body = '''
+Aggregated terminal resets preserve a maximum-score path when future transitions depend only on the retained trie states and declared context. Retain tied predecessors if all optimal segmentations are required. A finite lexicon limits the language model; beam pruning additionally limits the search and cannot support an exhaustive exclusion.
+'''
+
+[[blocks]]
 kind = "attack"
 title = "Use as a decipherment component"
 body = '''
@@ -118,6 +125,34 @@ function VITERBI_SEGMENT(text, lattice):
                 predecessor[end] = (start, token)
             else if candidate ties: retain the additional predecessor
     return best[last position], BACKTRACK_ALL_TIED_PATHS(predecessor)
+```
+'''
+
+[[blocks]]
+kind = "pseudocode"
+title = "Coupled-trie decoding with aggregated resets"
+body = '''
+```text
+function DUAL_TRIE_DECODE(cipher, plain_trie, key_trie, boundary_policy):
+    layer = {(plain_root, key_root, initial_flags): score_zero}
+    for position in cipher:
+        if position is first:
+            closure_sources = [layer]
+        else:
+            HP = MAXIMIZE_PLAIN_CLOSURE_PER_KEY_STATE(layer)
+            HK = MAXIMIZE_KEY_CLOSURE_PER_PLAIN_STATE(layer)
+            HB = MAXIMIZE_BOTH_CLOSURES_FROM_SAME_STATE(layer)
+            closure_sources = [layer, HP, HK, HB]
+        next = SPARSE_MAP_WITH_TIED_BACKPOINTER_DAG()
+        for source in closure_sources:
+            for legal plaintext child letter a:
+                b = KEY_LETTER_FOR(cipher[position], a)
+                if matching key-trie child exists:
+                    RELAX_MAX_AND_RETAIN_TIES(next, both_children, source)
+        if state or backpointer budget exceeded: return INCOMPLETE
+        layer = next
+    finals = APPLY_LEGAL_TERMINAL_CLOSURES_ONCE(layer, boundary_policy)
+    return COMPLETE, MAX_SCORE_AND_ALL_REQUIRED_WITNESSES(finals)
 ```
 '''
 
@@ -185,3 +220,19 @@ url = "https://aclanthology.org/C08-1049/"
 title = "Error Bounds for Convolutional Codes and an Asymptotically Optimum Decoding Algorithm"
 author = "Andrew J. Viterbi"
 year = 1967
+
+[[provenance]]
+path = "withmath/docs/cipher-methods/RUNKEY_WORDPAIR751.md"
+kind = "design"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[provenance]]
+path = "archive-b/frac_running_biwords.cpp"
+kind = "solver"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[references]]
+title = "Finite-State Transducers in Language and Speech Processing"
+url = "https://aclanthology.org/J97-2003/"
+author = "Mehryar Mohri"
+year = 1997

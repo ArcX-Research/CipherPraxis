@@ -6,9 +6,9 @@ status = "POWER-LIMITED"
 status_note = "The algebra, exact schedule step, equality-class scan, and forward transform pass recorded controls. The tested end-to-end solver retained every planted structural class but missed two exact output labelings, so recovery remains power-limited at the substitution stage."
 family = "Stream and machine ciphers"
 tags = ["cipher disk", "piecewise velocity", "continuous phase", "arbitrary substitution", "change points"]
-related = ["alberti-progressive", "alternating-velocity-disk-cipher", "piecewise-running-shift-dp", "arbitrary-substitution-equality-classes", "latent-label-identifiability", "stationary-alternating-optimization", "strict-best-improvement-swap-ascent", "lexical-band-contextual-reranking", "reverse-alphabet-affine-alias"]
+related = ["alberti-progressive", "alternating-velocity-disk-cipher", "piecewise-running-shift-dp", "arbitrary-substitution-equality-classes", "latent-label-identifiability", "stationary-alternating-optimization", "strict-best-improvement-swap-ascent", "lexical-band-contextual-reranking", "reverse-alphabet-affine-alias", "word-prefix-csp", "conjugacy-and-gauge"]
 summary = "This cipher turns one alphabet disk at a constant speed inside each segment. At a boundary, the speed may change, but the disk does not jump back to its starting position. Removing the carried disk phase leaves one latent symbol stream under a single substitution alphabet."
-updated = "2026-09-06"
+updated = "2026-09-08"
 
 [[blocks]]
 kind = "definition"
@@ -48,6 +48,36 @@ That closed form makes the carried history explicit: every earlier velocity affe
 '''
 
 [[blocks]]
+kind = "equations"
+title = "Constrain a proposed word path without guessing the alphabet"
+body = '''
+For a fixed outer order, put $x_i=B^{-1}(C_i)$ and $z=M^{-1}$. Write the carried phase as $f_i\cdot d$, where $f_i$ contains each earlier segment's length, the current local position, and zeros for later segments. Then
+
+$$z(P_i)=x_i-f_i\cdot d\pmod m.$$
+
+Store the first occurrence a of each proposed plaintext letter. Every repeat at i adds
+
+$$(f_i-f_a)\cdot d=x_i-x_a\pmod m.$$
+
+Different letters must have different resulting coordinates. Thus a path through candidate words can constrain only the s velocity variables plus observed-letter anchors, rather than branching on every unused alphabet entry. Once a complete path is consistent, u observed letters leave exactly $(m-u)!$ bijective map completions. Preserve these completions, physical schedules and distinct segmentation paths when the application needs them.
+
+This remains exact over composite m; never divide by a nonunit. For example, $2d=2\pmod4$ has both solutions1 and3. A work cap is an incomplete search, not evidence that a path is impossible.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "An equivalent curvature test keeps the bridge windows"
+body = '''
+Assume every segment has at least two positions. For a complete proposed text and a bijection z, the continuous model is equivalent to the initial gauge $z(P_0)=x_0$ and
+
+$$z(P_i)-2z(P_{i+1})+z(P_{i+2})=x_i-2x_{i+1}+x_{i+2}$$
+
+at all valid triple starts except $i=b_q-1$ for internal boundaries. There are $n-s-1$ such equations. The omitted window contains the change from the old velocity to the new one. Keep $i=b_q-2$: it makes the step into the next segment use the previous velocity and therefore enforces continuous phase.
+
+To see sufficiency, subtract z(P) from x. The retained equations make consecutive first differences equal everywhere except the declared velocity changes. The zero initial residual fixes the phase gauge. Read each segment's velocity from its first residual edge and independently replay the whole cipher. Using only triples wholly inside segments loses the bridge constraints and admits independent phase jumps.
+'''
+
+[[blocks]]
 kind = "variants"
 body = '''
 - **Constant velocity:** all $d_q$ are equal, giving ordinary progressive disk motion.
@@ -69,10 +99,21 @@ body = '''
 '''
 
 [[blocks]]
+kind = "assumptions"
+title = "Delayed velocity introduction — scope"
+body = '''
+Delayed velocity introduction is justified by the local transition equations. The cited delayed-state proposal is a design, so the earlier word-path controls do not establish its enumeration completeness, memory use or recovery power. Compare complete witness sets against a direct small-instance enumerator before using it to exclude a model.
+'''
+
+[[blocks]]
 kind = "attack"
 title = "Peel motion before fitting labels"
 body = '''
 Enumerate or optimise the admitted velocity schedules. For each schedule, carry the phase across every boundary and subtract it from the ciphertext coordinates. Group the resulting latent streams by their complete equality pattern before fitting the arbitrary substitution. For a fixed substitution, use [Piecewise running-shift dynamic programming](/exact/piecewise-running-shift-dp) so internal and boundary-crossing language terms are counted exactly. Preserve all schedule aliases and independently encrypt every reported plaintext.
+
+An exact alternative interleaves word paths with the anchor constraints above. The first segment, plus the next segment's first symbol when there is one, depends only on the first velocity: at most m distinct prefix equality patterns need be tested, with all physical velocity aliases retained. Introduce later velocities only when they affect an observed position. Do not match segments independently; literal-letter anchors and correlated velocity constraints must carry across boundaries. This is an algebraic search interface, not a proved language-recovery guarantee.
+
+Each new velocity first affects local position1, where its coefficient is1. For a proposed letter with known coordinate y, it is forced by $d_q=x_i-\phi_q-y\pmod m$. For a new letter, branch over unused coordinates y and use the same equation. Keep the correlated earlier velocities and any unfinished word arc; this delay removes redundant future-slope enumeration without dividing by a nonunit.
 '''
 
 [[blocks]]
@@ -104,6 +145,34 @@ function PEEL(cipher, boundaries, velocities, outer):
 '''
 
 [[blocks]]
+kind = "pseudocode"
+title = "Delayed velocity introduction"
+body = '''
+```text
+function EXTEND_WORD_PATH(state, arc):
+    for symbol at physical position i within arc:
+        q, j = SEGMENT_AND_OFFSET(i)
+        phase = segment_length * SUM(state.previous_velocities) mod modulus
+        if j == 1:
+            choices = EXISTING_COORDINATE_OR_EVERY_UNUSED_COORDINATE(symbol, state)
+            for y in choices:
+                d = ciphertext_coordinate[i] - phase - y mod modulus
+                EXTEND_CORRELATED_STATE_WITH_NEW_VELOCITY(state, d, y)
+        else:
+            y = ciphertext_coordinate[i] - phase - j * ACTIVE_VELOCITY_OR_ZERO(state)
+            KEEP_ONLY_CONSISTENT_INJECTIVE_ANCHOR(state, symbol, y mod modulus)
+        if any declared work or memory cap reached: return INCOMPLETE
+    CHARGE_ARC_SCORE_ONCE_AT_ITS_END(state, arc)
+    KEEP_ALL_REQUIRED_PATH_AND_KEY_ORIGINS(state)
+    if complete text:
+        for full_map in ALL_UNUSED_COORDINATE_COMPLETIONS(state):
+            require LITERAL_FORWARD_REPLAY(full_map, state.velocities) == cipher
+            EMIT_COMPLETE_WITNESS(state, full_map)
+    else: continue through each legal outgoing word arc
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
 For $s$ segments and $m$ allowed velocities per segment, direct schedule enumeration has $m^s$ cells and costs $O(nm^s)$ just to peel them. Equality-pattern grouping can reduce repeated substitution work. With a fixed substitution, the continuity constraint supports an exact dynamic program whose cost is polynomial in $s$ and $m$ rather than exponential in $s$.
@@ -124,6 +193,8 @@ body = '''
 kind = "controls"
 body = '''
 Use planted texts with different velocity patterns, alphabet directions, and symbol coverage. Include nearby-family sentinels for boundary reset, shifted boundaries, periodic velocity, and independent segment maps. Require an exact equality-class scan over every declared schedule, a complete alias census, whole-text score agreement, and a separately written forward recurrence. Report structural-class recovery apart from literal plaintext recovery so a label-scoring failure does not become a false rejection of the motion model.
+
+A finite word-path implementation was separately checked on eight public symbolic cases over alphabets of size3 and4. Across384 segmentation paths and256 case-texts, all108 accepted full map/schedule/path records matched both exhaustive map-times-schedule enumeration and the curvature/gauge formulation. Unused-map completions, nonunit roots, physical outer aliases and a non-self-inverse outer direction test survived. All four intentional caps remained incomplete; a reset contrast rejected the intended continuous witnesses. This establishes tiny exact inference and software composition, not full-alphabet word-search complexity or language power.
 '''
 
 [[blocks]]
@@ -164,6 +235,24 @@ path = "withmath/logs/640_pk10_quartervelocity_controls_20260905T215346Z.log"
 kind = "log"
 note = "Frozen target-absent control receipt separating schedule-class retention from exact output-label recovery."
 ref = "LOG640"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_WORDPATH771.md"
+kind = "design"
+note = "Independently source-reviewed exact proposed-letter/four-velocity formulation, nonunit-root and unused-map boundaries, complete curvature/gauge equivalence, and first L+1 prefix-pattern shortcut. The shortcut remains unimplemented in this reference; tiny software equivalence is recorded separately below."
+ref = "LOG771"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_WORDPATH771_RESULTS.md"
+kind = "audit"
+note = "Sole KAT and independent audit exited0 with unchanged sources/runtime and empty stderr. Complete8-case/108-record accepted-set equivalence; four cap-INCOMPLETE probes,22 source-attested malformed refusals and13 separately executed receipt refusals. Independent audit result SHAe3062f8ab58e29b1374c0d0b5e7402270237ce85af8e4d28b0aae3a4f1ca1758. No target, corpus, language model, retry or power admission; historical exits are operator-attested."
+ref = "LOG771"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_DELAYED772.md"
+kind = "design"
+note = "Exact coefficient-one delayed introduction and accepted-set equivalence proof, with separate path-count and unused-key completion limits. Initial tiny core is source-reviewed only; no delayed-worker KAT, degree26 resource guarantee or language-power result is claimed."
+ref = "LOG772"
 
 [[references]]
 title = "De Cifris"

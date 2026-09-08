@@ -6,9 +6,9 @@ status = "VERIFIED"
 status_note = "Arbitrary-matrix attacks passed controls at every tested size. Hill-2 over a periodic layer solved 96- and 126-letter controls exactly. Hill-3 controls passed at 153, 144, and 504 letters while checking 15,372 valid rows. Two random direct Hill-4 controls also passed. A dictionary-matrix screen recovered an earlier solved text."
 family = "Polygraphic substitution"
 tags = ["polygraphic", "linear", "matrix", "block"]
-related = ["affine-cipher", "playfair", "matrix-invertibility-mod-26", "finite-field-linear-algebra", "units-mod-26", "periodic-substitution-dp", "meet-in-the-middle", "family-wise-null", "hill-lab", "g-polygraphic"]
+related = ["affine-cipher", "playfair", "matrix-invertibility-mod-26", "finite-field-linear-algebra", "units-mod-26", "periodic-substitution-dp", "meet-in-the-middle", "family-wise-null", "hill-lab", "g-polygraphic", "circulant-hill", "linear-feedback-hill", "hill-row-recovery"]
 summary = "The Hill cipher treats each d-letter block as numbers and multiplies it by a reversible d x d matrix modulo 26. During decryption, each row of the inverse matrix produces every d-th plaintext letter. A solver can score those sampled streams one row at a time, then join rows only if the full matrix is reversible. Tests covered arbitrary matrices of sizes 2, 3, and 4, both alone and over a repeating additive layer."
-updated = "2026-09-07"
+updated = "2026-09-08"
 
 [[blocks]]
 kind = "definition"

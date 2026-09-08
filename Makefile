@@ -18,7 +18,7 @@ help:
 		'  make lint         Run Rust and script linters' \
 		'  make test         Run the workspace test suite' \
 		'  make content      Validate the content catalog' \
-		'  make provenance   Check cited files in the Cryptanalysis corpus' \
+		'  make provenance   Check cited files across the research archives' \
 		'  make check        Run the complete project check' \
 		'  make build        Build the release site in dist/' \
 		'  make build-dev    Build the development site in dist/' \
@@ -44,6 +44,7 @@ lint-scripts:
 
 test:
 	$(CARGO) test --workspace --all-features
+	$(PYTHON) scripts/check_research_algorithms.py
 
 content:
 	$(CARGO) run --quiet -p praxis-core --features authoring --bin praxis-check -- content --strict

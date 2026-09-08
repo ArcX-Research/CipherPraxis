@@ -6,9 +6,9 @@ status = "CLOSED"
 status_note = "The exact graph solver passed 4/4 planted controls and two negative controls. Target tests returned structural zeros for the stated shared-plaintext periods 26 and 7 family (3,128 layouts) and equal-period window family (132 cases). Those families are ruled out only in that scope. The period-7/period-9 test has a control plan but no target run."
 family = "Combinatorial constraints"
 tags = ["graph", "potential", "cycle space", "bipartite", "spanning tree", "components"]
-related = ["difference-operators", "lcm-of-periods", "finite-field-linear-algebra", "all-different-constraints", "dihedral-group", "key-cancellation", "segment-chain-analysis", "exact-chain-oracle", "g-residue-class", "g-invariant"]
+related = ["difference-operators", "lcm-of-periods", "finite-field-linear-algebra", "all-different-constraints", "dihedral-group", "key-cancellation", "segment-chain-analysis", "exact-chain-oracle", "g-residue-class", "g-invariant", "compound-periodic-key", "zero-aware-cartesian-product-cap"]
 summary = "Suppose two ciphertexts share one plaintext but use different repeating keys. At each position, subtracting their coordinates leaves the difference between two key values. Draw a vertex for each key remainder and an edge for each position. The keys can exist exactly when every cycle in this graph sums to zero. This gives exact equations for the unknown alphabet without knowing either key. The number of separate graph parts tells us how many key offsets remain free."
-updated = "2026-09-07"
+updated = "2026-09-08"
 
 [[blocks]]
 kind = "definition"
@@ -51,6 +51,16 @@ body = '''
 '''
 
 [[blocks]]
+kind = "attack"
+title = "Process crib constraints incrementally"
+body = '''
+Write a two-key decryption as $P_i=\sigma C_i+A_{i\bmod p}-B_{i\bmod q}\pmod m$, with $\sigma\in\{-1,1\}$. A crib supplies equations $A_r-B_s=d_i$. Maintain a disjoint-set forest on the $p+q$ key vertices, storing each vertex's potential relative to its parent. Path compression adds these potentials modulo $m$; no modular division is needed.
+
+
+If FIND returns $(R_u,w_u)$ and $(R_v,w_v)$, where $w_u=x_u-x_{R_u}$, the equation $x_u-x_v=d$ requires $w_u-w_v=d$ when roots agree. Otherwise attaching $R_u$ under $R_v$ requires weight $d-w_u+w_v$. Reverse that weight if union by size attaches the other way.
+'''
+
+[[blocks]]
 kind = "pseudocode"
 body = '''
 ```text
@@ -83,6 +93,39 @@ function SOLVE_RESIDUE_GRAPH(m, q, edges (r_i, g_i, d_i), eps):
 // becomes a homogeneous linear row in the cycle coordinates z, solved over
 // GF(2) and GF(13).
 ```
+'''
+
+[[blocks]]
+kind = "pseudocode"
+title = "Incremental modular-potential constraints"
+body = '''
+```text
+function JOIN_EQUATION(u, v, d, forest, modulus):
+    ru, wu = FIND_WITH_COMPRESSED_POTENTIAL(u, forest)
+    rv, wv = FIND_WITH_COMPRESSED_POTENTIAL(v, forest)
+    if ru == rv: return (wu - wv - d) mod modulus == 0
+    delta = (d - wu + wv) mod modulus
+    if SIZE(ru) <= SIZE(rv): ATTACH(ru, rv, delta)
+    else: ATTACH(rv, ru, -delta mod modulus)
+    return true
+function FIT_TWO_PERIODS(cipher, crib, p, q, modulus, sigma, limit):
+    full = COMPONENTS_OF_ALL_POSITION_EDGES(cipher, p, q)
+    forest = SINGLETON_POTENTIAL_FOREST(p + q)
+    for (u, v, d) in CRIB_EQUATIONS(crib, sigma * cipher, p, q, modulus):
+        if not JOIN_EQUATION(u, v, d, forest, modulus): return INFEASIBLE
+    fix one crib-component root per full component to zero
+    free = remaining crib-component roots
+    if modulus ** COUNT(free) exceeds limit: return INCOMPLETE
+    enumerate every free-root offset; decode and forward-check each witness
+    return COMPLETE, witnesses, full-component gauge translations
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+title = "Component offsets and incremental cost"
+body = '''
+With union by size and path compression, $n$ constraints take $O(n\alpha(p+q))$ amortized disjoint-set operations. If the crib graph has $c$ components and the full position graph has $g$, only $m^{c-g}$ relative offsets affect the observed decryption. The $m^g$ omitted common translations are key gauges and must remain recoverable as physical origins.
 '''
 
 [[blocks]]
@@ -172,3 +215,18 @@ year = 2008
 title = "Algebraic Graph Theory"
 author = "Norman Biggs"
 year = 1993
+
+[[provenance]]
+path = "archive-a/double_period_vigenere.cpp"
+kind = "solver"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[provenance]]
+path = "archive-a/check_double_period.py"
+kind = "script"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[provenance]]
+path = "CipherPraxis/scripts/check_research_algorithms.py"
+kind = "script"
+note = "Weighted union-find observable completions compared with exhaustive key assignments. These checks do not establish general recovery power or replay the external solver."

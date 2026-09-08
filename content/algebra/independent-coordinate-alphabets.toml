@@ -1,0 +1,73 @@
+id = "independent-coordinate-alphabets"
+section = "algebra"
+title = "Independent coordinate alphabets in stream relations"
+status = "VERIFIED"
+status_note = "The linear elimination and gauge statements follow from the model. They establish necessary constraints and witness reconstruction, not practical recovery. A failed or capped implementation test supplies no family exclusion."
+family = "Combinatorial constraints"
+tags = ["independent alphabets", "coordinate maps", "gauge", "CRT", "all-different"]
+related = ["conjugacy-and-gauge", "running-key-relation-test"]
+summary = "A relation among three streams can use one shared alphabet coordinate or three independently keyed coordinates. The larger model has different variables, gauges, and identifiability limits."
+updated = "2026-09-08"
+
+[[blocks]]
+kind = "definition"
+body = '''
+For ordered streams $W,X,Y$, independently variable permutations $u,v,w$ to $\mathbb Z_m$, signs $a,b\in\{-1,1\}$, and period $q$, define
+$$u(W_i)-a v(X_i)-b w(Y_i)=h_{i\bmod q}\pmod m.$$
+Setting $u=v=w$ gives a strict subfamily in general. The same physical letter in two maps is represented by two different variables and cannot be canceled across map identities.
+'''
+
+[[blocks]]
+kind = "equations"
+body = '''
+Subtract one anchor equation per phase to eliminate $h$. With one translation gauge per full map the system has $3(m-1)$ columns. The signs may be absorbed into the unrestricted maps for existence testing. Independent translations change $h$ by $\alpha-a\beta-b\gamma$. A common multiplicative unit is also a symmetry; three independent multipliers are not generally a symmetry.
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+For full maps modulo 26, each binary image occurs thirteen times and each odd residue twice. Identical odd coordinate forms for two letters in one map force their binary values to differ, giving an affine binary equation. Enumerate the resulting particular solution plus its kernel, not just the homogeneous kernel. These full-map capacities do not apply unchanged to an observed subset.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function COMPILE_INDEPENDENT_COORDINATES(W, X, Y, period, signs):
+    require equal lengths and every declared phase populated
+    variables = DISTINCT_MAP_QUALIFIED_OBSERVED_SYMBOLS(W, X, Y)
+    anchor = FIRST_POSITION_PER_PHASE(period)
+    equations = []
+    for position i other than its phase anchor j:
+        row = ZERO_ROW(variables)
+        ADD_COEFFICIENTS(row, map_u, W[i], W[j], +1)
+        ADD_COEFFICIENTS(row, map_v, X[i], X[j], -signs.a)
+        ADD_COEFFICIENTS(row, map_w, Y[i], Y[j], -signs.b)
+        equations.append(row)
+    fix one observed coordinate per map to zero
+    solutions = SOLVE_OBSERVED_MAPS_WITH_EXACT_CRT_INJECTION(equations)
+    recover phase intercepts from original equations
+    return solutions with complete sign, translation and unit origins
+```
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+A feasible relation does not by itself identify which coordinate alphabet represents plaintext. Inverting a fourth independent latent alphabet through one of these three maps is unjustified. Sparse observations leave unused-coordinate and permutation fibers; source review and small-symbol tests cannot establish full-alphabet recovery power.
+'''
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/THREE_COORDINATE760.md"
+kind = "design"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/THREE_COORDINATE761_RESULTS.md"
+kind = "audit"
+note = "The bounded full-coordinate preflight did not complete successfully. No implementation pass is inferred from the algebraic derivation."
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/OBSERVABLE_COMPLETIONS764.md"
+kind = "design"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."

@@ -7,8 +7,8 @@ status_note = "The implementation covers inner models with one, two, or three ro
 family = "Bayesian evidence and model selection"
 tags = ["evidence", "marginal likelihood", "model comparison", "Bayes factor", "shift marginalisation"]
 related = ["quadgram-log-likelihood", "index-of-coincidence", "family-wise-null", "selection-overfit-diagnostic", "mixture-inference-under-transposition", "order-free-width-statistic", "expectation-maximisation", "exact-period-alignment", "g-evidence", "g-marginal-likelihood", "g-nats-per-letter"]
-summary = "A repeating key with seven positions gives seven shifts to choose. Reporting only the best likelihood rewards that freedom. On a 153-letter text, choosing the best shifts adds about 0.15 nats per letter even for wrong models. Bayesian evidence instead averages over every shift under a declared prior. It also averages across each model bank, so extra poorly fitting members dilute that bank's evidence under the stated uniform prior. One-, two-, and three-rotation banks can then be compared under those priors and checked against shuffled texts."
-updated = "2026-09-07"
+summary = "Bayesian evidence averages a model’s likelihood over its full declared key prior instead of reporting only the best fit. Model-bank priors and parameter multiplicities affect that average. Evidence comparisons require compatible likelihoods, explicit priors and a matching null model."
+updated = "2026-09-08"
 
 [[blocks]]
 kind = "definition"

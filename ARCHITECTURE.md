@@ -6,8 +6,8 @@ Architecture and content-schema note. Read this before adding content or code.
 
 Cipher Praxis is a public, general-cryptography knowledge base. It preserves and explains the
 classical-cipher models, algebra, cryptanalysis techniques, statistical instruments, search and
-exact solvers, validation protocols, and engineering practice developed during a long
-cryptanalytic research program in this repository (the sibling `../Cryptanalysis/` repository, especially its `withmath/` directory).
+exact solvers, validation protocols, and engineering practice supported by standard literature
+and the local cryptanalytic research archives.
 
 The repository is the **evidence corpus**, not the subject. Public content is written as general
 cryptography research:
@@ -16,8 +16,9 @@ cryptography research:
   puzzle detail appear in any public field. A build-time lint (`build.rs`) rejects forbidden
   tokens in public fields.
 - Internal provenance (`[[provenance]]`) may cite project files, log ids, and audit notes so that
-  every claim is traceable. Provenance is rendered in a clearly labelled "Evidence" panel and is
-  exempt from the public-text lint (file names may contain internal identifiers).
+  every claim is traceable. The Evidence panel leads with literature and puts archival paths
+  inside a "Supporting research records" disclosure. Provenance is exempt from the public-text
+  lint (file names may contain internal identifiers).
 - Results are reported as they were recorded: planted-control pass rates, power numbers, null
   distributions, throughput. Nothing is invented; missing evidence is `UNTESTED`.
 
@@ -40,7 +41,7 @@ cryptography research:
 | `/<section>/<id>` | — | Entry page for any record |
 
 Every method page follows the same block order where applicable: definition, equations, variants,
-assumptions & invariants, attack strategy, complexity, failure modes, controls, reproducible generic
+assumptions & invariants, attack strategy, optimized pseudocode, complexity, failure modes, controls, reproducible generic
 example, notes. Blocks are optional but the *kind* vocabulary is fixed (see §4).
 
 ## 3. Stack decision
@@ -104,6 +105,11 @@ year = 1967
 url = "https://…"               # optional
 ```
 
+Unprefixed provenance paths resolve under `../Cryptanalysis`. `archive-a/` and `archive-b/`
+resolve under the additional local research checkouts; `CipherPraxis/` resolves under this
+repository. `scripts/check_provenance.py` accepts overrides for all four roots. These aliases
+are archival identifiers and do not define the public subject or taxonomy of an article.
+
 Status vocabulary (rendered as badges; the Overview explains them):
 
 - `VERIFIED` — the stated claim has a cited derivation or recorded validation. The status note
@@ -130,15 +136,16 @@ block `title`/`body`, glossary text):
 
 ## 5. Brand (Dilate, light theme only)
 
-Derived from dilate.co.ke (Framer site) on 2026-09-04:
+Derived from the Dilate visual language, with restrained scientific reading surfaces:
 
-- Ink `#000020`; secondary ink `rgba(0,0,32,0.65)`; Dilate blue `#0454ff`; indigo `#4946ff`/`#6764ff`;
-  purple accent `#A95DC9`; lavender tint `#e1e0ff`; surfaces `#ffffff`, `#f6f5f4`, `#f0f0eb`,
+- Ink `#000020`; secondary ink `rgba(0,0,32,0.68)`; muted ink `#626779`; Dilate blue `#0454ff`;
+  slate blue `#3d5b8c`; teal `#35777d`; pale blue tint `#e6edf8`; surfaces `#ffffff`, `#f6f5f4`, `#f0f0eb`,
   `#edede8`; hairline `#e4e4e1`.
 - Type: Geist (UI/body, weights 400/500/600), Adamina (serif display/quotes), DM Mono (data/code).
   Letter-spacing −0.01em body, −0.04em display. Radii 8/12/20 px. Generous whitespace.
-- Motifs: hairline grids, dotted fields, concentric/tableau geometry; no gradients heavier than a
-  faint lavender wash; no dark mode.
+- Motifs: hairline grids, faint dotted fields, concentric geometry and subtle blue/teal washes.
+  Equations and pseudocode use quiet, high-contrast reading panels. Amber marks limited power;
+  status text always accompanies color. No dark mode.
 
 ## 6. Layout of this directory
 

@@ -7,8 +7,8 @@ status_note = "The ledger requires this check. In one ciphertext-based cycle ban
 family = "Power and calibration"
 tags = ["selection", "overfitting", "multiplicity", "nulls"]
 related = ["selection-overfit-diagnostic", "family-wise-null", "within-coset-null", "shuffled-null-z-score", "valid-model-nulls", "tautological-gate-rule", "quadgram-log-likelihood", "bayesian-evidence-model-selection"]
-summary = "Every attack chooses a winner: the best key, crib position, or width. The best of many noisy scores is naturally higher than one score. Compare the target winner with winners from the same search on data known to contain no signal. Each null run must repeat every stage after the first screen. Several strong-looking target scores disappeared inside this fair null range."
-updated = "2026-09-07"
+summary = "A selected maximum is naturally larger than one unselected score. Compare it with maxima from the same complete search under a justified null model. Repeating only the final scoring stage fails to account for earlier choices of key, crib, width or candidate bank."
+updated = "2026-09-08"
 
 [[blocks]]
 kind = "definition"

@@ -6,9 +6,9 @@ status = "VERIFIED"
 status_note = "The shared-cycle symmetries are proved and tested: 48/48 unit checks, 16/16 translation checks, and 312 equivalent descriptions reduced to one class. One control run recovered in one gauge but scored in another. That run was marked invalid and replaced."
 family = "Group theory"
 tags = ["gauge", "symmetry", "canonicalisation", "identifiability", "conjugacy"]
-related = ["permutation-cycles", "group-actions-on-alphabets", "units-mod-26", "affine-maps-mod-26", "modular-arithmetic-z26", "gauge-defect-invalidation", "planted-controls", "shared-cycle-attack", "segment-chain-analysis", "key-cancellation", "quagmire-iii", "latent-label-identifiability", "g-gauge-freedom", "g-affine-orbit", "g-conjugate-permutation"]
+related = ["permutation-cycles", "group-actions-on-alphabets", "units-mod-26", "affine-maps-mod-26", "modular-arithmetic-z26", "gauge-defect-invalidation", "planted-controls", "shared-cycle-attack", "segment-chain-analysis", "key-cancellation", "quagmire-iii", "latent-label-identifiability", "candidate-bank-lineage-and-cap-accounting", "partial-permutation-completion-bounds", "g-gauge-freedom", "g-affine-orbit", "g-conjugate-permutation", "independent-coordinate-alphabets", "factorial-completion-resource-guards"]
 summary = "Gauge freedom means that different parameter values can produce exactly the same visible result. For keyed additive ciphers, you may shift the alphabet coordinates along with the key or multiply them by a unit. A solver must treat these versions as equivalent. If it fixes the gauge incorrectly, or recovers in one gauge and scores in another, it can reject a correct answer. One recorded run failed for this reason."
-updated = "2026-09-07"
+updated = "2026-09-08"
 
 [[blocks]]
 kind = "definition"
@@ -20,8 +20,8 @@ Two permutations are **conjugate** when $w = z^{-1} \tau z$ for some bijection $
 kind = "equations"
 title = "The two-text chain and its gauges"
 body = '''
-Let text A (153 letters) be enciphered with the plaintext of text B (144 letters) as a cycled running key, both under one unknown cycle $z$, signs $e_A, e_B \in \{\pm 1\}$, and a segmented key $\kappa_j$ on text B:
-$$z(C^B_j) \equiv e_B\, z(P^B_j) + \kappa_j, \qquad z(C^A_i) \equiv e_A\, z(P^A_i) + z(P^B_{j}), \quad j = i \bmod 144.$$
+Let text A be enciphered with the length-$N_B$ plaintext of text B as a cycled running key, both under one unknown cycle $z$, signs $e_A, e_B \in \{\pm 1\}$, and a segmented key $\kappa_j$ on text B:
+$$z(C^B_j) \equiv e_B\, z(P^B_j) + \kappa_j, \qquad z(C^A_i) \equiv e_A\, z(P^A_i) + z(P^B_{j}), \quad j = i \bmod N_B.$$
 Eliminating $P^B$:
 $$z(P^A_i) - e_A\, z(C^A_i) + e_A e_B\, z(C^B_j) - e_A e_B\, \kappa_j \equiv 0 \pmod{26}.$$
 Gauges of this system:
@@ -54,11 +54,54 @@ Restore the aliases before applying evidence that depends on physical plaintext 
 '''
 
 [[blocks]]
+kind = "variants"
+title = "Equivalent equations can have different readings"
+body = '''
+A transformation can preserve whether equations have a solution without preserving the text a later stage reads from that solution. Fix the observable before deciding which descriptions to merge.
+
+For a bijective dial $z$ modulo $m$, suppose three observed streams satisfy
+
+$$z(W_i)=a z(X_i)+b z(Y_i)+h_{g(i)},\qquad a,b\in\{+1,-1\}.$$
+
+One ordered reconstruction has coordinate stream $d_i=z(X_i)-a z(W_i)$. After restoring a translation phase $\delta$, its physical reading is $U_\delta[i]=z^{-1}(d_i-a\delta)$. A nonempty stream has exactly $m$ different readings as $\delta$ varies. For an affine dial $Z=uz+\tau$, the same reading uses $\delta=u^{-1}\tau$: retain every unit sidecar with $\tau=u\delta$, rather than treating all $m\varphi(m)$ affine descriptions as independent texts.
+
+Swapping $X,Y$ and $a,b$ leaves the feasibility equation unchanged, but changes the reconstructed coordinate to $d'_i=z(Y_i)-b z(W_i)$. The two complete translation-reading sets coincide if and only if $d'_i-d_i$ is constant over all included positions. Otherwise those sets are disjoint, even though their equation rows are identical.
+
+The feasibility calculation may be cached once, but every already-declared ordered role must survive in the metadata and be decoded separately. This does not justify adding new roles after inspecting a result. Only deduplicate physical text after its complete reading and parameter origins are recoverable; see [candidate-bank lineage](/engineering/candidate-bank-lineage-and-cap-accounting).
+'''
+
+[[blocks]]
+kind = "variants"
+title = "Solve observed coordinates without losing the missing letters"
+body = '''
+Suppose independent coordinate maps enter only same-class difference equations, so each map has its own translation freedom. Map $j$ observes a nonempty set $S_j$ of $k_j$ physical letters in an alphabet of size $m$. Let $r_j=m-k_j$ and $r=\sum_j r_j$. Compare the full field kernel, with one fixed physical letter gauged to zero, with the kernel containing only observed coordinates, gauged at one observed anchor per map. Then
+
+$$d_p(\mathrm{full})=r+d_p(\mathrm{observed}).$$
+
+Restriction to observed coordinate differences is onto. Its kernel consists of functions constant on each observed set and arbitrary on unused letters; it has exactly $r_j$ dimensions per map. This remains true when the fixed physical letter is unobserved. The identity counts avoidable linear freedom; it is not a measured speedup or a bound on the remaining search.
+
+For unrestricted permutation maps, an observed assignment extends if and only if its actual modular images are distinct. Each map's unused physical letters may then be matched bijectively with its unused images, giving exactly $F=\prod_j r_j!$ full completions. Modulo26, marginal limits of13 symbols per parity and two per residue modulo13 are necessary but not sufficient: equal odd residues must also have opposite parity. Do not impose a full-alphabet checksum or a balanced histogram on an observed subset. Its image complement supplies the missing values automatically.
+
+Keep the completion family, not just its size. If an inverse lookup asks for $t$ distinct coordinates outside one map's observed image, there are $r_j!/(r_j-t)!$ possible physical answers. Repeated queries must repeat the same letter, and distinct queries must use distinct letters. Each answer retains $(r_j-t)!$ completions of that map, multiplied by the other maps' completion counts.
+
+Unit symmetry can have a stabilizer on a partial map even though it acts freely on full permutations. Modulo26, every unit fixes the anchored image $\{0,13\}$. Therefore a partial completion family must not automatically be divided by12. Count its stabilizer, or retain all witnesses without this quotient. Similarly, complete an unobserved physical-zero image before changing gauges; there is no extra factor of26 to discard.
+
+These factorial counts require unrestricted missing coordinates and independent maps. Involutions, coupled maps, fixed key families or prescribed images need additional constraints; [partial-permutation completion bounds](/exact/partial-permutation-completion-bounds) treats the different involution case. Symbolic completion preserves feasibility but does not by itself choose readable missing letters. These statements have independent proof review, not a new implementation or recovery benchmark.
+'''
+
+[[blocks]]
 kind = "assumptions"
 body = '''
 - A gauge is a symmetry of the *whole* observable model, including the comparison used in controls. If a score is not gauge-invariant (English quadgrams of a decrypt whose cycle coordinates are rotated are not), the score must be maximised over the gauge, or the comparison must be made modulo the orbit.
 - The gauge group depends on the model: with a shift-free key stream taken from another text's letters, translation is no longer a symmetry and only the 12 units remain.
 - Route models have their own gauge: when every admitted period divides the text length, the cyclic cut of an affine route is unidentifiable.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Observed-coordinate completion procedure — scope"
+body = '''
+Observed-coordinate enumeration can defer unused labels only when they occur in no remaining constraint or queried output. Count completions within the stated gauge convention; fixing the zero label on an unobserved symbol consumes that coordinate even though no observed variable receives it. Finite synthetic comparisons check this boundary case separately from recovery experiments.
 '''
 
 [[blocks]]
@@ -107,6 +150,35 @@ function SAME_ORBIT(z_recovered, z_planted):
 '''
 
 [[blocks]]
+kind = "pseudocode"
+title = "Observed-coordinate completion procedure"
+body = '''
+```text
+function SOLVE_OBSERVED_MAPS(streams, phase_classes, limits):
+    observed = SYMBOL_SETS_PER_INDEPENDENT_MAP(streams)
+    anchors = CHOOSE_ONE_OBSERVED_SYMBOL_PER_MAP(observed)
+    rows = BUILD_SAME_PHASE_DIFFERENCES(streams, anchors)
+    binary, odd = COMPLETE_FIELD_SOLUTION_SPACES(rows, 2, 13)
+    if either inconsistent: return INFEASIBLE
+    if exact join cannot fit limits: return INCOMPLETE
+    fibers = []
+    for b, o in ALL_ADMITTED_FIELD_ASSIGNMENT_PAIRS(binary, odd):
+        images = CRT_OBSERVED_IMAGES(b, o)
+        if any map has duplicate images: continue
+        intercepts = RECOVER_PHASE_VALUES_FROM_ORIGINAL_ANCHORS(images)
+        require every original stream equation holds
+        missing_symbols = COMPLEMENT_OF_OBSERVED_SYMBOLS(observed)
+        missing_images = COMPLEMENT_OF_ASSIGNED_IMAGES(images)
+        fibers.append(images, intercepts, ALL_BIJECTIONS(missing_symbols, missing_images))
+    return COMPLETE_SYMBOLIC_FAMILY, fibers
+function ANSWER_INVERSE_QUERIES(fiber, queried_coordinates):
+    reuse known inverses and identical repeated queries
+    enumerate injections from distinct unknown queries to missing symbols
+    retain all remaining unused-map permutations as witness metadata
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
 The affine action on a complete dial is free, so each orbit has $12\cdot26=312$ members. A common shift reduces a period-$m$ shift-vector enumeration from $26^m$ to $26^{m-1}$ only when the objective is invariant under that shift. A physical-language score generally requires restoring the omitted shifts. These counts alone give neither a runtime bound nor a uniqueness proof.
@@ -127,6 +199,8 @@ body = '''
 Static known-answer tests: unit gauge produces identical ciphertexts 48/48 (12 units times 4 sign cells); translation gauge reproduces both ciphertexts with text A unchanged and the predicted key shift 16/16; orbit canonicalisation 312 to 1; in a later successor the exact translation gauge was tested 20/20. Chain plants: a bank member that is a rotation of the true cycle recovers text A exactly and text B up to the predicted shift. Rotation $b = 5$ gives shift 5; $b = 9$ with $e_A = -1$ gives shift 17; a unit alias gives exact recovery. The truth gate follows this rule.
 
 The free-dial absorption variant above has an independent algebraic proof, not a new recovery experiment. Before using it in a search implementation, exhaustively compare original and residual witness sets on a small alphabet, including sparse support, repeated positions, and a label-dependent score that requires restoring a single global alias.
+
+For the ordered-role distinction, a hand-checkable example uses the identity dial modulo six, $a=1,b=-1$, $X=(0,1,2,3,4,5)$, $Y=(2,4,1,5,0,3)$, $W=(5,5,2,0,5,4)$ and alternating intercepts $(1,2)$. The two zero-phase readings are $(1,2,0,3,5,1)$ and $(1,3,3,5,5,1)$. Their difference is nonconstant, so their entire translation-reading sets are disjoint. Independent hand reviews verified this example and the general formula; this is not a new runtime, language-power or recovery result.
 '''
 
 [[blocks]]
@@ -202,7 +276,24 @@ kind = "audit"
 note = "2026-09-06 lead plus independent source-free LOG734 gauge correction: residual-coordinate free-dial witness bijection removes52 redundant sign/offset labels, including partial completions and copied tail. Later physical-language scoring must restore one global alias. Established symmetry, not a new implementation or recovery experiment; frozen734 remains held."
 ref = "LOG734 gauge correction"
 
+[[provenance]]
+path = "withmath/docs/cross-cipher/PARITY_STREAM_HANDOFF757.md"
+kind = "audit"
+note = "LOG757 source-free design: two independent full-text reviews at SHA256 bc96a446377ae6d78148edaf863e8d950f47272e801841a2001e5f6f2af02f77. Complete unit/translation reading sidecars and ordered-role counterexample; no implementation execution, corpus, target or recovery claim. Extends an established observable-invariance rule, not a claim of general mathematical novelty."
+ref = "LOG757"
+
+[[provenance]]
+path = "withmath/docs/cross-cipher/OBSERVABLE_COMPLETIONS764.md"
+kind = "audit"
+note = "LOG764 independent source-free proof, SHA256 6fcec4a21006ae06b51410341bf9480dd3aefaf754788fc75abced792a5be855: exact observed-kernel quotient, unrestricted factorial completion fibers, partial unit stabilizers and completion-aware inverse queries. Main separately read and checked all283 lines. No numerical fixture, target or recovery claim."
+ref = "LOG764"
+
 [[references]]
 title = "Abstract Algebra"
 author = "David S. Dummit and Richard M. Foote"
 year = 2004
+
+[[provenance]]
+path = "CipherPraxis/scripts/check_research_algorithms.py"
+kind = "script"
+note = "Observed-coordinate completion and inverse-query fibers checked by exhaustive permutation completion. These checks do not establish general recovery power or replay the external solver."

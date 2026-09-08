@@ -7,8 +7,8 @@ status_note = "The crib-based solver recovered 3/3 planted 153-letter Quagmire I
 family = "Polyalphabetic substitution"
 tags = ["periodic", "keyed alphabet", "polyalphabetic", "quagmire"]
 related = ["vigenere", "keyword-mixed-alphabet", "quagmire-ii", "quagmire-iii", "quagmire-iv", "crib-driven-alphabet-recovery", "phrase-keyed-alphabet-attack", "simulated-annealing", "quagmire-lab", "g-keyed-alphabet"]
-summary = "Quagmire I is a Vigenère cipher with a mixed plaintext alphabet and a straight ciphertext alphabet. Its periodic cosets remain, so standard period diagnostics apply. Each coset's expected letter profile is a shifted, relabelled language profile. A contiguous crib at least as long as the tested period fixes every shift conditional on a trial alphabet. In recorded 153-letter controls, batched annealing then recovered the remaining alphabet."
-updated = "2026-09-07"
+summary = "Quagmire I uses a mixed plaintext alphabet and a straight ciphertext alphabet. Its periodic cosets have shifted, relabeled language profiles. Conditional on a trial alphabet, a crib covering every key residue determines the periodic shifts; recovering the remaining alphabet is a separate constrained search."
+updated = "2026-09-08"
 
 [[blocks]]
 kind = "definition"

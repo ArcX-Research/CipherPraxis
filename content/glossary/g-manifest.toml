@@ -6,5 +6,5 @@ status_note = "Term as used in the engineering and governance entries."
 family = "Engineering vocabulary"
 tags = ["provenance", "release"]
 related = ["seal-and-audit-protocol", "g-receipt"]
-summary = "A build manifest records the inputs and fixed configuration of a run before outputs exist. In this project it is a canonical one-line JSON record listing input paths and SHA-256 hashes, fixed parameters, and permitted output paths. It cannot precommit the unknown hashes of later outputs; a separate release record can bind those outputs to the manifest and audit records. Other reproducibility systems may use different serializations with the same role."
-updated = "2026-09-07"
+summary = "A manifest records the inputs and fixed configuration of a computation before its outputs are known. It can include file hashes, parameters and expected output paths. Later receipts bind the actual outputs to that manifest; no particular serialization alone guarantees reproducibility."
+updated = "2026-09-08"

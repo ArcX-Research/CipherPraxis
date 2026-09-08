@@ -20,25 +20,9 @@ pub fn EvidencePanel(
     });
     view! {
         <section class="evidence" class:evidence-wide=wide aria-labelledby="evidence-h">
-            <h2 id="evidence-h" class="side-h"><span class="mono meta">"§"</span>" Evidence"</h2>
-            {has_prov.then(|| view! {
-                <p class="evidence-note">"These internal files support the claims on this page. Each path starts at "<code>{CORPUS_ROOT}</code>" unless it begins with "<code>"CipherPraxis/"</code>", which points to this website's repository."</p>
-                <ul class="prov-list">
-                    {provenance.into_iter().map(|p| view! {
-                        <li class="prov">
-                            <div class="prov-head">
-                                <span class=format!("kind kind-{}", p.kind)>{p.kind.clone()}</span>
-                                <code class="prov-path">{p.path.clone()}</code>
-                            </div>
-                            {p.reference.clone().map(|r| view! { <div class="prov-ref mono">{r}</div> })}
-                            {p.note.clone().map(|n| view! { <div class="prov-note">{n}</div> })}
-                        </li>
-                    }).collect_view()}
-                </ul>
-            })}
-            {request_form}
+            <h2 id="evidence-h" class="side-h"><span class="mono meta">"§"</span>" Sources and evidence"</h2>
             {has_refs.then(|| view! {
-                <h3 class="side-h side-h-sm">"Books and papers"</h3>
+                <h3 class="side-h side-h-sm">"Literature and specifications"</h3>
                 <ul class="ref-list">
                     {references.into_iter().map(|r| {
                         let meta = [r.author.clone(), r.year.map(|y| y.to_string())]
@@ -59,6 +43,25 @@ pub fn EvidencePanel(
                     }).collect_view()}
                 </ul>
             })}
+            {has_prov.then(|| view! {
+                <details class="evidence-records">
+                <summary>"Supporting research records"</summary>
+                <p class="evidence-note">"Source paths are archival identifiers. Unprefixed paths refer to "<code>{CORPUS_ROOT}</code>"; "<code>"archive-a/"</code>" and "<code>"archive-b/"</code>" identify additional source collections, and "<code>"CipherPraxis/"</code>" identifies this reference. A source record supports only the claim and conditions described on the page."</p>
+                <ul class="prov-list">
+                    {provenance.into_iter().map(|p| view! {
+                        <li class="prov">
+                            <div class="prov-head">
+                                <span class=format!("kind kind-{}", p.kind)>{p.kind.clone()}</span>
+                                <code class="prov-path">{p.path.clone()}</code>
+                            </div>
+                            {p.reference.clone().map(|r| view! { <div class="prov-ref mono">{r}</div> })}
+                            {p.note.clone().map(|n| view! { <div class="prov-note">{n}</div> })}
+                        </li>
+                    }).collect_view()}
+                </ul>
+                </details>
+            })}
+            {request_form}
             {(!has_prov && !has_refs).then(|| view! { <p class="evidence-note">"This entry does not list any source files, books, or papers yet."</p> })}
         </section>
     }

@@ -6,7 +6,7 @@ status = "VERIFIED"
 status_note = "Sealed control sets pair positives with two kinds of negatives: independent letters drawn from the declared single-letter distribution, and cases that break the cipher model. The independent-letter negative caught an English gate that would otherwise have passed on algebra alone."
 family = "Power and calibration"
 tags = ["nulls", "negatives", "controls", "calibration"]
-related = ["tautological-gate-rule", "planted-controls", "selection-overfit-check", "family-wise-null", "within-coset-null", "shuffled-null-z-score", "permutation-test", "english-gate-calibration", "homophonic-substitution"]
+related = ["tautological-gate-rule", "planted-controls", "selection-overfit-check", "family-wise-null", "within-coset-null", "shuffled-null-z-score", "permutation-test", "english-gate-calibration", "homophonic-substitution", "conjugacy-and-gauge"]
 summary = "A negative that breaks the cipher rules may be easy to reject for the wrong reason. A valid-model null keeps the correct construction and a legal key, but draws letters independently from the English single-letter distribution. A gate intended to reject these cases reliably must use information beyond that preserved distribution. This tests whether the pipeline detects the declared language signal when the cipher's algebra is present but language adjacency is absent."
 updated = "2026-09-07"
 
@@ -29,6 +29,23 @@ The same idea applied to a *target* rather than a fixture gives the program's ca
 $$p = \frac{1 + \#\{b : S_1(\text{null}_b) \ge S_1(\text{obs})\}}{B + 1}, \qquad \text{equality loses}.$$
 
 With $B=99$ the smallest attainable value is $p=0.01$, and the recorded strict-rank gate requires zero exceedances. The selection over classes is inside every replicate, so the multiplicity of that declared search is included in its null. Under group invariance, valid protocols include independent uniform group draws with replacement, or distinct uniform draws from the non-identity transformations with the identity appended. Retain repeated transformed data and score ties in either design; see [Permutation test](/statistics/permutation-test).
+'''
+
+[[blocks]]
+kind = "equations"
+title = "A larger key family can make an old null uninformative"
+body = '''
+Suppose three streams satisfy
+
+$$u(W_i)-a\,v(X_i)-b\,w(Y_i)=h_{g(i)}\pmod m,$$
+
+where $u,v,w$ range independently over all coordinate permutations and the phase intercepts $h$ are free. Renaming one stream's symbols does not break this relation. For any symbol permutation $\pi$, set $Y'_i=\pi(Y_i)$ and $\widetilde w=w\circ\pi^{-1}$. Then $\widetilde w(Y'_i)=w(Y_i)$ at every position. This invertible transformation pairs every complete witness with a witness for the renamed data.
+
+The conclusion survives a zero-coordinate [gauge](/algebra/conjugacy-and-gauge). If $\gamma=\widetilde w(0)$, use $w'=\widetilde w-\gamma$ and $h'=h+b\gamma$. All original equations still hold and $w'(0)=0$.
+
+Thus complete feasibility and complete witness counts are unchanged. An existence statistic maximized over the same finite window and phase family is also unchanged: every such relabeling ties, so the inclusive plus-one value is $p=1$, however many copies are generated. This is an uninformative test, not evidence against the model. A search cap or a changed enumeration order cannot turn this identity into structural evidence.
+
+With one shared coordinate map, the same one-stream relabeling need not be absorbable: changing that map also changes its other uses. Recheck the null whenever the key family changes. Positional shuffles can break correspondence in the independent-map model, but need their own frozen margins, complete reselection and exchangeability argument. They are a different null, not a silent repair of the old one. Restricted map families or external constraints may also break the displayed symmetry; prove closure before applying it.
 '''
 
 [[blocks]]
@@ -151,3 +168,9 @@ path = "withmath/docs/pk9/PK9_STRUCTURED_P7_CHAIN383_CREATOR_AUDIT.md"
 kind = "audit"
 note = "Eight sentinels with typed terminals (independent prose, wrong period, structured-versus-random pair, out-of-bank row, variable-length tokens, forced ambiguity, offset chain, wrong endpoint)."
 ref = "LOG383"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "design"
+note = "Lead null-symmetry warning, 2026-09-07 02:11:59 UTC: independently free coordinate alphabets absorb one-stream physical relabeling; witness bijection and zero-coordinate regauging proved before any successor null draw. Mathematical design result only, not an executed null, recovery gate or live solve."
+ref = "LOG762"

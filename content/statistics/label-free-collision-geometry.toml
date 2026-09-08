@@ -1,14 +1,14 @@
 id = "label-free-collision-geometry"
 section = "statistics"
 title = "Label-free collision geometry"
-subtitle = "Rank schedules using symbol and adjacent-pair equality without fitting a substitution"
+subtitle = "Rank schedules using symbol, pair, and triple equality without fitting a substitution"
 status = "VERIFIED"
 status_note = "The monogram and adjacent-pair expectation identities and exhaustive score calculations are verified under their stated independence assumptions. Pair counts recover structured, uniform-marginal examples missed by monograms, but periodic nonlanguage defeats both: these are proposal statistics, not language tests."
 family = "Permutation-invariant statistics"
 tags = ["collision counts", "unknown substitution", "schedule recovery", "histograms", "invariants"]
 related = ["index-of-coincidence", "coincidence-lag-profile", "observable-function-fingerprinting", "permutation-test", "family-wise-null", "parameter-versus-plaintext-recovery", "alternating-velocity-disk-cipher", "piecewise-constant-velocity-disk-cipher", "valid-model-nulls", "conditional-language-evidence"]
 summary = "An unknown monoalphabetic substitution preserves equality of symbols and of ordered symbol pairs. Undo a candidate position schedule, then count collisions without naming the latent letters. Single-letter counts use uneven frequencies; adjacent-pair counts can also exploit order when individual letter frequencies are flat. Both need matched controls and explicit failure cases before selecting candidates for a language solver."
-updated = "2026-09-06"
+updated = "2026-09-08"
 
 [[blocks]]
 kind = "definition"
@@ -114,6 +114,42 @@ Shuffling outgoing occurrences and taking a trail does **not** establish uniform
 
 [[blocks]]
 kind = "variants"
+title = "Add turns when the edge graph is unchanged"
+body = '''
+The smallest longer-order refinement counts directed triples. Let $T_r(a,b,c)$ count internal triples in peeled block r. Then
+
+$J_3=\sum_{r<s}\sum_{a,b,c}T_r(a,b,c)T_s(a,b,c)$
+
+counts equal triples across blocks. A common alphabet permutation relabels all three coordinates together and leaves the score unchanged. In graph terms, a triple is a consecutive pair of compatible directed edges: it records how the trail turns, not merely which edges exist. An Euler rearrangement preserves the edge multiset but need not preserve these turns.
+
+For example, A=`00010` and B=`00100` have the same endpoints, symbol counts and directed-edge multiset. Four blocks AAAA and AABB both have cross-block pair score36. Their triple scores are18 and14: each block has three different triples, while A and B share only two. Thus triple information can distinguish a pair-invariant rearrangement. It does not distinguish every such rearrangement, and a large score is still not an English-language test.
+
+The same phase-table shortcut applies. Before subtracting each block's initial phase, form $T_{r,d}$ after local drift removal. Precompute $E_{r,s}(u,v,\delta)=\sum_{a,b,c}T_{r,u}(a,b,c)T_{s,v}(a+\delta,b+\delta,c+\delta)$ and use the continuous offset $\delta=\phi_s-\phi_r$. Shift all three coordinates. A reduced set of attainable boundary phases does not justify reducing the within-block velocity menu.
+
+A public three-symbol native implementation and a separately written per-position replay agreed on496 physical schedules, complete score distributions, checksums and every cutoff tie. Two nominal top64 sets expanded to82 and90 rows; deliberate scan and payload caps stayed incomplete. This establishes the small software calculation, not full-alphabet arithmetic, recovery power, calibrated null separation or a live release gate. Adding triple seeds to an existing selector still requires revalidating the enlarged selection.
+'''
+
+[[blocks]]
+kind = "variants"
+title = "Build triple factors from equal curvature"
+body = '''
+For two raw coordinate triples starting at positions j and k inside different blocks, write their symbols as $A_0,A_1,A_2$ and $B_0,B_1,B_2$. Equality after peeling left and right velocities u and v requires
+
+$$v-u=(B_1-B_0)-(A_1-A_0)=d,$$
+
+$$B_2-2B_1+B_0=A_2-2A_1+A_0,$$
+
+and boundary phase difference
+
+$$\delta=B_0-kv-A_0+ju\pmod m.$$
+
+Thus enumerate occurrence pairs with equal second differences, then only m choices of u; v and the required phase follow exactly. Increment the factor once per occurrence pair, preserving repeated triples' multiplicities. This computes the same collision statistic, not a new ranking rule.
+
+For equal block length L, only phases $\delta=Lh$ are attainable. Let $g=\gcd(L,m)$. Reject a factor contribution unless $g\mid\delta$, then solve $(L/g)h=\delta/g\pmod{m/g}$ using a unit inverse. Keep all m physical velocities: reducing the boundary phase space does not reduce the within-block velocity space.
+'''
+
+[[blocks]]
+kind = "variants"
 body = '''
 - **Global histogram score:** $S_{\rm all}=\sum_x n_x(n_x-1)$, computed from one histogram instead of visiting every pair.
 - **Cross-block score:** count equal symbols only between distinct blocks, reducing sensitivity to repeated material within one block.
@@ -172,6 +208,29 @@ function COLLISION_GEOMETRY_SCREEN(ciphertext, schedules, pair_graph, keep):
 '''
 
 [[blocks]]
+kind = "pseudocode"
+title = "Curvature-indexed triple construction"
+body = '''
+```text
+function TRIPLE_FACTORS_FROM_CURVATURE(left, right, modulus):
+    groups = GROUP_RIGHT_TRIPLES_BY_SECOND_DIFFERENCE(right, modulus)
+    factors = ZERO_TABLE(left_velocity, right_velocity, phase_difference)
+    for triple A starting at j in left:
+        curvature = A[2] - 2*A[1] + A[0] mod modulus
+        for triple B starting at k in groups[curvature]:
+            difference = (B[1]-B[0]) - (A[1]-A[0]) mod modulus
+            for u in all physical velocities:
+                v = u + difference mod modulus
+                delta = B[0] - k*v - A[0] + j*u mod modulus
+                factors[u,v,delta] += 1
+    return factors
+function SCORE_CONTINUOUS_SCHEDULE(velocities, factors, segment_lengths):
+    phases = CUMULATIVE_LENGTH_TIMES_VELOCITY(velocities, segment_lengths)
+    return SUM(factors[q,r,velocities[q],velocities[r],phases[r]-phases[q]])
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
 A direct implementation costs $O(|\Theta|n+|\Theta||E|)$ for schedule family $\Theta$, text length $n$, and pair graph $E$. Histogram updates can share work between schedules that differ in one local parameter. The recorded exhaustive implementation traversed 913,952 physical schedules per large control while retaining tie-expanded shortlists.
@@ -189,7 +248,17 @@ body = '''
 - **Schedule called plaintext:** equality geometry does not name latent symbols or recover the substitution.
 - **Uncharged extra objective:** adding pair-score seeds enlarges the selector. Preserve all origins and repeat the complete enlarged selection in every decision null; an earlier release gate cannot be inherited unchanged.
 - **Population versus sample:** exact translation symmetries of a declared source law do not identify the unknown law from one fitted sample, and do not justify deduplicating actual plaintext candidates.
+- **Slowly mixing blocks:** stationarity and independent block initialization do not make each short histogram representative. Blocks can spend much of their length on different recurrence orbits with disjoint triple support. Even equal-norm histograms can then have zero cross-collision, so cosine normalization is not a universal repair.
 - **Blocks too short:** the subgroup tie-count shortcut needs two internal pairs per block. Two-symbol blocks can have additional ties and require the direct expectation calculation.
+'''
+
+[[blocks]]
+kind = "controls"
+title = "Full-alphabet control limit"
+body = '''
+A subsequent full-alphabet public-symbol panel completed the frozen triple-collision scan and its independent replay. Among four positive model cases, the planted physical schedule was a rank-one winner in two and survived the fixed, tie-expanded top band in three. The remaining public cases were descriptive traps, not calibrated nulls. Complete arithmetic and correct phase handling therefore did not establish reliable physical-schedule recovery.
+
+This is a finite-sample limit on that selector. The population expectation identity can hold while independent short trajectories occupy different long-lived source orbits. Changing a retained band after observing a miss does not repair its original gate. A later observation that some winners agree modulo a factor of the alphabet size is diagnostic, not validation of a newly chosen quotient-level endpoint.
 '''
 
 [[blocks]]
@@ -204,6 +273,8 @@ An order-sensitive extension tested four public 504-symbol Markov examples with 
 The subgroup tie formula was separately checked against literal expectation scores for 10,319 small-alphabet schedules, matching all 224 ties. A six-symbol noncirculant permutation retains two common offsets; a six-symbol parity-block law leaves 162 velocity tuples tied across four blocks. A two-symbol-block counterexample has three ties where an out-of-domain use of the formula would predict one. Degree-26 checks cover exact stabilizers and literal witnesses only, not full expected-score enumeration.
 
 A later public-symbol integration preserved the original class-seed identity while unioning all three tie-expanded objectives. It produced 201 endpoints from 67 classes, versus 192 endpoints from the unchanged 64-class monogram projection. A separate implementation replayed the complete geometry, every endpoint's swap stationarity and all physical forwards. Six symbolic Euler-trail tests included loops, repeated edges and fixed points. These are composition and invariant checks, not prose power or a live release gate.
+
+A full-alphabet triple extension completed seven public 504-symbol cases, each with 913,952 physical schedules. Independent histogram and occurrence-pair implementations agreed on complete score distributions, ordered checksums and all cutoff ties; 593 retained origins also passed literal replay. There were no caps. Yet among four declared second-order positive sources, only two plants ranked first and only three entered the tie-expanded top64 band. The other cases were descriptive uniform, periodic and Euler-reordered traps, not certified nulls. This is an honest power failure, not a contradiction of the expectation identity. Posthoc agreement after projecting away parity does not retroactively pass the physical-schedule criterion.
 '''
 
 [[blocks]]
@@ -330,3 +401,32 @@ path = "withmath/docs/cross-cipher/SHAREDMAP_PAIR_IDENTITY750.md"
 kind = "design"
 note = "Independently hand-reviewed exact cross-text diagonal identity, bounded-word harmonic computation, phase and endpoint traps, conservative integer bound, matched order diagnostic and unequal-exposure caveat. Proof-only result: no implementation KAT, timing, fresh power or live admission."
 ref = "LOG750"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_TRIGRAM742.md"
+kind = "design"
+note = "Exact cross-block turn tensor and continuous-phase factor tables; scope distinguishes traversal order from the preserved Euler edge graph. The original large supervisors remain held and were not executed for the later tiny integration."
+ref = "LOG742"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_TRIGRAM768_RESULTS.md"
+kind = "audit"
+note = "Sole public native invocation and separately released scalar replay both had actual exit0, clean external stderr and unchanged sources/binary. Replayed28 calls,496 schedules,26784 triple comparisons and1134 factors, preserving all cutoff ties and both incomplete-cap cases. Independent result SHA3ea67f429a12f99cac33aceab8a1b3c2df3326be7444bb48cb3a3b7c5baf1f96. Small software/math evidence only; build/process history is operator-attested, not complete SDK or kernel resource containment."
+ref = "LOG768"
+
+[[provenance]]
+path = "withmath/docs/project-notes/PK10_TRIGRAM769_RESULTS.md"
+kind = "audit"
+note = "Full degree26 public panel and independent review: complete software replay but POWER_BLOCKED,2/4 positive rank1 and3/4 band retention. Audit result SHA99ab52f70313a123c3ff54b87efde5b6001ab21c5f979ad467710267326a1129. No target/corpus input or retry; consumed parity projection is not revised admission."
+ref = "LOG769"
+
+[[provenance]]
+path = "withmath/scripts/experiments/pk10/wm_pk10_trigram769_reference.cpp"
+kind = "solver"
+note = "SHA9ab25a426756bf77e43f00dd4962bf359ba3fb9c39e95264e8247f875e54157c. Independent occurrence-pair/curvature factor builder,9420-origin small literal KAT, and direct replay of593 retained full-degree origins. Complete distributions and ordered FNV64 are not a collision-free full-vector transcript."
+ref = "LOG769"
+
+[[provenance]]
+path = "CipherPraxis/scripts/check_research_algorithms.py"
+kind = "script"
+note = "Curvature-indexed triple counts compared with direct peeled substring equality. These checks do not establish general recovery power or replay the external solver."

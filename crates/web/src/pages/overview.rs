@@ -33,15 +33,16 @@ pub fn Overview() -> impl IntoView {
     .filter_map(|id| catalog.get(id).cloned())
     .collect();
     let prov_files = catalog.provenance_map().len();
+    let lab_count = catalog.section_count(Section::Labs);
 
     view! {
         <section class="hero">
             <div class="wrap hero-grid">
                 <div class="hero-copy">
                     <p class="eyebrow mono">"Dilate · Cryptography knowledge base"</p>
-                    <h1 class="display display-xl">"Learn cryptography"<br/><em class="serif">"Test what you learn"</em></h1>
+                    <h1 class="display display-xl">"Cryptography,"<br/><em class="serif">"from first principles"</em></h1>
                     <p class="lede">
-                        "Cipher Praxis explains cipher models, the math behind them, ways to attack them, and the checks that make results trustworthy. Read the guides, check the equations, and run the code in your browser."
+                        "Cipher systems, mathematical foundations and methods of cryptanalysis. Explore precise definitions, optimized pseudocode, worked examples and the evidence behind each claim."
                     </p>
                     <div class="hero-actions">
                         <a class="btn btn-primary" href="/ciphers">"Browse ciphers"</a>
@@ -52,7 +53,7 @@ pub fn Overview() -> impl IntoView {
                         <div><dt>"entries"</dt><dd>{total}</dd></div>
                         <div><dt>"sections"</dt><dd>{Section::ALL.len()}</dd></div>
                         <div><dt>"evidence files"</dt><dd>{prov_files}</dd></div>
-                        <div><dt>"runtime"</dt><dd>"Rust → WASM"</dd></div>
+                        <div><dt>"interactive labs"</dt><dd>{lab_count}</dd></div>
                     </dl>
                 </div>
                 <div class="hero-visual"><CipherDisc/></div>

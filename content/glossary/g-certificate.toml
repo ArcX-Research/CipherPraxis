@@ -6,5 +6,5 @@ status_note = "Usage as recorded in the corpus's sealed audits."
 family = "Exactness guarantees"
 tags = ["exactness", "reproducibility"]
 related = ["bound-benchmarks-and-certificates", "known-answer-tests", "rank-sharding", "reproducibility-receipts"]
-summary = "A certificate is auxiliary information that lets a checker verify a precisely stated claim, often more cheaply than repeating the original computation. In this project's exact-search protocol it includes fixed inputs, declared search scope, completion counters, candidates and ties relevant to the decision, and independently checkable score and forward-transform data. Certificate validity depends on the checker and claim; a truncated transcript or failed replay does not support the advertised completeness result."
-updated = "2026-09-07"
+summary = "A certificate is auxiliary information that lets a checker verify a precisely stated claim. For exact search it may bind inputs, coverage, candidates, ties and independently checkable bounds or transformations. A hash binds bytes but does not establish the mathematical claim contained in them."
+updated = "2026-09-08"

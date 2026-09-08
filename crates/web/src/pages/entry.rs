@@ -49,16 +49,24 @@ fn EntryView(entry: Entry) -> impl IntoView {
     let section = entry.section;
     let is_lab = section == Section::Labs;
     let is_glossary = section == Section::Glossary;
+    let mut anchor_counts = std::collections::HashMap::new();
     let toc: Vec<(String, String)> = entry
         .blocks
         .iter()
         .map(|b| {
-            (
-                format!("{}-{}", b.kind.slug(), b.kind.ordinal()),
-                b.heading(),
-            )
+            let count = anchor_counts.entry(b.kind.slug()).or_insert(0usize);
+            *count += 1;
+            // Preserve existing links to the first block of each kind.
+            let base = format!("{}-{}", b.kind.slug(), b.kind.ordinal());
+            let id = if *count == 1 {
+                base
+            } else {
+                format!("{base}-{count}")
+            };
+            (id, b.heading())
         })
         .collect();
+    let block_anchors: Vec<_> = toc.iter().map(|(id, _)| id.clone()).collect();
     let lab_key = entry.lab.clone();
     let blocks = entry.blocks.clone();
     let provenance = entry.provenance.clone();
@@ -94,14 +102,14 @@ fn EntryView(entry: Entry) -> impl IntoView {
                         </div>
                         {(section.is_method_section() && !is_lab).then(|| view! {
                             <details class="entry-context">
-                                <summary>"What do these figures mean?"</summary>
+                                <summary>"How to interpret the evidence"</summary>
                                 <p><b>{status.label()}</b>" means: "{status.description()}" "<a href="/#status-h">"See all statuses."</a></p>
                                 <p>
-                                    "The numbers come from a research program that tested each method on its own ciphertexts. "
+                                    "A derivation establishes a claim under its stated assumptions. "
                                     <a href="/validation/planted-controls">"Planted controls"</a>
-                                    " are test cases with a known answer, run through the same pipeline before any real text; a "
+                                    " test recovery on generated cases with known answers; a "
                                     <a href="/statistics/shuffled-null-z-score">"z-score"</a>
-                                    " compares a reading with the same measurement on shuffled text; and phrases such as “the two texts” or “the 153-letter text” refer to that program's target ciphertexts, which this site does not reproduce. Every figure is backed by the files listed under Evidence."
+                                    " compares a statistic with a specified null distribution. Experimental results apply to the reported model, data and budget. Exactness, recovery power and historical novelty are separate claims; a status badge does not establish all three."
                                 </p>
                             </details>
                         })}
@@ -119,11 +127,10 @@ fn EntryView(entry: Entry) -> impl IntoView {
                             {render_lab(&k)}
                         </section>
                     })}
-                    {blocks.into_iter().map(|b| {
-                        let id = format!("{}-{}", b.kind.slug(), b.kind.ordinal());
+                    {blocks.into_iter().zip(block_anchors).enumerate().map(|(index, (b, id))| {
                         view! {
                             <section class="block" id=id.clone() aria-labelledby=format!("{id}-h")>
-                                <h2 class="block-h" id=format!("{id}-h")><span class="block-n mono">{format!("{:02}", b.kind.ordinal())}</span>{b.heading()}</h2>
+                                <h2 class="block-h" id=format!("{id}-h")><span class="block-n mono">{format!("{:02}", index + 1)}</span>{b.heading()}</h2>
                                 {if b.kind == BlockKind::Pseudocode {
                                     view! { <div class="prose" inner_html=praxis_core::render::pseudocode_to_html(&b.body)></div> }.into_any()
                                 } else {

@@ -6,7 +6,7 @@ status = "PROMISING"
 status_note = "A cache optimization was exact on its symbols-only test matrix and ran 1.565 times as fast in aggregate, but won only 44 of 60 cases and regressed on both zero-weight workload classes. It remains a candidate rather than an automatic production change."
 family = "Solver performance engineering"
 tags = ["benchmarking", "regression", "hot path", "exact search", "release gate"]
-related = ["closed-footprint-bound-cache", "pruned-traversal-equivalence-certificates", "bound-benchmarks-and-certificates", "compiled-hot-cores", "drainability-and-throughput", "kat-harness", "fresh-holdout-after-selector-change", "finite-field-linear-algebra"]
+related = ["closed-footprint-bound-cache", "pruned-traversal-equivalence-certificates", "bound-benchmarks-and-certificates", "compiled-hot-cores", "drainability-and-throughput", "kat-harness", "fresh-holdout-after-selector-change", "finite-field-linear-algebra", "admissible-bound-selectivity"]
 summary = "An algebraically exact shortcut is not automatically a useful optimization. First prove that it preserves the required search behaviour. Then time reference and candidate in interleaved order across complete, capped, pruning-heavy, cache-poor, and inactive-bound workloads. A good average cannot hide a critical regression, and a microbenchmark cannot authorize a production change by itself."
 updated = "2026-09-07"
 
@@ -88,12 +88,26 @@ body = '''
 - **Average-only admission.** A strong cache-heavy gain hides a slowdown in a frequent cache-poor path.
 - **Zero-bound omission.** Every fixture activates the expensive bound, so bookkeeping overhead is never exposed.
 - **Timing before equality.** A wrong candidate appears fast because it skips work.
+- **Shared constraint omission.** The reference and candidate agree because both optimize the same relaxation; neither enforces the full feasible domain.
 - **Hash-only output check.** Compact trace hashes replace full record comparison.
 - **Fixed order bias.** The candidate always runs second with warmer code and data.
 - **Callback drift.** Different callbacks do different downstream work, making kernel times incomparable.
 - **Microbenchmark promotion.** A small same-process result is described as sustained end-to-end throughput.
 - **Candidate-count speedup.** A smaller enumerated set is reported as a runtime gain without measuring setup, final checking, alias expansion or output costs.
 - **Frozen-method mutation.** The faster core is inserted into an already validated release without new capability controls.
+'''
+
+[[blocks]]
+kind = "controls"
+title = "Check the feasible domain, not just agreement"
+body = '''
+Two different algorithms can agree exactly while solving the wrong optimization problem. Let F be the required feasible set and R a relaxed set with $F\subseteq R$. Agreement on $U=\max_{x\in R}Q(x)$ establishes a relaxed optimum, not necessarily $\max_{x\in F}Q(x)$. If the returned relaxed winner violates a constraint omitted from R, rejecting that winner proves neither that F is empty nor that its best score is known.
+
+If a complete relaxed maximum has a winner that does satisfy every required constraint, its score is also the constrained optimum. That certifies one optimal witness, not the full set of tied optima. A consumer that needs all optimum aliases must preserve or reconstruct them separately.
+
+Audit the candidate and reference against the written feasible predicate before comparing their scores. For an exact constrained enumeration, apply every global constraint to each emitted leaf, even if it was safely relaxed inside the bound. A simple discriminating regression has a relaxed winner scoring 10 that fails the omitted constraint and a feasible runner-up scoring 9; a post-winner filter must not report infeasibility or an exact constrained score. Also test a score tie containing both feasible and infeasible candidates. These are test designs, not a report that such tests have run.
+
+A certified global upper bound remains useful: if U is below a declared score threshold, every feasible candidate is below it too. Keep that exclusion distinct from finding the feasible optimum. A cap flag or an unknown feasibility check is not itself a certificate. Threshold exclusion still needs a certified global bound; an exact optimum value needs a feasible witness attaining such a bound. See [Admissible-bound selectivity](/exact/admissible-bound-selectivity).
 '''
 
 [[blocks]]
@@ -153,3 +167,9 @@ path = "withmath/docs/cross-cipher/DIAL_PARITY_CALLER756.md"
 kind = "audit"
 note = "Independently reviewed degree-four permutation-polynomial counting proof, fixed before execution and kept evaluator-only; the worker uses first and second half moments. The subsequent sole KAT and separate original-coefficient replay both passed with recorded external exit zero. Across the complete principal catalog they matched 112 unit groups, 624 physical maps and 1,248 source origins; four cap cases remain unknown. Producer result SHA256 3bd3bea0147b46098b3c65474be4abcf047be2b0892c1fbac7dfeca617862c77; audit result 92287f5740861002a92596a9b7041a74d6c5be28ef258199bca67154163be3df. These are implementation checks, not a paired speed benchmark, live result or fresh recovery-power study."
 ref = "LOG756"
+
+[[provenance]]
+path = "withmath/COORDINATION.md"
+kind = "audit"
+note = "Lead and independent source review found that the held column-first reference and dynamic program enforce local injections/tail but check the global two-dial predicate only after selecting one relaxed optimum; PASS permits that optimum to be infeasible. Source SHA eb4113cd594e3ed2c8458f1e087d9a3bb888136e1ba140a221994feeb2bfbb6f. This is static source evidence, not an executed regression or cipher-power result. The reviewer disclosed incidental target bytes in a ledger excerpt and did not use them; the source finding was independently checked by the lead. Existing runs remain inadmissible and no rerun was released."
+ref = "LOG734; lead source review 2026-09-07"

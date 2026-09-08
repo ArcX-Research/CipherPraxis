@@ -8,7 +8,7 @@ family = "Modern and encoding schemes"
 tags = ["mnemonic", "word list", "checksum", "structured key", "exact search"]
 related = ["quagmire-iii", "quagmire-iv", "keyword-mixed-alphabet", "word-prefix-csp", "constraint-satisfaction-forward-checking", "modular-inverse-and-crt", "all-different-enumeration", "shared-cycle-attack", "g-mixed-alphabet"]
 summary = "A standard mnemonic stores 128 to 256 random bits as 12 to 24 words from a fixed list of 2,048. Each word carries 11 bits, and the last word includes a hash checksum. Four letters suffice to identify every list word of length at least four; the 103 three-letter words need a separate fixed-width convention. Exact solvers tested declared layouts beneath repeating keyed ciphers and enforced the checksum as a rule, not just a score."
-updated = "2026-09-07"
+updated = "2026-09-08"
 
 [[blocks]]
 kind = "definition"
@@ -42,6 +42,13 @@ body = '''
 - The standard English list and checksum rule. A declared word count, block origin and cipher period.
 - For words of length at least four, the first four letters identify the list entry uniquely. A fixed four-character layout is lossless only after a padding or escape rule for the 103 shorter words is declared.
 - Invariant: an endpoint is accepted only if the checksum passes, $z$ is a permutation, a separately written literal decrypt yields the printed prefixes, and literal re-encryption reproduces every ciphertext letter. These are algebraic cross-checks, and only the checksum and literal replay are independent gates.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Dictionary membership versus a complete encoding"
+body = '''
+A word-list-restricted running key and a standardized entropy mnemonic are different hypotheses. In BIP-39, permitted entropy lengths determine a checksum, the concatenated bits form 11-bit word indices, and converting the mnemonic to a seed is a separate password-based derivation. Merely finding words in the dictionary does not establish the checksum, index order, bit packing, normalization or seed derivation. A cipher attack using only the words must state that reduced model explicitly.
 '''
 
 [[blocks]]
@@ -159,3 +166,17 @@ ref = "LOG472"
 title = "BIP-39: Mnemonic code for generating deterministic keys"
 author = "M. Palatinus, P. Rusnak, A. Voisine, S. Bowe"
 year = 2013
+
+[[provenance]]
+path = "archive-a/cp_mnemonic_key.py"
+kind = "solver"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[provenance]]
+path = "archive-a/check_mnemonic_running.py"
+kind = "script"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[references]]
+title = "Mnemonic code for generating deterministic keys, BIP-39"
+url = "https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki"

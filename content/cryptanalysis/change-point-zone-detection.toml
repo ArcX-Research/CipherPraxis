@@ -7,8 +7,8 @@ status_note = "An exact dynamic program found one boundary at position 53 in the
 family = "Period and structure recovery"
 tags = ["change point", "segmentation", "zone", "dynamic programming", "coincidence", "alphabet-free"]
 related = ["exact-period-alignment", "segment-chain-analysis", "assumption-review-protocol", "within-coset-null", "permutation-test", "exact-dynamic-programming", "coincidence-lag-profile", "g-change-point", "g-zone", "g-coset"]
-summary = "One ciphertext can contain several zones. The key may change, a prefix may use a special key, or the kind of plaintext may switch. Zone tests find boundaries without knowing the alphabet. They compare matches at period-sized gaps, the set of letters used, and how letter counts relate across segments. In one project text, this changed the interpretation: a 63-letter period-7 zone mixed with 90 flat letters had looked like a different inner cipher."
-updated = "2026-09-07"
+summary = "A ciphertext can contain segments with different keys, schedules or source statistics. Change-point methods compare coincidence, symbol support and cross-segment frequency structure while accounting for boundary selection. A mixture of regimes can mimic a different cipher family when analyzed as one stationary text."
+updated = "2026-09-08"
 
 [[blocks]]
 kind = "definition"

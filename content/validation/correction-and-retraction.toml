@@ -7,8 +7,8 @@ status_note = "The ledger records full retractions, changed classifications, voi
 family = "Audit and release governance"
 tags = ["retraction", "correction", "ledger", "integrity"]
 related = ["ledger-reservations", "seal-and-audit-protocol", "reproducibility-receipts", "gauge-defect-invalidation", "selection-overfit-check", "power-measurement"]
-summary = "A large research project will make some wrong claims. A dated correction should quote the error, give the evidence against it, state which conclusions fall and which remain, and leave the original record unchanged. Corrections here came from source checks, independent audits, and arithmetic. They found a supposedly untested family that had been covered by a broader search, a power test that checked only wiring, and a gate count of 17 that was really 16."
-updated = "2026-09-04"
+summary = "A correction records the original claim, the evidence against it, and which conclusions remain supported. Preserve the historical record and publish the amended scope. This applies to incorrect algebra, incomplete searches, mislabeled controls, and measurements that were attributed to the wrong implementation."
+updated = "2026-09-08"
 
 [[blocks]]
 kind = "definition"

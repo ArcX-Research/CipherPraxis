@@ -6,9 +6,9 @@ status = "CLOSED"
 status_note = "Affine-lag filters tested LCG-style, progressive, and drifting keys against a family-wide shuffled null. None of the three texts showed an excess. Planted controls passed for lagged-Fibonacci digit keys at periods 6 and 7 and for constant-acceleration schedules. Tests on the 504-letter text did not end in language. These results cover only the stated rules, lags, and periods."
 family = "Modular arithmetic"
 tags = ["recurrence", "LCG", "lagged Fibonacci", "progressive key", "meet-in-the-middle"]
-related = ["affine-maps-mod-26", "modular-inverse-and-crt", "difference-operators", "lcm-of-periods", "gromark", "alberti-progressive", "running-key", "meet-in-the-middle", "family-wise-null", "g-linear-congruential-generator"]
-summary = "A linear recurrence can make a key stream look complex even though it needs only a short primer and a rule. That rule leaves a clear mathematical pattern. An affine-lag filter removes an affine recurrence. A lagged-Fibonacci digit chain is linear in its primer, so meet-in-the-middle search can recover it. A polynomial schedule has a constant second difference. The project built and tested a separate detector for each pattern."
-updated = "2026-09-07"
+related = ["affine-maps-mod-26", "modular-inverse-and-crt", "difference-operators", "lcm-of-periods", "gromark", "alberti-progressive", "running-key", "meet-in-the-middle", "family-wise-null", "g-linear-congruential-generator", "linear-feedback-hill"]
+summary = "Linear and affine recurrences generate structured key streams from short initial states. Differencing exposes affine order, field decomposition supports exact recurrence synthesis over a composite modulus, and primer search can exploit linearity. A low fitted order is a property of the observed sequence, not by itself evidence for a particular cipher."
+updated = "2026-09-08"
 
 [[blocks]]
 kind = "definition"
@@ -23,6 +23,15 @@ body = '''
 - Lagged Fibonacci is linear in the primer: $d_i = \sum_j A_{i,j} r_j \pmod{10}$ with $A_{i,j} = A_{i-P,j} + A_{i-P+1,j}$; under $\mathbb{Z}_{10} \cong \mathbb{Z}_2 \times \mathbb{Z}_5$ the primer splits into halves whose contribution vectors are met by addition.
 - Substitution-invariant selector: with $C_i = \sigma[(P_i + d_i) \bmod 26]$, equal ciphertext letters give $P_j - P_i \equiv d_i - d_j \pmod{26}$ regardless of the unknown alphabet $\sigma$; consecutive occurrences of every letter form a spanning forest of $n - (\text{observed letters})$ edges.
 - Polynomial schedule: $a_{i+1} - 2a_i + a_{i-1} \equiv \alpha$.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Minimum affine order by differencing"
+body = '''
+For a finite coordinate sequence $x$, the smallest affine recurrence order equals the smallest homogeneous recurrence order of its first differences. If $d_i=x_{i+1}-x_i$ obeys $d_i=\sum_{j=1}^r a_jd_{i-j}$, then $x_t-\sum_{j=1}^r a_jx_{t-j}$ is constant for $t\ge r$. Conversely, subtracting consecutive affine equations gives the difference recurrence.
+
+Over modulo 26, compute the Berlekamp–Massey linear complexity of $d$ separately over the two fields. The minimum order is the maximum of those two complexities: pad the shorter coefficient vector with zeros, combine by CRT, recover the affine constant from one original equation and replay the entire sequence. Never run field division directly modulo 26. This is an exact finite-sequence descriptor, not a prediction theorem for unseen symbols.
 '''
 
 [[blocks]]
@@ -76,6 +85,33 @@ function LAG_FILTER(c[0..n-1], a, L):
 // with b maximised out; compare the family-wise maximum with the same scan on
 // shuffled texts.
 ```
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function MINIMUM_AFFINE_RECURRENCE(x):
+    require x is a nonempty coordinate sequence
+    differences = [(x[i+1] - x[i]) mod 26 for every adjacent position]
+    a2 = BERLEKAMP_MASSEY(differences mod 2)
+    a13 = BERLEKAMP_MASSEY(differences mod 13)
+    convert both outputs to next_value = SUM(a[j] * prior_value[j]) convention
+    order = max(LENGTH(a2), LENGTH(a13))
+    ZERO_PAD_TO_ORDER(a2, order); ZERO_PAD_TO_ORDER(a13, order)
+    coefficients = CRT(a2, a13)
+    constant = x[order] - SUM(coefficients[j] * x[order-j-1]) mod 26
+    for i in order .. LENGTH(x)-1:
+        require x[i] == constant + SUM(coefficients[j] * x[i-j-1]) mod 26
+    return order, coefficients, constant, x[0:order]
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+title = "Cost and inferential boundary"
+body = '''
+Classical Berlekamp–Massey uses $O(n^2)$ field operations and $O(n)$ space. Scaling by a unit and translating the original coordinate sequence leave the minimum affine order unchanged. A low fitted order requires calibration under a declared source law and the complete selection over windows, layouts and directions; a short sequence can admit many recurrences.
 '''
 
 [[blocks]]
@@ -160,3 +196,18 @@ year = 1997
 title = "Random Number Generators"
 author = "T. E. Hull and A. R. Dobell"
 year = 1962
+
+[[provenance]]
+path = "withmath/docs/cipher-methods/AFFINE_RECURRENCE731.md"
+kind = "audit"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[provenance]]
+path = "archive-b/poly_crt_recurrence.cpp"
+kind = "solver"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[provenance]]
+path = "CipherPraxis/scripts/check_research_algorithms.py"
+kind = "script"
+note = "Finite affine recurrence order and reconstruction compared with exhaustive smaller composite-ring recurrences. These checks do not establish general recovery power or replay the external solver."

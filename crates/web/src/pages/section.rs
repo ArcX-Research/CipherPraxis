@@ -285,11 +285,13 @@ fn ReferencesPage() -> impl IntoView {
             <div class="section-head">
                 <p class="eyebrow mono">"Source files"</p>
                 <h2 class="display-sm">{format!("{prov_count} source files support entries in this knowledge base")}</h2>
-                <p class="lede-sm">"Each path starts at "<code>{CORPUS_ROOT}</code>". These internal links show where every reported number came from."</p>
+                <p class="lede-sm">"Archival identifiers trace individual claims to their records. Unprefixed paths refer to "<code>{CORPUS_ROOT}</code>"; archive prefixes identify additional source collections."</p>
             </div>
+            <details class="evidence-records">
+                <summary>"Browse the archival source index"</summary>
             <div class="table-scroll">
                 <table class="prov-table">
-                    <thead><tr><th>"Corpus file"</th><th>"Cited by"</th></tr></thead>
+                    <thead><tr><th>"Archival record"</th><th>"Cited by"</th></tr></thead>
                     <tbody>
                         {prov_rows.into_iter().map(|(p, es)| view! {
                             <tr>
@@ -300,6 +302,7 @@ fn ReferencesPage() -> impl IntoView {
                     </tbody>
                 </table>
             </div>
+            </details>
         </section>
     }
 }

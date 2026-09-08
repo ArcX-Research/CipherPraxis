@@ -1,0 +1,80 @@
+id = "incremental-language-score"
+section = "engineering"
+title = "Incremental n-gram scoring"
+status = "VERIFIED"
+status_note = "The delta identity is exact for an additive fixed n-gram objective. Floating-point drift, changing objectives, and incomplete enumeration need independent checks."
+family = "Compute and throughput"
+tags = ["delta scoring", "n-grams", "Gray code", "undo", "integer scores"]
+related = ["quadgram-log-likelihood", "compiled-hot-cores", "baconian", "exact-optimization-admission"]
+summary = "Recompute exactly the language-model windows touched by a proposed key change. Sparse dependency lists also support exhaustive Gray-code search over binary symbol assignments."
+updated = "2026-09-08"
+
+[[blocks]]
+kind = "equations"
+body = '''
+Let $S(P)=\sum_{i=0}^{n-k}w(P_i,\ldots,P_{i+k-1})$. A move changes positions $D$. Its affected starts are $A=\bigcup_{j\in D}\{i:0\le i\le n-k,\ i\le j<i+k\}$. Then
+$$S(P')-S(P)=\sum_{i\in A}\bigl(w(P'_i,\ldots,P'_{i+k-1})-w(P_i,\ldots,P_{i+k-1})\bigr).$$
+Deduplicate starts before evaluation: one changed n-gram can touch several edited positions.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function SCORE_MOVE(plain, changed_positions, proposed_symbols, score, k):
+    starts = UNIQUE_CLIPPED_WINDOW_STARTS(changed_positions, k, length(plain))
+    before = SUM_WINDOW_SCORES(plain, starts)
+    undo = SAVE_CHANGED_SYMBOLS(plain, changed_positions)
+    APPLY_SYMBOLS(plain, changed_positions, proposed_symbols)
+    after = SUM_WINDOW_SCORES(plain, starts)
+    return score + after - before, undo
+function ENUMERATE_BINARY_LABELS(symbols, cipher):
+    state = ALL_ZERO_ASSIGNMENT(symbols)
+    EVALUATE_AND_RETAIN_INITIAL_STATE(state)
+    for counter in 1 .. (2 ** COUNT(symbols)) - 1:
+        bit = INDEX_OF_LOWEST_SET_BIT(counter)
+        FLIP_SYMBOL_LABEL_AND_UPDATE_AFFECTED_WINDOWS(state, bit)
+        RETAIN_ALL_REQUIRED_TIES(state)
+    require emitted assignment count equals 2 ** COUNT(symbols)
+    RECOMPUTE_FULL_SCORES_OF_RETAINED_CANDIDATES()
+    return COMPLETE, retained
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+A move costs $O(k|D|)$ to assemble affected starts and at most that many window evaluations, rather than $O(n)$ full windows. A Gray-code traversal changes one binary assignment at a time. Assign frequently toggled bits to sparse symbols only as a deterministic work optimization; include the initial zero assignment and retain the full semantic domain.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+Undo both the plaintext and objective state after rejected moves. Repeated floating additions can drift; periodically rescore and use exact integer weights where the model provides them. If a score includes global word segmentation, a local character delta does not update that component. Invalid decoding must remain invalid rather than merely receive a convenient finite penalty.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+On small alphabets compare every delta against full rescoring and compare the complete Gray-code assignment set with ordinary binary enumeration. Test overlapping windows, the first and last positions, short inputs, rejected moves, and the all-zero winner.
+'''
+
+[[provenance]]
+path = "archive-a/progressive_vigenere.cpp"
+kind = "solver"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[provenance]]
+path = "archive-a/hill_decryption_words.cpp"
+kind = "solver"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[provenance]]
+path = "archive-b/frac_bacon_exact.cpp"
+kind = "solver"
+note = "Gray-code dependency-list implementation. The generalized pseudocode explicitly includes the initial zero assignment, which the inspected loop did not offer as a candidate."
+
+[[provenance]]
+path = "CipherPraxis/scripts/check_research_algorithms.py"
+kind = "script"
+note = "Every Gray-code assignment, including zero, checked against full n-gram rescoring with overlapping windows. These checks do not establish general recovery power or replay the external solver."

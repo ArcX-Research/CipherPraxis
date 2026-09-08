@@ -1,0 +1,77 @@
+id = "block-word-boundary-dp"
+section = "exact"
+title = "Word-block decoding with cached boundary transfers"
+status = "VERIFIED"
+status_note = "The recurrence is exact for the declared finite word bank, block offsets and fixed character n-gram objective. It does not establish completeness over natural language or certify a truncated list as the global k best."
+family = "Exact language decoding"
+tags = ["running key", "word blocks", "max-plus", "dynamic programming", "boundary cache"]
+related = ["running-key", "quadgram-log-likelihood", "exact-dynamic-programming", "word-lattice-segmentation"]
+summary = "An exact dynamic program for a running key made of fixed-length dictionary blocks. Cache the n-gram contribution across each block boundary, then evaluate each candidate word only once per layer."
+updated = "2026-09-08"
+
+[[blocks]]
+kind = "definition"
+body = '''
+A fixed cipher relation maps each candidate key word at one block position to a unique plaintext segment. Under a character model of order $k$, only the last $k-1$ plaintext symbols affect future scores. Store the best score for each such suffix, with explicit shorter contexts at the beginning of the text. Key-word identities and tied paths remain backpointers.
+'''
+
+[[blocks]]
+kind = "attack"
+body = '''
+For a segment of length at least $k-1$, precompute a max-plus bridge from every old suffix to every possible new prefix of length $k-1$. Applying $k-1$ single-character transfer layers avoids scanning every old suffix separately for every word. The word's first $k-1$ symbols select the bridge entry, its internal windows add a fixed score, and its final suffix selects the destination. Short final segments preserve residual old-context symbols and need the corresponding shorter transfer.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+function WORD_BLOCK_DP(cipher, word_bank, block_layout, ngram_order):
+    scores = {EMPTY_CONTEXT: 0}
+    history = []
+    for block in block_layout:
+        segments = DECODE_WORD_BANK_AT_BLOCK(cipher, word_bank, block)
+        bridge = scores with identity backpointers
+        steps = min(block.length, ngram_order - 1)
+        repeat steps times:
+            bridge = MAX_PLUS_CHARACTER_TRANSFER(bridge, charge_only_complete_windows)
+        next = EMPTY_SUFFIX_SCORE_MAP()
+        for word_origin, segment in segments:
+            for bridge_state compatible with segment prefix:
+                value = bridge_state.score + INTERNAL_WINDOW_SCORE(segment)
+                if block.length >= ngram_order - 1: suffix = TAIL_CONTEXT(segment)
+                else: suffix = bridge_state.context
+                RELAX_WITH_TIES(next, suffix, value, word_origin, bridge_state.predecessors)
+        history.append(SHARED_BACKPOINTERS(next))
+        scores = next
+    witnesses = TRACE_MAXIMUM_FINAL_STATES(scores, history)
+    require each witness score equals full ngram rescoring
+    return COMPLETE_FOR_DECLARED_BANK, witnesses
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+For $m$ symbols, a bridge for order $k$ has up to $m^{k-1}$ states and $m$ outgoing transitions per layer, giving $O(km^k)$ work per block plus word decoding and internal scoring. Directly pairing $B$ words with all suffixes can cost $O(Bm^{k-1})$ boundary work. Sparse states may reduce practical work.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+A fake initial suffix must not add language scores before enough real symbols exist. Retaining one predecessor per suffix is exact for one maximum, but not for all tied words or global k-best sequences. Prefix and suffix fragments must come from a declared word-offset policy, not arbitrary free letters.
+'''
+
+[[provenance]]
+path = "archive-a/word_stream_dp.cpp"
+kind = "solver"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[provenance]]
+path = "archive-a/word_stream_exact.cpp"
+kind = "solver"
+note = "Source reviewed for the stated algorithm; no performance or recovery guarantee is inferred."
+
+[[provenance]]
+path = "CipherPraxis/scripts/check_research_algorithms.py"
+kind = "script"
+note = "Cached max-plus word transfers compared with all paths, including short blocks, ties and duplicate word origins. These checks do not establish general recovery power or replay the external solver."
