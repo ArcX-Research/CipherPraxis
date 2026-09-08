@@ -35,7 +35,7 @@ cryptography research:
 | `/exact` | `exact` | Exact Solvers: CSP, CP-SAT/SMT, DP, exhaustive enumeration |
 | `/validation` | `validation` | Validation (planted controls, power, audits, receipts) |
 | `/engineering` | `engineering` | Solver Engineering (cores, harnesses, reproducibility) |
-| `/labs` | `labs` | Interactive WASM Labs (cipher/analysis code running in the browser) |
+| `/labs` | `labs` | Interactive cipher and analysis labs |
 | `/glossary` | `glossary` | Terms |
 | `/references` | `references` | Sources: literature and the internal evidence corpus |
 | `/<section>/<id>` | — | Entry page for any record |
@@ -146,6 +146,13 @@ Derived from the Dilate visual language, with restrained scientific reading surf
 - Motifs: hairline grids, faint dotted fields, concentric geometry and subtle blue/teal washes.
   Equations and pseudocode use quiet, high-contrast reading panels. Amber marks limited power;
   status text always accompanies color. No dark mode.
+- The overview pairs a concise introduction with a transparent vector security illustration in
+  blue and teal. The text column stops growing at 640 px; the artwork is centered in the remaining
+  space and its faint halo fades into the page. Subject cards use one short description; suggested
+  entries and labs link to canonical pages without repeating their metadata and tags. The six evidence definitions
+  remain visible, with reading principles in a disclosure. Article headers separate parent
+  navigation, family and the semantic update date. Responsive overview grids use workspace
+  container queries so the left navigation is included in available-width calculations.
 - Category indexes use aligned entry rows and a 300 px right sidebar for search, family,
   topic, grouping, and evidence status. All eleven categories share the filter logic;
   Glossary retains its definitions and letter index, and References retains bibliographies.

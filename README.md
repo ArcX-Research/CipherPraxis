@@ -2,8 +2,7 @@
 
 A public, general-cryptography knowledge base: cipher models, algebra, cryptanalysis techniques,
 statistical instruments, search and exact solvers, validation protocols, implementation
-engineering and interactive labs, all compiled from Rust to WebAssembly and running entirely in
-the browser.
+engineering and interactive labs, compiled from Rust to WebAssembly.
 
 ## Run it locally
 

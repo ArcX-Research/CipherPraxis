@@ -93,7 +93,7 @@ pub fn KnowledgeSidebar(open: RwSignal<bool>) -> impl IntoView {
             </nav>
             <div class="kb-sidebar-foot mono">
                 <span class="kb-live-dot" aria-hidden="true"></span>
-                <span>"Browser search ready"</span>
+                <span>"Search ready"</span>
             </div>
         </aside>
     }

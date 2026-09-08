@@ -84,16 +84,20 @@ fn EntryView(entry: Entry) -> impl IntoView {
         <article class="wrap entry" class:entry-lab=is_lab>
             <div class="entry-grid">
                 <div class="entry-main">
-                    <nav class="breadcrumbs mono" aria-label="Breadcrumb">
-                        <a href="/">"Cipher Praxis"</a><span class="sep">"/"</span>
-                        <a href=format!("/{}", section.slug())>{section.title()}</a><span class="sep">"/"</span>
-                        <span aria-current="page">{title.clone()}</span>
-                    </nav>
                     <header class="entry-header">
-                        <p class="eyebrow mono">
-                            {format!("{:02} · {}", section.ordinal(), family)}
-                            {updated.map(|u| view! { <span class="sep">"·"</span><span>{format!("updated {u}")}</span> })}
-                        </p>
+                        <div class="entry-topline">
+                            <nav class="breadcrumbs" aria-label="Breadcrumb">
+                                <ol>
+                                    <li><a href="/">"Overview"</a></li>
+                                    <li><a href=format!("/{}", section.slug())>{section.title()}</a></li>
+                                    <li class="sr-only" aria-current="page">{title.clone()}</li>
+                                </ol>
+                            </nav>
+                            {updated.map(|u| view! {
+                                <p class="entry-updated">"Updated "<time datetime=u.clone()>{u.clone()}</time></p>
+                            })}
+                        </div>
+                        <p class="entry-family">{family}</p>
                         <h1 class="display">{title.clone()}</h1>
                         {subtitle.map(|s| view! { <p class="entry-subtitle serif">{s}</p> })}
                         <div class="entry-status glass">
@@ -123,7 +127,7 @@ fn EntryView(entry: Entry) -> impl IntoView {
                     })}
                     {lab_key.map(|k| view! {
                         <section class="lab-panel" aria-label="Interactive lab">
-                            <div class="lab-panel-head mono"><span class="lab-live"><i></i>"Running in your browser"</span><span>{format!("lab/{k}")}</span></div>
+                            <div class="lab-panel-head mono"><span class="lab-live"><i></i>"Interactive lab"</span><span>{format!("lab/{k}")}</span></div>
                             {render_lab(&k)}
                         </section>
                     })}

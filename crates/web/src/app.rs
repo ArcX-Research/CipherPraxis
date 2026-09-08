@@ -71,10 +71,7 @@ fn Header(sidebar: RwSignal<bool>) -> impl IntoView {
                     </span>
                 </a>
                 <div class="header-context mono">
-                    <span class="kb-live-dot" aria-hidden="true"></span>
                     <span>{format!("{total} entries")}</span>
-                    <span class="header-context-sep">"/"</span>
-                    <span>"runs in your browser"</span>
                 </div>
                 <div class="header-actions">
                     <button
@@ -140,7 +137,7 @@ fn Footer() -> impl IntoView {
             </div>
             <div class="wrap footer-line mono">
                 <span>"© Dilate Technologies · Cipher Praxis"</span>
-                <span>"No tracking · runs in your browser"</span>
+                <span>"No tracking"</span>
             </div>
         </footer>
     }

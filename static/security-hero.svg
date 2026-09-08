@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 520" fill="none">
+  <title>Cryptographic security</title>
+  <desc>An abstract glass shield and keyhole, surrounded by a network of geometric nodes and circuit paths.</desc>
+  <defs>
+    <radialGradient id="halo">
+      <stop stop-color="#82a7e2" stop-opacity=".15"/>
+      <stop offset=".48" stop-color="#b4ccec" stop-opacity=".09"/>
+      <stop offset="1" stop-color="#dbe7f7" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="glass" x1="211" y1="103" x2="404" y2="351" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#e8f1ff" stop-opacity=".9"/><stop offset=".45" stop-color="#c8dcf4" stop-opacity=".5"/><stop offset="1" stop-color="#c8e4e6" stop-opacity=".4"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="206" y1="102" x2="428" y2="341" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#436ca7"/><stop offset=".43" stop-color="#5387ce"/><stop offset="1" stop-color="#4d919b"/>
+    </linearGradient>
+    <linearGradient id="floor" x1="320" y1="332" x2="320" y2="480" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7597bd" stop-opacity=".24"/><stop offset="1" stop-color="#7597bd" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="glow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="5"/></filter>
+    <filter id="shadow" x="-30%" y="-20%" width="160%" height="160%"><feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#557ba9" flood-opacity=".09"/></filter>
+  </defs>
+  <ellipse cx="326" cy="246" rx="300" ry="244" fill="url(#halo)"/>
+
+  <!-- An architectural field, with no implied protocol or live security metrics. -->
+  <g stroke="#7293bc" stroke-width="1" opacity=".19">
+    <path d="m320 52 174 100v200L320 452 146 352V152Z" stroke-dasharray="3 8"/>
+    <path d="m320 77 151 87v174l-151 87-151-87V164Z"/>
+    <path d="M169 164 320 251l151-87M320 251v174"/>
+    <path d="M320 52V32M494 152l22-13M494 352l22 13M146 152l-22-13M146 352l-22 13M320 452v24"/>
+  </g>
+  <g stroke="url(#floor)">
+    <path d="m320 332 249 87-249 87L71 419Z"/>
+    <path d="m320 348 203 71-203 71-203-71Z"/>
+    <path d="m320 368 145 51-145 51-145-51Z"/>
+    <path d="M121 401 369 488M170 384l250 87M221 367l249 87M270 350l250 87M121 437l249-87M170 454l249-87M221 471l249-87M270 488l249-87"/>
+  </g>
+  <ellipse cx="320" cy="419" rx="83" ry="16" fill="#5a90b3" opacity=".15" filter="url(#glow)"/>
+  <ellipse cx="320" cy="419" rx="63" ry="13" stroke="#659cac" stroke-opacity=".3"/>
+  <path d="M320 385v27" stroke="#648fa4" stroke-opacity=".5" stroke-dasharray="2 5"/>
+
+  <!-- Routed links and small network nodes. -->
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <g stroke="#7c96b8" stroke-opacity=".55">
+      <path d="M72 208h63l31 31h50M64 304h71l36-36h45M119 116h49l38 38h17"/>
+      <path d="M568 180h-57l-44 44h-46M576 288h-68l-30-30h-54M521 382h-61l-37-37h-37"/>
+      <path d="M112 387h55l34-34h30M456 93h-43l-33 33"/>
+    </g>
+    <g stroke="#3e8490" stroke-width="1.6">
+      <path d="M86 208h49l31 31h20"/><path d="M534 288h-26l-30-30h-29"/>
+      <path d="M159 387h8l34-34h21" stroke-opacity=".6"/>
+    </g>
+    <g fill="#f7faff" stroke="#8ca7c9">
+      <rect x="51" y="187" width="42" height="42" rx="10"/>
+      <rect x="547" y="159" width="42" height="42" rx="10"/>
+      <rect x="91" y="366" width="42" height="42" rx="10"/>
+      <rect x="500" y="361" width="42" height="42" rx="10"/>
+    </g>
+    <g stroke="#4b6f9d" stroke-width="1.4">
+      <path d="M63 202h18M63 208h13M63 214h18"/>
+      <path d="m568 171 9 5v9l-9 5-9-5v-9Z"/>
+      <path d="M105 380h14v14h-14ZM109 377v3M115 377v3M109 394v3M115 394v3M102 384h3M102 390h3M119 384h3M119 390h3"/>
+      <path d="m513 382 5 5 11-11" stroke="#407f8c"/>
+    </g>
+    <g fill="#f4f8fd" stroke="#7896bc">
+      <circle cx="119" cy="116" r="5"/><circle cx="64" cy="304" r="5"/>
+      <circle cx="456" cy="93" r="5"/><circle cx="576" cy="288" r="5"/>
+    </g>
+    <g fill="#3b8290">
+      <circle cx="135" cy="208" r="3"/><circle cx="508" cy="288" r="3"/>
+      <circle cx="201" cy="353" r="2.5"/>
+    </g>
+  </g>
+
+  <!-- Three offset shield planes give the central object depth. -->
+  <path d="M304 111c-34 23-69 37-109 43v103c0 58 48 106 109 132 62-26 110-74 110-132V154c-41-6-77-20-110-43Z" fill="#dce9f7" fill-opacity=".65" stroke="#79a6b5" stroke-opacity=".36"/>
+  <path d="M313 97c-34 23-69 37-109 43v103c0 58 48 106 109 132 62-26 110-74 110-132V140c-41-6-77-20-110-43Z" fill="#dfeafa" fill-opacity=".55" stroke="#7095c2" stroke-opacity=".48"/>
+  <g filter="url(#shadow)">
+    <path d="M322 83c-34 23-69 37-109 43v103c0 58 48 106 109 132 62-26 110-74 110-132V126c-41-6-77-20-110-43Z" fill="url(#glass)" stroke="url(#edge)" stroke-width="1.8"/>
+    <path d="M322 103c-28 18-58 30-90 37v88c0 46 37 87 90 113 54-26 91-67 91-113v-88c-33-7-63-19-91-37Z" stroke="#7298c7" stroke-opacity=".27"/>
+    <path d="M322 84v276c-61-26-109-74-109-132V126c40-6 75-20 109-42Z" fill="#5285bd" fill-opacity=".045"/>
+    <path d="M215 163v-35c39-6 73-20 107-43" stroke="#5079b4" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M431 228c0 58-48 106-109 132" stroke="#4c909b" stroke-width="2.2" stroke-linecap="round"/>
+  </g>
+  <g stroke="#6588b1" stroke-opacity=".28" stroke-width="1">
+    <path d="M247 180h17l12 12M247 249h16l13-13M398 180h-17l-12 12M398 249h-16l-13-13M289 298l13-13h39l14 13"/>
+    <circle cx="247" cy="180" r="2"/><circle cx="398" cy="249" r="2"/>
+  </g>
+  <circle cx="322" cy="220" r="57" fill="#f5f9ff" fill-opacity=".65" stroke="#7399c4" stroke-opacity=".35"/>
+  <circle cx="322" cy="220" r="47" stroke="#6f94c0" stroke-opacity=".18" stroke-dasharray="1 7"/>
+  <path d="M309 211v-9a13 13 0 0 1 26 0v9" stroke="#3d659c" stroke-width="3" stroke-linecap="round"/>
+  <rect x="300" y="211" width="44" height="34" rx="8" fill="#7b9fd0" fill-opacity=".12" stroke="#4b78ad" stroke-width="1.5"/>
+  <circle cx="322" cy="224" r="3.3" fill="#2e5d92"/>
+  <path d="M322 227v6" stroke="#2e5d92" stroke-width="2" stroke-linecap="round"/>
+  <g fill="#527fad">
+    <circle cx="322" cy="83" r="3"/><circle cx="432" cy="126" r="2.5"/><circle cx="322" cy="361" r="3"/>
+  </g>
+</svg>

@@ -110,7 +110,7 @@ impl Section {
             Section::Exact => "Methods that check every allowed answer and can prove when no answer exists within a stated scope.",
             Section::Validation => "Controls, audits, and saved records that show whether a test works and what its result really means.",
             Section::Engineering => "How the tools are built, tested, run, and made repeatable.",
-            Section::Labs => "Run the same cipher and analysis code in your browser and see each step.",
+            Section::Labs => "Experiment with ciphers and analysis tools, and follow each step.",
             Section::Glossary => "Plain definitions for terms used across the site, with links to fuller explanations.",
             Section::References => "Books, papers, and project records that support the claims on this site.",
         }
