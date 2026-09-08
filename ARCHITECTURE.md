@@ -143,6 +143,7 @@ Derived from the Dilate visual language, with restrained scientific reading surf
   `#edede8`; hairline `#e4e4e1`.
 - Type: Geist (UI/body, weights 400/500/600), Adamina (serif display/quotes), DM Mono (data/code).
   Letter-spacing −0.01em body, −0.04em display. Radii 8/12/20 px. Generous whitespace.
+- Titles and headings have no trailing periods. Questions retain their question marks.
 - Motifs: hairline grids, faint dotted fields, concentric geometry and subtle blue/teal washes.
   Equations and pseudocode use quiet, high-contrast reading panels. Amber marks limited power;
   status text always accompanies color. No dark mode.

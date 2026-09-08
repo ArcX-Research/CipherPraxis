@@ -72,7 +72,7 @@ pub fn Overview() -> impl IntoView {
                 <div class="wrap hero-grid">
                     <div class="hero-copy">
                         <p class="eyebrow">"A field guide to cryptography"</p>
-                        <h1 id="welcome-h" class="display display-xl">"The science of"<br/><em class="serif">"keeping secrets."</em></h1>
+                        <h1 id="welcome-h" class="display display-xl">"The science of"<br/><em class="serif">"keeping secrets"</em></h1>
                         <p class="lede">"Explore how ciphers protect information, how cryptanalysis tests their limits, and what the mathematical evidence supports."</p>
                         <div class="hero-actions">
                             <a class="btn btn-primary" href="#ia-h">"Explore the library"<span aria-hidden="true">"↗"</span></a>
@@ -163,16 +163,16 @@ pub fn Overview() -> impl IntoView {
                 <div class="evidence-guide">
                     <div class="evidence-guide-intro">
                         <p class="eyebrow">"Read with confidence"</p>
-                        <h2 id="status-h">"Every claim has a scope."</h2>
+                        <h2 id="status-h">"Every claim has a scope"</h2>
                         <p>"A status describes the support for a particular claim. Read it alongside the assumptions, controls and sources on each page."</p>
                         <a class="overview-text-link" href="/validation">"Explore validation methods"<span aria-hidden="true">"→"</span></a>
                         <details class="overview-principles" open>
                             <summary>"Four principles for reading evidence"</summary>
                             <ol>
-                                <li><b>"Run controls first."</b>" Define what each control should recover and test it with the same procedure. A failed control limits what a target miss can establish."</li>
-                                <li><b>"Trace every number."</b>" Follow pass rates, z-scores and speed figures to their source logs, audits or notes."</li>
-                                <li><b>"Keep negative claims narrow."</b>" State the tested family, assumptions, text length and recovery rate. Distinguish an exhaustive exclusion from a search that found no answer."</li>
-                                <li><b>"Test failure modes."</b>" Use matching positive and negative controls. Separate null cases that satisfy the model from cases that violate its assumptions."</li>
+                                <li><b>"Run controls first"</b>" Define what each control should recover and test it with the same procedure. A failed control limits what a target miss can establish."</li>
+                                <li><b>"Trace every number"</b>" Follow pass rates, z-scores and speed figures to their source logs, audits or notes."</li>
+                                <li><b>"Keep negative claims narrow"</b>" State the tested family, assumptions, text length and recovery rate. Distinguish an exhaustive exclusion from a search that found no answer."</li>
+                                <li><b>"Test failure modes"</b>" Use matching positive and negative controls. Separate null cases that satisfy the model from cases that violate its assumptions."</li>
                             </ol>
                         </details>
                     </div>
