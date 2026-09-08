@@ -148,9 +148,12 @@ Derived from the Dilate visual language, with restrained scientific reading surf
   status text always accompanies color. No dark mode.
 - The overview pairs a concise introduction with a transparent vector security illustration in
   blue and teal. The text column stops growing at 640 px; the artwork is centered in the remaining
-  space and its faint halo fades into the page. Subject cards use one short description; suggested
-  entries and labs link to canonical pages without repeating their metadata and tags. The six evidence definitions
-  remain visible, with reading principles in a disclosure. Article headers separate parent
+  space and its faint halo fades into the page. On wide screens the communication chain extends
+  left while the main shield stays in place; smaller layouts fit the full illustration to its column.
+  The introduction begins 20–32 px below the header. Subject cards use one short description;
+  suggested entries and labs link to canonical pages without repeating their metadata and tags.
+  The six evidence definitions remain visible, with reading principles open by default in a
+  disclosure. Article headers separate parent
   navigation, family and the semantic update date. Responsive overview grids use workspace
   container queries so the left navigation is included in available-width calculations.
 - Category indexes use aligned entry rows and a 300 px right sidebar for search, family,
@@ -159,6 +162,11 @@ Derived from the Dilate visual language, with restrained scientific reading surf
   Topics are counted once per entry, grouped without regard to case, and alphabetized.
   Full search uses the same row layout and tools rail. Below 920 px of available workspace,
   the rail becomes an expandable panel between the heading and results.
+- Labs share sentence-case labels, associated input hints, quiet output panels and a static
+  activity marker. The affine lab pairs encryption with recovered plaintext, shows the first
+  letter's arithmetic and offers accessible multiplier buttons with their modular inverses.
+  Lab container queries keep inputs, output comparisons and the key selector readable at
+  the article column's actual width.
 
 ## 6. Layout of this directory
 

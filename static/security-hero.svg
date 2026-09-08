@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 520" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-116 0 756 520" fill="none">
   <title>Cryptographic security</title>
-  <desc>An abstract glass shield and keyhole, surrounded by a network of geometric nodes and circuit paths.</desc>
+  <desc>An abstract security shield connects through two smaller locks to a message, with arrows showing the sequence along a network path.</desc>
   <defs>
     <radialGradient id="halo">
       <stop stop-color="#82a7e2" stop-opacity=".15"/>
@@ -41,22 +41,20 @@
   <!-- Routed links and small network nodes. -->
   <g stroke-linecap="round" stroke-linejoin="round">
     <g stroke="#7c96b8" stroke-opacity=".55">
-      <path d="M72 208h63l31 31h50M64 304h71l36-36h45M119 116h49l38 38h17"/>
+      <path d="M64 304h71l36-36h45M119 116h49l38 38h17"/>
       <path d="M568 180h-57l-44 44h-46M576 288h-68l-30-30h-54M521 382h-61l-37-37h-37"/>
       <path d="M112 387h55l34-34h30M456 93h-43l-33 33"/>
     </g>
     <g stroke="#3e8490" stroke-width="1.6">
-      <path d="M86 208h49l31 31h20"/><path d="M534 288h-26l-30-30h-29"/>
+      <path d="M534 288h-26l-30-30h-29"/>
       <path d="M159 387h8l34-34h21" stroke-opacity=".6"/>
     </g>
     <g fill="#f7faff" stroke="#8ca7c9">
-      <rect x="51" y="187" width="42" height="42" rx="10"/>
       <rect x="547" y="159" width="42" height="42" rx="10"/>
       <rect x="91" y="366" width="42" height="42" rx="10"/>
       <rect x="500" y="361" width="42" height="42" rx="10"/>
     </g>
     <g stroke="#4b6f9d" stroke-width="1.4">
-      <path d="M63 202h18M63 208h13M63 214h18"/>
       <path d="m568 171 9 5v9l-9 5-9-5v-9Z"/>
       <path d="M105 380h14v14h-14ZM109 377v3M115 377v3M109 394v3M115 394v3M102 384h3M102 390h3M119 384h3M119 390h3"/>
       <path d="m513 382 5 5 11-11" stroke="#407f8c"/>
@@ -66,7 +64,7 @@
       <circle cx="456" cy="93" r="5"/><circle cx="576" cy="288" r="5"/>
     </g>
     <g fill="#3b8290">
-      <circle cx="135" cy="208" r="3"/><circle cx="508" cy="288" r="3"/>
+      <circle cx="508" cy="288" r="3"/>
       <circle cx="201" cy="353" r="2.5"/>
     </g>
   </g>
@@ -93,5 +91,33 @@
   <path d="M322 227v6" stroke="#2e5d92" stroke-width="2" stroke-linecap="round"/>
   <g fill="#527fad">
     <circle cx="322" cy="83" r="3"/><circle cx="432" cy="126" r="2.5"/><circle cx="322" cy="361" r="3"/>
+  </g>
+
+  <!-- A visual narrative of protected communication, not a protocol schematic.
+       Draw this route above the shield so its origin at the main lock stays visible. -->
+  <g id="message-route" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M300 228h-23l-10 10h-76M139 238H79M27 238H-44" stroke="#ffffff" stroke-opacity=".85" stroke-width="5"/>
+    <path d="M300 228h-23l-10 10h-76M139 238H79M27 238H-44" stroke="#468b98" stroke-width="1.8"/>
+    <g stroke="#468b98" stroke-width="1.6">
+      <path d="m234 234-4 4 4 4M113 234l-4 4 4 4M-5 234l-4 4 4 4"/>
+    </g>
+    <circle cx="277" cy="228" r="2.5" fill="#468b98"/>
+
+    <g id="secondary-lock">
+      <rect x="139" y="212" width="52" height="52" rx="12" fill="#f5f9ff" stroke="#81a4c8" stroke-width="1.2"/>
+      <path d="M158 233v-6a7 7 0 0 1 14 0v6" stroke="#3d659c" stroke-width="2"/>
+      <rect x="153" y="233" width="24" height="20" rx="4" fill="#e2edf8" stroke="#4b78ad" stroke-width="1.4"/>
+      <circle cx="165" cy="241" r="2" fill="#2e5d92"/>
+      <path d="M165 243v4" stroke="#2e5d92" stroke-width="1.5"/>
+    </g>
+
+    <use id="tertiary-lock" href="#secondary-lock" x="-112"/>
+
+    <g id="message-node" transform="translate(-112 0)">
+      <path d="M14 212h44a10 10 0 0 1 10 10v28a10 10 0 0 1-10 10H29l-10 8v-8h-5a10 10 0 0 1-10-10v-28a10 10 0 0 1 10-10Z" fill="#f8fcfc" stroke="#85afb7" stroke-width="1.2"/>
+      <g stroke="#4d8492" stroke-width="1.6">
+        <path d="M18 226h36M18 234h29M18 242h33"/>
+      </g>
+    </g>
   </g>
 </svg>

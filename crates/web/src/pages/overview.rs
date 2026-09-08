@@ -85,8 +85,8 @@ pub fn Overview() -> impl IntoView {
                         </dl>
                     </div>
                     <div class="hero-visual">
-                        <img src="/security-hero.svg" width="640" height="520" fetchpriority="high"
-                            alt="A translucent shield and keyhole surrounded by connected nodes, an abstract illustration of cryptographic security."/>
+                        <img src="/security-hero.svg" width="756" height="520" fetchpriority="high"
+                            alt="A security shield connects through smaller locks to a message, illustrating protected communication."/>
                     </div>
                 </div>
             </section>
@@ -166,7 +166,7 @@ pub fn Overview() -> impl IntoView {
                         <h2 id="status-h">"Every claim has a scope."</h2>
                         <p>"A status describes the support for a particular claim. Read it alongside the assumptions, controls and sources on each page."</p>
                         <a class="overview-text-link" href="/validation">"Explore validation methods"<span aria-hidden="true">"→"</span></a>
-                        <details class="overview-principles">
+                        <details class="overview-principles" open>
                             <summary>"Four principles for reading evidence"</summary>
                             <ol>
                                 <li><b>"Run controls first."</b>" Define what each control should recover and test it with the same procedure. A failed control limits what a target miss can establish."</li>

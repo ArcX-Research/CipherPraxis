@@ -12,14 +12,17 @@ pub fn TextField(
 ) -> impl IntoView {
     let id = format!("f-{}", label.to_lowercase().replace(' ', "-"));
     let id2 = id.clone();
+    let hint_id = format!("{id}-hint");
+    let described_by = (!hint.is_empty()).then_some(hint_id.clone());
     view! {
         <div class="field">
-            <label class="field-label" for=id.clone()>{label}{(!hint.is_empty()).then(|| view! { <span class="field-hint">{hint}</span> })}</label>
+            <label class="field-label" for=id>{label}</label>
             {if multiline {
-                view! { <textarea id=id2 class="field-input" class:mono=mono rows="3" prop:value=move || value.get() on:input=move |ev| value.set(event_target_value(&ev))></textarea> }.into_any()
+                view! { <textarea id=id2 class="field-input" class:mono=mono rows="3" aria-describedby=described_by prop:value=move || value.get() on:input=move |ev| value.set(event_target_value(&ev))></textarea> }.into_any()
             } else {
-                view! { <input id=id2 class="field-input" class:mono=mono type="text" prop:value=move || value.get() on:input=move |ev| value.set(event_target_value(&ev))/> }.into_any()
+                view! { <input id=id2 class="field-input" class:mono=mono type="text" aria-describedby=described_by prop:value=move || value.get() on:input=move |ev| value.set(event_target_value(&ev))/> }.into_any()
             }}
+            {(!hint.is_empty()).then(|| view! { <span class="field-hint" id=hint_id>{hint}</span> })}
         </div>
     }
 }
@@ -46,11 +49,19 @@ pub fn Output(
     label: &'static str,
     #[prop(into)] value: Signal<String>,
     #[prop(default = true)] grouped: bool,
+    #[prop(optional)] formula: &'static str,
 ) -> impl IntoView {
     view! {
         <div class="output">
-            <div class="output-label mono">{label}<span class="output-len">{move || format!("{} letters", value.get().chars().filter(|c| c.is_ascii_alphabetic()).count())}</span></div>
-            <div class="output-value mono">{move || if grouped { group5(&value.get()) } else { value.get() }}</div>
+            <div class="output-label">{label}<span class="output-len mono">{move || {
+                let n = value.get().chars().filter(|c| c.is_ascii_alphabetic()).count();
+                format!("{n} {}", if n == 1 { "letter" } else { "letters" })
+            }}</span></div>
+            {(!formula.is_empty()).then(|| view! { <div class="output-formula mono">{formula}</div> })}
+            <div class="output-value mono">{move || {
+                let text = value.get();
+                if text.is_empty() { "—".into() } else if grouped { group5(&text) } else { text }
+            }}</div>
         </div>
     }
 }

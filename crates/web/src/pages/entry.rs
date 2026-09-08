@@ -127,7 +127,7 @@ fn EntryView(entry: Entry) -> impl IntoView {
                     })}
                     {lab_key.map(|k| view! {
                         <section class="lab-panel" aria-label="Interactive lab">
-                            <div class="lab-panel-head mono"><span class="lab-live"><i></i>"Interactive lab"</span><span>{format!("lab/{k}")}</span></div>
+                            <div class="lab-panel-head"><span class="lab-live"><i aria-hidden="true"></i>"Interactive lab"</span><span class="lab-panel-hint">"Updates as you type"</span></div>
                             {render_lab(&k)}
                         </section>
                     })}
