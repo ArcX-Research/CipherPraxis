@@ -6,7 +6,7 @@ status = "VERIFIED"
 status_note = "The transform, exact fixed-period alignment objective, and planted-control generators are implemented and pass recorded checks. Recovery was demonstrated for the stated control lengths, periods, language source, and selector; no fixed message length guarantees recovery across periods or plaintext models."
 family = "Polyalphabetic substitution"
 tags = ["periodic", "additive", "polyalphabetic", "tabula recta"]
-related = ["beaufort", "variant-beaufort", "quagmire-iii", "gronsfeld", "permutation-keystream", "index-of-coincidence", "exact-period-alignment", "vigenere-lab"]
+related = ["beaufort", "variant-beaufort", "quagmire-iii", "gronsfeld", "permutation-keystream", "index-of-coincidence", "exact-period-alignment", "vigenere-lab", "sum-of-periodic-keys"]
 summary = "Vigenère adds a repeating key to the plaintext one letter at a time modulo 26. A key of length m splits the ciphertext into m cosets. Each coset is a Caesar shift of the plaintext letters at those positions. Attacks use this repeated structure to find the period and shifts. Vigenère is also the baseline for keyed-alphabet and layered versions."
 updated = "2026-09-07"
 

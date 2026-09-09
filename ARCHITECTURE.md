@@ -105,9 +105,9 @@ year = 1967
 url = "https://…"               # optional
 ```
 
-Unprefixed provenance paths resolve under `../Cryptanalysis`. `archive-a/` and `archive-b/`
-resolve under the additional local research checkouts; `CipherPraxis/` resolves under this
-repository. `scripts/check_provenance.py` accepts overrides for all four roots. These aliases
+Unprefixed provenance paths resolve under `../Cryptanalysis`. `archive-a/`, `archive-b/` and
+`archive-c/` resolve under the additional local research collections; `CipherPraxis/` resolves
+under this repository. `scripts/check_provenance.py` accepts overrides for all five roots. These aliases
 are archival identifiers and do not define the public subject or taxonomy of an article.
 
 Status vocabulary (rendered as badges; the Overview explains them):

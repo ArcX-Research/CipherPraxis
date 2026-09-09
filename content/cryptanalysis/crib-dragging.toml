@@ -6,7 +6,7 @@ status = "VERIFIED"
 status_note = "The project implements key-consistency filtering, batch annealing over one unknown alphabet, and an exact crib-plus-keyword solver. Validated families recovered planted controls at 100%, with true positions found in 9 to 16 of 16 restarts. Wrong positions set the measured null level: mean -6.06 +/- 0.21 at 153 letters and median -5.3 to -5.4 at 95 letters (logs/22, 23, 26, 42)."
 family = "Known-plaintext methods"
 tags = ["crib", "known plaintext", "placement", "implied key", "null level"]
-related = ["vigenere", "quagmire-i", "quagmire-ii", "quagmire-iii", "crib-driven-alphabet-recovery", "coset-shift-recovery", "quadgram-log-likelihood", "selection-overfit-diagnostic", "word-prefix-csp", "constraint-satisfaction-forward-checking", "g-crib", "g-selection-freedom"]
+related = ["vigenere", "quagmire-i", "quagmire-ii", "quagmire-iii", "crib-driven-alphabet-recovery", "coset-shift-recovery", "quadgram-log-likelihood", "selection-overfit-diagnostic", "word-prefix-csp", "constraint-satisfaction-forward-checking", "g-crib", "g-selection-freedom", "linear-keystream-crib-solve"]
 summary = "A crib is a piece of plaintext that may appear in the message. Try it at every position and calculate the key each position would require. In a repeating additive cipher, each crib letter reveals one key value. A crib longer than the period must agree with itself when the key repeats. A word-like key or readable full decryption supports the position. To avoid false hits on short text, compare the best position with the scores from known-wrong positions."
 updated = "2026-09-07"
 

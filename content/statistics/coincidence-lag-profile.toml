@@ -3,12 +3,12 @@ section = "statistics"
 title = "Coincidence lag profile"
 subtitle = "Count matching letters at each gap to reveal periods and boundaries"
 status = "VERIFIED"
-status_note = "Lag profiles pass planted periodic checks. A complete aligned-row extension also recovered four planted row copies, while a striking seven-of-26 observed match had selected-null p = 0.750 once all widths, gaps, and starts were included."
+status_note = "Lag profiles pass planted periodic checks. A complete aligned-row extension also recovered four planted row copies, while a striking seven-of-26 observed match had selected-null p = 0.750 once all widths, gaps, and starts were included. The class-pooled profile of a solved 153-letter text whose key is a sum of periodic keys shows only modest excess (z about 2.8 against random letters) at its period-7 component and multiples; the same shape on an unsolved 144-letter text is a screening lead without a planted library for that family."
 family = "Coincidence and frequency statistics"
-tags = ["coincidence", "lag", "period detection", "zone detection", "fingerprint"]
-related = ["index-of-coincidence", "shuffled-null-z-score", "family-wise-null", "within-coset-null", "kasiski-examination", "exact-period-alignment", "change-point-zone-detection", "family-identification", "coincidence-lab"]
+tags = ["coincidence", "lag", "period detection", "zone detection", "fingerprint", "component period", "residue fold"]
+related = ["index-of-coincidence", "shuffled-null-z-score", "family-wise-null", "within-coset-null", "kasiski-examination", "exact-period-alignment", "change-point-zone-detection", "family-identification", "coincidence-lab", "sum-of-periodic-keys", "linear-keystream-crib-solve", "lcm-of-periods"]
 summary = "At gap d, the coincidence rate is the share of pairs (i, i+d) that contain the same letter. Under an iid plaintext approximation, a periodic key makes multiples of its period approach the plaintext collision rate, about 0.066 for English; other lags often lie nearer 0.04 when relative shifts are well spread. Real prose repeats and key schedules can change either value. A lag profile is therefore a period and boundary diagnostic that must be compared with a matched, family-wise null."
-updated = "2026-09-07"
+updated = "2026-09-09"
 
 [[blocks]]
 kind = "definition"
@@ -23,6 +23,13 @@ Repeated plaintext words add coincidences at the distance between the repeats (t
 '''
 
 [[blocks]]
+kind = "equations"
+title = "Component periods of a summed key"
+body = '''
+When the keystream is a [sum of periodic keys](/ciphers/sum-of-periodic-keys), $k_i = \sum_j u^{(j)}_{i \bmod p_j}$ with combined period beyond the text, no lag reproduces the whole-key comb and the whole-text IC stays near random. Two positions $i, i'$ in the same class modulo $p$ still coincide with probability $\sum_x q_x q_{x+\delta}$, $\delta = k_{i'} - k_i$, under an iid plaintext model with monogram $q$: the collision rate (about $0.066$ for English) when $\delta = 0$ and $0.032$ to $0.045$ otherwise. If $p$ is a multiple of one component period $p_j$, that component cancels in $\delta$, which becomes a sum over the other components only; with fewer terms, and with repeated letters inside keywords, $\delta = 0$ occurs for a larger share of the pairs than at a lag that cancels nothing, so the class-pooled **periodic IC** (the mean over residues $i \bmod p$ of the class IC) rises modestly at $p_j$ and its multiples. The excess is a fraction of what a single period-$p$ layer gives, because only some pairs have $\delta = 0$. Folding the letter positions modulo 13 before counting also credits $\delta = 13$ and can help when the residual differences concentrate on $\{0, 13\}$ in the alphabet used for the fold; the unfolded periodic IC is identical in every indexing, because relabeling symbols does not change which pairs match, so only the fold carries alphabet information.
+'''
+
+[[blocks]]
 kind = "variants"
 body = '''
 - **Per-segment profile.** $\kappa(d)$ computed on a segment, with a null from shuffles of that segment; lags with $|z| \ge 2.5$ are listed. Used to compare the head, middle and tail of a text.
@@ -30,6 +37,7 @@ body = '''
 - **Pooled same-coset rate.** Lags $7, 14, 21$ pooled against planted prose zones of the same geometry (300 plants) gives one number per zone with a simulated standard error.
 - **Alignment z-profile.** For each candidate period $p$, align the cosets by histogram rotation, take the union [IC](/statistics/index-of-coincidence), and report its $z$ against within-text shuffles. The vector of $z$ over $p \in \{3,4,7,9,14,17,21\}$ is compared with the same vector for planted constructions.
 - **Global aligned-row scan.** For every fitting width $w$, positive row gap $g$, and start $a$, count $K(w,g,a)=\sum_{j=0}^{w-1}[c_{a+j}=c_{a+gw+j}]$. Rank the complete family by a fixed-histogram binomial-tail score, then rerun the full maximisation on whole-multiset permutations. This tests a localized repeat without selecting its width or offset in advance.
+- **Component-period profile with residue fold.** Periodic IC for $p = 2 \dots 40$ in the natural indexing and folded modulo 13 in each candidate keyed alphabet, each as $z$ against 200 random-letter texts of the same length. Multiples of one $p$ read together point at a component of period $p$, not at a key of that period.
 '''
 
 [[blocks]]
@@ -49,6 +57,7 @@ body = '''
 3. Run the alignment z-profile and compare it with the planted library. At 153 letters one plain period-7 control reads $(p_7,p_{14},p_{21})=(+7.4,+4.9,+3.1)$ with nothing at $3,4,9,17$. A tested period-7 substitution below a width-9 columnar transposition reads $-0.7$ at $p_7$, while tested Hill-layer variants read about $+0.5$. A similar 7/14/21 profile therefore ranks the outer-periodic construction above those particular alternatives. It does not determine layer order outside the calibrated library; under the iid periodic model, peak size is related to the inner collision rate.
 4. Hand the period to [exact period alignment](/cryptanalysis/exact-period-alignment) and the zone boundaries to [change-point detection](/cryptanalysis/change-point-zone-detection).
 5. If one localized row match was noticed after inspecting the text, replace the fixed-tuple reading with the global aligned-row scan. The null must choose its own best width, gap, and start.
+6. For a suspected sum of periodic keys, read the component-period profile: a pattern at $p, 2p, 4p, 5p$ (7, 14, 28, 35 in the recorded texts) nominates a component of period $p$; rank period sets containing it first in the [exact crib solve](/cryptanalysis/linear-keystream-crib-solve), and plant sums of periodic keys over English of the same length before treating the profile as more than a lead.
 '''
 
 [[blocks]]
@@ -101,6 +110,7 @@ body = '''
 - **Multiplicity.** Seventy lags are tested. A single lag at $z = +2.9$ is not significant on its own. Use a [family-wise null](/statistics/family-wise-null) for "any lag".
 - **Post-selected row geometry.** A small nominal tail for one chosen row pair can be ordinary when hundreds of thousands of widths, gaps, and starts were available. Report the rank of the global maximum under complete fixed-multiset permutations.
 - **Disagreement with alignment.** A text can show no individually significant lag (whole-text lag 7 at $z = +0.0$) while its coset histograms align at $z = +4$. When the key is zoned, the histogram alignment sees the zone and the whole-text lag profile dilutes it.
+- **Harmonics of a component are not periods.** In a summed key the excess at 14, 28 and 35 follows from a component at 7; a random-letter null tests for any structure rather than for the family, and a fold in the wrong alphabet scrambles the residues, so a $z$ between 2 and 3.5 across 39 periods and three statistics is a lead, not evidence.
 '''
 
 [[blocks]]
@@ -109,6 +119,8 @@ body = '''
 Each segment profile includes a shuffle null made within that segment. The pooled same-coset rate for each zone is compared with 300 planted prose zones of the same shape. One zone gave $0.068$ against $0.064 \pm 0.022$, $z = +0.2$. The other gave $0.081$ against $0.065 \pm 0.017$, $z = +0.9$. The alignment z-profile is calibrated on 13 models at 153, 144, and 504 letters: plain periods 7, 14, and 21; period 7 combined with 2 or 3; sandwiches at widths 9 and 17; an outside transposition; and Hill inside and outside. At 504 letters, the plain period-7 model gives $z = +39$ at $p_7$, showing how quickly the test gains power as text grows.
 
 The global row scanner recovered four planted complete-row copies, each as the unique family winner with empirical rank $1/100$. Two fixtures containing exactly seven aligned matches at width 26 were not selected as their own global winner and had full-family ranks $0.54$ and $0.18$. On one 504-symbol observation the complete scan covered 495,747 physical tuples. Its unique seven-of-26 winner had a fixed-tuple nominal tail near $4.5\times10^{-5}$ but a selected-null rank of $0.750$ over 999 fixed-multiset permutations. A separate prefix-sum implementation reproduced all fixture scans, null maxima, ties, and the observation result.
+
+Component-period profile: on the solved 153-letter corpus text, whose recovered key has components of periods 4, 5, 6 and 7, the periodic IC against 200 random-letter texts reads $z = +2.8$ at period 7, $+2.0$ at 14, $+2.1$ at 28 and $+2.8$ at 35, and $+2.7$ at 7 after folding keyed-alphabet positions modulo 13 (the recorded null was drawn at length 144, which slightly understates these values). An unsolved 144-letter corpus text shows the same shape, $+3.5$ at 7, $+2.5$ at 14 and $+2.2$ at 28 folded, which is why that family is being tested on it. That text is not solved; no planted library calibrates the profile for the family; the eight crib-solve cells of $\{4, 5, 6, 7\}$ completed at noise on it; and reusing the solved text's keystream at all 420 phases under eight conventions gave a best decrypted monogram IC of $0.0456$ (random $0.0385$), so the two texts do not share a keystream. Whole-text monogram IC of the two texts is $0.0395$ and $0.0445$.
 '''
 
 [[blocks]]
@@ -118,12 +130,14 @@ body = '''
 Text `ATTACKATDAWN` ($n = 12$). Lag 6 compares positions $(0,6), (1,7), (2,8), (3,9), (4,10), (5,11)$: A=A, T=T, T$\ne$D, A=A, C$\ne$W, K$\ne$N, so $\kappa(6) = 3/6 = 0.50$. Lag 1 compares eleven adjacent pairs, of which only TT agrees: $\kappa(1) = 1/11 = 0.09$.
 
 The spike at lag 6 comes from a repeat in this particular text, exactly the kind of coincidence that a repeating key of period 6 could also produce. One lag profile cannot identify its cause. Compare the complete pattern with length-matched constructions, use a null that preserves the invariants relevant to the claim, and require independent cipher constraints before assigning the spike to a key period.
+
+Summed key: in the alphabet keyed by `ZEBRAS`, take `SEA` of period 3 (positions 5, 1, 4) and `NOON` of period 4 (positions 16, 17, 17, 16). For positions three apart the `SEA` component cancels and $\delta$ is the `NOON` difference at lag 3, which by residue of $i$ modulo 4 is $0, -1, 0, 1$: half of those pairs carry $\delta = 0$ and coincide at the plaintext collision rate. For positions four apart the `NOON` component cancels and $\delta$ is the `SEA` difference at lag $4 \equiv 1 \pmod 3$, $-4, 3, 1$, never zero, so period 4 gains nothing although it is a component period; which component shows depends on the repeated letters of the other keywords. This checks the mechanism only; the size of the excess at a given length is a question for a planted null.
 '''
 
 [[blocks]]
 kind = "notes"
 body = '''
-The lag profile is the pairwise reading of the [periodic index of coincidence](/statistics/index-of-coincidence): summing $\kappa(d)$ over $d \equiv 0 \pmod m$ recovers the within-coset pair count.
+The lag profile is the pairwise reading of the [periodic index of coincidence](/statistics/index-of-coincidence): summing $\kappa(d)$ over $d \equiv 0 \pmod m$ recovers the within-coset pair count. For a summed key the comb at the full period is absent and only the weaker combs of the components remain, as in the equations above.
 '''
 
 [[provenance]]
@@ -187,6 +201,21 @@ path = "withmath/logs/725_roweq_live_audit_20260906T121923Z_39122.json"
 kind = "audit"
 note = "Independent replay of the complete 495,747-cell observation scan and 999 selected-family null maxima."
 ref = "LOG725"
+
+[[provenance]]
+path = "archive-c/pk9-attack/stats.py"
+kind = "script"
+note = "Periodic IC profile for p = 2..40 in the natural and keyed indexings and folded modulo 13, z against 200 random-letter texts of length 144 (seeds 1 and 2); output reproduced on 2026-09-09: 153-letter text z 2.82 (p 7), 1.99 (14), 2.08 (28), 2.81 (35), folded 2.72 at 7; 144-letter text 3.45 (7), 2.51 (14), 1.98 raw and 2.17 folded (28); monogram IC 0.0395 and 0.0445; keystream-reuse test best decrypted IC 0.0456 over 420 phases x 8 conventions."
+
+[[provenance]]
+path = "archive-c/pk9-attack/b-pk9-4567/summary.json"
+kind = "data"
+note = "Crib-solve negatives on the 144-letter text at periods {4, 5, 6, 7}: eight cells complete, bests -1181 to -1213."
+
+[[provenance]]
+path = "archive-c/pk8-solution/pk8_solution.py"
+kind = "solver"
+note = "Recovered key of the 153-letter text (components of periods 4, 5, 6, 7) that accounts for the observed component-period lags."
 
 [[references]]
 title = "Military Cryptanalysis, Part III"

@@ -6,9 +6,9 @@ status = "VERIFIED"
 status_note = "Bank searches cover 202,504 phrase-keyed alphabets, 2.06 million structured alphabets, 425,000 two-word alphabets, 10- to 20-letter transposition words, word pairs, 190,000 Myszkowski words, 32,000 nine-letter Hill keys, and other fixed lists. Before target rows, each search prints a planted control at rank 1. Every recorded target search stayed at its bank's noise floor."
 family = "Enumeration strategies"
 tags = ["dictionary", "keyword alphabet", "phrase key", "word bank", "finite bank", "scoped closure"]
-related = ["exhaustive-enumeration", "corpus-bank-screen", "k-best-lists", "keyword-mixed-alphabet", "phrase-keyed-alphabet-attack", "columnar-transposition", "myszkowski", "hill-cipher", "quagmire-iii", "multiple-rounds-analysis", "family-wise-null", "quadgram-log-likelihood", "planted-controls"]
+related = ["exhaustive-enumeration", "corpus-bank-screen", "k-best-lists", "keyword-mixed-alphabet", "phrase-keyed-alphabet-attack", "columnar-transposition", "myszkowski", "hill-cipher", "quagmire-iii", "multiple-rounds-analysis", "family-wise-null", "quadgram-log-likelihood", "planted-controls", "lcm-of-periods", "sum-of-periodic-keys"]
 summary = "A dictionary attack checks a fixed finite bank of candidate keys or structured objects. Membership of the true key is necessary but not sufficient for top-rank recovery: short data, score mismatch, ties, or additional fitted parameters can still misrank it. Planted controls estimate recall for the declared bank and pipeline. A completed miss excludes only candidates actually enumerated under the stated conventions, while the selected maximum requires a family-wise null comparison."
-updated = "2026-09-07"
+updated = "2026-09-09"
 
 [[blocks]]
 kind = "definition"
@@ -52,6 +52,7 @@ body = '''
 - **Transposition keys.** Every dictionary word of 10-20 letters as a columnar key, word pairs (a themed list paired with all 9-letter words), triple and quadruple columnars from a small vocabulary, 190,000 Myszkowski words, rail fences with 2-40 rails at every offset; planted word-pair, triple-columnar and rail-fence controls at 100%.
 - **Matrix keys.** 32,000 nine-letter keywords as 3x3 Hill matrices in four conventions on the flat segments: all at shuffle maxima.
 - **Word-list rows and object vocabularies.** 7-letter word banks of 704, about 52,000 and about 25,000 entries as rows under seven fixed substitutions; frozen vocabularies of numbers, ordinals, compass points, note names, element names and symbols, calendar names and Greek letters tiled exactly (see [constraint satisfaction](/exact/constraint-satisfaction-forward-checking)).
+- **Keyword reading over a gauge orbit.** When a solved keystream is a sum of periodic keys, its components are fixed only up to a gauge; enumerating the $26^g$ gauge points and both sign conventions against word lists of the component lengths found exactly one all-word decomposition on a solved text. Every orbit point re-encrypts identically, so the word criterion is a labelling, not plaintext evidence; see [Least common multiples of periods](/algebra/lcm-of-periods).
 '''
 
 [[blocks]]

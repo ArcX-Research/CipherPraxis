@@ -74,12 +74,13 @@ latest additions, merges and limits of the source audit. Extend the existing can
 when a source adds a variant, optimization or correction to an already documented method.
 
 Provenance paths without an alias resolve under `../Cryptanalysis`; `CipherPraxis/` resolves in
-this repository. The `archive-a/` and `archive-b/` aliases identify the two additional local
-research collections. To use different checkout locations, run:
+this repository. The `archive-a/`, `archive-b/` and `archive-c/` aliases identify the three
+additional local research collections. To use different checkout locations, run:
 
 ```bash
 python3 scripts/check_provenance.py --corpus /path/to/Cryptanalysis \
-  --archive-a /path/to/first-archive --archive-b /path/to/second-archive
+  --archive-a /path/to/first-archive --archive-b /path/to/second-archive \
+  --archive-c /path/to/third-archive
 ```
 
 `make test` includes finite, synthetic comparisons of the added algebra and scoring algorithms

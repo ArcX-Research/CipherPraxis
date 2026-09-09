@@ -6,7 +6,7 @@ status = "VERIFIED"
 status_note = "The cited exact cycle solvers use modular inverses and the split into two prime fields. Across 240 systems and 538,656 answers, the CRT form of the all-different rule matched brute force with 0 errors. Solvers using it passed 32/32 exact crib checks and 4/4 lagged-recurrence primer checks."
 family = "Number theory"
 tags = ["inverse", "CRT", "extended Euclid", "lift", "GF(13)"]
-related = ["modular-arithmetic-z26", "units-mod-26", "finite-field-linear-algebra", "all-different-constraints", "matrix-invertibility-mod-26", "linear-recurrences-lcg", "all-different-enumeration", "exact-chain-oracle", "crt-lab", "gromark", "g-residue-class", "g-nullity"]
+related = ["modular-arithmetic-z26", "units-mod-26", "finite-field-linear-algebra", "all-different-constraints", "matrix-invertibility-mod-26", "linear-recurrences-lcg", "all-different-enumeration", "exact-chain-oracle", "crt-lab", "gromark", "g-residue-class", "g-nullity", "linear-keystream-crib-solve"]
 summary = "A value in Z26 has an inverse exactly when it shares no factor with 26. The extended Euclidean algorithm finds that inverse. The Chinese remainder theorem represents each Z26 value as a pair: one remainder modulo 2 and one modulo 13. A solver handles the two fields GF(2) and GF(13), then joins the answers. The same split makes the 26-letter permutation rule cheap enough for exact alphabet search."
 updated = "2026-09-07"
 

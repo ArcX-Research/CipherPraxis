@@ -8,7 +8,7 @@ family = "Provenance"
 tags = ["provenance", "sources", "scientific method"]
 related = ["reproducibility-receipts", "evidence-scope-ladder", "correction-and-retraction", "literature-methodology"]
 summary = "A useful cryptographic reference distinguishes established theory, explicit derivations, implementation checks and empirical recovery results. Public literature and archived records have complementary roles: one identifies the underlying method, while the other records exactly what was tested."
-updated = "2026-09-08"
+updated = "2026-09-09"
 
 [[blocks]]
 kind = "definition"
@@ -36,7 +36,7 @@ title = "Trace an individual claim"
 body = '''
 An entry’s status note defines the claim being assessed. Its Sources and evidence panel lists literature first and keeps supporting archival records in an expandable section. A record identifies a source path, its role and, where appropriate, a log reference. Paths are archival locators rather than names for cryptographic concepts.
 
-The archive includes multiple source collections. Unprefixed paths refer to the primary analysis archive; `archive-a/` and `archive-b/` distinguish two additional collections, while `CipherPraxis/` identifies this reference’s own files. The maintainer inventory records their local locations and review scope. Requesting the supporting files preserves these identifiers so a record can be located precisely.
+The archive includes multiple source collections. Unprefixed paths refer to the primary analysis archive; `archive-a/`, `archive-b/` and `archive-c/` distinguish three additional collections, while `CipherPraxis/` identifies this reference’s own files. The maintainer inventory records their local locations and review scope. Requesting the supporting files preserves these identifiers so a record can be located precisely.
 
 A path-existence check only establishes that a file can be found. A file hash binds the bytes read; it does not prove those bytes executed, authenticate an outcome, or replace an independent mathematical check. Superseded, incomplete and failed records remain useful when their limitations are explicit.
 '''

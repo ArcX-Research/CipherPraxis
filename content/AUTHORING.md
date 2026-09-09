@@ -79,6 +79,7 @@ Provenance paths resolve as follows:
 | `CipherPraxis/` | This repository (override with `--site`) |
 | `archive-a/` | First additional research checkout (override with `--archive-a`) |
 | `archive-b/` | Second additional research checkout (override with `--archive-b`) |
+| `archive-c/` | Root of the research collection that holds the solution and attack working directories beside the first two (override with `--archive-c`) |
 
 See `scripts/check_provenance.py` for default local locations. Keep source paths and project
 identifiers in provenance, never in the scientific explanation. An inventory hash records the

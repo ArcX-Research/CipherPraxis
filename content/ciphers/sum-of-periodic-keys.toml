@@ -1,0 +1,194 @@
+id = "sum-of-periodic-keys"
+section = "ciphers"
+title = "Sum of periodic keys"
+subtitle = "Several short repeating keys added in one alphabet, so the combined key outruns the text"
+status = "VERIFIED"
+status_note = "The model, its exact crib solver and its planted-control generator are implemented. Five planted 153-letter controls with period sets of degree 10 to 52 were recovered exactly before any target run, and a 153-letter corpus text was then solved under periods 4, 5, 6 and 7, with the recovered key re-encrypting to its ciphertext. Recovery rests on a crib at least as long as the degree; the crib-free attacks are documented separately and their recorded controls have not yet passed."
+family = "Composite constructions"
+tags = ["periodic", "composite", "lcm", "keyed alphabet", "polyalphabetic", "linear keystream", "additive"]
+related = ["compound-periodic-key", "vigenere", "quagmire-iii", "keyword-mixed-alphabet", "running-key", "lcm-of-periods", "linear-keystream-crib-solve", "linear-recurrences-lcg", "coincidence-lag-profile", "g-period", "g-keyed-alphabet", "difference-operators", "conjugacy-and-gauge", "dictionary-attack"]
+summary = "Apply several short repeating keys one after another in a single alphabet. Because the additions commute, they form one keystream that is the sum of the component keys, with period equal to the least common multiple of the component periods. Four keywords of lengths 4, 5, 6 and 7 give period 420, longer than a short message, so nothing repeats inside the text, yet the keystream is a linear function of only 18 independent values. That linearity is what the exact crib solve exploits."
+updated = "2026-09-09"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Fix one alphabet $A$ (straight or keyword-mixed) used on both the plaintext and the ciphertext side, with index map $\operatorname{pos}_A$. Take $r$ keywords of lengths $p_1, \dots, p_r$ and read each as an index vector $u^{(j)} \in \mathbb{Z}_{26}^{p_j}$. Encryption applies $r$ Vigenère layers in turn; since the layers only add, the result is one additive layer,
+
+$$\operatorname{pos}_A(c_i) \equiv \operatorname{pos}_A(p_i) + k_i, \qquad k_i \equiv \sum_{j=1}^{r} u^{(j)}_{\,i \bmod p_j} \pmod{26}.$$
+
+Decryption subtracts the same keystream. The keystream has period dividing $\operatorname{lcm}(p_1, \dots, p_r)$: with periods 4, 5, 6 and 7 that is 420, so a text shorter than 420 letters never sees the key repeat, although the key is stored in $\sum_j p_j = 22$ values.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Degree, recurrence and information content"
+body = '''
+Write $k = M\theta$, where $\theta \in \mathbb{Z}_{26}^{\sum_j p_j}$ stacks the component keys and $M$ is the $n \times \sum_j p_j$ design matrix with one 1 per period block in every row. The keystreams of the family form the row space of $M$. Their dimension, the **degree** of the period set, is the order of the shortest linear recurrence every such keystream satisfies, whose characteristic polynomial is $\operatorname{lcm}_j (x^{p_j} - 1)$. Writing $D$ for the set of all divisors of the periods, that degree is
+
+$$\deg = \sum_{d \in D} \varphi(d),$$
+
+which is 18 for periods $\{4, 5, 6, 7\}$ ($D = \{1, \dots, 7\}$), against 22 stored values; the difference of 4 is the gauge freedom counted under [Least common multiples of periods](/algebra/lcm-of-periods). Two consequences:
+
+- Any 18 consecutive keystream values determine the whole keystream through the recurrence, forwards and backwards.
+- The identifiable key content is $18 \log_2 26 \approx 84.6$ bits, far beyond exhaustion but tiny compared with the $420$-letter combined period.
+
+The reciprocal form $\operatorname{pos}_A(c_i) \equiv k_i - \operatorname{pos}_A(p_i)$ and the choice of a straight or keyed alphabet on either side give eight convention cells with the same linear structure; the recorded search enumerated all eight for every period set.
+'''
+
+[[blocks]]
+kind = "variants"
+body = '''
+- **Same keyed alphabet on both sides** (the solved case): a Quagmire III whose alphabet is known and whose shift sequence is a sum of periodic keys.
+- **Straight alphabet**: an ordinary multi-key Vigenère.
+- **Reciprocal relation**: Beaufort-type subtraction instead of addition; the sign is one of the enumerated conventions.
+- **Two keys with $\operatorname{lcm} \le n$**: the [compound periodic key](/ciphers/compound-periodic-key), which a periodic solver at the combined period or an alternating class fit can handle directly.
+- **Redundant period sets**: a period that divides another period adds no keystreams, so canonical enumeration lists only sets in which no period divides another.
+'''
+
+[[blocks]]
+kind = "assumptions"
+title = "Assumptions and invariants"
+body = '''
+- Every component is strictly periodic over the whole text and every position uses the same alphabet convention.
+- The combined layer is purely additive: no fractionation, transposition or feedback between the components.
+- Invariant: the keystream is linear in the stored values, so any known-plaintext fragment yields linear equations modulo 26, solved over $\mathrm{GF}(2)$ and $\mathrm{GF}(13)$ and rejoined by the Chinese remainder theorem.
+- Invariant: for a lag $L$ divisible by a component period, that component cancels in $c_i - c_{i+L}$; the other components remain.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to attack it"
+body = '''
+1. **Screen.** Periodic coincidence at multiples of one component period (with its residue-13 fold) is a modest but characteristic signal; see the component-period profile in [Coincidence lag profile](/statistics/coincidence-lag-profile). Whole-text IC stays near random because the combined period exceeds the text.
+2. **Enumerate hypotheses.** Period sets in increasing total period (or degree) and the eight alphabet and sign conventions.
+3. **Crib solve.** With a crib of at least the degree in length, every placement fixes the whole keystream exactly; decrypt and score the full text ([Exact crib solve of a linear keystream](/cryptanalysis/linear-keystream-crib-solve)). Run the planted controls first.
+4. **Crib-free.** Lag differences that cancel chosen components isolate one component at a time ([Difference operators](/algebra/difference-operators)); this stage has not yet passed its controls.
+5. **Read the keywords.** The raw components carry a gauge; search the gauge orbit for the decomposition whose components are all dictionary words ([Least common multiples of periods](/algebra/lcm-of-periods)).
+6. **Verify.** Re-solve the key from the full plaintext over both fields and re-encrypt; the result must reproduce the ciphertext exactly.
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// One alphabet A on both sides; pos_A is its index map. Component keys
+// u[1..r], u[j] of length p[j].
+function KEYSTREAM(u, p, n):
+    for i in 0..n-1:
+        k[i] = 0
+        for j in 1..r:
+            k[i] = (k[i] + u[j][i mod p[j]]) mod 26
+    return k                              // period divides lcm(p[1..r])
+
+function ENCRYPT(plain[0..n-1], u, p):
+    k = KEYSTREAM(u, p, n)
+    for i in 0..n-1:
+        c[i] = A[(pos_A(plain[i]) + k[i]) mod 26]
+    return c
+
+function DECRYPT(c[0..n-1], u, p):
+    k = KEYSTREAM(u, p, n)
+    for i in 0..n-1:
+        plain[i] = A[(pos_A(c[i]) - k[i]) mod 26]
+    return plain
+
+// Degree of the period set: sum of Euler's phi over every divisor of any
+// period; 18 for {4, 5, 6, 7}. It bounds the independent key values.
+function DEGREE(p):
+    D = { d : d divides some p[j] }
+    return sum over d in D of PHI(d)
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+Encryption and decryption cost $O(nr)$. The key space is $26^{\deg}$ after the gauge is removed (about $2^{84.6}$ for $\{4, 5, 6, 7\}$), so exhaustion is out of reach; the exact crib solve replaces it with one $O(\deg^3)$ elimination per hypothesis and $O(n \deg)$ per placement. The number of period sets grows quickly with the total period, and each set costs eight convention cells.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Combined period inside the text.** If $\operatorname{lcm}(p_j) \le n$, the construction is an ordinary periodic cipher at that period and standard coset methods apply; the sum structure only matters when the period outruns the text.
+- **Gauge on the components.** The keystream is unique but its decomposition is not: constants and shared-divisor sequences move between components without changing any ciphertext letter. Controls that compare raw components letter for letter reject correct answers ([Gauge-defect invalidation](/validation/gauge-defect-invalidation)).
+- **Short text.** The rank of the first $n$ rows of $M$ reaches the degree only once $n$ covers enough consecutive positions (here 18); shorter fragments leave the keystream underdetermined.
+- **Wrong convention cell.** A crib placed under the wrong alphabet side or sign produces a consistent but wrong keystream, so all eight cells must be swept and scored against the same bar.
+- **Crib-free recovery.** The letter-difference statistics that remain after cancelling components carry little information per pair; the recorded crib-free controls did not recover their plaintext.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+The crib worker's control script builds five planted 153-letter ciphers from the same generator (period sets of degree 10, 16, 26, 29 and 52, random keys, alphabet and sign cells rotating), supplies the true crib among 35 random cribs, and requires the exact plaintext at the planted offset 51, every emitted record to re-encrypt, and a checkpoint-and-resume run to be byte-identical to a single run; all five passed and the scheduler refuses to start without that pass marker. A prefix checker covering ten period sets, including degenerate ones such as repeated periods and periods close to the text length, verifies prefix acceptance, rejection of mutated prefixes and completion for every prefix length. The solved corpus text is verified by re-solving the key from the full plaintext over both fields and re-encrypting.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+Alphabet $A$ keyed by `ZEBRAS` (`ZEBRASCDFGHIJKLMNOPQTUVWXY`) on both sides. Keys `SEA` (positions 5, 1, 4; period 3) and `TIDE` (positions 20, 11, 7, 1; period 4). Plaintext `ADDTWOKEYS`:
+
+```trace
+plain     A   D   D   T   W   O   K   E   Y   S
+pos_A     4   7   7  20  23  17  13   1  25   5
+key3      5   1   4   5   1   4   5   1   4   5
+key4     20  11   7   1  20  11   7   1  20  11
+sum      29  19  18  26  44  32  25   3  49  21
+cipher    R   Q   P   Z   P   C   Y   R   W   U
+```
+
+Check position 0: `A` is letter 4 of $A$; $4 + 5 + 20 = 29 \equiv 3$, and letter 3 of $A$ is `R`. The keystream is $25, 12, 11, 6, 21, 15, 12, 2, 24, 16$; its period is $\operatorname{lcm}(3, 4) = 12$, so it continues $8, 5$ and only then repeats, longer than the ten-letter text. The degree is $\varphi(1) + \varphi(2) + \varphi(3) + \varphi(4) = 6$ against 7 stored values: adding 5 to every `SEA` value and subtracting 5 from every `TIDE` value (`HCG` and `MCBV` in this alphabet) gives the same keystream.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The construction is the natural extension of the two-key [compound periodic key](/ciphers/compound-periodic-key) to several keys whose combined period exceeds the text. It behaves like a running key for period-finding tools, but unlike a running key it is linear in a small parameter vector, which the exact crib solve and the component-cancellation differences both use. See [Least common multiples of periods](/algebra/lcm-of-periods) for the period arithmetic.
+'''
+
+[[provenance]]
+path = "archive-c/pk8-solution/pk8_solution.py"
+kind = "solver"
+note = "Self-contained re-derivation: the four-keyword model over one keyed alphabet, keystream period 420 > 153, degree 18 with 84.6 bits, re-encryption check, crib-slide re-enactment and gauge search; ends with an assertion that re-encryption reproduces the recorded ciphertext."
+
+[[provenance]]
+path = "archive-c/pk8-solution/README.md"
+kind = "note"
+note = "Solution record for the 153-letter corpus text: cipher description, the exact scheduler command and environment of the winning job, score comparison against the next-best job and planted true plaintexts."
+
+[[provenance]]
+path = "archive-a/check_mixed_period_cribs.py"
+kind = "script"
+note = "Five planted crib controls (degrees 10, 16, 26, 29, 52): exact plaintext at offset 51, every record re-encrypts, checkpoint resume byte-identical."
+ref = "mixed-crib-controls.log"
+
+[[provenance]]
+path = "archive-a/mixed-crib-controls.log"
+kind = "log"
+note = "ALL_MIXED_ANYWHERE_CRIB_CONTROLS_PASS; the scheduler asserts this marker before starting."
+
+[[provenance]]
+path = "archive-a/check_mixed_period.py"
+kind = "script"
+note = "Generator encrypt/recover pair and prefix checker over ten period sets, including degenerate sets; recover() solves the key from a plaintext/ciphertext pair over both fields and re-encrypts."
+
+[[provenance]]
+path = "archive-a/running-key/mixed_period_prefix.cpp"
+kind = "library"
+note = "Sum-of-periodic-keys model: design matrix from the period list, projection over F2 and F13, causal conditions and keystream recurrence."
+
+[[references]]
+title = "Military Cryptanalysis, Part II"
+author = "William F. Friedman"
+year = 1938
+
+[[references]]
+title = "Finite Fields"
+author = "Rudolf Lidl and Harald Niederreiter"
+year = 1997
+
+[[references]]
+title = "The Codebreakers"
+author = "David Kahn"
+year = 1967

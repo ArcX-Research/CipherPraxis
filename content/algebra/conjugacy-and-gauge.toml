@@ -6,9 +6,9 @@ status = "VERIFIED"
 status_note = "The shared-cycle symmetries are proved and tested: 48/48 unit checks, 16/16 translation checks, and 312 equivalent descriptions reduced to one class. One control run recovered in one gauge but scored in another. That run was marked invalid and replaced."
 family = "Group theory"
 tags = ["gauge", "symmetry", "canonicalisation", "identifiability", "conjugacy"]
-related = ["permutation-cycles", "group-actions-on-alphabets", "units-mod-26", "affine-maps-mod-26", "modular-arithmetic-z26", "gauge-defect-invalidation", "planted-controls", "shared-cycle-attack", "segment-chain-analysis", "key-cancellation", "quagmire-iii", "latent-label-identifiability", "candidate-bank-lineage-and-cap-accounting", "partial-permutation-completion-bounds", "g-gauge-freedom", "g-affine-orbit", "g-conjugate-permutation", "independent-coordinate-alphabets", "factorial-completion-resource-guards"]
+related = ["permutation-cycles", "group-actions-on-alphabets", "units-mod-26", "affine-maps-mod-26", "modular-arithmetic-z26", "gauge-defect-invalidation", "planted-controls", "shared-cycle-attack", "segment-chain-analysis", "key-cancellation", "quagmire-iii", "latent-label-identifiability", "candidate-bank-lineage-and-cap-accounting", "partial-permutation-completion-bounds", "g-gauge-freedom", "g-affine-orbit", "g-conjugate-permutation", "independent-coordinate-alphabets", "factorial-completion-resource-guards", "lcm-of-periods"]
 summary = "Gauge freedom means that different parameter values can produce exactly the same visible result. For keyed additive ciphers, you may shift the alphabet coordinates along with the key or multiply them by a unit. A solver must treat these versions as equivalent. If it fixes the gauge incorrectly, or recovers in one gauge and scores in another, it can reject a correct answer. One recorded run failed for this reason."
-updated = "2026-09-08"
+updated = "2026-09-09"
 
 [[blocks]]
 kind = "definition"
@@ -213,7 +213,7 @@ Take $e_A = e_B = +1$, so $\kappa' = \kappa + b$ and $z(P^{B\prime}) = z(P^B) - 
 [[blocks]]
 kind = "notes"
 body = '''
-Gauge bookkeeping is a validation matter as much as an algebraic one. The invalidation protocol is described under [Gauge-defect invalidation](/validation/gauge-defect-invalidation). See [Group actions on alphabets](/algebra/group-actions-on-alphabets) for orbit counting.
+Gauge bookkeeping is a validation matter as much as an algebraic one. The invalidation protocol is described under [Gauge-defect invalidation](/validation/gauge-defect-invalidation). See [Group actions on alphabets](/algebra/group-actions-on-alphabets) for orbit counting. The additive gauge of a keystream that is a sum of several periodic keys, with its exact rank and kernel count and the keyword reading over its orbit, is treated under [Least common multiples of periods](/algebra/lcm-of-periods).
 '''
 
 [[provenance]]

@@ -6,9 +6,9 @@ status = "VERIFIED"
 status_note = "The alternating fit recovered both planted controls at 100%: a same-alphabet period-70 case at z +51 and a two-alphabet 7-over-10 case at z +27. The general cascade also recovered a two-period cipher in an earlier solved text. Tests then ruled out this family for the two short texts at inner periods 2 to 13."
 family = "Composite constructions"
 tags = ["periodic", "composite", "lcm", "two alphabets", "polyalphabetic"]
-related = ["vigenere", "quagmire-iii", "additive-stream-wheels", "sandwich-construction", "lcm-of-periods", "exact-period-alignment", "coincidence-lag-profile", "expectation-maximisation", "coordinate-descent", "g-period"]
+related = ["vigenere", "quagmire-iii", "additive-stream-wheels", "sandwich-construction", "lcm-of-periods", "exact-period-alignment", "coincidence-lag-profile", "expectation-maximisation", "coordinate-descent", "g-period", "sum-of-periodic-keys"]
 summary = "Apply one repeating key after another. If both use the same alphabet, they combine into one key whose period divides lcm(m, q). If they use different mixed alphabets, the result is a new layered cipher. Finite texts may show evidence at one or both component periods. The solver alternates exact one-coordinate fits for the 7 + q shifts from many starts, then checks the heuristic result with quadgrams and shuffled null data."
-updated = "2026-09-07"
+updated = "2026-09-09"
 
 [[blocks]]
 kind = "definition"
@@ -31,6 +31,7 @@ Every position uses one reachable phase pair $(b,j)$. There are $\operatorname{l
 kind = "variants"
 body = '''
 - **Same alphabet**: a single key whose period divides $\operatorname{lcm}(m,q)$; covered by a periodic solver that includes the resulting minimal period.
+- **Several keys, combined period beyond the text**: three or more short keys, or two whose least common multiple exceeds the text, form a [sum of periodic keys](/ciphers/sum-of-periodic-keys); the keystream stays linear in the stored values and is solved by an exact crib method rather than by a solver at the combined period.
 - **Two alphabets**: the new family. The program used the straight order and one keyword-mixed order in all four pairings.
 - **Block drift**: an outer period-7 key plus one constant per block ($m = 2, 3, 4$ blocks).
 - **Sandwich**: a transposition between the two layers; see [Sandwich construction](/ciphers/sandwich-construction).

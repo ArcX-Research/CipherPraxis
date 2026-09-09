@@ -12,6 +12,7 @@ def main() -> int:
     research_root = Path.home() / "Projects/Mywork/ArcX-Research/Research/Cryptography"
     parser.add_argument("--archive-a", type=Path, default=research_root / "pk8-research")
     parser.add_argument("--archive-b", type=Path, default=research_root / "pk9pk10-research")
+    parser.add_argument("--archive-c", type=Path, default=research_root)
     args = parser.parse_args()
 
     missing = []
@@ -30,6 +31,8 @@ def main() -> int:
                 target = args.archive_a / path.removeprefix("archive-a/")
             elif path.startswith("archive-b/"):
                 target = args.archive_b / path.removeprefix("archive-b/")
+            elif path.startswith("archive-c/"):
+                target = args.archive_c / path.removeprefix("archive-c/")
             else:
                 target = args.corpus / path
             if not target.exists():

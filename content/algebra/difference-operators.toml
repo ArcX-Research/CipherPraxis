@@ -3,12 +3,12 @@ section = "algebra"
 title = "Difference operators"
 subtitle = "Subtract shifted or paired texts to remove a shared unknown"
 status = "VERIFIED"
-status_note = "Known-answer tests confirm the exact cancellations: 32/32 derived streams, 50/50 planted chains, and 256/256 rule-breaking mutations rejected. These differences are the starting reduction in the cited plaintext- and key-elimination attacks. Screens of the target ciphertext differences and running keys found no lead."
+status_note = "Known-answer tests confirm the exact cancellations: 32/32 derived streams, 50/50 planted chains, and 256/256 rule-breaking mutations rejected. These differences are the starting reduction in the cited plaintext- and key-elimination attacks. Screens of the target ciphertext differences and running keys found no lead. A staged single-text solver that cancels components of a summed periodic key is implemented, but its one recorded 144-letter planted control was not recovered by any of its three procedures; that stage is power-limited while the identity it uses is exact."
 family = "Modular arithmetic"
-tags = ["difference", "lag", "cancellation", "derived stream", "autokey"]
-related = ["modular-arithmetic-z26", "linear-recurrences-lcg", "residue-class-graphs", "conjugacy-and-gauge", "key-cancellation", "autokey-difference-periodicity", "running-key-relation-test", "segment-chain-analysis", "autokey", "running-key", "vigenere", "index-of-coincidence", "g-invariant"]
+tags = ["difference", "lag", "cancellation", "derived stream", "autokey", "component cancellation", "summed key"]
+related = ["modular-arithmetic-z26", "linear-recurrences-lcg", "residue-class-graphs", "conjugacy-and-gauge", "key-cancellation", "autokey-difference-periodicity", "running-key-relation-test", "segment-chain-analysis", "autokey", "running-key", "vigenere", "index-of-coincidence", "g-invariant", "sum-of-periodic-keys", "linear-keystream-crib-solve", "lcm-of-periods", "cascade-cancellation", "beam-search", "simulated-annealing", "planted-controls", "power-measurement"]
 summary = "Subtract a ciphertext from a shifted copy of itself, or from an aligned second ciphertext, and an additive term with the same alignment and coefficient cancels. This may remove a periodic key at its period, a running key shared by two texts, or one plaintext used under two keys. Nonlinear, differently scaled, or misaligned terms do not cancel automatically."
-updated = "2026-09-07"
+updated = "2026-09-09"
 
 [[blocks]]
 kind = "definition"
@@ -29,6 +29,9 @@ contains no letter of $P^B$: it is text A's plaintext under a key that is consta
 $$z(L_i) - \varepsilon\, z(R_i) \equiv h_{i \bmod 7} \pmod{26},$$
 the plaintext vanishes and the difference is periodic. With unequal periods $m, q$ the difference is $A_{i \bmod m} - \varepsilon B_{i \bmod q}$, an edge value on a residue graph.
 - **Key-free collision implications** (chain with a constant class): if both $C^A_i = C^A_r$ and $C^B_j = C^B_s$ then $P^A_i = P^A_r$ for every $z$ and every sign. If exactly one component collides then $P^A_i \ne P^A_r$.
+- **One component of a summed periodic key.** If $k_i = \sum_j u^{(j)}_{i \bmod p_j}$ ([Sum of periodic keys](/ciphers/sum-of-periodic-keys)) and $L$ is a multiple of $p_j$, then $\Delta_{mL}$ removes $u^{(j)}$ for every $m \ge 1$ while the other components survive:
+$$c_i - c_{i+mL} \equiv \varepsilon\,(p_i - p_{i+mL}) + \sum_{j:\ L \bmod p_j \ne 0}\big(u^{(j)}_{i \bmod p_j} - u^{(j)}_{(i+mL) \bmod p_j}\big) \pmod{26}.$$
+Choosing $L$ as the least common multiple of all periods but one isolates a single component; the number of usable pairs is $N(L) = \sum_{m \ge 1} \max(0, n - mL)$. For periods $\{4, 5, 6, 7\}$ and $n = 144$: $L = 60$ leaves the period-7 component with 108 pairs, $L = 84$ leaves the period-5 component with 60 pairs, and $L = 12$ cancels 4 and 6, leaving 5 and 7 with 792 pairs. The cancelled components are not lost: once the others are known and subtracted they form a residual keystream of period dividing $L$, an ordinary periodic additive cipher.
 '''
 
 [[blocks]]
@@ -46,6 +49,7 @@ body = '''
 2. **Running-key relation test.** Form $c^A \mp c^B$ at every offset in $[-40, 40]$, reversed or not, and compare the best IC with the same maximum under shuffled pairings.
 3. **Exact elimination.** In chain and common-plaintext families, difference away the shared unknown and hand the derived stream to an exact periodic solver or a residue-graph solver.
 4. **Free pre-filters.** Use the collision implications to reject candidate plaintext windows before any algebra: on one constant-class pair they reduced 2,344,345 corpus windows to 40,331 candidates.
+5. **Staged single-text solve of a summed key (design under validation).** Solve the components outside a small residual set one at a time, most pairs first (7 with $L = 60$, then 5 with $L = 12$ for $\{4, 5, 6, 7\}$): enumerate each component with the gauge $u_0 = 0$ in $26^{p-1}$ candidates, scoring the implied plaintext differences by the English letter-difference distribution $D(\delta) = \sum_x q_x q_{x-\delta}$ ($D(0) \approx 0.0655$, the rest $0.032$ to $0.045$, uniform $0.0385$) and keeping a beam; subtract the solved components, fit each residual class as a Caesar shift by unigrams, polish by quadgram coordinate descent and rank by a quintgram score. Variants anneal the kept components under the pair objective (shift base chosen to maximise pairs under a 16-parameter cap) or anneal all stored values directly. A heuristic information count limits all of them: $D$ diverges from uniform by about $0.020$ bits per pair, so 108 pairs carry roughly 2 bits against the $6 \log_2 26 \approx 28$ bits of a period-7 component and 792 pairs about 16 bits against 19 bits for period 5; pairs are treated as independent, so this is a guide, not a theorem.
 '''
 
 [[blocks]]
@@ -87,9 +91,42 @@ function DERIVED_STREAM(z, CA, CB, psi, e_B):
 '''
 
 [[blocks]]
+kind = "pseudocode"
+title = "Staged component cancellation"
+body = '''
+```text
+// y[0..n-1]: ciphertext positions, sign eps, periods p, residual set R with
+// L_R = lcm(R); the other components are solved in the given order.
+function PAIRS(L, n): return [(i, i + m*L) for m >= 1, i >= 0, i + m*L < n]
+
+function COMPONENT_CANCELLATION(y, eps, p, R, order, beam_width):
+    beam = [(score = 0, solved = {})]
+    for step in 0..|order|-1:
+        q = order[step]
+        L = lcm(L_R, every order[t] with t > step)     // cancels the unsolved
+        next = []
+        for (s, solved) in beam:
+            for (i, i') in PAIRS(L, n):
+                base[i, i'] = eps*((y[i] - y[i']) - sum over solved of
+                        (u[i mod p_j] - u[i' mod p_j])) mod 26
+            for each candidate u of period q with u[0] = 0:       // 26^(q-1)
+                t = sum over pairs of log D((base[i, i'] - eps*(u[i mod q]
+                        - u[i' mod q])) mod 26)
+                next.append((s + t, solved + {u}))
+        beam = the beam_width best of next
+    for (s, solved) in beam:
+        z[i] = eps*(y[i] - sum over solved) mod 26 for all i
+        r[c] = Caesar shift of residual class c by unigram fit, c < L_R
+        polish r by quadgram coordinate descent; x[i] = z[i] - r[i mod L_R]
+        rank by QUINTGRAM_SCORE(x)
+    return the best x, to be re-encrypted and compared with the control bar
+```
+'''
+
+[[blocks]]
 kind = "complexity"
 body = '''
-$O(n)$ per lag and sign. The running-key screen evaluates 324 offset/sign/orientation trials per alphabet order. The derived stream of the chain is a same-order two-class cell solved exactly in about $0.5$ s ($8^7$ product plus polish) or 16 ms in the bank solver's compiled inner product.
+$O(n)$ per lag and sign. The running-key screen evaluates 324 offset/sign/orientation trials per alphabet order. The derived stream of the chain is a same-order two-class cell solved exactly in about $0.5$ s ($8^7$ product plus polish) or 16 ms in the bank solver's compiled inner product. For the staged component solve, pairs number about $n^2/(2L)$; each component costs $26 \times 26$ tables per residue pair and $26^{p-1}$ candidates per beam entry ($26^6 \approx 3.1 \times 10^8$ for $p = 7$), about 40 s for one cell at $n = 144$ in the recorded run, and the annealing variant about 300 s.
 '''
 
 [[blocks]]
@@ -98,12 +135,15 @@ body = '''
 - A maximum over many lags and signs inflates the apparent significance. The running-key screen's own log notes that with 324 trials a maximum near $+3$ sd is expected by chance. Best running-key ICs of $0.0455$ to $0.0468$ against random pairing $0.0383 \pm 0.0017$ were therefore read as noise.
 - The difference of two independent language streams is flatter than language (coincidence $0.066$ falls toward $0.0385$), so weak signals need matched nulls.
 - **Typicality is not necessity.** A high-entropy running key usually erases periodic structure in the keyed text, but a key text that is itself periodic restores it (a repeated seven-letter key text made the keyed text an ordinary period-7 cipher with standardized alignment score $+6.927$). A statistic that the family does not fix cannot be a gate.
+- **Little information per difference pair.** The letter-difference distribution is close to uniform, so with a few hundred pairs the maximum-likelihood component of a summed key is essentially random; residual classes of $n/L$ letters (12 for $L = 12$ at $n = 144$) leave several shifts nearly tied, and eight alphabet and sign cells multiply the selection. The recorded control below shows the miss.
 '''
 
 [[blocks]]
 kind = "controls"
 body = '''
 Derived stream, inverses and two scalar forwards 32/32 over random cycles and sign cells; chain elimination 50/50 random plants; collision-implication filter validated on 256 synthetic arbitrary-permutation chains over all four sign pairs with 256/256 implication-violating mutations rejected and independent scalar/vector agreement over 4,096 windows. Screen results on the target texts: lag-difference maxima reached period-7 aligned-IC $z$ between $+2.5$ and $+3.9$ as maxima over 40 lag/sign texts per text and order, recorded without a lead. The running-key relation test was at noise.
+
+Staged component cancellation, one planted control: a 144-letter English text enciphered under periods $\{4, 5, 6, 7\}$ with random keys in the keyed alphabet on both sides, additive sign. Recorded outcomes: pair annealing with $L = 6$, 1,656 pairs and the period-4, 5 and 7 components kept, pair log-likelihood $-5{,}339$, quintgram $-1{,}113$ in 304 s; beam enumeration in the order 7 then 5 with residual period 12, pair log-likelihood $-2{,}896$, quintgram $-1{,}039$ in 40 s; direct annealing over all 22 stored values, quintgram $-1{,}055$ in 39 s; 153-letter true plaintexts score about $-750$ to $-765$ under the same table. None reproduced the control plaintext, so the stage is power-limited under the recorded budget and is not admitted against the 144-letter target until a control passes; the cancellation identity itself is exact.
 '''
 
 [[blocks]]
@@ -113,12 +153,23 @@ body = '''
 Vigenère with key `KEY` ($m = 3$) on `ATTACK`: $A{+}K = 10 = K$, $T{+}E = 23 = X$, $T{+}Y = 43 \equiv 17 = R$, $A{+}K = K$, $C{+}E = 6 = G$, $K{+}Y = 34 \equiv 8 = I$; ciphertext `KXRKGI`.
 
 $\Delta_3$ of the ciphertext: $c_3 - c_0 = 0$, $c_4 - c_1 = 6 - 23 \equiv 9$, $c_5 - c_2 = 8 - 17 \equiv 17$. $\Delta_3$ of the plaintext: $A - A = 0$, $C - T = 2 - 19 \equiv 9$, $K - T = 10 - 19 \equiv 17$. The two agree at every position: the key has cancelled.
+
+Summed key: ciphertext `RQPZPCYRWU` from the [sum-of-periodic-keys example](/ciphers/sum-of-periodic-keys) (alphabet keyed by `ZEBRAS`, `SEA` of period 3, `TIDE` of period 4, positions $y = 3, 19, 18, 0, 18, 6, 25, 3, 23, 21$). With $L = 3$ the `SEA` component cancels and the seven pairs $(i, i+3)$ give
+
+```trace
+pair     0-3   1-4   2-5   3-6   4-7   5-8   6-9
+cipher     3     1    12     1    15     9     4
+plain     10    10    16     7    22    18     8
+key       19    17    22    20    19    17    22
+```
+
+each cipher difference being the plaintext difference plus the `TIDE` difference $u_{i \bmod 4} - u_{(i+3) \bmod 4}$ ($10 + 19 = 29 \equiv 3$ at the first pair). The key row takes one value per residue of $i$ modulo 4, $19, 17, 22, 20$, summing to $78 \equiv 0$ because they go once round the cycle; with $u_0 = 0$ three unknowns remain and each pair scores the plaintext difference it implies. Seven pairs cannot pick one of $26^3$ candidates, the small-scale form of the information limit above.
 '''
 
 [[blocks]]
 kind = "notes"
 body = '''
-Differences are also the source of the "residue graph" formulation, in which each difference is an edge and the existence of keys is a cycle condition; see [Residue-class graphs](/algebra/residue-class-graphs). For the statistical side of difference texts see [Autokey difference periodicity](/cryptanalysis/autokey-difference-periodicity) and [Running-key relation test](/cryptanalysis/running-key-relation-test).
+Differences are also the source of the "residue graph" formulation, in which each difference is an edge and the existence of keys is a cycle condition; see [Residue-class graphs](/algebra/residue-class-graphs). For the statistical side of difference texts see [Autokey difference periodicity](/cryptanalysis/autokey-difference-periodicity) and [Running-key relation test](/cryptanalysis/running-key-relation-test). The single-text cancellation of one component of a summed key is the same identity applied with $L$ equal to the least common multiple of the other periods; the method that has actually recovered a text of that family is the [exact crib solve](/cryptanalysis/linear-keystream-crib-solve).
 '''
 
 [[provenance]]
@@ -167,6 +218,51 @@ note = "Counterexample: a repeated seven-letter key text restores period-7 struc
 path = "withmath/docs/pk8-pk9/PK89_SHARED_CYCLE_CHAIN380_DESIGN.md"
 kind = "design"
 note = "Exact same-order cell solve of the derived stream in about 0.5 s."
+
+[[provenance]]
+path = "archive-c/pk9-attack/beam_solver.cpp"
+kind = "solver"
+note = "Beam enumeration: residual set by lcm cap, solve order by most pairs, per-residue-pair tables, 26^(p-1) candidates with u[0] = 0, residual classes by unigram fit and quadgram polish, quintgram ranking."
+
+[[provenance]]
+path = "archive-c/pk9-attack/pair_solver.cpp"
+kind = "solver"
+note = "Pair-difference annealing: shift base chosen to maximise pairs under a 16-parameter cap, English letter-difference log-likelihood objective, residual period-L classes by unigram fit and quadgram polish."
+
+[[provenance]]
+path = "archive-c/pk9-attack/sa_periodic.cpp"
+kind = "solver"
+note = "Direct simulated annealing over all stored key values with a quadgram objective and quintgram ranking."
+
+[[provenance]]
+path = "archive-c/pk9-attack/control_cipher.txt"
+kind = "data"
+note = "144-letter planted control ciphertext (periods 4, 5, 6, 7; keyed alphabet both sides; sign +1); its plaintext is control_plain.txt in the same directory."
+
+[[provenance]]
+path = "archive-c/pk9-attack/control_pair.jsonl"
+kind = "log"
+note = "Pair-annealing control run: L = 6, 1,656 pairs, kept 4, 5, 7, pair_ll -5338.86, quintgram -1113.4, 303.8 s; plaintext not recovered."
+
+[[provenance]]
+path = "archive-c/pk9-attack/control_beam.jsonl"
+kind = "log"
+note = "Beam control run: order 7, 5; residual period 12; pair_ll -2896.19; quintgram -1038.8; 39.5 s; plaintext not recovered."
+
+[[provenance]]
+path = "archive-c/pk9-attack/control_sa.jsonl"
+kind = "log"
+note = "Direct-annealing control run: quintgram -1055.5, 38.7 s; plaintext not recovered."
+
+[[provenance]]
+path = "archive-c/pk9-attack/stats.py"
+kind = "script"
+note = "English monogram table from which the letter-difference distribution D and its 0.020-bit divergence from uniform are computed (same table as in the solvers)."
+
+[[provenance]]
+path = "archive-c/pk8-solution/README.md"
+kind = "note"
+note = "True-plaintext quintgram level of about -750 to -765 at 153 letters under the shared table."
 
 [[references]]
 title = "Military Cryptanalysis, Part III"

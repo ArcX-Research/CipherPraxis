@@ -1,0 +1,214 @@
+id = "linear-keystream-crib-solve"
+section = "cryptanalysis"
+title = "Exact crib solve of a linear keystream"
+subtitle = "Slide a crib, solve the key parameters over two prime fields, extend the keystream by its recurrence and score the whole decrypt"
+status = "VERIFIED"
+status_note = "Before the target ran, five planted 153-letter controls (period sets of degree 10 to 52, the true crib hidden among 35 random ones) returned the exact plaintext at the planted offset with every record re-encrypting and checkpoint resumption byte-identical. The search then solved a 153-letter corpus text at periods 4, 5, 6 and 7: the winning placement scored -767 where planted true plaintexts score about -750 to -765 under the same table and the next-best job scored -1197. A completed sweep of the same family and crib bank on a 144-letter corpus text stayed at noise, which excludes only the enumerated period sets, conventions and cribs."
+family = "Known-plaintext methods"
+tags = ["crib", "known plaintext", "linear system", "GF(2)", "GF(13)", "CRT", "recurrence", "quintgram", "planted controls", "sum of periodic keys"]
+related = ["sum-of-periodic-keys", "crib-dragging", "crib-driven-alphabet-recovery", "finite-field-linear-algebra", "modular-inverse-and-crt", "linear-recurrences-lcg", "n-gram-language-scoring", "quadgram-log-likelihood", "planted-controls", "control-first-policy", "dictionary-attack", "compound-periodic-key", "g-crib", "g-selection-freedom", "lcm-of-periods", "difference-operators"]
+summary = "When a keystream is a linear function of a few unknown values, a crib does more than fix the key letters it touches: every crib letter gives one linear equation modulo 26, and enough of them fix the whole keystream. Solve the equations over GF(2) and GF(13), check that the crib rows leave no freedom in the keystream, rejoin the two answers by the Chinese remainder theorem, extend the key across the text by its recurrence, decrypt everything and score it with a language model. Sweep cribs, offsets, period sets and alphabet conventions with planted controls in front of the target."
+updated = "2026-09-09"
+
+[[blocks]]
+kind = "definition"
+body = '''
+Let $x_i = \operatorname{pos}_P(p_i)$ and $y_i = \operatorname{pos}_C(c_i)$ under the alphabets being tried, with
+
+$$y_i \equiv \varepsilon\, x_i + k_i \pmod{26}, \qquad k = M\theta,$$
+
+$\varepsilon \in \{+1, -1\}$ the additive or reciprocal relation and $M$ the design matrix of the hypothesised period set ([Sum of periodic keys](/ciphers/sum-of-periodic-keys)). A crib $q_0 \dots q_{L-1}$ placed at offset $o$ asserts $k_{o+j} \equiv y_{o+j} - \varepsilon\,\operatorname{pos}_P(q_j)$ for $j = 0, \dots, L-1$: $L$ linear equations in $\theta$. The placement is **consistent** if the system has a solution over both prime fields, and it **determines the keystream** if every solution of the homogeneous crib system generates the zero keystream on all $n$ positions, which is exactly the condition that the crib rows span the row space of $M$. Then
+
+$$k^{(26)}_i = k^{(13)}_i + 13\,\big((k^{(2)}_i - k^{(13)}_i) \bmod 2\big)$$
+
+lifts the two field solutions, and the full decrypt $x_i = \varepsilon(y_i - k_i)$ is scored.
+'''
+
+[[blocks]]
+kind = "equations"
+title = "Recurrence form and the score"
+body = '''
+Row-reducing rows $0, 1, 2, \dots$ of $M$ over each field, the first dependent row (index $\deg$) expresses $k_{\deg}$ through $k_0, \dots, k_{\deg-1}$. Lifted by CRT this is a recurrence
+
+$$\sum_{j=0}^{\deg} a_j\, k_{i+j} \equiv 0 \pmod{26}, \qquad a_{\deg} = 1,\ \gcd(a_0, 26) = 1,$$
+
+that every keystream of the family satisfies at every $i$; the worker verifies it against each column of $M$ over the whole text before use. Consequently a crib of exactly $\deg$ consecutive letters at any offset fixes $\deg$ consecutive key values, and the recurrence extends them forwards ($k_{i+\deg} = -\sum_{j<\deg} a_j k_{i+j}$) and backwards ($k_i = -a_0^{-1}\sum_{j \ge 1} a_j k_{i+j}$) without a second elimination. For $\{4, 5, 6, 7\}$ the degree is 18, so cribs are truncated to their first 18 letters and shorter cribs are skipped.
+
+Each placement is scored by the sum of log-probabilities of all $n - 4$ five-letter windows of the decrypt under a fixed English quintgram table. The score scales with length and is table-specific; the bars are the planted true plaintexts under the same table (about $-750$ to $-765$ at 153 letters), the wrong placements of the same job (about $-1{,}300$) and the best of every other job (next best $-1{,}197$ in the recorded search).
+'''
+
+[[blocks]]
+kind = "assumptions"
+body = '''
+- The crib occurs in the plaintext, in the cipher's own alphabet convention, at some offset in the swept range; a negative sweep says nothing about texts that do not contain any bank phrase ([Crib dragging](/cryptanalysis/crib-dragging)).
+- The keystream is linear in $\theta$ with a known design matrix for each hypothesis; period sets, alphabets and signs are enumerated, not fitted.
+- The crib is at least as long as the degree, so the keystream is determined; shorter cribs leave a null space and are not scored.
+- The whole text is enciphered under one hypothesis; a change of key or convention part way through breaks the recurrence extension.
+'''
+
+[[blocks]]
+kind = "attack"
+title = "How to attack it"
+body = '''
+1. **Controls first.** The scheduler asserts the pass markers of the planted crib controls and of the linear-template controls before it creates any target job.
+2. **Bank.** Sort a phrase bank (8,764 phrases taken from earlier solved texts of the same corpus in the recorded run) and truncate each phrase to the degree, skipping duplicates.
+3. **Hypotheses.** Enumerate period sets by increasing total period, skipping sets in which one period divides another, and for each set the eight cells (straight or keyed alphabet on each side, additive or reciprocal sign). Give every job time slices of 15 s, least elapsed first, with checkpoints so that interrupted jobs resume identically.
+4. **Per job.** Derive and verify the recurrence; for each crib and each of the $n - \deg + 1$ offsets, fill the key values, extend, decrypt, score; append every new best to the job record.
+5. **Detect.** A job whose best score reaches the planted-true-plaintext level while all other jobs stay a few hundred points lower is the signal; the recorded hit came in 12 s within its job, after 316,744 placements.
+6. **Verify.** Re-solve $\theta$ from the complete plaintext over both fields, re-encrypt, compare with the ciphertext, and read the keywords over the gauge orbit ([Least common multiples of periods](/algebra/lcm-of-periods)).
+'''
+
+[[blocks]]
+kind = "pseudocode"
+body = '''
+```text
+// Ciphertext indices y[0..n-1] under the alphabets of the cell, sign eps,
+// period set p with design matrix M and degree D.
+function PREPARE(p, n):
+    M = DESIGN_MATRIX(p, n)
+    for q in {2, 13}:
+        reduce rows 0..D of M over GF(q); row D is the first dependent row
+        rel[q] = its expression through rows 0..D-1
+    a = CRT_LIFT(rel[2], rel[13])          // recurrence, a[D] = 1, a[0] a unit
+    assert every column of M satisfies a at every position
+    return a
+
+function CRIB_JOB(y, eps, cribs, a, D):
+    best = -infinity
+    for each crib in cribs (first D letters, duplicates skipped):
+        for o in 0..n-D:
+            for j in 0..D-1: k[o+j] = (pos_P(crib[j]) - eps*y[o+j]) mod 26
+            for i in o+D..n-1:  k[i] = -(sum_{j<D} a[j]*k[i-D+j]) mod 26
+            for i in o-1 down to 0:
+                k[i] = -(INVERSE_MOD(a[0], 26) * sum_{j>=1} a[j]*k[i+j]) mod 26
+            x = [(k[i] + eps*y[i]) mod 26 for i in 0..n-1]
+            s = QUINTGRAM_SCORE(x)
+            if s > best: best = s; record (crib, o, x)
+    return best                             // compared with the planted level
+```
+'''
+
+[[blocks]]
+kind = "complexity"
+body = '''
+One elimination of $O(\deg^3)$ per job; then $O(n\deg)$ per placement for the extension plus $O(n)$ for scoring, with $(n - \deg + 1) \times |\text{bank}|$ placements per job: the recorded winning job tested 316,744 placements in 11.9 s. The number of jobs is eight times the number of period sets, which grows quickly with the total period; the recorded scheduler had reached the four-period set $\{4, 5, 6, 7\}$ as job 1055.
+'''
+
+[[blocks]]
+kind = "failure_modes"
+body = '''
+- **Selection across jobs and placements.** Hundreds of thousands of placements per job and thousands of jobs make the running maximum a poor bar; compare with the planted-true-plaintext level and with the distribution of other jobs' bests, as recorded ($-767$ against $-1{,}197$ and below).
+- **Wrong cell.** A crib under the wrong alphabet side or sign still yields a consistent keystream, because $\deg$ equations in $\deg$ unknowns are always solvable; only the decrypt score distinguishes cells.
+- **Crib shorter than the degree.** The keystream is not determined and the placement cannot be scored; increasing the crib length or combining two cribs is required.
+- **Bank miss.** A 144-letter corpus text swept with the same bank stayed at noise for every completed job (best $-1{,}149$); that excludes the enumerated cribs and hypotheses, not the family; the crib-free component cancellation under [Difference operators](/algebra/difference-operators) has not yet passed its control.
+- **Non-linear layers.** Any fractionation, transposition or feedback between the additive layers removes the linear structure and the recurrence.
+'''
+
+[[blocks]]
+kind = "controls"
+body = '''
+Planted crib controls: five 153-letter ciphers from the same generator with period sets of degree 10, 16, 26, 29 and 52, random keys and rotating alphabet and sign cells; each run supplies 35 random cribs plus the true crib, must output the exact plaintext at the planted offset 51, every output record must re-encrypt to the control ciphertext, and a run interrupted and resumed with zero-second slices must produce byte-identical state and output files (4 to 6 resume rounds each). Linear-template controls for the related scan worker (two mixed-period, one structured-matrix) passed with wrong guessed tails ignored and every record re-encrypted. On the solved text, the self-contained re-derivation slides the winning 18-letter crib over all 136 offsets, obtains a uniquely determined keystream at every offset, and selects the same plaintext with an independent dictionary-coverage scorer. On the 144-letter text, the eight cells of $\{4, 5, 6, 7\}$ completed with 316,484 placements each and bests from $-1{,}213$ to $-1{,}181$; a broader run with 9,435 cribs over 682 period sets (5,456 jobs) had completed 1,007 jobs through degree 19 and part of degree 20 at the time of writing, best $-1{,}149$, all at noise.
+'''
+
+[[blocks]]
+kind = "example"
+title = "Worked example"
+body = '''
+Ciphertext `RQPZPCYRWU` from the [sum-of-periodic-keys example](/ciphers/sum-of-periodic-keys): alphabet keyed by `ZEBRAS` on both sides, periods $\{3, 4\}$, degree $6$, additive sign. Crib `DTWOKE` at offset 2 gives residues $y - \operatorname{pos}_P(q)$ at positions $2 \dots 7$ of $11, 6, 21, 15, 12, 2$. Over $\mathrm{GF}(2)$ the crib rows have rank 6 with nullity 1 (the constant transfer), and that kernel vector generates the zero keystream, so the stream is determined: $1, 0, 1, 0, 1, 1, 0, 0, 0, 0$. Over $\mathrm{GF}(13)$: $12, 12, 11, 6, 8, 2, 12, 2, 11, 3$. The CRT lift is $25, 12, 11, 6, 21, 15, 12, 2, 24, 16$ (position 0: $12 + 13 \cdot ((1 - 12) \bmod 2) = 25$), and the decrypt is `ADDTWOKEYS`.
+
+The same crib at offset 3 is also consistent and also determines a keystream, but the decrypt reads `BFMDTWOKED`, which a language score rejects. The five-letter crib `DTWOK` leaves nullity 2 in both fields and does not determine the keystream, so it cannot be scored at all.
+'''
+
+[[blocks]]
+kind = "notes"
+body = '''
+The method generalises the observation in [Crib dragging](/cryptanalysis/crib-dragging) that a contiguous crib of length $m$ fixes a period-$m$ key: with a linear keystream the relevant length is the degree, not the period, and the recurrence plays the role of the repetition. The linear algebra follows [Linear algebra over GF(2) and GF(13)](/algebra/finite-field-linear-algebra); the gauge of the solved components is counted in [Least common multiples of periods](/algebra/lcm-of-periods).
+'''
+
+[[provenance]]
+path = "archive-a/mixed_period_cribs.cpp"
+kind = "solver"
+note = "Crib worker: derives and verifies the keystream recurrence, truncates cribs to the degree, fills and extends the key forwards and backwards per placement, quintgram-scores the full decrypt, checkpoints every 5 s and resumes identically."
+
+[[provenance]]
+path = "archive-a/running-key/mixed_period_prefix.cpp"
+kind = "library"
+note = "Design matrix from the period list; row elimination over F2 and F13 tracking each row as a combination of earlier positions; CRT completion of the keystream."
+
+[[provenance]]
+path = "archive-a/run_linear_templates.py"
+kind = "script"
+note = "Scheduler: asserts both control pass markers, enumerates period sets by increasing total period with eight alphabet/sign cells each, 15 s slices least-elapsed first, sqlite checkpointing."
+
+[[provenance]]
+path = "archive-a/mixed-cribs-mixed-cribs-core-pk8/1055.jsonl"
+kind = "data"
+note = "The 16 running-best records of job 1055; the last is the 18-letter crib at offset 122, the earlier ones score about -1,300."
+ref = "job 1055"
+
+[[provenance]]
+path = "archive-a/mixed-cribs-pk8.log"
+kind = "log"
+note = "Original scheduler log of the search; line 1287 is the hit: job 1055, periods [4, 5, 6, 7], keyed alphabet both sides, sign +1, 316,744 placements, best -767.35, complete in 11.9 s (recorded 2026-09-09); the next-best job in the log scored -1196.8."
+ref = "job 1055"
+
+[[provenance]]
+path = "archive-c/pk8-solution/README.md"
+kind = "note"
+note = "Exact command and environment of job 1055, reproduction output (COMPLETE 18 316744 -767.35), next-best job -1196.8, planted true plaintexts about -750 to -765 in this scorer."
+
+[[provenance]]
+path = "archive-c/pk8-solution/pk8_solution.py"
+kind = "solver"
+note = "METHOD section: re-enacts the slide of the winning crib over all 136 offsets with exact GF(2)/GF(13) solves, uniqueness tests and CRT, selecting the same plaintext with a dictionary-coverage scorer."
+
+[[provenance]]
+path = "archive-a/check_mixed_period_cribs.py"
+kind = "script"
+note = "Five planted controls: 35 random cribs plus the true crib, exact plaintext at offset 51, all records re-encrypted, resume identical."
+ref = "mixed-crib-controls.log"
+
+[[provenance]]
+path = "archive-a/mixed-crib-controls.log"
+kind = "log"
+note = "Five MIXED_ANYWHERE_CRIB_CONTROL rows (4 to 6 resume rounds) and the ALL_..._PASS marker."
+
+[[provenance]]
+path = "archive-a/linear-template-controls.log"
+kind = "log"
+note = "Three LINEAR_TEMPLATE_CONTROL rows (mixed_period 0, 1; structured_hill 2) and the ALL_..._PASS marker the scheduler requires."
+
+[[provenance]]
+path = "archive-a/mixed-cribs-core.txt"
+kind = "data"
+note = "Sorted crib bank of 8,764 phrases; built by build_mixed_cribs_core.py from a phrase list derived from earlier solved corpus texts."
+
+[[provenance]]
+path = "archive-a/quintgram_cache.hpp"
+kind = "library"
+note = "Memory-mapped English quintgram table (26^5 floats) shared by the workers."
+
+[[provenance]]
+path = "archive-c/pk9-attack/b-pk9-4567/summary.json"
+kind = "data"
+note = "144-letter text, periods {4, 5, 6, 7}: eight cells COMPLETE at degree 18, 316,484 placements each, bests -1181.0 to -1212.7."
+
+[[provenance]]
+path = "archive-c/pk9-attack/b-pk9-broad.log"
+kind = "log"
+note = "144-letter text, broad enumeration: 9,435 cribs, 682 period sets, 5,456 jobs; 1,007 jobs complete through degree 19 and part of degree 20 on 2026-09-09, best -1149.0."
+
+[[provenance]]
+path = "archive-c/pk9-attack/attack_b_cribs.py"
+kind = "script"
+note = "Driver that reuses the compiled crib worker on the 144-letter text with the extended bank, enumerating period sets by degree."
+
+[[references]]
+title = "The Codebreakers"
+author = "David Kahn"
+year = 1967
+
+[[references]]
+title = "Finite Fields"
+author = "Rudolf Lidl and Harald Niederreiter"
+year = 1997

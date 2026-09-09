@@ -6,7 +6,7 @@ status = "POWER-LIMITED"
 status_note = "With an unknown alphabet at 153 letters, annealing recovered 0/24 blind controls and 0/21 controls with cribs up to 25 letters. Parallel tempering with 2,000 to 8,000 chains stopped at 30–40% of the alphabet. When a keyword or phrase structures the alphabet, the bank search recovers controls at 100%."
 family = "Polyalphabetic substitution"
 tags = ["periodic", "keyed alphabet", "polyalphabetic", "quagmire", "power limit"]
-related = ["vigenere", "quagmire-i", "quagmire-ii", "quagmire-iv", "keyword-mixed-alphabet", "parallel-tempering", "simulated-annealing", "polish-basin-measurement", "power-measurement", "crib-driven-alphabet-recovery", "quagmire-lab", "g-mixed-alphabet"]
+related = ["vigenere", "quagmire-i", "quagmire-ii", "quagmire-iv", "keyword-mixed-alphabet", "parallel-tempering", "simulated-annealing", "polish-basin-measurement", "power-measurement", "crib-driven-alphabet-recovery", "quagmire-lab", "g-mixed-alphabet", "sum-of-periodic-keys"]
 summary = "Quagmire III uses the same mixed alphabet for plaintext and ciphertext, with a repeating shift between them. Changing one alphabet position affects both sides of the transformation, coupling the search variables. Finite alphabet banks, exact conditional key search and matched controls help distinguish a search failure from evidence against the model."
 updated = "2026-09-08"
 
