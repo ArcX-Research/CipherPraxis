@@ -786,10 +786,13 @@ textarea.field-input { resize: vertical; min-height: 72px; line-height: 1.5; }
 .lab-missing { color: var(--ink-2); padding: 16px; }
 
 /* Boot screen */
-.boot { position: fixed; inset: 0; display: grid; place-content: center; gap: 18px; justify-items: center; background: var(--paper); z-index: 200; }
+.boot { position: fixed; inset: 0; display: grid; place-content: center; gap: 18px; justify-items: center; padding: 24px; text-align: center; background: var(--paper); z-index: 200; }
 .boot-mark { width: 44px; height: 44px; border-radius: 12px; border: 2px solid transparent; background: linear-gradient(#fff, #fff) padding-box, var(--spectral) border-box; animation: spin 1.6s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .boot-text { color: var(--ink-3); }
+.boot-note { max-width: 38ch; margin: 0; color: var(--ink-2); font-size: 14px; }
+.boot-retry[hidden] { display: none; }
+.boot-failed .boot-mark { animation: none; }
 .boot-noscript { color: #8a1f1f; }
 
 /* Responsive */

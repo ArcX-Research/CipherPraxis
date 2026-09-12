@@ -45,6 +45,7 @@ lint-scripts:
 test:
 	$(CARGO) test --workspace --all-features
 	$(PYTHON) scripts/check_research_algorithms.py
+	$(PYTHON) scripts/test_fingerprint_assets.py
 
 content:
 	$(CARGO) run --quiet -p praxis-core --features authoring --bin praxis-check -- content --strict

@@ -55,14 +55,9 @@ if [ "$PROFILE" = release ] && command -v wasm-opt >/dev/null 2>&1; then
   wasm-opt -Os -o "$ROOT/dist/pkg/praxis_bg.wasm" "$ROOT/dist/pkg/praxis_bg.wasm"
 fi
 cp -R "$ROOT/static/." "$ROOT/dist/"
-# Cache-bust the module and stylesheet with a content hash.
-if command -v shasum >/dev/null 2>&1; then
-  HASH="$(shasum -a 256 "$ROOT/dist/pkg/praxis_bg.wasm" | cut -c1-10)"
-else
-  HASH="$(sha256sum "$ROOT/dist/pkg/praxis_bg.wasm" | cut -c1-10)"
-fi
-sed -i.bak -e "s#/pkg/praxis.js#/pkg/praxis.js?v=$HASH#g" -e "s#/styles.css#/styles.css?v=$HASH#g" "$ROOT/dist/index.html"
-rm -f "$ROOT/dist/index.html.bak"
+# Fingerprint every executable asset, including the WASM URL inside its JS loader.
+# CSS has its own fingerprint, so a style-only edit does not redownload the WASM.
+python3 "$ROOT/scripts/fingerprint_assets.py" "$ROOT/dist"
 # SPA fallback for static hosts that serve 404.html.
 cp "$ROOT/dist/index.html" "$ROOT/dist/404.html"
 echo "▸ dist/ ready ($PROFILE)"

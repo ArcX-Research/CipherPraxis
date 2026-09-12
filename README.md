@@ -107,6 +107,23 @@ The build output is static (`dist/`), so any static host works. The app uses cli
 so the host must serve `index.html` for unknown paths (a "SPA rewrite"); `dist/404.html` is a copy
 of the shell for hosts that use that convention instead.
 
+The build gives the WASM binary, its matching JavaScript loader, and stylesheet independent
+content-hashed filenames in `dist/pkg/`. The loader's default WASM URL and the HTML initialization
+URL both point to that same fingerprinted binary. This prevents a returning visitor from mixing
+new JavaScript with an older cached WASM file. A CSS-only edit changes the stylesheet URL without
+invalidating the WASM cache. Publish the complete `dist/` output together, and keep the HTML shell
+revalidated (`Cache-Control: no-cache`), including deep-link rewrites.
+
+The loading screen remains until the first routed page has rendered. Failed downloads or startup
+errors show a retry button; a slow connection gets the same option after 15 seconds while loading
+continues. Reloading uses the current shell and its matching assets without clearing unrelated
+browser data.
+
+`make test` checks asset fingerprinting across releases and style-only edits. After building,
+`node scripts/check_startup.cjs` runs headless mobile/desktop startup, cache-upgrade, deep-link,
+slow-network and failure/retry checks against an isolated local server. It requires Playwright
+and Chromium; `PLAYWRIGHT_MODULE` and `CHROME_BIN` may point to existing external installations.
+
 ### Share previews
 
 `static/og.png` (2400×1260) is the Open Graph and Twitter card image declared in `static/index.html`;
@@ -133,6 +150,13 @@ reach the WebAssembly router:
 | Source address | Target address | Type |
 | --- | --- | --- |
 | `</^[^.]+$\|\.(?!(css\|gif\|ico\|jpg\|js\|png\|txt\|svg\|woff\|woff2\|ttf\|map\|json\|wasm)$)([^.]+$)/>` | `/index.html` | `200 (Rewrite)` |
+
+Check a direct article URL such as `/ciphers/vigenere` after deployment: it should return the
+HTML shell with HTTP 200 and `Cache-Control: no-cache`. A redirect to a trailing slash followed
+by HTTP 404 means the SPA rewrite is missing; the `404.html` fallback alone is insufficient.
+Amplify only applies custom cache headers to successful 200 responses, so this also matters for
+[cache revalidation](https://docs.aws.amazon.com/amplify/latest/userguide/Using-headers-to-control-cache-duration.html).
+Keep asset extensions excluded from the rewrite so missing JS/WASM files return a real 404.
 
 The first build installs the Rust toolchain and compiles the workspace in release mode (several
 minutes); the cache paths in `amplify.yml` make later builds much faster.

@@ -32,18 +32,61 @@
   <div id="boot" class="boot" aria-live="polite">
     <div class="boot-mark" aria-hidden="true"></div>
     <div class="boot-text mono">Loading Cipher Praxis…</div>
+    <p class="boot-note" hidden></p>
+    <button class="btn boot-retry" type="button" hidden>Try again</button>
     <noscript><p class="boot-noscript">Turn on JavaScript and WebAssembly to use Cipher Praxis.</p></noscript>
   </div>
   <script type="module">
-    import init from '/pkg/praxis.js';
-    init().then(() => {
-      const b = document.getElementById('boot');
-      if (b) b.remove();
-    }).catch((err) => {
-      const t = document.querySelector('.boot-text');
-      if (t) t.textContent = 'Cipher Praxis could not load: ' + err;
-      console.error(err);
-    });
+    const boot = document.getElementById('boot');
+    const text = boot.querySelector('.boot-text');
+    const note = boot.querySelector('.boot-note');
+    const retry = boot.querySelector('.boot-retry');
+    let initialized = false;
+
+    retry.addEventListener('click', () => window.location.reload());
+
+    function showFailure() {
+      clearTimeout(slowLoad);
+      boot.classList.add('boot-failed');
+      text.textContent = 'Cipher Praxis could not load';
+      note.textContent = 'Check your connection and try again.';
+      note.hidden = false;
+      retry.hidden = false;
+    }
+
+    // Routes render asynchronously, after init() can resolve. Keep the loading screen
+    // and error handlers until the first page actually mounts, including deep links.
+    function finishWhenReady() {
+      if (!initialized || !document.querySelector('#main h1')) return;
+      clearTimeout(slowLoad);
+      observer.disconnect();
+      window.removeEventListener('error', showFailure);
+      window.removeEventListener('unhandledrejection', showFailure);
+      boot.remove();
+    }
+
+    const observer = new MutationObserver(finishWhenReady);
+    observer.observe(document.body, { childList: true, subtree: true });
+    window.addEventListener('error', showFailure);
+    window.addEventListener('unhandledrejection', showFailure);
+    const slowLoad = setTimeout(() => {
+      text.textContent = 'Still loading Cipher Praxis…';
+      note.textContent = 'Loading is taking longer than expected. You can wait or try again.';
+      note.hidden = false;
+      retry.hidden = false;
+    }, 15000);
+
+    try {
+      // Dynamic import lets the same recovery UI handle a failed module download.
+      // The build fingerprints both URLs, so a cached WASM file cannot cross releases.
+      const { default: init } = await import('/pkg/praxis.js');
+      await init({ module_or_path: '/pkg/praxis_bg.wasm' });
+      initialized = true;
+      finishWhenReady();
+    } catch (err) {
+      showFailure();
+      console.error('Cipher Praxis startup failed', err);
+    }
   </script>
 </body>
 </html>

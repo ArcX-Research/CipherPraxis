@@ -1,5 +1,6 @@
-# AWS Amplify Hosting custom headers. Bundle assets carry a content hash in their URLs, so they
-# can be cached for a year; the HTML shell must always be revalidated.
+# AWS Amplify Hosting custom headers. Every file in /pkg has a content-hashed filename
+# (WASM, matching JS loader, CSS). Only these immutable assets can be cached for a year.
+# The HTML shell, including SPA rewrites to index.html, must always be revalidated.
 customHeaders:
   - pattern: '/pkg/*'
     headers:

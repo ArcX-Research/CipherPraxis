@@ -14,6 +14,8 @@ python3 -c 'import ast, pathlib; [ast.parse(path.read_text(), filename=str(path)
 if command -v shellcheck >/dev/null 2>&1; then
   shellcheck scripts/*.sh
 fi
+echo "▸ asset cache regression checks"
+python3 scripts/test_fingerprint_assets.py
 
 echo "▸ clippy (workspace, native)"
 cargo clippy --workspace --all-targets --all-features -- -D warnings
@@ -47,10 +49,10 @@ cargo check -p praxis-web --target wasm32-unknown-unknown
 if [ "${REPRO:-0}" = "1" ]; then
   echo "▸ reproducibility: two clean release builds must hash identically"
   scripts/build.sh release >/dev/null
-  H1="$(shasum -a 256 dist/pkg/praxis_bg.wasm | cut -d' ' -f1)"
+  H1="$(shasum -a 256 dist/pkg/*_bg.wasm | cut -d' ' -f1)"
   cargo clean -p praxis-web --release --target wasm32-unknown-unknown >/dev/null 2>&1
   scripts/build.sh release >/dev/null
-  H2="$(shasum -a 256 dist/pkg/praxis_bg.wasm | cut -d' ' -f1)"
+  H2="$(shasum -a 256 dist/pkg/*_bg.wasm | cut -d' ' -f1)"
   if [ "$H1" != "$H2" ]; then
     echo "reproducibility FAILED: $H1 != $H2" >&2
     exit 1
