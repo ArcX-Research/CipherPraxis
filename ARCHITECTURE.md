@@ -138,15 +138,28 @@ block `title`/`body`, glossary text):
 
 Derived from the Dilate visual language, with restrained scientific reading surfaces:
 
-- Ink `#000020`; secondary ink `rgba(0,0,32,0.68)`; muted ink `#626779`; Dilate blue `#0454ff`;
-  slate blue `#3d5b8c`; teal `#35777d`; pale blue tint `#e6edf8`; surfaces `#ffffff`, `#f6f5f4`, `#f0f0eb`,
-  `#edede8`; hairline `#e4e4e1`.
-- Type: Geist (UI/body, weights 400/500/600), Adamina (serif display/quotes), DM Mono (data/code).
-  Letter-spacing −0.01em body, −0.04em display. Radii 8/12/20 px. Generous whitespace.
+- Ink and sidebar use Dilate navy `#000020`; body ink `#545368`; muted ink
+  `#656579`; Dilate blue `#0454ff`. Reading surfaces are white `#ffffff`, with neutral
+  `#f6f6f9`/`#eeeef4` accents and `#e3e3eb` borders. Navigation has light text and a
+  pale-blue active marker. The navbar stays white, with search at its right edge.
+  The desktop sidebar reaches the top of the viewport and holds the site identity.
+  On mobile, the white navbar shows the identity while the sidebar becomes a full-height drawer.
+  Article content and its right rail share a centered, width-limited layout within the
+  workspace, with evidence and citation sections aligned to the same outer edges.
+- Type is taken from the Dilate Framer project: Adamina 400 for display, page, card,
+  and article headings; Geist 400/500/600 for UI and body; DM Mono 400/500 for data/code.
+  Article body follows the 18 px / 30 px, −0.02em preset; article headings use 40/32/26 px
+  with responsive sizing, 1.25–1.35 line-height, and −0.03em/−0.02em tracking.
+  The hero uses Adamina up to 64 px, 1.2 line-height, and −0.04em tracking.
+  Radii remain 8/12/20 px.
 - Titles and headings have no trailing periods. Questions retain their question marks.
-- Motifs: hairline grids, faint dotted fields, concentric geometry and subtle blue/teal washes.
-  Equations and pseudocode use quiet, high-contrast reading panels. Amber marks limited power;
-  status text always accompanies color. No dark mode.
+- Keep page backgrounds, footers, cards, filter panels, and lab outputs white. Avoid
+  decorative page-wide dots, gradients, or translucent reading surfaces. The hero SVG
+  retains its original blue/teal artwork. Other accents, marks, and charts use navy and
+  blue; research statuses always have text labels and restrained borders. Red is reserved
+  for actual input or rendering errors. No dark mode.
+- Omit search-readiness messages, section ordinal numbers, redundant result-count lines,
+  and build/stack details. Filter results remain announced to assistive technology.
 - The overview pairs a concise introduction with a transparent vector security illustration in
   blue and teal. The text column stops growing at 640 px; the artwork is centered in the remaining
   space and its faint halo fades into the page. On wide screens the communication chain extends

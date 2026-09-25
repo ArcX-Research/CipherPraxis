@@ -33,10 +33,10 @@ pub fn App() -> impl IntoView {
     view! {
         <Router>
             <a class="skip-link" href="#main">"Skip to content"</a>
-            <Header sidebar=sidebar/>
             <div class="kb-shell">
                 <KnowledgeSidebar open=sidebar/>
                 <div class="kb-workspace">
+                    <Header sidebar=sidebar/>
                     <main id="main" class="main" tabindex="-1">
                         <Routes fallback=|| view! { <NotFound/> }>
                             <Route path=path!("/") view=Overview/>
@@ -57,8 +57,6 @@ pub fn App() -> impl IntoView {
 #[component]
 fn Header(sidebar: RwSignal<bool>) -> impl IntoView {
     let palette = use_palette();
-    let state = crate::state::use_state();
-    let total = state.catalog.len();
 
     view! {
         <header class="site-header">
@@ -70,9 +68,6 @@ fn Header(sidebar: RwSignal<bool>) -> impl IntoView {
                         <span class="brand-sub">"Cryptography knowledge base"</span>
                     </span>
                 </a>
-                <div class="header-context mono">
-                    <span>{format!("{total} entries")}</span>
-                </div>
                 <div class="header-actions">
                     <button
                         type="button"
@@ -89,7 +84,7 @@ fn Header(sidebar: RwSignal<bool>) -> impl IntoView {
                         class="nav-toggle"
                         aria-expanded=move || sidebar.get().to_string()
                         aria-controls="knowledge-sidebar"
-                        aria-label="Open site menu"
+                        aria-label=move || if sidebar.get() { "Close site menu" } else { "Open site menu" }
                         on:click=move |_| sidebar.update(|open| *open = !*open)
                     >
                         <span class="nav-toggle-bars" aria-hidden="true"><i></i><i></i></span>
@@ -102,9 +97,6 @@ fn Header(sidebar: RwSignal<bool>) -> impl IntoView {
 
 #[component]
 fn Footer() -> impl IntoView {
-    let state = crate::state::use_state();
-    let generated = state.catalog.generated().to_string();
-    let n = state.catalog.len();
     view! {
         <footer class="site-footer">
             <div class="wrap footer-grid">
@@ -125,19 +117,10 @@ fn Footer() -> impl IntoView {
                         {Section::ALL.iter().skip(6).map(|s| view! { <a href=format!("/{}", s.slug())>{s.title()}</a> }).collect_view()}
                         <a href="/find">"Search"</a>
                     </div>
-                    <div>
-                        <div class="footer-h">"Build"</div>
-                        <div class="footer-meta mono">
-                            <div>{format!("{n} entries")}</div>
-                            <div>{format!("bundle {generated}")}</div>
-                            <div>"Rust · Leptos · WebAssembly"</div>
-                        </div>
-                    </div>
                 </div>
             </div>
             <div class="wrap footer-line mono">
                 <span>"© Dilate Technologies · Cipher Praxis"</span>
-                <span>"No tracking"</span>
             </div>
         </footer>
     }

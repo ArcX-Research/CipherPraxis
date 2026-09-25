@@ -1,5 +1,5 @@
 //! Persistent knowledge index for the database-style application shell.
-use crate::components::motif::ICON_SEARCH;
+use crate::components::motif::{Logo, ICON_SEARCH};
 use crate::state::use_state;
 use leptos::prelude::*;
 use leptos_router::hooks::use_location;
@@ -43,10 +43,13 @@ pub fn KnowledgeSidebar(open: RwSignal<bool>) -> impl IntoView {
             aria-label="Site menu"
         >
             <div class="kb-sidebar-head">
-                <div>
-                    <p class="eyebrow mono">"Browse"</p>
-                    <p class="kb-sidebar-count mono">{format!("{} entries · {} sections", catalog.len(), Section::ALL.len())}</p>
-                </div>
+                <a class="brand" href="/" aria-label="Cipher Praxis home">
+                    <Logo/>
+                    <span class="brand-text">
+                        <span class="brand-name">"Cipher Praxis"</span>
+                        <span class="brand-sub">"Cryptography knowledge base"</span>
+                    </span>
+                </a>
                 <button
                     type="button"
                     class="kb-sidebar-close"
@@ -91,10 +94,6 @@ pub fn KnowledgeSidebar(open: RwSignal<bool>) -> impl IntoView {
                     })
                     .collect_view()}
             </nav>
-            <div class="kb-sidebar-foot mono">
-                <span class="kb-live-dot" aria-hidden="true"></span>
-                <span>"Search ready"</span>
-            </div>
         </aside>
     }
 }
@@ -155,7 +154,6 @@ fn SidebarSection(section: Section, entries: Vec<Entry>, query: RwSignal<String>
                     href=format!("/{}", section.slug())
                     aria-current=move || active.get().then_some("location")
                 >
-                    <span class="mono kb-tree-ord">{format!("{:02}", section.ordinal())}</span>
                     <span>{section.short()}</span>
                 </a>
                 <span class="mono kb-tree-count">{move || visible.with(Vec::len)}</span>

@@ -28,7 +28,6 @@ pub fn FindPage() -> impl IntoView {
     view! {
         <section class="wrap page catalog-layout">
             <header class="section-header">
-                <p class="eyebrow mono">"Search"</p>
                 <h1 class="display">"Search the knowledge base"</h1>
                 <p class="lede">"Find cipher systems, mathematical foundations, and methods across every category."</p>
             </header>
@@ -50,7 +49,7 @@ pub fn FindPage() -> impl IntoView {
                 <button type="button" class="filter-reset" disabled=move || local.get().is_empty() on:click=move |_| local.set(String::new())>"Clear search"</button>
             </CatalogTools>
             <div class="catalog-results">
-            <p class="mono meta result-count" role="status">{move || {
+            <p class="sr-only" role="status">{move || {
                 let n = hits.with(|h| h.len());
                 let q = local.get();
                 if q.trim().is_empty() { "Enter a word or phrase to search every section.".to_string() } else { format!("{n} result{} for “{q}”", if n == 1 { "" } else { "s" }) }

@@ -24,10 +24,9 @@ pub fn SectionPage() -> impl IntoView {
 }
 
 #[component]
-fn SectionHeader(section: Section, count: usize) -> impl IntoView {
+fn SectionHeader(section: Section) -> impl IntoView {
     view! {
         <header class="section-header">
-            <p class="eyebrow mono">{format!("{:02} / {}", section.ordinal(), Section::ALL.len())}<span class="sep">"·"</span>{format!("{count} entries")}</p>
             <h1 class="display">{section.title()}</h1>
             <p class="lede">{section.blurb()}</p>
         </header>
@@ -154,7 +153,7 @@ fn SectionIndex(section: Section) -> impl IntoView {
 
     view! {
         <section class="wrap page catalog-layout">
-            <SectionHeader section=section count=count/>
+            <SectionHeader section=section/>
             <CatalogTools title="Search and filters">
                 <div class="filter-block">
                     <label class="filter-label" for="category-search">"Search this category"</label>
@@ -216,7 +215,7 @@ fn SectionIndex(section: Section) -> impl IntoView {
                 })}
             </CatalogTools>
             <div class="catalog-results">
-                <p class="mono meta result-count" role="status">{move || format!("Showing {} of {} entries", filtered.with(|entries| entries.len()), count)}</p>
+                <p class="sr-only" role="status">{move || format!("{} matching entries", filtered.with(|entries| entries.len()))}</p>
                 {move || filtered.with(|entries| entries.is_empty()).then(|| view! {
                     <p class="empty">"No entries match. Reset the filters or try a broader search."</p>
                 })}
@@ -233,7 +232,7 @@ fn SectionIndex(section: Section) -> impl IntoView {
                                 }
                                 groups.into_iter().map(|(family, entries)| view! {
                                     <div class="family-group">
-                                        <h2 class="family-h"><span>{family}</span><span class="mono meta">{format!("{} {}", entries.len(), if entries.len() == 1 { "entry" } else { "entries" })}</span></h2>
+                                        <h2 class="family-h">{family}</h2>
                                         <div class="catalog-list">{entries.into_iter().map(|entry| view! { <EntryCard entry=entry show_section=false show_family=false/> }).collect_view()}</div>
                                     </div>
                                 }).collect_view().into_any()

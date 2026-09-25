@@ -100,20 +100,20 @@ pub fn bars_svg(
     );
     if let Some((v, label)) = reference {
         let y = h - 20.0 - (v / max) * (h - 30.0);
-        s.push_str(&format!(r##"<line x1="30" x2="{:.1}" y1="{y:.1}" y2="{y:.1}" stroke="#a95dc9" stroke-dasharray="3 3"/><text x="{:.1}" y="{:.1}" font-size="8" fill="#a95dc9" text-anchor="end" font-family="DM Mono, monospace">{label}</text>"##, w - 4.0, w - 4.0, y - 3.0));
+        s.push_str(&format!(r##"<line x1="30" x2="{:.1}" y1="{y:.1}" y2="{y:.1}" stroke="var(--ink)" stroke-dasharray="3 3"/><text x="{:.1}" y="{:.1}" font-size="8" fill="var(--ink-2)" text-anchor="end" font-family="DM Mono, monospace">{label}</text>"##, w - 4.0, w - 4.0, y - 3.0));
     }
     for (i, (label, v)) in data.iter().enumerate() {
         let x = 32.0 + i as f64 * (bw + gap);
         let bh = (v / max) * (h - 30.0);
         let y = h - 20.0 - bh;
         let fill = if highlight.contains(&i) {
-            "url(#bar-spectral)"
+            "var(--blue)"
         } else {
-            "#c7c6ee"
+            "var(--chart-bar)"
         };
-        s.push_str(&format!(r##"<rect x="{x:.1}" y="{y:.1}" width="{bw}" height="{bh:.1}" rx="2" fill="{fill}"><title>{label}: {v:.4}</title></rect><text x="{:.1}" y="{:.1}" font-size="8" text-anchor="middle" fill="#000020" fill-opacity="0.6" font-family="DM Mono, monospace">{label}</text>"##, x + bw / 2.0, h - 8.0));
+        s.push_str(&format!(r##"<rect x="{x:.1}" y="{y:.1}" width="{bw}" height="{bh:.1}" rx="2" fill="{fill}"><title>{label}: {v:.4}</title></rect><text x="{:.1}" y="{:.1}" font-size="8" text-anchor="middle" fill="var(--ink-2)" font-family="DM Mono, monospace">{label}</text>"##, x + bw / 2.0, h - 8.0));
     }
-    s.push_str(r##"<defs><linearGradient id="bar-spectral" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#0454ff"/><stop offset="1" stop-color="#a95dc9"/></linearGradient></defs></svg>"##);
+    s.push_str("</svg>");
     s
 }
 
